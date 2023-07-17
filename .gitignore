@@ -1,0 +1,38 @@
+# Byte-compiled / optimized Python files
+*.pyc
+*.pyo
+__pycache__/
+
+# Static files
+staticfiles/
+
+# Media files
+media/
+
+# Database
+*.sqlite3
+
+# Environment variables
+.env
+
+# Development server
+*.runserver
+
+# Virtual environment
+venv/
+env/
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Compiled translations
+locale/
+
