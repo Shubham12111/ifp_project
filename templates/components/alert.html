@@ -1,0 +1,22 @@
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show text-white" role="alert" id="alert-message">
+        <span class="alert-text"><strong>{{ message.tags }}!</strong> {{ message }}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Place the JavaScript code anywhere below the alert message's HTML code -->
+<script>
+    setTimeout(function() {
+        var alertMessage = document.getElementById("alert-message");
+        if (alertMessage) {
+            alertMessage.remove();
+        }
+    }, 5000); // 20 seconds
+</script>
+
+    
