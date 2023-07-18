@@ -39,7 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'authentication',
     'contact',
-    'cities_light'
+    'cities_light',
+    'rest_framework',
+    'rest_framework.authtoken',
+    
 ]
 
 MIDDLEWARE = [
@@ -79,11 +82,11 @@ WSGI_APPLICATION = 'infinity_fire_solutions.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', ''),
+        'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
         'USER': os.environ.get('DB_USER', ''),
         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', ''),
-        'PORT': os.environ.get('DB_PORT', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
 
@@ -149,6 +152,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # USER MODEL 
 AUTH_USER_MODEL = 'authentication.User'
+LOGIN_URL = '/auth/login/'
 
 #COUNTRY
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']
