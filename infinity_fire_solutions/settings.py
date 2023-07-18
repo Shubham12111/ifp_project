@@ -68,6 +68,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                 # Other context processors
+                'infinity_fire_solutions.context_processors.breadcrumbs', 
+                'infinity_fire_solutions.context_processors.custom_menu'
             ],
         },
     },

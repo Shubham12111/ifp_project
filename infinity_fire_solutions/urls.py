@@ -20,9 +20,9 @@ from django.urls import path, include
 from django.conf.urls.static import static
 
 # admin Customization
-admin.site.site_header = "IFP Admin"
-admin.site.site_title = "IFP Admin Login"
-admin.site.index_title = "IFP Management"
+admin.site.site_header = "Infinity Fire Solutions Admin"
+admin.site.site_title = "Infinity Fire Solutions"
+admin.site.index_title = "Infinity Fire Solutions Management"
 
 
 
@@ -30,7 +30,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
     path('contact/',include('contact.urls')),
-    path('common_app/',include('common_app.urls')),
+    path('',include('common_app.urls')),
 
 
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
