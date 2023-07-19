@@ -12,9 +12,10 @@ class LoginSerializer(serializers.ModelSerializer):
         max_length=100,
         style={
             "input_type": "email",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            "autofocus": False,
         },
         error_messages={
             "required": "This field is required.",
@@ -26,9 +27,10 @@ class LoginSerializer(serializers.ModelSerializer):
         max_length=100,
         style={
             "input_type": "password",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            "autofocus": False,
         },
         error_messages={
             "required": "This field is required.",
@@ -42,18 +44,35 @@ class LoginSerializer(serializers.ModelSerializer):
 
 
 class SignupSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(
-        label=('Name *'),
+    first_name = serializers.CharField(
+        label=('First Name *'),
         max_length=100,
         style={
             "input_type": "text",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            "autofocus": False,
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Name field cannot be blank.",
+            "blank": "First Name field cannot be blank.",
+        },
+    )
+    
+    last_name = serializers.CharField(
+        label=('Last Name *'),
+        max_length=100,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            "autofocus": False,
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Last Name field cannot be blank.",
         },
     )
     
@@ -62,50 +81,60 @@ class SignupSerializer(serializers.ModelSerializer):
         max_length=100,
         style={
             "input_type": "email",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            "autofocus": False,
         },
         error_messages={
             "required": "This field is required.",
             "blank": "Email field cannot be blank.",
         },
     )
+    
     password = serializers.CharField(
         label=('Password *'),
         max_length=100,
         style={
             "input_type": "password",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            "autofocus": False,
         },
         error_messages={
             "required": "This field is required.",
             "blank": "Password field cannot be blank.",
         },
     )
-    confirm_password = serializers.CharField(
+    
+    password2 = serializers.CharField(
         label=('Confirm Password *'),
         max_length=100,
         style={
             "input_type": "password",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            "autofocus": False,
         },
         error_messages={
             "required": "This field is required.",
             "blank": "Confirm Password field cannot be blank.",
         },
+        write_only=True
     )
 
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'password', 'password2')
+        
     def validate(self, data):
         password = data.get('password')
-        confirm_password = data.get('confirm_password')
+        confirm_password = data.get('password2')
 
         if password and confirm_password and password != confirm_password:
-            raise serializers.ValidationError({"confirm_password": "Passwords do not match."})
+            raise serializers.ValidationError({"password2": "Passwords do not match."})
 
         return data
 
@@ -117,9 +146,9 @@ class SignupSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('User with this email already exists, Please try with differnt email.')
         return value
 
-    class Meta:
-        model = User
-        fields = ('name', 'email', 'password', 'confirm_password')
+    def create(self, validate_data):
+        validate_data.pop('password2')
+        return User.objects.create_user(**validate_data)
 
 class ForgotPasswordSerializer(serializers.Serializer):
     
@@ -128,9 +157,10 @@ class ForgotPasswordSerializer(serializers.Serializer):
         max_length=100,
         style={
             "input_type": "email",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            "autofocus": False,
         },
         error_messages={
             "required": "This field is required.",
@@ -148,9 +178,10 @@ class VerifyOTPSerializer(serializers.Serializer):
         max_length=100,
         style={
             "input_type": "text",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            "autofocus": False,
         },
         error_messages={
             "required": "This field is required.",

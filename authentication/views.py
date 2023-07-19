@@ -7,8 +7,11 @@ from rest_framework.authtoken.models import Token
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.contrib.auth import login
+from django.contrib.auth.models import Group
+from django.contrib.auth import logout
 from .serializers import LoginSerializer, SignupSerializer, ForgotPasswordSerializer, VerifyOTPSerializer
-from infinity_fire_solutions.response_schemas import create_api_response
+
 
 class LoginView(APIView):
     """
@@ -28,8 +31,10 @@ class LoginView(APIView):
         """
         Handle GET request for login page.
         """
+        if self.request.user.is_authenticated:
+            return redirect(reverse('dashboard'))
+        
         serializer = self.serializer_class()
-
         # Render the HTML template for login page
         return self.render_html_response(serializer)
 
@@ -53,7 +58,8 @@ class LoginView(APIView):
                 return self.render_html_response(serializer)
 
             # Render the HTML template for successful login
-            messages.success(request, 'Login failed. The credentials provided are incorrect. Please verify your login information and try again.')
+            login(request, user)
+            messages.success(request, 'Login Success.')
             return redirect(reverse('dashboard'))
 
         else:
@@ -77,8 +83,10 @@ class SignupView(APIView):
         """
         Handle GET request for login page.
         """
+        if self.request.user.is_authenticated:
+            return redirect(reverse('dashboard'))
+        
         serializer = self.serializer_class()
-
         # Render the HTML template for login page
         return self.render_html_response(serializer)
 
@@ -86,41 +94,36 @@ class SignupView(APIView):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            # Validating the serializer data
-            name = serializer.validated_data.get('name')
-            email = serializer.validated_data.get('email')
-            password = serializer.validated_data.get('password')
-
-            register_data = {
-                'name':  name,
-                'email': email,
-                'password': password
-            }
-
-            # Create a new user with the validated serializer data
-            user_serializer = LoginSerializer(data=register_data)
-            if user_serializer.is_valid():
-                try:
-                    user = user_serializer.save()
-                except Exception as e:
-                    error = str(e)
-                    messages.error(request, f'{error}')
-
-                    # Render the HTML template for successful signup
-                    return self.render_html_response(serializer)
-                        
-                # Additional logic after user signup (e.g., sending email, generating tokens, etc.)
-                messages.success(request, 'User signed up successfully.')
-
-                # Render the HTML template for successful signup
-                return redirect('/auth/login/')
-            else:
-                messages.error(request, 'User Registeration Failed.')
-                return self.render_html_response(serializer)
-
+            user = serializer.save()
+            user.set_password(serializer.validated_data["password"])
+            user.save()
+            
+            #check the User Role 
+            user_roles = Group.objects.filter(name="Contractor")
+            if user_roles:
+                user.groups.set(user_roles)
+            
+            messages.success(request, "User registered successfully. Please login here.")
+            return redirect(reverse('login'))
+        
         else:
             # Render the HTML template with invalid serializer data
             return self.render_html_response(serializer)
+
+class LogoutView(APIView):
+    """
+    View for user logout.
+    """
+    def get(self, request):
+        """
+        Handle GET request for user logout.
+        """
+        # Log the user out
+        if self.request.user.is_authenticated:
+            logout(request)
+        
+        # Redirect to a specific page after logout (you can change 'login' to the desired page name)
+        return redirect(reverse('login'))
 
 
 class ForgotPasswordView(APIView):
@@ -139,8 +142,10 @@ class ForgotPasswordView(APIView):
         """
         Handle GET request for login page.
         """
+        if self.request.user.is_authenticated:
+            return redirect(reverse('dashboard'))
+        
         serializer = self.serializer_class()
-
         # Render the HTML template for login page
         return self.render_html_response(serializer)
 
@@ -174,8 +179,10 @@ class VerifyOTPView(APIView):
         """
         Handle GET request for login page.
         """
+        if self.request.user.is_authenticated:
+            return redirect(reverse('dashboard'))
+        
         serializer = self.serializer_class()
-
         # Render the HTML template for login page
         return self.render_html_response(serializer)
 
