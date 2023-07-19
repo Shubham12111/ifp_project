@@ -229,3 +229,67 @@ class VerifyOTPSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('otp')
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    
+    first_name = serializers.CharField(
+        label=('First Name *'),
+        max_length=100,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            "autofocus": False,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "First Name is required.",
+             "invalid": "Last Name can only contain characters.",
+        },
+    )
+    
+    last_name = serializers.CharField(
+        label=('Last Name *'),
+        max_length=100,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            "autofocus": False,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Last Name is required.",
+            "invalid": "Last Name can only contain characters.",
+        },
+    )
+
+    email = serializers.EmailField(
+        label=('Email *'),
+        max_length=100,
+        style={
+            "input_type": "email",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            "autofocus": False,
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Email is required.",
+        },
+    )
+    
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', ]
+        
+class ChangePasswordSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = User
+        fields = ['password']
