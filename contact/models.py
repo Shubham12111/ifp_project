@@ -1,7 +1,15 @@
 from django.db import models
 from cities_light.models import City, Country, Region
+from authentication.models import User
 
 
+class ConversationType(models.Model):
+    name = models.CharField(max_length=50)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
 
 class ContactType(models.Model):
     name = models.CharField(max_length=50)
@@ -12,6 +20,7 @@ class ContactType(models.Model):
         return self.name
 
 class Contact(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=255)
     email = models.EmailField()
     phone_number = models.CharField(max_length=20)
@@ -28,3 +37,18 @@ class Contact(models.Model):
 
     def __str__(self):
         return self.name
+
+class Conversation(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    contact_id = models.ForeignKey(Contact, on_delete=models.CASCADE)
+    conversation_type = models.ForeignKey(ConversationType, on_delete=models.CASCADE)
+    document_path = models.CharField(max_length=200, verbose_name="Document Path", null=True, blank=True)
+    message = models.TextField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
