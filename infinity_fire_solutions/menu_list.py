@@ -11,4 +11,6 @@ MENU_ITEMS = [
          'order': 2
         
     },
+    {'url': '/auth/logout/', 'name': 'Account Settings', 'icon': 'fas fa-user', 'order': 3},
+    {'url': '/auth/logout/', 'name': 'Logout', 'icon': 'fas fa-sign-out-alt', 'order': 4},
 ]

@@ -4,10 +4,9 @@
 {% block title %} Signup {{ block.super }}{% endblock %}
 
 {% block content %}
+<div class="card-header pb-0 text-start text-center">
 
-<div class="card card-plain">
-  <div class="card-header pb-0 text-left">
-    <h4 class="font-weight-bolder">Sign Up</h4>
+    <h5 class="font-weight-bolder">Sign Up</h5>
     <p class="mb-0">Enter your details to register</p>
   </div>
   <div class="card-body pb-3">
@@ -25,6 +24,5 @@
       <a href="{% url 'login' %}" class="text-primary text-gradient font-weight-bold">Sign in</a>
     </p>
   </div>
-</div>
 
 {% endblock %}

@@ -21019,7 +21019,7 @@ fieldset:disabled .btn {
 }
 
 .card.card-background.card-background-mask-primary:after {
-  background-image: linear-gradient(310deg, #7928CA 0%, #FF0080 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
   opacity: .85;
 }
 
@@ -21738,7 +21738,7 @@ label,
 }
 
 .bg-gradient-primary {
-  background-image: linear-gradient(310deg, #7928CA 0%, #FF0080 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
 }
 
 .bg-gradient-secondary {
@@ -23187,7 +23187,7 @@ html {
 }
 
 .sidenav[data-color="primary"] .navbar-nav>.nav-item>.nav-link.active .icon {
-  background-image: linear-gradient(310deg, #cb0c9f 0%, #cb0c9f 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
 }
 
 .sidenav[data-color="secondary"] .navbar-nav>.nav-item>.nav-link.active .icon {
@@ -23332,7 +23332,7 @@ html {
 }
 
 .navbar-vertical .navbar-nav>.nav-item .nav-link.active .icon {
-  background-image: linear-gradient(310deg, #cb0c9f 0%, #cb0c9f 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
 }
 
 .navbar-vertical .navbar-nav>.nav-item .nav-link.active .icon svg .color-background,
@@ -23624,13 +23624,24 @@ html {
   }
 }
 
-.navbar-vertical .navbar-nav .nav-item .nav-link .icon i {
+.navbar-vertical .navbar-nav .nav-item .nav-link.active .icon i
+{
+    color : #fff !important;
+}
+
+.navbar-vertical .navbar-nav .nav-item .nav-link .icon i
+{
+    color : #000 !important;
+}
+
+
+/* .navbar-vertical .navbar-nav .nav-item .nav-link .icon i {
   color: #141727;
 }
 
 .navbar-vertical .navbar-nav .nav-item .nav-link .icon i {
   color: #fff;
-}
+} */
 
 .nav.nav-pills {
   background: #f8f9fa;
@@ -23806,7 +23817,7 @@ html {
 .pagination.pagination-primary .page-item.active>.page-link,
 .pagination.pagination-primary .page-item.active>.page-link:focus,
 .pagination.pagination-primary .page-item.active>.page-link:hover {
-  background-image: linear-gradient(310deg, #7928CA 0%, #FF0080 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
   border: none;
   color: #fff;
 }
@@ -24994,7 +25005,7 @@ p {
 }
 
 .text-gradient.text-primary {
-  background-image: linear-gradient(310deg, #7928CA, #FF0080);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
 }
 
 .text-gradient.text-info {
@@ -26234,7 +26245,7 @@ span.flatpickr-weekday {
 }
 
 .noUi-connect {
-  background-image: linear-gradient(310deg, #7928CA 0%, #FF0080 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
 }
 
 /* Handles and cursors;
@@ -28897,7 +28908,7 @@ span.flatpickr-weekday {
 }
 
 .noUi-connect {
-  background-image: linear-gradient(310deg, #7928CA 0%, #FF0080 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
 }
 
 /* Handles and cursors;
@@ -32289,7 +32300,7 @@ Github: https://github.com/fiduswriter/Simple-DataTables
 
 .dataTable-wrapper .dataTable-bottom .dataTable-pagination .dataTable-pagination-list .active a {
   background: transparent;
-  background-image: linear-gradient(310deg, #7928CA 0%, #FF0080 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
   box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.09), 0 2px 3px -1px rgba(0, 0, 0, 0.07);
   color: #fff;
   border: none;
@@ -32297,7 +32308,7 @@ Github: https://github.com/fiduswriter/Simple-DataTables
 }
 
 .dataTable-wrapper .dataTable-bottom .dataTable-pagination .dataTable-pagination-list .active a:hover {
-  background-image: linear-gradient(310deg, #7928CA 0%, #FF0080 100%);
+  background-image: linear-gradient(310deg, #5d1a14 0%, #f64936 100%);
 }
 
 .dataTable-wrapper.no-footer .dataTable-container {

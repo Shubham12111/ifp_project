@@ -4,9 +4,9 @@
 {% block title %} Signup {{ block.super }}{% endblock %}
 
 {% block content %}
-<div class="card card-plain">
-    <div class="card-header pb-0 text-left">
-      <h4 class="font-weight-bolder">Reset password</h4>
+<div class="card-header pb-0 text-start text-center">
+
+      <h5 class="font-weight-bolder">Reset password</h5>
       <p class="mb-0">You will receive an e-mail in maximum 60 seconds</p>
     </div>
 
@@ -26,5 +26,5 @@
             <a href="{% url 'login' %}" class="text-primary text-gradient font-weight-bold">Login</a>
         </p>
     </div>
-</div>
+
 {% endblock %}
