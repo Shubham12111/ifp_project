@@ -2,8 +2,11 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import User
 
-
 class LoginSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for user login.
+    """
+
     email = serializers.EmailField(
         label=('Email *'),
         max_length=100,
@@ -12,7 +15,6 @@ class LoginSerializer(serializers.ModelSerializer):
             "autofocus": True,
             "autocomplete": "off",
             "required": True,
-            
         },
         error_messages={
             "required": "This field is required.",
@@ -37,6 +39,7 @@ class LoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'password')
+
 
 class SignupSerializer(serializers.ModelSerializer):
     name = serializers.CharField(

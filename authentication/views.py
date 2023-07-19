@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.urls import reverse
 from .serializers import LoginSerializer, SignupSerializer, ForgotPasswordSerializer, VerifyOTPSerializer
 from infinity_fire_solutions.response_schemas import create_api_response
 
@@ -64,7 +65,9 @@ class LoginView(APIView):
 
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template for successful login
-                return self.render_html_response(serializer)
+                messages.success(request, 'Login failed. The credentials provided are incorrect. Please verify your login information and try again.')
+                return redirect(reverse('dashboard'))
+                #return self.render_html_response(serializer)
             else:
                 # Return JSON response with token
                 return create_api_response(status_code=status.HTTP_200_OK,
