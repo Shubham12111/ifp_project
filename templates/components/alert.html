@@ -1,12 +1,14 @@
 {% if messages %}
+<div class="text-left p-2 mb-2">
     {% for message in messages %}
     <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show text-white" role="alert" id="alert-message">
-        <span class="alert-text"><strong>{{ message.tags }}!</strong> {{ message }}</span>
+        <span class="alert-text"> {{ message }}</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
     {% endfor %}
+</div>
 {% endif %}
 
 <!-- Place the JavaScript code anywhere below the alert message's HTML code -->

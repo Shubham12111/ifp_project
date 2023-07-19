@@ -11,7 +11,7 @@ from django.contrib.auth import login
 from django.contrib.auth.models import Group
 from django.contrib.auth import logout
 from .serializers import LoginSerializer, SignupSerializer, ForgotPasswordSerializer, VerifyOTPSerializer
-
+from .models import User
 
 class LoginView(APIView):
     """
@@ -153,9 +153,19 @@ class ForgotPasswordView(APIView):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            # Render the HTML template with invalid serializer data
-            messages.info(request, "OTP will be sent to your email, if you're registered.")
-            return redirect('/auth/verify/')
+            email = serializer.validated_data.get('email')
+        
+            try:
+                user = User.objects.get(email=email)
+                # Email exists in the system, proceed with sending the OTP
+                # Render the HTML template with invalid serializer data
+                messages.info(request, f"Please note that an OTP (One-Time Password) has been sent to the email address {email}.")
+                return redirect(reverse('login'))
+            except User.DoesNotExist:
+                # Email does not exist in the system
+                messages.error(request, f"We apologize, but it seems that the email {email} is not associated with our records.")
+                return self.render_html_response(serializer)
+            
 
         else:
             # Invalid serializer data

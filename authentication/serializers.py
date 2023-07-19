@@ -1,6 +1,25 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
 from .models import User
+import re
+
+
+def custom_validate_password(value):
+    if 'password' in value.lower():
+        raise serializers.ValidationError({"password":'Password should not contain the word "password".'})
+    if len(value) < 8:
+        raise serializers.ValidationError({"password":'Password should be at least 8 characters long.'})
+    if not re.findall(r'\d', value):
+        raise serializers.ValidationError({"password":'The password must contain at least 1 digit.'})
+    if not re.findall(r'[A-Z]', value):
+        raise serializers.ValidationError({"password":'The password must contain at least 1 uppercase letter.'})
+    if not re.findall(r'[()[\]{}|\\`~!@#$%^&*_\-+=;:\'",<>./?]', value):
+        raise serializers.ValidationError({"password":'Password should contain a symbol.'})
+    if not re.findall(r'[a-z]', value):
+        raise serializers.ValidationError({"password":'The password must contain at least 1 lowercase letter (a-z).'})
+    return value
+
 
 class LoginSerializer(serializers.ModelSerializer):
     """
@@ -16,10 +35,12 @@ class LoginSerializer(serializers.ModelSerializer):
             "autocomplete": "off",
             "required": True,
             "autofocus": False,
+           
+            
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Email field cannot be blank.",
+            "blank": "Email is required.",
         },
     )
     password = serializers.CharField(
@@ -34,7 +55,7 @@ class LoginSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Password field cannot be blank.",
+            "blank": "Password is required.",
         },
     )
 
@@ -53,10 +74,12 @@ class SignupSerializer(serializers.ModelSerializer):
             "autocomplete": "off",
             "required": True,
             "autofocus": False,
+            'base_template': 'custom_input.html'
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "First Name field cannot be blank.",
+            "blank": "First Name is required.",
+             "invalid": "Last Name can only contain characters.",
         },
     )
     
@@ -69,10 +92,12 @@ class SignupSerializer(serializers.ModelSerializer):
             "autocomplete": "off",
             "required": True,
             "autofocus": False,
+            'base_template': 'custom_input.html'
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Last Name field cannot be blank.",
+            "blank": "Last Name is required.",
+            "invalid": "Last Name can only contain characters.",
         },
     )
     
@@ -88,7 +113,7 @@ class SignupSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Email field cannot be blank.",
+            "blank": "Email is required.",
         },
     )
     
@@ -104,7 +129,7 @@ class SignupSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Password field cannot be blank.",
+            "blank": "Password is required.",
         },
     )
     
@@ -120,7 +145,7 @@ class SignupSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Confirm Password field cannot be blank.",
+            "blank": "Confirm Password is required.",
         },
         write_only=True
     )
@@ -130,6 +155,8 @@ class SignupSerializer(serializers.ModelSerializer):
         fields = ('first_name', 'last_name', 'email', 'password', 'password2')
         
     def validate(self, data):
+        custom_validate_password(data.get('password'))
+        
         password = data.get('password')
         confirm_password = data.get('password2')
 
@@ -137,6 +164,17 @@ class SignupSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"password2": "Passwords do not match."})
 
         return data
+    
+    def validate_last_name(self, value):
+        if not re.match(r'^[a-zA-Z]+$', value):
+            raise serializers.ValidationError("Last Name can only contain characters.")
+        return value
+    
+    def validate_first_name(self, value):
+        if not re.match(r'^[a-zA-Z]+$', value):
+            raise serializers.ValidationError("Last Name can only contain characters.")
+        return value
+
 
     def validate_email(self, value):
         # Call the parent's is_valid() method to perform the default validationif 
@@ -164,7 +202,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Email field cannot be blank.",
+            "blank": "Email is required.",
         },
     )
 
