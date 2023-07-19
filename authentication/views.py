@@ -160,7 +160,8 @@ class ForgotPasswordView(APIView):
                 # Email exists in the system, proceed with sending the OTP
                 # Render the HTML template with invalid serializer data
                 messages.info(request, f"Please note that an OTP (One-Time Password) has been sent to the email address {email}.")
-                return redirect(reverse('login'))
+                return redirect(reverse('verify_otp'))
+
             except User.DoesNotExist:
                 # Email does not exist in the system
                 messages.error(request, f"We apologize, but it seems that the email {email} is not associated with our records.")
