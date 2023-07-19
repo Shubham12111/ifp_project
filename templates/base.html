@@ -32,12 +32,10 @@
         <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
             <!-- Navbar -->
             {% include 'includes/breadcrumb.html' %}
-        </main>
-
-    {% include 'includes/top_navbar.html' %}
-    {% block content %}
+            {% block content %}
     
-    {% endblock %}
+          {% endblock %}
+        </main>
 
 
     <!-- Footer -->

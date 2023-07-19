@@ -10,8 +10,9 @@ from django.urls import reverse
 from django.contrib.auth import login
 from django.contrib.auth.models import Group
 from django.contrib.auth import logout
-from .serializers import LoginSerializer, SignupSerializer, ForgotPasswordSerializer, VerifyOTPSerializer
+from .serializers import LoginSerializer, SignupSerializer, ForgotPasswordSerializer, VerifyOTPSerializer, UserProfileSerializer, ChangePasswordSerializer
 from .models import User
+from rest_framework.permissions import IsAuthenticated
 
 class LoginView(APIView):
     """
@@ -209,3 +210,49 @@ class VerifyOTPView(APIView):
             # Invalid serializer data
             # Render the HTML template with invalid serializer data
             return self.render_html_response(serializer)
+
+class ProfileView(APIView):
+    
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    serializer_class = UserProfileSerializer
+    template_name = "profile.html"
+
+    
+    def render_html_response(self, serializer):
+        """
+        Render HTML response using the provided serializer and template name.
+        """
+        return Response({'serializer': serializer}, template_name=self.template_name)
+
+    def get(self, request):
+        """
+        Handle GET request for login page.
+        """
+        # return redirect(reverse('dashboard'))
+        
+        serializer = self.serializer_class()
+        # Render the HTML template for login page
+        return self.render_html_response(serializer)
+
+class ChangePasswordView(APIView):
+    
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    serializer_class = ChangePasswordSerializer
+    template_name = "change_password.html"
+
+    
+    def render_html_response(self, serializer):
+        """
+        Render HTML response using the provided serializer and template name.
+        """
+        return Response({'serializer': serializer}, template_name=self.template_name)
+
+    def get(self, request):
+        """
+        Handle GET request for login page.
+        """
+        # return redirect(reverse('dashboard'))
+        
+        serializer = self.serializer_class()
+        # Render the HTML template for login page
+        return self.render_html_response(serializer)
