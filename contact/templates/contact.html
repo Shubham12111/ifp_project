@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} Add Contact {{ block.super }}{% endblock %}
+
+{% block content %}
+
+<!--form panels-->
+<div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
+  <h5 class="font-weight-bolder mb-0">About me</h5>
+  <p class="mb-0 text-sm">Mandatory informations</p>
+  <div class="multisteps-form__content">
+    <div class="row mt-3">
+      <div class="col-12 col-sm-6">
+  
+
+      <form role="form" method="POST" autocomplete="off" class="row">
+        {% csrf_token %}
+        {% render_form serializer %}
+     
+        <div class="text-center">
+          <button type="submit" class="btn btn-lg bg-gradient-primary w-100 mt-4 mb-0">Submit</button>
+        </div>
+      </form> 
+          </div>
+        </div> 
+  
+        {% endblock %}
