@@ -4,35 +4,15 @@
 {% block title %} Profile Settings {{ block.super }}{% endblock %}
 {% block content %}
 <div class="container-fluid my-3 py-3">
-    {% include 'includes/profile_actions.html' %}
+    {% include 'authentication/profile_actions.html' %}
 
     <div class="col-lg-9 mt-lg-0 mt-4">
       {% include 'components/alert.html' %}
-        <div class="card card-body" id="profile">
-            <div class="row justify-content-center align-items-center">
-              <div class="col-sm-auto col-8 my-auto">
-                <div class="h-100">
-                  <h5 class="mb-1 font-weight-bolder">
-                    {{ request.user.first_name|title }} {{ request.user.last_name|title }}  
-                  </h5>
-                  <p class="mb-0 font-weight-bold text-sm">
-                    
-                    {% for group in user.groups.all %}
-                    {{ group.name }}
-                    {% if not forloop.last %} / {% endif %}
-                    {% endfor %}
-                  </p>
-                </div>
-              </div>
-              <div class="col-sm-auto ms-sm-auto mt-sm-0 mt-3 d-flex">
-                
-              </div>
-            </div>
-          </div>
+      {% include 'authentication/profile_info.html' %}
         <!-- Card Basic Info -->
         <div class="card mt-4" id="basic-info">
             <div class="card-header">
-            <h5>Basic Info</h5>
+            <h5>General Information</h5>
             </div>
             <div class="card-body pt-0">
                 <form role="form"  method="POST" autocomplete="off" >
@@ -40,7 +20,7 @@
                         {% csrf_token %}
                         {% render_form serializer %}
                     </div>
-                    <button class="btn bg-gradient-dark btn-sm float-end mt-6 mb-0">Update</button>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-6 mb-0">Update Profile</button>
                 </form>
             </div>
         </div>

@@ -245,7 +245,6 @@ class ProfileView(APIView):
             return redirect(reverse('profile'))
 
         else:
-            print(serializer.errors)
             return self.render_html_response(serializer)
 
 class ChangePasswordView(APIView):
@@ -270,3 +269,14 @@ class ChangePasswordView(APIView):
         serializer = self.serializer_class()
         # Render the HTML template for login page
         return self.render_html_response(serializer)
+
+    def post(self, request):
+        data = request.data
+        serializer = self.serializer_class(data=data, instance=request.user, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, f"Password updated successfully. Please use your new password for future logins.")
+            return redirect(reverse('profile'))
+
+        else:
+            return self.render_html_response(serializer)

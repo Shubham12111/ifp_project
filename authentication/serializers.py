@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.renderers import HTMLFormRenderer
+from django.contrib.auth import update_session_auth_hash
 
 from cities_light.models import City, Country, Region
 from .models import User
@@ -69,7 +70,7 @@ class LoginSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
+            'base_template': 'custom_full_width_password.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -91,13 +92,12 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
             'base_template': 'custom_input.html'
         },
         error_messages={
             "required": "This field is required.",
             "blank": "First Name is required.",
-             "invalid": "Last Name can only contain characters.",
+            "invalid": "Last Name can only contain characters.",
         },
     )
     
@@ -109,7 +109,6 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
             'base_template': 'custom_input.html'
         },
         error_messages={
@@ -143,7 +142,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
+           'base_template': 'custom_password.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -159,7 +158,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
+           'base_template': 'custom_password.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -375,7 +374,76 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     
 class ChangePasswordSerializer(serializers.ModelSerializer):
-    
+    old_password = serializers.CharField(
+        label=('Old Password *'),
+        max_length=100,
+        style={
+            "input_type": "password",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+           'base_template': 'custom_full_width_password.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Old Password is required.",
+        },
+    )
+    password = serializers.CharField(
+        label=('New Password *'),
+        max_length=100,
+        style={
+            "input_type": "password",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+           'base_template': 'custom_full_width_password.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "New Password is required.",
+        },
+    )
+    confirm_password = serializers.CharField(
+        label=('Confirm Password *'),
+        max_length=100,
+        style={
+            "input_type": "password",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+           'base_template': 'custom_full_width_password.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Confirm Password is required.",
+        },
+    )
+
     class Meta:
         model = User
-        fields = ['password']
+        fields = ['old_password','password', 'confirm_password']
+
+    def validate(self, data):
+        user = self.context['request'].user
+
+        if not user.check_password(data['old_password']):
+            raise serializers.ValidationError({"old_password":"The old password is incorrect."})
+        
+        if data['password'] == data['old_password']:
+            raise serializers.ValidationError({"password":"The new password cannot be the same as the old password."})
+
+        custom_validate_password(data.get('password'))   
+
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({"confirm_password":"The new passwords do not match."})
+
+        return data
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
+        instance.save()
+        # Update the user's session authentication hash
+        update_session_auth_hash(self.context['request'], instance)
+
+        return instance

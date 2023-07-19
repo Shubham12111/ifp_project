@@ -13,22 +13,15 @@
 {
     color : #000 !important;
 }
-.password-container 
-{
-    position: relative;
-}
 
 .password-toggle 
 {
-    position: absolute;
-    top: 28.59rem; /* 65% of 16px = 10.4px = 0.65rem (if base font-size is 16px) */
-    left: 21.3125rem; /* 37px = 2.3125rem (if base font-size is 16px) */
-    transform: translateY(-50%);
     cursor: pointer;
-}
-
-.password-field {
-padding-right: 30px;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
 }
 
 

@@ -42,7 +42,8 @@
               <li class="nav-item dropdown pe-2 d-flex align-items-center">
                 <a href="javascript:;" class="nav-link text-body p-0" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                    <span class="d-sm-inline d-none">   <i class="fa fa-user me-sm-1"></i>
-                    {{ request.user.first_name|title }} {{ request.user.last_name|title }}  </span>
+                   {% if request.user.first_name %}{{ request.user.first_name|title }}  {% endif %}
+                   {% if request.user.last_name %}{{ request.user.last_name|title }}   {% endif %}</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end px-2 py-3 me-sm-n4" aria-labelledby="dropdownMenuButton">
                 <li>
