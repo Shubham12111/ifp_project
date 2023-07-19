@@ -29,7 +29,7 @@ admin.site.index_title = "Infinity Fire Solutions Management"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
-    path('contact/',include('contact.urls'))
+    path('contact/',include('contact.urls')),
     path('',include('common_app.urls')),
 
 
