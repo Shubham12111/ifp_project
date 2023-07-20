@@ -1,90 +1,7 @@
 from rest_framework import serializers
-
 from .models import Contact,ContactType
 from cities_light.models import City, Country, Region
 
-
-class ContactTypeSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(
-        label=('Contact Type *'),
-        max_length=100,
-        style={
-            "input_type": "text",
-            "autofocus": True,
-            "autocomplete": "off",
-            "required": True,
-            'base_template': 'custom_select.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Contact type field cannot be blank.",
-        },
-    )
-    class Meta:
-        model = ContactType
-        fields = '__all__'
-
-
-class CountrySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(
-        label=('Country *'),
-        max_length=100,
-        style={
-            "input_type": "text",
-            "autofocus": True,
-            "autocomplete": "off",
-            "required": True,
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Country field cannot be blank.",
-        },
-    )
-    class Meta:
-        model = Country
-        fields = '__all__'
-
-
-class CitySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(
-        label=('City *'),
-        max_length=100,
-        style={
-            "input_type": "text",
-            "autofocus": True,
-            "autocomplete": "off",
-            "required": True,
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "City field cannot be blank.",
-        },
-    )
-    class Meta:
-        model = Country
-        fields = '__all__'
-
-
-class RegionSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(
-        label=('State *'),
-        max_length=100,
-        style={
-            "input_type": "text",
-            "autofocus": True,
-            "autocomplete": "off",
-            "required": True,
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "State field cannot be blank.",
-        },
-    )
-    class Meta:
-        model = Region
-        fields = '__all__'
-
-    
 class ContactSerializer(serializers.ModelSerializer):
     name = serializers.CharField(
         label=('Name *'),
@@ -110,10 +27,9 @@ class ContactSerializer(serializers.ModelSerializer):
         max_length=100,
         style={
             "input_type": "email",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
             'base_template': 'custom_input.html'
         },
         error_messages={
@@ -123,13 +39,12 @@ class ContactSerializer(serializers.ModelSerializer):
     )
     phone_number = serializers.CharField(
         label=('Phone *'),
-        max_length=12,
+        max_length=14,
         style={
             "input_type": "text",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
             "base_template": 'custom_input.html'
         },
         error_messages={
@@ -137,10 +52,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "blank": "Phone number field cannot be blank.",
         },
     )
-    contact_type = serializers.PrimaryKeyRelatedField(
-        queryset=ContactType.objects.all(), 
-        required=True,label=('Contact Type *')
-        )
+   
 
     job_title = serializers.CharField(
         label=('Job Title'),
@@ -148,19 +60,17 @@ class ContactSerializer(serializers.ModelSerializer):
         required= False,
         style={
             "input_type": "text",
-            "autofocus": True,
-            "autocomplete": "off",
             "autofocus": False,
+            "autocomplete": "off",
             "base_template": 'custom_input.html'
         }
     )
     company = serializers.CharField(
-        label=('Company'),
+        label=('Company Name'),
         max_length=100,
         required=False,
         style={
             "input_type": "text",
-            "autofocus": True,
             "autocomplete": "off",
             "autofocus": False,
             "base_template": 'custom_input.html'
@@ -172,32 +82,58 @@ class ContactSerializer(serializers.ModelSerializer):
         required=False,
         style={
             "input_type": "text",
-            "autofocus": True,
-            "autocomplete": "off",
             "autofocus": False,
-            "base_template": 'custom_input.html'
+            "autocomplete": "off",
         }
     )
-    country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), required=False)
-    city = serializers.PrimaryKeyRelatedField(queryset=City.objects.all(), required=False)
-    state = serializers.PrimaryKeyRelatedField(queryset=Region.objects.all(), required=False)
+    
+    contact_type = serializers.PrimaryKeyRelatedField(
+        label=('Contact Type *'),
+        required=True,
+        queryset=ContactType.objects.all(),
+        style={
+            'base_template': 'custom_select.html'
+        },
+    )
+     
+    country = serializers.PrimaryKeyRelatedField(
+        queryset=Country.objects.all(),
+        default=None,
+        style={
+            'base_template': 'custom_select.html'
+        },
+    )
+    city = serializers.PrimaryKeyRelatedField(
+        queryset=City.objects.all(),
+        default=None,
+        style={
+            'base_template': 'custom_select.html'
+        },
+    )
+    state = serializers.PrimaryKeyRelatedField(
+        queryset=Region.objects.all(),
+        default=None,
+        style={
+            'base_template': 'custom_select.html'
+        },
+    )
 
     
     pincode = serializers.CharField(
         label=('Pincode'),
-        max_length=10,
+        max_length=6,
         required=False,
         style={
             "input_type": "text",
-            "autofocus": True,
+            "autofocus": False,
             "autocomplete": "off",
-            "autofocus": False
+            'base_template': 'custom_input.html'
         }
     )
 
     class Meta:
         model = Contact
-        fields = ['name', 'email', 'phone_number', 'contact_type','job_title','company','address','country','city','state','pincode']
+        fields = ['contact_type','name', 'email', 'phone_number','job_title','company','country','city','state','pincode','address']
 
         extra_kwargs={
             'name':{'required':True},

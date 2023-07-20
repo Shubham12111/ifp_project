@@ -1,7 +1,7 @@
 MENU_ITEMS = [
     {'url': '/', 'name': 'Dasboard', 'icon': 'fas fa-chart-bar', 'order': 1},
     {
-        'url': '/contact/',
+        'url': '/contact/list/',
         'name': 'Contacts',
         # 'submenu': [
         #     {'url': '/products/category1/', 'name': 'Category 1', 'icon': '<svg>Your SVG Icon Markup Here</svg>'},

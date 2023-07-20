@@ -1,22 +1,9 @@
 <!-- add_contact.html -->
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %} Add Contact {{ block.super }}{% endblock %}
-
 {% block content %}
-
-{% if messages %}
-  <div class="container">
-    {% for message in messages %}
-      <div class="alert {% if message.level == 'success' %}alert-success{% elif message.level == 'info' %}alert-info{% elif message.level == 'warning' %}alert-warning{% elif message.level == 'error' %}alert-danger{% endif %} bg-light">
-        <strong>{{ message }}</strong>
-      </div>
-    {% endfor %}
-  </div>
-{% endif %}
-
-
+{% include 'components/alert.html' %}
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-12">
@@ -29,7 +16,7 @@
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
               <div class="ms-auto my-auto">
-                <a href="{% url 'add' %}" class="btn bg-gradient-primary btn-sm mb-0" target="_blank">+&nbsp; New Contact</a>
+                <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0" target="_blank">+&nbsp; New Contact</a>
               </div>
             </div>
           </div>
@@ -54,7 +41,7 @@
                   <td class="text-sm">{{contact.phone_number}}</td>
                   <td class="text-sm">{{contact.contact_type}}</td>
                   <td class="text-sm">
-                    <a href="{% url 'edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit contact">
+                    <a href="{% url 'contact_edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit contact">
                       <i class="fas fa-user-edit text-dark"></i>
                     </a>
                     <a href="" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Chat">
@@ -92,22 +79,7 @@
       perPage: 25
     });
 
-    {% comment %} document.querySelectorAll(".export").forEach(function(el) {
-      el.addEventListener("click", function(e) {
-        var type = el.dataset.type;
-
-        var data = {
-          type: type,
-          filename: "soft-ui-" + type,
-        };
-
-        if (type === "csv") {
-          data.columnDelimiter = "|";
-        }
-
-        dataTableSearch.export(data);
-      });
-    }); {% endcomment %}
+    
   };
 
 </script>

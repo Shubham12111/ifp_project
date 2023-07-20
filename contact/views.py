@@ -102,7 +102,7 @@ class ContactAddUpdateView(APIView):
                     messages.success(request, "Great! your contact has been updated successfully.")
                 else:
                     messages.success(request, "Congratulations! your contact has been added successfully.")
-                return redirect(reverse('list'))
+                return redirect(reverse('contact_list'))
 
             else:
             # Return JSON response with success message and serialized data
@@ -153,7 +153,7 @@ class ContactDeleteView(APIView):
         
         if request.accepted_renderer.format == 'html':
             messages.success(request, "Your contact has been deleted successfully!")
-            return redirect(reverse('list'))
+            return redirect(reverse('contact_list'))
         else:
             return create_api_response(status_code=status.HTTP_200_OK,
                                        message="Your contact has been deleted successfully!")  
