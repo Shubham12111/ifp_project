@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
     path('contact/',include('contact.urls')),
+    path('todo/',include('todo.urls')),
     path('',include('common_app.urls')),
 
 

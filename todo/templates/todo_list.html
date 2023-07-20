@@ -1,0 +1,86 @@
+<!-- add_contact.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Todo List {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mt-4">
+        <div class="col-lg-12 col-12">
+          <div class="card">
+            <div class="card-header p-3">
+              <div class="row">
+                <div class="col-md-6">
+                  <h6 class="mb-0">ToDo List</h6>
+                </div>
+                
+              </div>
+              <hr class="horizontal dark mb-0">
+            </div>
+            <div class="card-body p-3 pt-0">
+              <ul class="list-group list-group-flush" data-toggle="checklist">
+                {% for todo_data in todo_list %}
+                  
+                  <li class="list-group-item border-0 flex-column align-items-start ps-0 py-0 mb-3">
+                    <div class="checklist-item {% if todo_data.status == 'in-progress' %}checklist-item-warning{% elif todo_data.status == 'completed' %}checklist-item-success{% else %}checklist-item-primary{% endif %} ps-2 ms-3">
+                      <div class="d-flex align-items-center">
+                        <h6 class="mb-0 text-dark font-weight-bold text-sm col-7">{{ todo_data.title }}</h6>
+                        <div class="dropstart ms-auto pe-0">
+                          <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
+                          </a>
+                          <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">
+                            <li><a class="dropdown-item border-radius-md" href="javascript:;">Edit</a></li>
+                            <li><a class="dropdown-item border-radius-md" href="javascript:;">View</a></li>
+                            <li><a class="dropdown-item border-radius-md" href="javascript:;">Delete</a></li>
+                          </ul>
+                        </div>
+                      </div>
+                      <div class="d-flex align-items-center ms-4 mt-3 ps-1 row">
+                        <div class="col-lg-4 col-sm-12 col-xs-12">
+                            <p class="text-xs mb-1 text-secondary font-weight-bold">{{ todo_data.description|truncatechars:200 }}</p>   
+                            <span class="text-xs text-secondary">{{ todo_data.start_date|date:"M d, Y" }} - {{ todo_data.end_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 col-xs-12">
+                          <p class="text-xs mb-1 text-secondary font-weight-bold">Module</p>
+                          <span class="text-xs font-weight-bolder">{{ todo_data.module.name|title }}</span>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 col-xs-12">
+                            <p class="text-xs mb-1 text-secondary font-weight-bold">Assgined To</p>
+                            <span class="text-xs font-weight-bolder">{{ todo_data.assigned_to}}</span>
+                          </div>
+                          <div class="col-lg-2 col-sm-12 col-xs-12">
+                          <p class="text-xs mb-1 text-secondary font-weight-bold">Status</p>
+                          <span class="text-xs font-weight-bolder {% if todo_data.status == 'in-progress' %}text-warning{% elif todo_data.status == 'completed' %}text-success{% else %}text-primary{% endif %}">
+                            {{ todo_data.status|title }}
+                          </span>
+                        </div>
+                        <div class="col-lg-2 col-sm-12 col-xs-12">
+                          <p class="text-xs mb-1 text-secondary font-weight-bold">Priority</p>
+                          <span class="text-xs font-weight-bolder {% if todo_data.priority == 'high' %}text-danger{% elif todo_data.priority == 'medium' %}text-warning{% else %}text-primary{% endif %}">
+                            {{ todo_data.priority|title }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <hr class="horizontal dark mt-4 mb-0">
+                  </li>
+                  
+                  
+                {% endfor %}
+               
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+</div>
+
+
+
+{% endblock %}
+{% block extra_js %}
+
+{% endblock %}     
+  
