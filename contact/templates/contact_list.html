@@ -16,7 +16,7 @@
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
               <div class="ms-auto my-auto">
-                <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0" target="_blank">+&nbsp; New Contact</a>
+                <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0" >+&nbsp; New Contact</a>
               </div>
             </div>
           </div>
@@ -41,13 +41,13 @@
                   <td class="text-sm">{{contact.phone_number}}</td>
                   <td class="text-sm">{{contact.contact_type}}</td>
                   <td class="text-sm">
-                    <a href="{% url 'contact_edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit contact">
+                    <a href="{% url 'contact_edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
                       <i class="fas fa-user-edit text-dark"></i>
                     </a>
                     <a href="" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Chat">
                       <i class="ni ni-chat-round text-secondary"></i>
                     </a>
-                    <a href="" data-bs-toggle="tooltip" data-bs-original-title="Delete product">
+                    <a href="" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact">
                       <i class="fas fa-trash text-danger"></i>
                     </a>
                   </td>
