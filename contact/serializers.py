@@ -13,6 +13,7 @@ class ContactTypeSerializer(serializers.ModelSerializer):
             "autofocus": True,
             "autocomplete": "off",
             "required": True,
+            'base_template': 'custom_select.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -22,6 +23,7 @@ class ContactTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactType
         fields = '__all__'
+
 
 class CountrySerializer(serializers.ModelSerializer):
     name = serializers.CharField(
@@ -82,7 +84,7 @@ class RegionSerializer(serializers.ModelSerializer):
         model = Region
         fields = '__all__'
 
-
+    
 class ContactSerializer(serializers.ModelSerializer):
     name = serializers.CharField(
         label=('Name *'),
@@ -121,9 +123,9 @@ class ContactSerializer(serializers.ModelSerializer):
     )
     phone_number = serializers.CharField(
         label=('Phone *'),
-        max_length=100,
+        max_length=12,
         style={
-            "input_type": "number",
+            "input_type": "text",
             "autofocus": True,
             "autocomplete": "off",
             "required": True,
@@ -135,7 +137,10 @@ class ContactSerializer(serializers.ModelSerializer):
             "blank": "Phone number field cannot be blank.",
         },
     )
-    contact_type = serializers.PrimaryKeyRelatedField(queryset=ContactType.objects.all(), required=True,label=('Contact Type *'))
+    contact_type = serializers.PrimaryKeyRelatedField(
+        queryset=ContactType.objects.all(), 
+        required=True,label=('Contact Type *')
+        )
 
     job_title = serializers.CharField(
         label=('Job Title'),
@@ -145,7 +150,8 @@ class ContactSerializer(serializers.ModelSerializer):
             "input_type": "text",
             "autofocus": True,
             "autocomplete": "off",
-            "autofocus": False
+            "autofocus": False,
+            "base_template": 'custom_input.html'
         }
     )
     company = serializers.CharField(
@@ -156,7 +162,8 @@ class ContactSerializer(serializers.ModelSerializer):
             "input_type": "text",
             "autofocus": True,
             "autocomplete": "off",
-            "autofocus": False
+            "autofocus": False,
+            "base_template": 'custom_input.html'
         }
     )
     address = serializers.CharField(
@@ -167,7 +174,8 @@ class ContactSerializer(serializers.ModelSerializer):
             "input_type": "text",
             "autofocus": True,
             "autocomplete": "off",
-            "autofocus": False
+            "autofocus": False,
+            "base_template": 'custom_input.html'
         }
     )
     country = serializers.PrimaryKeyRelatedField(queryset=Country.objects.all(), required=False)
@@ -177,7 +185,7 @@ class ContactSerializer(serializers.ModelSerializer):
     
     pincode = serializers.CharField(
         label=('Pincode'),
-        max_length=100,
+        max_length=10,
         required=False,
         style={
             "input_type": "text",
@@ -198,3 +206,4 @@ class ContactSerializer(serializers.ModelSerializer):
             'contact_type':{'required':True}
 
         }
+

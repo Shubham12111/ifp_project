@@ -6,54 +6,110 @@
 
 {% block content %}
 
+{% if messages %}
+  <div class="container">
+    {% for message in messages %}
+      <div class="alert {% if message.level == 'success' %}alert-success{% elif message.level == 'info' %}alert-info{% elif message.level == 'warning' %}alert-warning{% elif message.level == 'error' %}alert-danger{% endif %} bg-light">
+        <strong>{{ message }}</strong>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+
 <div class="container-fluid py-4">
-  <div class="row mt-4">
+  <div class="row">
     <div class="col-12">
       <div class="card">
         <!-- Card header -->
-        <div class="card-header font-weight-bolder">
-          Contact List
+        <div class="card-header pb-0">
+          <div class="d-lg-flex">
+            <div>
+              <h5 class="mb-0">Contacts</h5>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              <div class="ms-auto my-auto">
+                <a href="{% url 'add' %}" class="btn bg-gradient-primary btn-sm mb-0" target="_blank">+&nbsp; New Contact</a>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="table-responsive">
-          <table class="table table-flush" id="datatable-search">
-            <thead class="thead-light">
-              <tr>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Email</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Phone</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Contact Type</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Job Title</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
+        <div class="card-body px-0 pb-0">
+          <div class="table-responsive">
+            <table class="table table-flush" id="contact-list">
+              <thead class="thead-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Contact Type</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {% for contact in contacts %}
-                <td class="text-sm font-weight-normal">{{contact.name}}</td>
-                <td class="text-sm font-weight-normal">{{contact.email}}</td>
-                <td class="text-sm font-weight-normal">{{contact.phone_number}}</td>
-                <td class="text-sm font-weight-normal">{{contact.contact_type}}</td>
-                <td class="text-sm font-weight-normal">{{contact.job_title}}</td>
-               
-        
-          </tr> 
-              {% endfor %}
-        
-            </tbody>
-          </table>
+                <tr>
+                  <td class="text-sm">{{contact.name}}</td>
+                  <td class="text-sm">{{contact.email}}</td>
+                  <td class="text-sm">{{contact.phone_number}}</td>
+                  <td class="text-sm">{{contact.contact_type}}</td>
+                  <td class="text-sm">
+                    <a href="{% url 'edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit contact">
+                      <i class="fas fa-user-edit text-dark"></i>
+                    </a>
+                    <a href="" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Chat">
+                      <i class="ni ni-chat-round text-secondary"></i>
+                    </a>
+                    <a href="" data-bs-toggle="tooltip" data-bs-original-title="Delete product">
+                      <i class="fas fa-trash text-danger"></i>
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              
+            </table>
+          </div>
         </div>
-   
+      </div>
+    </div>
+  </div>
+</div>
+
+
   
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+
 <script>
 
+  if (document.getElementById('contact-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25
+    });
 
-  const dataTableSearch = new simpleDatatables.DataTable("#datatable-search", {
-    searchable: true,
-    fixedHeight: true
-  });
+    {% comment %} document.querySelectorAll(".export").forEach(function(el) {
+      el.addEventListener("click", function(e) {
+        var type = el.dataset.type;
+
+        var data = {
+          type: type,
+          filename: "soft-ui-" + type,
+        };
+
+        if (type === "csv") {
+          data.columnDelimiter = "|";
+        }
+
+        dataTableSearch.export(data);
+      });
+    }); {% endcomment %}
+  };
+
 </script>
 {% endblock %}     
   
