@@ -7,7 +7,7 @@
     </label>
   {% endif %}
 
-  <select class="form-control" name="{{ field.name }}">
+  <select class="form-control" name="{{ field.name }}" id="choices-button-{{ field.name }}" >
     {% if field.allow_null or field.allow_blank %}
       <option value="" {% if not field.value %}selected{% endif %}>--------</option>
     {% endif %}
@@ -32,3 +32,4 @@
     <span class="help-block">{{ field.help_text|safe }}</span>
   {% endif %}
 </div>
+

@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-3&1voj3_&(tzrsww4^_!x!wht%0a2&x@jc@vw(y!23di798(6^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['54ad-49-249-18-102.ngrok-free.app','127.0.0.1','192.168.1.210']
 
 
 # Application definition
@@ -86,8 +86,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
-        'USER': os.environ.get('DB_USER', ''),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'root'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': os.environ.get('DB_PORT', '3306'),
     }
@@ -158,4 +158,10 @@ AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = '/auth/login/'
 
 #COUNTRY
+# settings.py
+
+# Include data for English language translations
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
+
+# Include data for the United Kingdom (UK)
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']
