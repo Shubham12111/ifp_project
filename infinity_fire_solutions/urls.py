@@ -33,4 +33,5 @@ urlpatterns = [
     path('',include('common_app.urls')),
 
 
+
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
