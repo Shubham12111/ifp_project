@@ -338,7 +338,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         },
     )
     pincode = serializers.CharField(
-        max_length=10,
+        max_length=6,
         required=False,
         allow_blank=True,
         allow_null=True,
@@ -350,24 +350,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone_number', 'country', 'city', 'state', 'pincode','address']
-    
 
-    def get_default_country(self):
-        # Replace this logic with your desired default selection
-        return Country.objects.first()
-
-    def get_default_city(self):
-        # Replace this logic with your desired default selection
-        return City.objects.first()
-
-    def get_default_state(self):
-        # Replace this logic with your desired default selection
-        return Region.objects.first()
-    
-    def validate_last_name(self, value):
-        if not re.match(r'^[a-zA-Z]+$', value):
-            raise serializers.ValidationError("Last Name can only contain characters.")
-        return value
     
     def validate_first_name(self, value):
         if not re.match(r'^[a-zA-Z]+$', value):

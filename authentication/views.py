@@ -57,7 +57,9 @@ class LoginView(APIView):
                 # Render the HTML template with error message
                 messages.error(request, 'Login failed. The credentials provided are incorrect. Please verify your login information and try again.')
                 return self.render_html_response(serializer)
-
+            if user.is_superuser:
+                messages.error(request, 'Login failed. The credentials provided are incorrect. Please verify your login information and try again.')
+                return self.render_html_response(serializer)
             # Render the HTML template for successful login
             login(request, user)
             messages.success(request, 'Congratulations! You have successfully logged in to your account. Enjoy your experience!')

@@ -1,3 +1,4 @@
+
 from django.contrib import messages
 from django.views import View
 from django.urls import reverse
@@ -6,6 +7,10 @@ from django.http import Http404
 from django.http import JsonResponse
 
 from rest_framework import generics, status, filters
+from django.shortcuts import render
+from django.views import View
+from .models import *
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer,JSONRenderer
@@ -41,6 +46,7 @@ class ContactListView(generics.ListAPIView):
             return Response({'contacts': queryset}, template_name=self.template_name)
         # If the client accepts JSON, serialize the data and return it
         serializer = self.serializer_class(queryset, many=True)
+
         return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
@@ -153,12 +159,12 @@ class ContactDeleteView(APIView):
             return create_api_response(status_code=status.HTTP_200_OK,
                                        message="Your contact has been deleted successfully!")  
 
+      
+      
+class MessageListView(View):
+    template_name = 'messages.html'
 
-            
-
-        
-
-
-
-
+    def get(self, request):
+        messages = Contact.objects.all()
+        return render(request, self.template_name, {'messages': messages})
 

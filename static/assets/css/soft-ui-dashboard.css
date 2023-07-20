@@ -9098,7 +9098,7 @@ fieldset:disabled .btn {
   justify-content: flex-start !important;
 }
 
-.justify-content-end {
+.justify-content-start {
   justify-content: flex-end !important;
 }
 

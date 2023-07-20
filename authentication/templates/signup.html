@@ -10,7 +10,7 @@
     <p class="mb-0">Enter your details to register</p>
   </div>
   <div class="card-body pb-3">
-    <form role="form" method="POST" autocomplete="off">
+    <form role="form" method="POST" autocomplete="off" class="row">
       {% csrf_token %}
       {% render_form serializer %}
       <div class="text-center">
