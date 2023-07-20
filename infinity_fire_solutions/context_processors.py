@@ -23,8 +23,15 @@ def breadcrumbs(request):
     Context processor for generating breadcrumbs data based on the current URL.
     """
     current_path = request.path
-    include_paths = ['/add/', '/edit/']  # Add the URLs or paths to include in breadcrumbs
+    include_paths = ['/add/', '/edit/', '/auth/profile/']
+
     breadcrumbs_data = []
+    
+    paths_dict = {
+        '/add/': 'Add',
+        '/edit/': 'Edit',
+        '/auth/profile/': 'Profile',
+        }
     
     # Find the matching breadcrumb for the current URL
     menu_items = sorted(MENU_ITEMS, key=lambda item: item.get('order', float('inf')))
@@ -32,8 +39,11 @@ def breadcrumbs(request):
     breadcrumb = find_breadcrumb(menu_items, current_path)
 
     try:
-        if breadcrumb and breadcrumb['url'] == current_path or current_path in include_paths:
+        if breadcrumb and breadcrumb['url'] == current_path:
             breadcrumbs_data.append(breadcrumb)
+        elif current_path in include_paths:
+            breadcrumbs_data.append({'url': current_path, 'name': paths_dict.get(current_path)})
+        
         else:
             breadcrumbs_data.append({'url': current_path, 'name': current_path})
     except KeyError:

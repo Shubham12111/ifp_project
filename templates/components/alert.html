@@ -18,7 +18,11 @@
         if (alertMessage) {
             alertMessage.remove();
         }
-    }, 5000); // 20 seconds
+        var divElement = document.querySelector('.text-left.p-2.mb-2');
+        if (divElement) {
+            divElement.remove();
+        }
+    }, 4000); // 20 seconds
 </script>
 
     

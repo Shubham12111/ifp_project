@@ -1,103 +1,27 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %} Account Settings {{ block.super }}{% endblock %}
+{% block title %} Profile Settings {{ block.super }}{% endblock %}
 {% block content %}
 <div class="container-fluid my-3 py-3">
-    {% include 'includes/profile_actions.html' %}
+    {% include 'authentication/profile_actions.html' %}
 
     <div class="col-lg-9 mt-lg-0 mt-4">
+      {% include 'components/alert.html' %}
+      {% include 'authentication/profile_info.html' %}
         <!-- Card Basic Info -->
-        <div class="card" id="basic-info">
+        <div class="card mt-4" id="basic-info">
             <div class="card-header">
-            <h5>Basic Info</h5>
+            <h5>General Information</h5>
             </div>
             <div class="card-body pt-0">
-                <form role="form"  method="POST" autocomplete="off" class='row'>
-                    {% csrf_token %}
-                    {% render_form serializer %}
-                {% comment %} <div class="row">
-                    <div class="col-6">
-                        <label class="form-label">First Name</label>
-                            <div class="input-group">
-                                <input id="firstName" name="firstName" class="form-control" type="text" placeholder="Alec" required="required">
-                            </div>
+                <form role="form"  method="POST" autocomplete="off" >
+                    <div class='row'>
+                        {% csrf_token %}
+                        {% render_form serializer %}
                     </div>
-                    <div class="col-6">
-                        <label class="form-label">Last Name</label>
-                            <div class="input-group">
-                                <input id="lastName" name="lastName" class="form-control" type="text" placeholder="Thompson" required="required">
-                            </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-4 col-6">
-                        <label class="form-label mt-4">I'm</label>
-                            <select class="form-control" name="choices-gender" id="choices-gender">
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                            </select>
-                    </div>
-                    <div class="col-sm-8">
-                    <div class="row">
-                        <div class="col-sm-5 col-5">
-                            <label class="form-label mt-4">Birth Date</label>
-                                <select class="form-control" name="choices-month" id="choices-month"></select>
-                        </div>
-                        <div class="col-sm-4 col-3">
-                            <label class="form-label mt-4">&nbsp;</label>
-                                <select class="form-control" name="choices-day" id="choices-day"></select>
-                        </div>
-                        <div class="col-sm-3 col-4">
-                            <label class="form-label mt-4">&nbsp;</label>
-                                <select class="form-control" name="choices-year" id="choices-year"></select>
-                        </div>
-                    </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <label class="form-label mt-4">Email</label>
-                        <div class="input-group">
-                            <input id="email" name="email" class="form-control" type="email" placeholder="example@email.com">
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label mt-4">Confirmation Email</label>
-                            <div class="input-group">
-                                <input id="confirmation" name="confirmation" class="form-control" type="email" placeholder="example@email.com">
-                            </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6">
-                        <label class="form-label mt-4">Your location</label>
-                            <div class="input-group">
-                                <input id="location" name="location" class="form-control" type="text" placeholder="Sydney, A">
-                            </div>
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label mt-4">Phone Number</label>
-                            <div class="input-group">
-                                <input id="phone" name="phone" class="form-control" type="number" placeholder="+40 735 631 620">
-                            </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 align-self-center">
-                        <label class="form-label mt-4">Language</label>
-                            <select class="form-control" name="choices-language" id="choices-language">
-                                <option value="English">English</option>
-                                <option value="French">French</option>
-                                <option value="Spanish">Spanish</option>
-                            </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label mt-4">Skills</label>
-                            <input class="form-control" id="choices-skills" type="text" value="vuejs, angular, react" placeholder="Enter something" />
-                    </div>
-                </div> {% endcomment %}
-                <button class="btn bg-gradient-dark btn-sm float-end mt-6 mb-0">Update</button>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-6 mb-0">Update Profile</button>
+
                 </form>
             </div>
         </div>

@@ -230,9 +230,24 @@ class ProfileView(APIView):
         """
         # return redirect(reverse('dashboard'))
         
-        serializer = self.serializer_class()
+
+        serializer = self.serializer_class(instance=request.user)
         # Render the HTML template for login page
         return self.render_html_response(serializer)
+    
+    def post(self, request):
+        data = request.data.copy()  # Create a mutable copy of request.data
+        data.update({'email': request.user.email})  # Update the copy with the new email value
+
+        serializer = self.serializer_class(data=data, instance=request.user)
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, f"Profile Updated: Your changes have been saved successfully! Thank you for keeping your information up to date")
+            return redirect(reverse('profile'))
+
+        else:
+            return self.render_html_response(serializer)
+
 
 class ChangePasswordView(APIView):
     
@@ -255,4 +270,17 @@ class ChangePasswordView(APIView):
         
         serializer = self.serializer_class()
         # Render the HTML template for login page
+
         return self.render_html_response(serializer)
+
+    def post(self, request):
+        data = request.data
+        serializer = self.serializer_class(data=data, instance=request.user, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, f"Password updated successfully. Please use your new password for future logins.")
+            return redirect(reverse('profile'))
+
+        else:
+            return self.render_html_response(serializer)
+
