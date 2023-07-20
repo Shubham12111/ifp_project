@@ -16,13 +16,11 @@
     <!-- Nucleo Icons -->
     <link href="{% static 'assets/css/nucleo-icons.css' %}" rel="stylesheet" />
     <link href="{% static 'assets/css/nucleo-svg.css' %}" rel="stylesheet" />
-    <link href="{% static 'assets/css/nucleo-svg.css' %}" rel="stylesheet" />
     <!-- CSS Files -->
     <link id="pagestyle" href="{% static 'assets/css/soft-ui-dashboard.css' %}" rel="stylesheet" /> 
      <!-- Custom CSS Files -->
      <link id="pagestyle" href="{% static 'assets/css/custom.css' %}" rel="stylesheet" />
-
-    {% block extra_css %}{% endblock %}
+  {% block extra_css %}{% endblock %}
 </head>
 
 <body>
@@ -42,7 +40,11 @@
       </div>
       <div class="container">
         <div class="row mt-lg-n12 mt-md-n12 mt-n12 justify-content-center">
-          <div class="col-xl-4 col-lg-5 col-md-7 mx-auto ">
+          {% if request.path == "/auth/signup/" %}
+          <div class="col-xl-5 col-lg-5 col-md-7 mx-auto ">
+          {% else %}
+            <div class="col-xl-4 col-lg-5 col-md-7 mx-auto ">
+          {% endif %}
             <div class="card z-index-0">
               <div class="position-relative text-center mt-5">
                 <img class="max-width-220 w-70 position-relative z-index-2 text-center" src="{% static 'assets/img/logo2.png' %}" alt="chat-img">
@@ -60,9 +62,6 @@
     <script src="{% static 'assets/js/core/bootstrap.min.js' %}"></script>
     <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
     <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
-    <!-- Kanban scripts -->
-    <script src="{% static 'assets/js/plugins/dragula/dragula.min.js' %}"></script>
-    <script src="{% static 'assets/js/plugins/jkanban/jkanban.js' %}"></script>
     <script>
         var win = navigator.platform.indexOf('Win') > -1;
         if (win && document.querySelector('#sidenav-scrollbar')) {
@@ -72,27 +71,39 @@
             Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
         }
     </script>
-
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-      var passwordField = document.querySelector('input[name="password"]');
-      var passwordToggle = document.querySelector('.password-toggle');
+      var passwordToggleIcons = document.querySelectorAll('.password-toggle');
 
-      passwordToggle.addEventListener('click', function() {
-        if (passwordField.getAttribute('type') === 'password') {
-          passwordField.setAttribute('type', 'text');
-          passwordToggle.classList.remove('fa-eye-slash');
-          passwordToggle.classList.add('fa-eye');
-        } else {
-          passwordField.setAttribute('type', 'password');
-          passwordToggle.classList.remove('fa-eye');
-          passwordToggle.classList.add('fa-eye-slash');
+      for (var i = 0; i < passwordToggleIcons.length; i++) {
+        passwordToggleIcons[i].addEventListener('click', togglePasswordVisibility);
+      }
+
+      function togglePasswordVisibility() {
+        var passwordInput = this.parentNode.parentNode.querySelector('input[type="password"]');
+        
+        var eyeIcon = this;
+        if (passwordInput) {
+              if (passwordInput.type === 'password') {
+              passwordInput.type = 'text';
+              eyeIcon.classList.remove('fa-eye-slash');
+              eyeIcon.classList.add('fa-eye');
+            }
+            else {
+              passwordInput.type = 'password';
+              eyeIcon.classList.remove('fa-eye');
+              eyeIcon.classList.add('fa-eye-slash');
+            }
         }
-      });
-    });
-
+        else {
+            var passwordInput = this.parentNode.parentNode.querySelector('input[type="text"]');
+              passwordInput.type = 'password';
+              eyeIcon.classList.remove('fa-eye');
+              eyeIcon.classList.add('fa-eye-slash');
+            }
+        
+        
+      }
     </script>
-
 
    <!-- Github buttons -->
     <script async defer src="https://buttons.github.io/buttons.js"></script>
