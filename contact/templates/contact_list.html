@@ -1,5 +1,5 @@
 <!-- add_contact.html -->
-{% extends 'authentication/base.html' %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block title %} Add Contact {{ block.super }}{% endblock %}
@@ -11,26 +11,18 @@
     <div class="col-12">
       <div class="card">
         <!-- Card header -->
-        <div class="card-header">
+        <div class="card-header font-weight-bolder">
           Contact List
         </div>
         <div class="table-responsive">
-          <table class="table table-flush" id="datatable-basic">
+          <table class="table table-flush" id="datatable-search">
             <thead class="thead-light">
               <tr>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Name</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Email</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Phone</th>
                 <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Contact Type</th>
-                {% comment %} <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Job Title</th> {% endcomment %}
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Company</th>
-                {% comment %} <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Address</th> {% endcomment %}
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Country</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">City</th>
-                {% comment %} <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">State</th> {% endcomment %}
-                {% comment %} <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Pincode</th> {% endcomment %}
-                {% comment %} <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Created Date</th>
-                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Updated Date</th> {% endcomment %}
+                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Job Title</th>
               </tr>
             </thead>
             <tbody>
@@ -40,16 +32,9 @@
                 <td class="text-sm font-weight-normal">{{contact.email}}</td>
                 <td class="text-sm font-weight-normal">{{contact.phone_number}}</td>
                 <td class="text-sm font-weight-normal">{{contact.contact_type}}</td>
-                {% comment %} <td class="text-sm font-weight-normal">{{contact.job_title}}</td> {% endcomment %}
-                <td class="text-sm font-weight-normal">{{contact.company}}</td>
-                {% comment %} <td class="text-sm font-weight-normal">{{contact.address}}</td> {% endcomment %}
-                <td class="text-sm font-weight-normal">{{contact.country}}</td>
-                <td class="text-sm font-weight-normal">{{contact.city}}</td>
-                {% comment %} <td class="text-sm font-weight-normal">{{contact.state}}</td>
-                <td class="text-sm font-weight-normal">{{contact.pincode}}</td>
-                <td class="text-sm font-weight-normal">{{contact.created_at}}</td>
-                <td class="text-sm font-weight-normal">{{contact.updated_at}}</td>
-            {% endcomment %}
+                <td class="text-sm font-weight-normal">{{contact.job_title}}</td>
+               
+        
           </tr> 
               {% endfor %}
         
@@ -57,8 +42,19 @@
           </table>
         </div>
    
-             
-      
+  
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script>
 
+
+  const dataTableSearch = new simpleDatatables.DataTable("#datatable-search", {
+    searchable: true,
+    fixedHeight: true
+  });
+</script>
+{% endblock %}     
   
   {% endblock %}

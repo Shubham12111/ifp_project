@@ -97,7 +97,8 @@ class SignupSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "This field is required.",
             "blank": "First Name is required.",
-            "invalid": "Last Name can only contain characters.",
+            "invalid": "First Name can only contain characters.",
+
         },
     )
     
@@ -246,7 +247,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('otp')
-        
+
 
 
 
@@ -276,6 +277,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "blank": "Last Name is required.",
             "invalid": "Last Name can only contain characters.",
         },
+
         style={
             "input_type": "text",
             "autofocus": False,

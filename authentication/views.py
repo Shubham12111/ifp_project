@@ -230,6 +230,7 @@ class ProfileView(APIView):
         """
         # return redirect(reverse('dashboard'))
         
+
         serializer = self.serializer_class(instance=request.user)
         # Render the HTML template for login page
         return self.render_html_response(serializer)
@@ -246,6 +247,7 @@ class ProfileView(APIView):
 
         else:
             return self.render_html_response(serializer)
+
 
 class ChangePasswordView(APIView):
     
@@ -268,6 +270,7 @@ class ChangePasswordView(APIView):
         
         serializer = self.serializer_class()
         # Render the HTML template for login page
+
         return self.render_html_response(serializer)
 
     def post(self, request):
@@ -280,3 +283,4 @@ class ChangePasswordView(APIView):
 
         else:
             return self.render_html_response(serializer)
+
