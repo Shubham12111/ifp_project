@@ -247,7 +247,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('otp')
-        
+
 
 
 
@@ -277,6 +277,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "blank": "Last Name is required.",
             "invalid": "Last Name can only contain characters.",
         },
+
         style={
             "input_type": "text",
             "autofocus": False,

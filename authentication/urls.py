@@ -1,6 +1,5 @@
 from django.urls import path
 from django.contrib.auth.decorators import login_required
-
 from .views import LoginView, SignupView, ForgotPasswordView, VerifyOTPView,LogoutView, ProfileView, ChangePasswordView
 
 
@@ -11,6 +10,4 @@ urlpatterns = [
     path('verify/', VerifyOTPView.as_view(), name='verify_otp'),
     path('logout/',  login_required(LogoutView.as_view()), name='logout'),
     path('profile/',  login_required(ProfileView.as_view()), name='profile'),
-    path('change_password/',  login_required(ChangePasswordView.as_view()), name='change_password'),
-   
-]
+    path('change_password/',  login_required(ChangePasswordView.as_view()), name='change_password')]
