@@ -3,6 +3,7 @@ from django.views import View
 from django.urls import reverse
 from django.shortcuts import render,redirect
 from django.http import Http404
+from django.http import JsonResponse
 
 from rest_framework import generics, status, filters
 from rest_framework.response import Response
@@ -30,6 +31,7 @@ class ContactListView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'email','contact_type__name']
     template_name = 'contact_list.html'
+    ordering_fields = ['created_at'] 
 
 
     def get(self, request, *args, **kwargs):
@@ -62,6 +64,69 @@ class ContactAddUpdateView(APIView):
         if kwargs.get('pk'):  # If a primary key is provided, it means we are editing an existing contact
             contact = self.get_object(kwargs['pk'])
             serializer = self.serializer_class(instance=contact)
+            return self.render_html_response(serializer)
+        else:
+            serializer = self.serializer_class()
+            return self.render_html_response(serializer)
+        
+    def get_object(self, pk):
+        try:
+            return Contact.objects.get(pk=pk)
+        except Contact.DoesNotExist:
+            raise Http404
+
+
+
+    def post(self, request, *args, **kwargs):
+        if kwargs.get('pk'):
+            # If a primary key is provided, it means we are editing an existing contact
+            contact = self.get_object(kwargs['pk'])
+            serializer = self.serializer_class(contact, data=request.data)
+        else:
+            # If no primary key is provided, it means we are adding a new contact
+            serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            if request.user.is_authenticated:  # Check if the user is authenticated
+                serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+            serializer.save()
+
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data
+                if kwargs.get('pk'):
+                    messages.success(request, "Great! your contact has been updated successfully.")
+                else:
+                    messages.success(request, "Congratulations! your contact has been added successfully.")
+                return redirect(reverse('list'))
+
+            else:
+            # Return JSON response with success message and serialized data
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                       message="Congratulations! your contact has been added/updated successfully.",
+                                       data=serializer.data
+                                       )
+        else:
+        # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data
+                return self.render_html_response(serializer)
+            else:   
+                # Return JSON response with error message
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                       message="We apologize for the inconvenience, but please review the below information.",
+                                       data=convert_serializer_errors(serializer.errors))
+
+            
+class ContactDeleteView(APIView):
+    serializer_class = ContactSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    # permission_classes = [IsAuthenticated]
+    template_name = 'contact.html'
+
+    def get(self, request, *args, **kwargs):
+        if kwargs.get('pk'):  # If a primary key is provided, it means we are editing an existing contact
+            contact = self.get_object(kwargs['pk'])
+            serializer = self.serializer_class(instance=contact)
         else:
             serializer = self.serializer_class()
         if request.accepted_renderer.format == 'html':
@@ -73,61 +138,22 @@ class ContactAddUpdateView(APIView):
             return Contact.objects.get(pk=pk)
         except Contact.DoesNotExist:
             raise Http404
+               
+    def delete(self, request, *args, **kwargs):
+        # Get the contact instance from the database
+        contact = self.get_object(kwargs['pk'])
 
-    
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                messages.success(request, "Congratulations! your contact has been added successfully.")
-                return redirect(reverse('list'))
-
-            else:
-                # Return JSON response with success message and serialized data
-                return create_api_response(status_code=status.HTTP_201_CREATED,
-                                       message="Congratulations! your contact has been added successfully.",
-                                       data=serializer.data
-                                        )
+        # Proceed with the deletion
+        contact.delete()
+        
+        if request.accepted_renderer.format == 'html':
+            messages.success(request, "Your contact has been deleted successfully!")
+            return redirect(reverse('list'))
         else:
-            # Invalid serializer data
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                context = {'serializer': serializer, 'errors': convert_serializer_errors(serializer.errors)}
-                return self.render_html_response(context)
-            else:
-                # Return JSON response with error message
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                           message="We apologize for the inconvenience, but please review the below information.",
-                                           data=convert_serializer_errors(serializer.errors))
-            
-    def put(self, request, *args, **kwargs):
-        instance = self.get_object(kwargs['pk'])
-        serializer = self.serializer_class(instance, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                messages.success(request, "Great! your contact has been updated successfully")
-                return redirect(reverse('list'))
-            
             return create_api_response(status_code=status.HTTP_200_OK,
-                                       message="Great! your contact has been updated successfully.",
-                                       data=serializer.data
-                                       )
-        else:
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                context = {'serializer': serializer, 'errors': convert_serializer_errors(serializer.errors)}
-                return self.render_html_response(context)
-            else:
-                # Return JSON response with error message
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                           message="We apologize for the inconvenience, but please review the below information.",
-                                           data=convert_serializer_errors(serializer.errors))
+                                       message="Your contact has been deleted successfully!")  
+
+
             
 
         
@@ -135,39 +161,4 @@ class ContactAddUpdateView(APIView):
 
 
 
-
-# class ContactRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Contact.objects.all()
-#     serializer_class = ContactSerializer
-#     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-#     renderer_classes = [TemplateHTMLRenderer,]
-#     template_name = 'contact_list.html'
-
-#     def render_to_response(self, context, **response_kwargs):
-#         return Response(context, template_name=self.template_name)
-
-#     def get(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         serializer = self.serializer_class(instance)
-#         return self.render_to_response({'serializer': serializer, 'action': 'Edit'})
-
-#     def put(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         serializer = self.serializer_class(instance, data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return create_api_response(status_code=status.HTTP_200_OK,
-#                                        message="Please ensure that the entered details are correct and try again.",
-#                                        data=serializer.data
-#                                        )
-#         else:
-#             return self.render_to_response({'serializer': serializer, 'action': 'Edit'})
-
-#     def delete(self, request, *args, **kwargs):
-#         instance = self.get_object()
-#         instance.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    
-    
 
