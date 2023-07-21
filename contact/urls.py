@@ -12,6 +12,6 @@ urlpatterns = [
     path('add/', login_required(ContactAddUpdateView.as_view()), name='contact_add'),
     path('edit/<int:pk>/', login_required(ContactAddUpdateView.as_view()), name='contact_edit'),
     path('delete/<int:pk>/',login_required(ContactDeleteView.as_view()),name='delete_contact'),
-    path('messages/', login_required(MessageListView.as_view()), name='messages'),
+    path('conversation/<int:pk>/', login_required(ConversationListView.as_view()), name='contact_conversation'),
 
 ]
