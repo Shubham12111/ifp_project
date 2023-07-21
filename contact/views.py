@@ -23,7 +23,7 @@ from infinity_fire_solutions.response_schemas import create_api_response,convert
 from cities_light.models import City, Country, Region
 
 from .models import Contact
-from .serializers import ContactSerializer
+from .serializers import ContactSerializer,ConversationSerializer
 
 
 class ContactListView(generics.ListAPIView):
@@ -106,7 +106,7 @@ class ContactAddUpdateView(APIView):
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template with invalid serializer data
                 if kwargs.get('pk'):
-                    messages.success(request, "Great! your contact has been updated successfully.")
+                    messages.success(request, "Congratulations! your contact has been updated successfully.")
                 else:
                     messages.success(request, "Congratulations! your contact has been added successfully.")
                 return redirect(reverse('contact_list'))
@@ -167,10 +167,66 @@ class ContactDeleteView(APIView):
 
       
       
-class MessageListView(View):
-    template_name = 'messages.html'
+class ConversationListView(APIView):
+    serializer_class = ConversationSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'conversation.html'
+    
+    def render_html_response(self, serializer):
+        """
+        Render HTML response using the provided serializer and template name.
+        """
+        return Response({'serializer': serializer}, template_name=self.template_name)
 
-    def get(self, request):
-        messages = Contact.objects.all()
-        return render(request, self.template_name, {'messages': messages})
+    def get(self, request, *args, **kwargs):
+        if kwargs.get('pk'):
+            contact_data = Contact.objects.filter(user_id=request.user, pk = kwargs.get('pk')).first()
+            if contact_data:
+                conversation_list = Conversation.objects.filter(user_id=request.user, 
+                                                                contact_id = contact_data).order_by('-created_at')
+                
+                return render(request, self.template_name,{'conversation_list':conversation_list,
+                                                           'serializer':self.serializer_class(),
+                                                           'contact_data':contact_data})
+            else:
+                messages.error(request, " You are not authorized to perform this action.")
+        else:
+            messages.error(request, " You are not authorized to perform this action.")
+        return redirect(reverse('contact_list'))
 
+
+    def post(self, request, *args, **kwargs):
+        if kwargs.get('pk'):
+            contact_data = Contact.objects.filter(user_id=request.user, pk = kwargs.get('pk')).first()
+            if contact_data:
+                conversation_list = Conversation.objects.filter(user_id=request.user, 
+                                                                contact_id = contact_data).order_by('-created_at')
+                
+                serializer = self.serializer_class(data=request.data)
+                if serializer.is_valid():
+                    serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+                    serializer.validated_data['contact_id'] = contact_data # Assign the current user instance
+                    serializer.save()
+                    if request.accepted_renderer.format == 'html':
+                        messages.success(request, "Congratulations! your conversation has been added successfully.")
+                        return redirect(reverse('contact_conversation', kwargs={'pk': kwargs['pk']}))
+                else:
+                # Invalid serializer data
+                    if request.accepted_renderer.format == 'html':
+                        # Render the HTML template with invalid serializer data
+                        return render(request, self.template_name,{'conversation_list':conversation_list,
+                                                           'serializer':self.serializer_class(),
+                                                           'contact_data':contact_data})
+                    else:   
+                        # Return JSON response with error message
+                        return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                            message="We apologize for the inconvenience, but please review the below information.",
+                                            data=convert_serializer_errors(serializer.errors))
+
+
+                    
+            else:
+                messages.error(request, " You are not authorized to perform this action.")
+        else:
+            messages.error(request, " You are not authorized to perform this action.")
+        return redirect(reverse('contact_list'))

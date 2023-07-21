@@ -46,7 +46,7 @@ class LoginSerializer(serializers.ModelSerializer):
     """
 
     email = serializers.EmailField(
-        label=('Email '),
+        label=('Email'),
         required=True,
         max_length=100,
         style={
@@ -54,8 +54,7 @@ class LoginSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
-           
+            'base_template': 'custom_fullwidth_input.html'
             
         },
         error_messages={
@@ -132,7 +131,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
+            'base_template': 'custom_fullwidth_input.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -224,7 +223,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
+            'base_template': 'custom_fullwidth_input.html'
         },
         error_messages={
             "required": "This field is required.",

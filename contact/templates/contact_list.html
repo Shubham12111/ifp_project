@@ -18,7 +18,7 @@
     color: #000; /* Light text color for body */
   }
 </style>
-{% include 'components/alert.html' %}
+{% include 'components/alert_small.html' %}
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-12">
@@ -62,10 +62,10 @@
                       <i class="fas fa-user-edit text-dark"></i>
                     </a>
                     
-                    <a href=""  class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact">
+                    <a href="{% url 'contact_edit' contact.pk %}"  class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact">
                       <i class="fas fa-trash text-danger"></i>
                     </a>
-                    <a href="" data-bs-toggle="tooltip" data-bs-original-title="Conversion">
+                    <a href="{% url 'contact_conversation' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Conversion">
                       <i class="ni ni-chat-round text-primary"></i>
                     </a>
                   </td>
@@ -102,5 +102,4 @@
 
 </script>
 {% endblock %}     
-  
-  {% endblock %}
+{% endblock %}

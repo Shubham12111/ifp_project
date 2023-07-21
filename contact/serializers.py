@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Contact,ContactType
+from .models import Contact,ContactType,Conversation,ConversationType
 from cities_light.models import City, Country, Region
 from rest_framework.validators import UniqueValidator
 
@@ -164,3 +164,47 @@ class ContactSerializer(serializers.ModelSerializer):
 
         }
 
+
+class ConversationSerializer(serializers.ModelSerializer):
+    # Custom FileField for handling file uploads
+    file = serializers.FileField(
+        label=('Document'),
+        max_length=6,
+        required=False,
+        style={
+            "input_type": "file",
+            "class":"form-control",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_file.html'
+        }
+    )
+    
+    # Custom CharField for the message with more rows (e.g., 5 rows)
+    message = serializers.CharField(max_length=1000, 
+                                    required=True, 
+                                    style={'base_template': 'textarea.html', 'rows': 5,})
+    
+    title = serializers.CharField(
+        max_length=250, 
+        label=('Title'),
+        required=True,
+        style={
+            "input_type": "input",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_fullwidth_input.html',
+        }
+    )
+    conversation_type = serializers.PrimaryKeyRelatedField(
+        label=('Conversation Type'),
+        queryset=ConversationType.objects.all(),
+        default=None,
+        style={
+            'base_template': 'custom_select.html'
+        },
+    )
+
+    class Meta:
+        model = Conversation
+        fields = ['title', 'conversation_type', 'file', 'message']
