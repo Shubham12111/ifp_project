@@ -43,46 +43,10 @@ class ContactListView(generics.ListAPIView):
         else:
             return self.handle_html_request(request)
     
-    def handle_ajax_request(self, request):
-        queryset = self.get_queryset()
-
-        # Apply filtering based on DataTables' search query
-        search_query = request.GET.get('search[value]')
-        if search_query:
-            queryset = queryset.filter(
-                Q(name__icontains=search_query) |
-                Q(email__icontains=search_query) |
-                Q(contact_type__name__icontains=search_query)
-            )
-
-        # Count the total number of records before applying pagination
-        total_records = queryset.count()
-
-        # Apply ordering based on DataTables' request
-        order_column_idx = int(request.GET.get('order[0][column]'))
-        order_column_name = self.ordering_fields[order_column_idx]
-        order_direction = request.GET.get('order[0][dir]')
-        if order_direction == 'desc':
-            order_column_name = f"-{order_column_name}"
-        queryset = queryset.order_by(order_column_name)
-
-        # Apply pagination based on DataTables' request
-        start = int(request.GET.get('start', 0))
-        length = int(request.GET.get('length', 10))
-        queryset = queryset[start:start + length]
-
-        # Serialize the data and return the JSON response
-        serializer = self.serializer_class(queryset, many=True)
-
-        return JsonResponse({
-            'draw': int(request.GET.get('draw', 1)),
-            'recordsTotal': total_records,
-            'recordsFiltered': queryset.count(),
-            'data': serializer.data,
-        })
+    
 
     def handle_html_request(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().order_by('-created_at')
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
             return Response({'contacts': queryset}, template_name=self.template_name)
@@ -137,8 +101,7 @@ class ContactAddUpdateView(APIView):
             serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            if request.user.is_authenticated:  # Check if the user is authenticated
-                serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+            serializer.validated_data['user_id'] = request.user  # Assign the current user instance
             serializer.save()
 
             if request.accepted_renderer.format == 'html':

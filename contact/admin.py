@@ -3,7 +3,7 @@ from .models import Contact, ContactType, ConversationType, Conversation
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ['id','name', 'email', 'phone_number', 'contact_type', 'job_title', 'company', 'address', 'city', 'state', 'pincode', 'country', 'created_at', 'updated_at']
+    list_display = ['id','first_name','last_name', 'email', 'phone_number', 'contact_type', 'job_title', 'company', 'address', 'city', 'state', 'pincode', 'country', 'created_at', 'updated_at']
     list_filter = ['contact_type']
     search_fields = ['name', 'email']
 

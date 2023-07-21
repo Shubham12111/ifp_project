@@ -46,7 +46,8 @@ class LoginSerializer(serializers.ModelSerializer):
     """
 
     email = serializers.EmailField(
-        label=('Email *'),
+        label=('Email '),
+        required=True,
         max_length=100,
         style={
             "input_type": "email",
@@ -63,7 +64,8 @@ class LoginSerializer(serializers.ModelSerializer):
         },
     )
     password = serializers.CharField(
-        label=('Password *'),
+        label=('Password '),
+        required=True,
         max_length=100,
         style={
             "input_type": "password",
@@ -85,7 +87,8 @@ class LoginSerializer(serializers.ModelSerializer):
 
 class SignupSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
-        label=('First Name *'),
+        label=('First Name '),
+        required=True,
         max_length=100,
         style={
             "input_type": "text",
@@ -103,7 +106,8 @@ class SignupSerializer(serializers.ModelSerializer):
     )
     
     last_name = serializers.CharField(
-        label=('Last Name *'),
+        label=('Last Name '),
+        required=True,
         max_length=100,
         style={
             "input_type": "text",
@@ -120,7 +124,8 @@ class SignupSerializer(serializers.ModelSerializer):
     )
     
     email = serializers.EmailField(
-        label=('Email *'),
+        label=('Email '),
+        required=True,
         max_length=100,
         style={
             "input_type": "email",
@@ -136,7 +141,8 @@ class SignupSerializer(serializers.ModelSerializer):
     )
     
     password = serializers.CharField(
-        label=('Password *'),
+        label=('Password '),
+        required=True,
         max_length=100,
         style={
             "input_type": "password",
@@ -152,7 +158,8 @@ class SignupSerializer(serializers.ModelSerializer):
     )
     
     password2 = serializers.CharField(
-        label=('Confirm Password *'),
+        label=('Confirm Password '),
+        required=True,
         max_length=100,
         style={
             "input_type": "password",
@@ -209,7 +216,8 @@ class SignupSerializer(serializers.ModelSerializer):
 class ForgotPasswordSerializer(serializers.Serializer):
     
     email = serializers.EmailField(
-        label=('Email *'),
+        label=('Email'),
+        required=True,
         max_length=100,
         style={
             "input_type": "email",
@@ -230,7 +238,8 @@ class ForgotPasswordSerializer(serializers.Serializer):
 class VerifyOTPSerializer(serializers.Serializer):
     
     otp = serializers.CharField(
-        label=('OTP *'),
+        label=('OTP '),
+        required=True,
         max_length=100,
         style={
             "input_type": "text",
@@ -254,7 +263,8 @@ class VerifyOTPSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         max_length=100,
-        label='First Name *',
+        label='First Name ',
+        required=True,
         error_messages={
             "required": "This field is required.",
             "blank": "First Name is required.",
@@ -271,7 +281,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     )
     last_name = serializers.CharField(
         max_length=100,
-        label='Last Name *',
+        label='Last Name ',
+        required=True,
         error_messages={
             "required": "This field is required.",
             "blank": "Last Name is required.",
@@ -349,7 +360,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone_number', 'country', 'city', 'state', 'pincode','address']
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'city', 'state', 'country', 'pincode']
 
     
     def validate_first_name(self, value):
@@ -360,7 +371,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
 class ChangePasswordSerializer(serializers.ModelSerializer):
     old_password = serializers.CharField(
-        label=('Old Password *'),
+        label=('Old Password '),
+        required=True,
         max_length=100,
         style={
             "input_type": "password",
@@ -375,7 +387,8 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         },
     )
     password = serializers.CharField(
-        label=('New Password *'),
+        label=('New Password '),
+        required=True,
         max_length=100,
         style={
             "input_type": "password",
@@ -390,7 +403,8 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         },
     )
     confirm_password = serializers.CharField(
-        label=('Confirm Password *'),
+        label=('Confirm Password '),
+        required=True,
         max_length=100,
         style={
             "input_type": "password",

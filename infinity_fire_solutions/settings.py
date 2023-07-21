@@ -85,17 +85,6 @@ WSGI_APPLICATION = 'infinity_fire_solutions.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
-#         'USER': os.environ.get('DB_USER', ''),
-#         'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-#         'HOST': os.environ.get('DB_HOST', 'localhost'),
-#         'PORT': os.environ.get('DB_PORT', '3306'),
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -105,8 +94,11 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'HOST': 'localhost', # or 'localhost' if MySQL is running on the same machine as Django
         'PORT': '3306', # default port is usually 3306
+
     }
 }
+
+
 
 
 # Password validation
