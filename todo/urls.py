@@ -4,5 +4,6 @@ from .views import *
 
 urlpatterns = [
     path('list/', ToDoListView.as_view(), name='todo_list'),
+   
     
 ]

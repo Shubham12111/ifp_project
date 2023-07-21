@@ -349,7 +349,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone_number', 'country', 'city', 'state', 'pincode','address']
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'city', 'state', 'country', 'pincode']
 
     
     def validate_first_name(self, value):

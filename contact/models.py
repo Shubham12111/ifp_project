@@ -21,8 +21,9 @@ class ContactType(models.Model):
 
 class Contact(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    name = models.CharField(max_length=255)
-    email = models.EmailField()
+    first_name = models.CharField(max_length=30,null=True)
+    last_name = models.CharField(max_length=30,null=True)
+    email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20)
     contact_type = models.ForeignKey(ContactType, on_delete=models.CASCADE)
     job_title = models.CharField(max_length=255, null=True, blank=True)
@@ -36,7 +37,7 @@ class Contact(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return self.first_name
 
 class Conversation(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)

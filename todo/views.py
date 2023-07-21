@@ -39,4 +39,3 @@ class ToDoListView(generics.ListAPIView):
         #     'recordsFiltered': total_records,
         #     'data': serializer.data
         # })
-    
