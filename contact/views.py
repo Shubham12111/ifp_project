@@ -93,6 +93,7 @@ class ContactListView(generics.ListAPIView):
         return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
+
     
 
 class ContactAddUpdateView(APIView):

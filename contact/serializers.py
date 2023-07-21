@@ -94,6 +94,12 @@ class ContactSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_select.html'
         },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Contact Type field cannot be blank.",
+            "invalid": "Contact Type can only contain characters.",
+
+        },
     )
      
     country = serializers.PrimaryKeyRelatedField(

@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'authentication',
     'contact',
+    'common_app',
+    'todo',
+
     'cities_light',
     'rest_framework',
     'rest_framework.authtoken',
@@ -96,14 +99,14 @@ WSGI_APPLICATION = 'infinity_fire_solutions.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
-        'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'root'),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),
-        'PORT': os.environ.get('DB_PORT', '3306'),
+        'NAME': 'IFP_DB',
+        'USER': 'root',
+        'PASSWORD': 'Testing@123',
+        'HOST': '127.0.0.1',
+        'HOST': 'localhost', # or 'localhost' if MySQL is running on the same machine as Django
+        'PORT': '3306', # default port is usually 3306
     }
 }
-
 
 
 # Password validation
