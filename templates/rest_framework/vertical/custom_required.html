@@ -1,10 +1,9 @@
 {% load rest_framework %}
 
-<div class="form-group col-6 {% if field.errors %}has-error{% endif %}" >
+<div class="form-group{% if field.errors %}has-error{% endif %}" >
   {% if field.label %}
-    <label {% if style.hide_label %}class="sr-only"{% endif %}>
-      {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
-    </label> 
+    <label {% if style.hide_label %}class="sr-only"{% endif %}>  {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
+    </label>
   {% endif %}
 
   <select class="form-control" name="{{ field.name }}" id="choices-button-{{ field.name }}" >

@@ -50,6 +50,7 @@ class ToDoListView(generics.ListAPIView):
         #     'data': serializer.data
         # })
 
+
 class ToDoAddView(generics.CreateAPIView):
     
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]

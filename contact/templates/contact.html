@@ -10,16 +10,23 @@
           <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8">
             <!--single form panel-->
             <div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
-              <h5 class="font-weight-bolder">Add Contact</h5>
+              <h4 class="font-weight-bolder">Add Contact</h4>
               <div class="multisteps-form__content">
                 {% csrf_token %}
                 <div class="row mt-3">
-                {% render_form serializer %}
+                  <div class="col-12 col-lg-12 mb-3 m-auto">
+                    <h6 class="font-weight-bolder mb-0">Personal Information <span class="text-danger">*</span></h6>
+                  </div>
+                  {% render_form serializer %}
                 </div>
-                <div class="button-row d-flex mt-4">
+                <div class="row mt-4">
+                <div class="col-6 col-lg-6 m-auto text-end"></div>
+                <div class="col-md-6 m-auto text-center text-md-end">
                   <a class="btn bg-gradient-secondary mb-0 js-btn-prev" href="{% url 'contact_list' %}" title="Back">Back</a>
-                  <button class="btn bg-gradient-primary ms-auto mb-0 js-btn-next" type="Submit" title="Submit">Submit</button>
+                  <button class="btn btn-md bg-gradient-primary ms-auto mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
                 </div>
+              </div>
+               
               </div>
             </div>
           

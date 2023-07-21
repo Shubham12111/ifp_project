@@ -3,6 +3,21 @@
 {% load static %}
 {% block title %} Add Contact {{ block.super }}{% endblock %}
 {% block content %}
+<style>
+   /* Style for the table header text */
+   table.table.table-flush thead {
+    color: #000; /* Light text color for header */
+  }
+
+  /* Style for the table body text */
+  table.table.table-flush tbody {
+    color: #000; /* Light text color for body */
+  }
+  /* Style for the table body text */
+  .dataTable-table th a {
+    color: #000; /* Light text color for body */
+  }
+</style>
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
   <div class="row">
@@ -12,21 +27,22 @@
         <div class="card-header pb-0">
           <div class="d-lg-flex">
             <div>
-              <h5 class="mb-0">Contacts</h5>
+              <h4 class="mb-0">Contacts</h4>
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
               <div class="ms-auto my-auto">
-                <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0" >+&nbsp; New Contact</a>
+                <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-md mb-0" >+&nbsp; Add Contact</a>
               </div>
             </div>
           </div>
         </div>
         <div class="card-body px-0 pb-0">
           <div class="table-responsive">
-            <table class="table table-flush" id="contact-list">
-              <thead class="thead-light">
-                <tr>
-                  <th>Name</th>
+            <table class="table table-flush text-dark" id="contact-list">
+              <thead class="thead-dark">
+                <tr class="text-md">
+                  <th class="">First Name</th>
+                  <th class="">Last Name</th>
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Contact Type</th>
@@ -35,20 +51,22 @@
               </thead>
               <tbody>
                 {% for contact in contacts %}
-                <tr>
-                  <td class="text-sm">{{contact.name}}</td>
-                  <td class="text-sm">{{contact.email}}</td>
-                  <td class="text-sm">{{contact.phone_number}}</td>
-                  <td class="text-sm">{{contact.contact_type}}</td>
-                  <td class="text-sm">
+                <tr class="text-sm">
+                  <td >{{contact.first_name}}</td>
+                  <td >{{contact.last_name}}</td>
+                  <td >{{contact.email}}</td>
+                  <td >{{contact.phone_number}}</td>
+                  <td >{{contact.contact_type}}</td>
+                  <td >
                     <a href="{% url 'contact_edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
                       <i class="fas fa-user-edit text-dark"></i>
                     </a>
-                    <a href="" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Chat">
-                      <i class="ni ni-chat-round text-secondary"></i>
-                    </a>
-                    <a href="" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact">
+                    
+                    <a href=""  class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact">
                       <i class="fas fa-trash text-danger"></i>
+                    </a>
+                    <a href="" data-bs-toggle="tooltip" data-bs-original-title="Conversion">
+                      <i class="ni ni-chat-round text-primary"></i>
                     </a>
                   </td>
                 </tr>
