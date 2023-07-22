@@ -1,0 +1,56 @@
+<style>
+  /* Custom CSS to increase the height of the Quill editor */
+  .quill-editor {
+    height: 250px; /* Set the desired height in pixels or use any other valid CSS height value */
+  }
+  {% load static %}
+</style>
+<div class="row">
+  <div class="col-12">
+    <div class="form-group {% if field.errors %}has-error{% endif %}">
+      {% if field.label %}
+        <label {% if style.hide_label %}class="sr-only"{% endif %}>
+          {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
+        </label>
+      {% endif %}
+      <div id="edit-{{ field.name }}" class="quill-editor">
+        <!-- Quill editor content will be inserted here -->
+      </div>
+      <input
+        name="{{ field.name }}"
+        {% if style.input_type != "file" %}class="form-control"{% endif %}
+        type="hidden"
+        {% if style.placeholder %}placeholder="{{ style.placeholder }}"{% endif %}
+        {% if field.value is not None %}value="{{ field.value }}"{% endif %}
+        {% if style.autofocus and style.input_type != "hidden" %}autofocus{% endif %}
+        autocomplete="off"
+        {% if field.required %}required{% endif %}
+        id="quill-{{ field.name }}"
+      />
+      {% if field.errors %}
+        {% for error in field.errors %}
+          <span class="help-block">{{ error }}</span>
+        {% endfor %}
+      {% endif %}
+      {% if field.help_text %}
+        <span class="help-block">{{ field.help_text|safe }}</span>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'assets/js/plugins/quill.min.js' %}"></script>
+<script>
+  if (document.getElementById('edit-{{ field.name }}')) {
+    var quill = new Quill('#edit-{{ field.name }}', {
+      theme: 'snow', // Specify theme in configuration
+    });
+
+    // Add an event listener to capture the content when the form is submitted
+    var form = document.querySelector('form');
+    form.addEventListener('submit', function (event) {
+      var quillContent = quill.root.innerHTML;
+      document.getElementById('quill-{{ field.name }}').value = quillContent;
+    });
+  }
+</script>

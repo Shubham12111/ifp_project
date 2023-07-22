@@ -1,7 +1,7 @@
 from django.db import models
 from cities_light.models import City, Country, Region
 from authentication.models import User
-
+from ckeditor.fields import RichTextField
 
 class ConversationType(models.Model):
     name = models.CharField(max_length=50)
@@ -31,8 +31,8 @@ class Contact(models.Model):
     address = models.CharField(max_length=255 , null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    state = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True)
-    pincode = models.CharField(max_length=10, null=True, blank=True)
+    county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
+    post_code = models.CharField(max_length=10, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -45,7 +45,7 @@ class Conversation(models.Model):
     contact_id = models.ForeignKey(Contact, on_delete=models.CASCADE)
     conversation_type = models.ForeignKey(ConversationType, on_delete=models.CASCADE)
     document_path = models.CharField(max_length=200, verbose_name="Document Path", null=True, blank=True)
-    message = models.TextField()
+    message = RichTextField()
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

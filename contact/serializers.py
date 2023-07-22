@@ -131,7 +131,7 @@ class ContactSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
-    state = serializers.PrimaryKeyRelatedField(
+    county = serializers.PrimaryKeyRelatedField(
         queryset=Region.objects.all(),
         default=None,
         style={
@@ -140,9 +140,9 @@ class ContactSerializer(serializers.ModelSerializer):
     )
 
     
-    pincode = serializers.CharField(
-        label=('Pincode'),
-        max_length=6,
+    post_code = serializers.CharField(
+        label=('Post Code'),
+        max_length=7,
         required=False,
         style={
             "input_type": "text",
@@ -154,7 +154,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company', 'job_title','address','city','state','country','pincode',]
+        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company', 'job_title','address','city','county','country','post_code',]
 
         extra_kwargs={
             'name':{'required':True},
@@ -183,7 +183,12 @@ class ConversationSerializer(serializers.ModelSerializer):
     # Custom CharField for the message with more rows (e.g., 5 rows)
     message = serializers.CharField(max_length=1000, 
                                     required=True, 
-                                    style={'base_template': 'textarea.html', 'rows': 5,})
+                                    style={'base_template': 'rich_textarea.html', 'rows': 5},
+                                    error_messages={
+                                            "required": "This field is required.",
+                                            "blank": "Message is required.",
+                                        })
+
     
     title = serializers.CharField(
         max_length=250, 
@@ -194,17 +199,31 @@ class ConversationSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             'base_template': 'custom_fullwidth_input.html',
-        }
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Title is required.",
+        },
     )
     conversation_type = serializers.PrimaryKeyRelatedField(
         label=('Conversation Type'),
+        required=True,
         queryset=ConversationType.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
+        style=
+        {
+            'base_template': 'custom_select.html',
+            'custom_class': 'col-12'
         },
     )
 
     class Meta:
         model = Conversation
-        fields = ['title', 'conversation_type', 'file', 'message']
+        fields = [ 'conversation_type', 'title', 'message','file']
+    
+    def validate_message(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        is_blank_html = value.strip() == "<p><br></p>"
+        
+        if is_blank_html:
+            raise serializers.ValidationError("Message field is required.")
+        return value

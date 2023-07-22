@@ -31,8 +31,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     address = models.CharField(max_length=255 , null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    state = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True)
-    pincode = models.CharField(max_length=10, null=True, blank=True)
+    county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
+    post_code = models.CharField(max_length=10, null=True, blank=True)
 
     objects = UserManager()
 

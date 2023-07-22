@@ -4,9 +4,9 @@ if (document.getElementById('choices-button-country')) {
   var element = document.getElementById('choices-button-country');
   const example = new Choices(element, {});
 }
-if (document.getElementById('choices-button-state')) {
+if (document.getElementById('choices-button-county')) {
   
-  var element = document.getElementById('choices-button-state');
+  var element = document.getElementById('choices-button-county');
   const example = new Choices(element, {});
 }
 
@@ -15,7 +15,7 @@ if (document.getElementById('choices-button-city')) {
   var element = document.getElementById('choices-button-city');
   const example = new Choices(element, {});
 }
-if (document.getElementById('choices-button-city')) {
+if (document.getElementById('choices-button-contact_type')) {
   
   var element = document.getElementById('choices-button-contact_type');
   const example = new Choices(element, {});
