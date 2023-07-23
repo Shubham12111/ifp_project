@@ -40,6 +40,9 @@ class Todo(models.Model):
     def __str__(self):
         return self.title
     
+    class Meta:
+        permissions = (("list_todo", "Can list Todo"),)
+    
 
 class Comment(models.Model):
     todo_id = models.ForeignKey(Todo, on_delete=models.CASCADE)

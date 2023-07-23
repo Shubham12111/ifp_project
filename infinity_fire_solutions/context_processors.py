@@ -74,17 +74,45 @@ def breadcrumbs(request):
 
 #     return {'breadcrumbs_data': breadcrumbs_data}
 
+def has_group_view_permission(user, permission_list):
+    """
+    Check if the user has the "view" permission for any of the specified permissions in any of their groups.
 
-def generate_menu(menu_items):
+    Args:
+        user (User): The user object for which to check permissions.
+        permission_list (list): A list of permission codenames to check.
+
+    Returns:
+        bool: True if the user has any of the specified permissions, False otherwise.
+    """
+    for group in user.groups.all():
+        for permission in group.permissions.all():
+            if permission.codename in permission_list:
+                return True
+    return False
+
+
+def generate_menu(request, menu_items):
     """
     Recursively generates a menu data structure based on the provided menu items.
-    Returns the menu data.
-    """
-    menu_items = sorted(menu_items, key=lambda item: item.get('order', float('inf')))
 
+    Args:
+        request (HttpRequest): The request object containing user information.
+        menu_items (list): A list of menu items to be included in the menu.
+
+    Returns:
+        list: A menu data structure containing the menu items that the user can access.
+    """
+    user = request.user
+    menu_items = sorted(menu_items, key=lambda item: item.get('order', float('inf')))
     menu_data = []
 
     for item in menu_items:
+        # Check if the menu item has 'permission_required' key and the user has the required permission
+        required_permissions = item.get('permissions', [])
+        if item.get('permission_required') and not has_group_view_permission(user, required_permissions):
+            continue
+
         menu_item = {
             'url': item.get('url'),
             'name': item.get('name'),
@@ -93,7 +121,7 @@ def generate_menu(menu_items):
         }
 
         if 'submenu' in item:
-            submenu_items = generate_menu(item['submenu'])
+            submenu_items = generate_menu(item['submenu'], user)
             if submenu_items:
                 menu_item['submenu'] = submenu_items
 
@@ -101,10 +129,9 @@ def generate_menu(menu_items):
 
     return menu_data
 
-
 def custom_menu(request):
     """
     Context processor for generating a custom menu data structure.
     """
-    menu_items = generate_menu(MENU_ITEMS)
+    menu_items = generate_menu(request, MENU_ITEMS)
     return {'menu_items': menu_items}

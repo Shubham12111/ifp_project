@@ -2,53 +2,69 @@ from django.http import JsonResponse
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.renderers import TemplateHTMLRenderer,JSONRenderer
-from infinity_fire_solutions.response_schemas import create_api_response
+from infinity_fire_solutions.response_schemas import create_api_response, render_html_response
 from .models import *
 from .serializers import *
 from django.contrib import messages 
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import PermissionDenied
 
-class ToDoListView(generics.ListAPIView):
-    """ view to get the listing of all contacts
-    """
+class GroupAndMethodBasedPermission(BasePermission):
+    def __init__(self, model_name, method_name, allowed_methods):
+        self.model_name = model_name
+        self.method_name = method_name
+        self.allowed_methods = allowed_methods
+
+    def has_permission(self, request, view):
+        # Check if the user belongs to any of the allowed groups
+        required_permission = f"{self.method_name}_{self.model_name.lower()}"
+        user_groups = request.user.groups.all()
+        for group in user_groups:
+            for permission in group.permissions.all():
+                if permission.codename == required_permission:
+                    return request.method in self.allowed_methods
+        
+        # Raise a PermissionDenied exception with an error message
+        raise PermissionDenied("You don't have permission to perform this action.")
+
+class ToDoView(APIView):
+    """ View to get the listing of all contacts """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'todo_list.html'
+    
+    
+    def get_queryset(self):
+        queryset = Todo.objects.all()
+        user_id = self.request.user.id
+        return queryset.filter(user_id=user_id)
+
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [GroupAndMethodBasedPermission(model_name='Todo', method_name='view', allowed_methods=['GET'])]
+        elif self.request.method == 'POST':
+            return [GroupAndMethodBasedPermission(model_name='Todo', method_name='add', allowed_methods=['POST'])]
+        else:
+            return super().get_permissions()
+
 
     def get(self, request, *args, **kwargs):
-        queryset = Todo.objects.filter(user_id=request.user)
+        queryset = self.get_queryset()
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            return Response({'todo_list': queryset}, template_name=self.template_name)
+            context = {'todo_list': queryset}
+            return render_html_response(context,self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
             return create_api_response(status_code=status.HTTP_200_OK,
                                        message="Data Retrieved successfully",
                                        data=serializer)
-        
-        # # If the client accepts JSON (DataTable's request), handle server-side processing
-        # draw = int(request.GET.get('draw', 1))
-        # start = int(request.GET.get('start', 0))
-        # length = int(request.GET.get('length', 10))
-        # search_value = request.GET.get('search[value]', None)
-
-        # if search_value:
-        #     queryset = queryset.filter(title__icontains=search_value)
-
-        # total_records = queryset.count()
-        # queryset = queryset[start:start + length]
-
-        # serializer = self.serializer_class(queryset, many=True)
-
-        # print(queryset, queryset)
-        # return JsonResponse({
-        #     'draw': draw,
-        #     'recordsTotal': total_records,
-        #     'recordsFiltered': total_records,
-        #     'data': serializer.data
-        # })
+       
 
 
 class ToDoAddView(generics.CreateAPIView):
