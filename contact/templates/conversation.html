@@ -3,12 +3,41 @@
 {% load rest_framework %}
 {% block title %} Contact Conversation {{ block.super }}{% endblock %}
 {% block content %}
+<style>
+  /* Custom container class for SweetAlert modal content */
+  .custom-swal-container {
+    font-size: 14px; /* Adjust the font size to your preferred smaller value */
+
+  }
+
+  /* Style the confirm and cancel buttons with smaller text size */
+  .swal2-confirm, .swal2-cancel {
+    font-size: 12px; /* Adjust the font size to your preferred smaller value */
+  }
+  .swal2-confirm {
+    background-image: linear-gradient(310deg,#17ad37,#98ec2d) !important;
+}
+.swal2-styled.swal2-confirm:hover, .swal2-styled.swal2-confirm:focus 
+{
+  background-image: linear-gradient(310deg,#17ad37,#98ec2d) !important;
+}
+.swal2-cancel {
+    background-image: linear-gradient(310deg,#ea0606,#ff667c)  !important;
+}
+.swal2-styled.swal2-cancel:hover, .swal2-styled.swal2-cancel:focus 
+{
+  background-image: linear-gradient(310deg,#ea0606,#ff667c) !important;
+}
+
+  
+</style>
+{% include 'components/alert_small.html' %}
 <div class="container-fluid py-4">
   <div class="row gx-4">
     <div class="col-lg-6">
       <div class="card">
         <div class="card-header pb-0">
-          <h4 class="font-weight-bolder">Add Conversation History</h4>
+          <h4 class="font-weight-bolder">Add Conversation</h4>
         </div>
         <form role="form" method="POST" autocomplete="off" class="multisteps-form__form" enctype="multipart/form-data">
           <div class="card-body p-3">
@@ -24,8 +53,8 @@
               <div class="row mt-2">
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 m-auto text-center text-md-end">
-                  <a class="btn bg-gradient-secondary mb-0 js-btn-prev" href="{% url 'contact_list' %}" title="Back">Back</a>
-                  <button class="btn btn-md bg-gradient-primary ms-auto mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
+                  <a class="btn bg-gradient-secondary mb-0 js-btn-prev " href="{% url 'contact_list' %}" title="Back">Back</a>
+                  <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
                 </div>
                 </div>
               </div>
@@ -42,23 +71,41 @@
           <div class="timeline timeline-one-side" data-timeline-axis-style="dotted" style="max-height: 700px; overflow-y: auto;">
 
             {% for conversation_data in conversation_list %}
-                  <!-- {% cycle 'success' 'info' 'warning' 'danger' as current_color %} -->
-                  <div class="timeline-block mb-3">
-                    <span class="timeline-step">
-                      <i class="ni ni-bell-55 text-{{ current_color|safe }} text-gradient"></i>
-                    </span>
-                    <div class="timeline-content">
-                      <h6 class="text-dark text-sm font-weight-bold mb-0">{{ conversation_data.title }}</h6>
-                      <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ conversation_data.created_at }}</p>
-                      <p class="text-sm mt-3 mb-2">
-                        {{ conversation_data.message }}
-                      </p>
-                      <span class="badge badge-sm bg-gradient-{{ current_color|safe }}">
-                        {{ conversation_data.conversation_type }}
-                      </span>
-                    </div>
+            <!-- {% cycle 'success' 'info' 'warning' 'danger' as current_color %} -->
+            <div class="timeline-block mb-3">
+              <span class="timeline-step">
+                <i class="ni ni-chat-round text-dark text-gradient"></i>
+              </span>
+              <div class="timeline-content">
+                <div class="d-flex justify-content-between">
+                  <h6 class="text-dark text-md font-weight-bold mb-0">{{ conversation_data.title }}</h6>
+                  <div class="d-flex">
+                    <!-- Add edit and delete icons here with appropriate links or actions -->
+                    <a href="" class="">
+                      <i class="fas fa-edit  text-info"></i>
+                    </a>
+                    <a href="#" class="delete-link ms-2" data-id="{{ conversation_data.id }}" data-title="{{ conversation_data.title }}">
+
+                      <i class="fas fa-trash-alt text-danger"></i>
+                    </a>
                   </div>
-                {% endfor %}
+                </div>
+                <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ conversation_data.created_at|date:"F d, Y" }}</p>
+                <p class="text-sm mt-3 mb-2">
+                  {{ conversation_data.message|safe }}
+                  <i class="fas fa-paperclip ml-1 text-warning"></i>
+                  {% if conversation_data.document_path %}
+                    <i class="fas fa-paperclip ml-1 text-info"></i>
+                  {% endif %}
+
+                </p>
+                <span class="badge badge-sm bg-gradient-dark">
+                  {{ conversation_data.conversation_type }}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
+          
  
           </div>
         </div>
@@ -68,4 +115,68 @@
   </div>
  
 </div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Handle click on delete link
+    const deleteLinks = document.querySelectorAll('.delete-link');
+    deleteLinks.forEach(function(deleteLink) {
+      deleteLink.addEventListener('click', function(event) {
+        event.preventDefault();
+
+        const deleteId = this.getAttribute('data-id');
+        const deleteTitle = this.getAttribute('data-title');
+
+        // Display SweetAlert confirmation dialog
+        Swal.fire({
+          title: 'Confirm Deletion',
+          text: `Are you sure you want to delete the conversation "${deleteTitle}"?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: 'danger',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Delete',
+          cancelButtonText: 'Cancel',
+          customClass: {
+            title: 'text-md', // Apply smaller font size to the title
+            container: 'custom-swal-container',
+          }
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Perform the delete operation, for example, using AJAX
+            // Replace "deleteUrl" with the actual URL for deleting conversations
+            fetch('/delete/conversation/' + deleteId, {
+              method: 'DELETE',
+            })
+            .then(function(response) {
+              if (response.ok) {
+                // Handle success, e.g., remove the deleted conversation from the DOM
+                // Assuming the conversation block has a parent with class "timeline-block"
+                const conversationBlock = document.querySelector(`.timeline-block[data-id="${deleteId}"]`);
+                if (conversationBlock) {
+                  conversationBlock.remove();
+                }
+                Swal.fire('Deleted!', 'The conversation has been deleted.', 'success');
+              } else {
+                // Handle error, e.g., show an error message
+                Swal.fire('Error!', 'An error occurred while deleting the conversation.', 'error');
+              }
+            })
+            .catch(function(error) {
+              // Handle network errors or other issues
+              console.error(error);
+              Swal.fire('Error!', 'An error occurred while deleting the conversation.', 'error');
+            });
+          }
+        });
+      });
+    });
+  });
+</script>
+
+
+
 {% endblock %}

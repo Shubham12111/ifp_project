@@ -34,9 +34,9 @@ def phone_number_validator(value):
         raise serializers.ValidationError('Invalid phone number format.')
     return value
     
-def pincode_validator(value):
+def post_code_validator(value):
     if not value.isdigit() or len(value) != 6:
-        raise serializers.ValidationError('Invalid pincode format.')
+        raise serializers.ValidationError('Invalid post_code format.')
     return value
     
 
@@ -340,15 +340,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
-    state = serializers.PrimaryKeyRelatedField(
+    county = serializers.PrimaryKeyRelatedField(
         queryset=Region.objects.all(),
         default=None,
         style={
             'base_template': 'custom_select.html'
         },
     )
-    pincode = serializers.CharField(
-        max_length=6,
+    post_code = serializers.CharField(
+        max_length=7,
         required=False,
         allow_blank=True,
         allow_null=True,
@@ -359,7 +359,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'city', 'state', 'country', 'pincode']
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'city', 'county', 'country', 'post_code']
 
     
     def validate_first_name(self, value):

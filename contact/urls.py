@@ -12,6 +12,7 @@ urlpatterns = [
     path('add/', login_required(ContactAddUpdateView.as_view()), name='contact_add'),
     path('edit/<int:pk>/', login_required(ContactAddUpdateView.as_view()), name='contact_edit'),
     path('delete/<int:pk>/',login_required(ContactDeleteView.as_view()),name='delete_contact'),
-    path('conversation/<int:pk>/', login_required(ConversationListView.as_view()), name='contact_conversation'),
+    path('conversation/<int:contact_id>/', login_required(ConversationView.as_view()), name='contact_conversation'),
+    path('conversation/edit/<int:contact_id>/<int:conversation_id>', login_required(ConversationView.as_view()), name='edit_conversation'),
 
 ]

@@ -46,7 +46,7 @@ class ContactListView(generics.ListAPIView):
     
 
     def handle_html_request(self, request, *args, **kwargs):
-        queryset = self.get_queryset().order_by('-created_at')
+        queryset = self.get_queryset().filter(user_id=request.user).order_by('-created_at')
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
             return Response({'contacts': queryset}, template_name=self.template_name)
@@ -168,11 +168,26 @@ class ContactDeleteView(APIView):
 
       
       
-class ConversationListView(APIView):
+class ConversationView(APIView):
     serializer_class = ConversationSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'conversation.html'
     
+    
+    def get_queryset(self):
+        return Contact.objects.filter(user_id=self.request.user)
+
+    def get_conversation_queryset(self):
+        return Conversation.objects.filter(user_id=self.request.user)
+    
+    def get_object(self):
+        contact_id = self.kwargs.get('contact_id')
+        conversation_id = self.kwargs.get('conversation_id')
+        if conversation_id:
+            return self.get_conversation_queryset().filter(contact_id=contact_id, pk=conversation_id).first()
+        else:
+            return self.get_queryset().filter(pk=contact_id).first()
+
     def render_html_response(self, serializer):
         """
         Render HTML response using the provided serializer and template name.
@@ -180,43 +195,43 @@ class ConversationListView(APIView):
         return Response({'serializer': serializer}, template_name=self.template_name)
 
     def get(self, request, *args, **kwargs):
-        if kwargs.get('pk'):
-            contact_data = Contact.objects.filter(user_id=request.user, pk = kwargs.get('pk')).first()
-            if contact_data:
-                conversation_list = Conversation.objects.filter(user_id=request.user, 
-                                                                contact_id = contact_data).order_by('-created_at')
-                
-                return render(request, self.template_name,{'conversation_list':conversation_list,
-                                                           'serializer':self.serializer_class(),
-                                                           'contact_data':contact_data})
-            else:
-                messages.error(request, " You are not authorized to perform this action.")
+        instance = self.get_object()
+        if instance:
+            conversation_list = Conversation.objects.filter(user_id=request.user, 
+                                                            contact_id = instance).order_by('-created_at')
+            
+            return render(request, self.template_name,{'conversation_list':conversation_list,
+                                                        'serializer':self.serializer_class(),
+                                                        'contact_data':instance})
         else:
             messages.error(request, " You are not authorized to perform this action.")
         return redirect(reverse('contact_list'))
 
 
     def post(self, request, *args, **kwargs):
-        if kwargs.get('pk'):
-            contact_data = Contact.objects.filter(user_id=request.user, pk = kwargs.get('pk')).first()
+        if kwargs.get('contact_id'):
+            contact_data = Contact.objects.filter(user_id = request.user, 
+                                                  pk = kwargs.get('contact_id')).first()
             if contact_data:
                 conversation_list = Conversation.objects.filter(user_id=request.user, 
                                                                 contact_id = contact_data).order_by('-created_at')
                 
                 serializer = self.serializer_class(data=request.data)
+                
                 if serializer.is_valid():
                     serializer.validated_data['user_id'] = request.user  # Assign the current user instance
                     serializer.validated_data['contact_id'] = contact_data # Assign the current user instance
                     serializer.save()
                     if request.accepted_renderer.format == 'html':
                         messages.success(request, "Congratulations! your conversation has been added successfully.")
-                        return redirect(reverse('contact_conversation', kwargs={'pk': kwargs['pk']}))
+                        return redirect(reverse('contact_conversation', kwargs={'contact_id': kwargs['contact_id']}))
                 else:
-                # Invalid serializer data
+                    # Invalid serializer data
                     if request.accepted_renderer.format == 'html':
                         # Render the HTML template with invalid serializer data
+                        print(serializer.errors)
                         return render(request, self.template_name,{'conversation_list':conversation_list,
-                                                           'serializer':self.serializer_class(),
+                                                           'serializer':serializer,
                                                            'contact_data':contact_data})
                     else:   
                         # Return JSON response with error message
