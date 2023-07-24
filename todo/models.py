@@ -1,5 +1,7 @@
 from django.db import models
 from authentication.models import User
+from ckeditor.fields import RichTextField
+
 
 STATUS_CHOICES = (
         ('pending', 'Pending'),
@@ -27,7 +29,7 @@ class Todo(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userid")
     module = models.ForeignKey(Module, on_delete=models.CASCADE, null=True)
     title = models.CharField(max_length=200)
-    description = models.TextField()
+    description = RichTextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Low')
     start_date = models.DateField()
@@ -40,14 +42,11 @@ class Todo(models.Model):
     def __str__(self):
         return self.title
     
-    class Meta:
-        permissions = (("list_todo", "Can list Todo"),)
-    
 
 class Comment(models.Model):
     todo_id = models.ForeignKey(Todo, on_delete=models.CASCADE)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    comment = models.TextField()
+    comment = RichTextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
