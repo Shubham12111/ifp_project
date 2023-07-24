@@ -4,7 +4,7 @@ from django.views import View
 from django.urls import reverse
 from django.shortcuts import render,redirect
 from django.http import Http404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 from rest_framework import generics, status, filters
 from django.shortcuts import render
@@ -155,16 +155,23 @@ class ContactDeleteView(APIView):
     def delete(self, request, *args, **kwargs):
         # Get the contact instance from the database
         contact = self.get_object(kwargs['pk'])
+        if contact:
 
-        # Proceed with the deletion
-        contact.delete()
+            # Proceed with the deletion
+            contact.delete()
         
-        if request.accepted_renderer.format == 'html':
-            messages.success(request, "Your contact has been deleted successfully!")
-            return redirect(reverse('contact_list'))
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, "Your contact has been deleted successfully!")
+                return HttpResponse(status=204)  # HTTP 204 No Content (optional, can be any status code)
+            else:
+                # If the request is from API renderer, return a JSON response
+                return JsonResponse({"message": "Your contact has been deleted successfully!"})
         else:
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                       message="Your contact has been deleted successfully!")  
+            if request.accepted_renderer.format == 'html':
+                messages.error(request, "Contact not found")
+                return HttpResponse(status=404)  # HTTP 404 Not Found (optional, can be any status code)
+            else:
+                return JsonResponse({"message": "Contact not found"}, status=404)
 
       
       

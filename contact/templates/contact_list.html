@@ -124,7 +124,7 @@
   // Function to delete the contact
   function deleteContact(pk) {
     // Send the DELETE request to the backend
-    fetch(`/delete/${pk}/`, {
+    fetch(`/contact/delete/${pk}/`, {
       method: "DELETE",
       headers: {
         "X-CSRFToken": "{{ csrf_token }}",
@@ -140,11 +140,8 @@
             confirmButtonColor: "#5e72e4",
           });
 
-          // Optionally, you can remove the deleted row from the table (assuming you have an ID for the table row)
-          // document.getElementById(`row-${pk}`).remove();
-
-          // Optionally, reload the page after successful deletion (optional)
-          // window.location.reload();
+          // reload the page after successful deletion (optional)
+          window.location.reload();
         } else {
           // Show the error alert if deletion fails
           swal.fire({
