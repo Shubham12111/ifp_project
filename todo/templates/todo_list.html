@@ -110,8 +110,8 @@
                             <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
                           </a>
                           <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">
-                            <li><a class="dropdown-item border-radius-md" href="{% url 'edit_task' todo_data.id %}">Edit</a></li>
-                            <li><a class="dropdown-item border-radius-md" href="javascript:;">View</a></li>
+                            <li><a class="dropdown-item border-radius-md" href="{% url 'todo_edit' todo_data.id %}">Edit</a></li>
+                            <li><a class="dropdown-item border-radius-md" href="{% url 'todo_view' todo_data.id %}">View</a></li>
                             <li><a class="dropdown-item border-radius-md" href="javascript:;">Delete</a></li>
                           </ul>
                         </div>

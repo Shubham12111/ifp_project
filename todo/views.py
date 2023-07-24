@@ -168,3 +168,53 @@ class ToDoAddView(generics.CreateAPIView):
             return Response(context, template_name=self.template_name)
            
 
+
+class ToDoRetrieveAPIView(generics.RetrieveAPIView):
+    permission_classes = [CanReadPermission, IsAuthenticated]
+    filter_backends = [filters.OrderingFilter, filters.SearchFilter]
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
+    search_fields = ['title', 'description']  # Specify fields you want to allow searching on
+    template_name = 'todo_view.html'
+    serializer_class = CommentSerializer
+    
+    def get_app_name(self):
+        return apps.get_containing_app_config(self.__module__).name
+    
+    def get_queryset(self):
+        queryset = Todo.objects.filter(pk=self.kwargs.get('todo_id'),user_id = self.request.user.id)
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset().get()
+        if request.accepted_renderer.format == 'html':
+            # If the client accepts HTML, render the template
+            comment_list = Comment.objects.filter(todo_id=queryset).order_by('-created_at')
+            context = {'todo_data': queryset,
+                       'serializer':self.serializer_class,
+                       'comment_list':comment_list}
+            return render_html_response(context,self.template_name)
+       
+    
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        if self.get_queryset().get():
+            # If a primary key is provided, it means we are updating an existing contact
+            todo_data =  self.get_queryset().get()
+            serializer = self.serializer_class(data=data)
+            if serializer.is_valid():
+                serializer.validated_data['user_id'] = request.user
+                serializer.validated_data['todo_id'] = todo_data
+                serializer.save()
+                if request.accepted_renderer.format == 'html':
+                    # For HTML rendering, redirect to the list view after successful save
+                
+                    return redirect(reverse('todo_list'))
+                else:
+                    # For other formats (e.g., JSON), return success response
+                    return Response({
+                        "status_code": status.HTTP_200_OK,
+                        "message": "Data retrieved successfully",
+                        "data": serializer.data
+                    })
+            

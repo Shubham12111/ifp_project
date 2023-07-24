@@ -1,6 +1,6 @@
 # todo_app/serializers.py
 from rest_framework import serializers
-from .models import Todo, Module, STATUS_CHOICES,PRIORITY_CHOICES
+from .models import Todo, Module,Comment, STATUS_CHOICES,PRIORITY_CHOICES
 from authentication.models import User
 from rest_framework.exceptions import ValidationError
 
@@ -91,3 +91,42 @@ class TodoAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
         fields = ('module', 'assigned_to', 'title', 'description','priority', 'start_date', 'end_date', )
+
+
+
+class CommentSerializer(serializers.ModelSerializer):
+   
+    # Custom CharField for the message with more rows (e.g., 5 rows)
+    comment = serializers.CharField(max_length=1000, 
+                                    required=True, 
+                                    style={'base_template': 'rich_textarea.html', 'rows': 5},
+                                    error_messages={
+                                            "required": "This field is required.",
+                                            "blank": "Message is required.",
+                                        })
+
+    
+    status = serializers.ChoiceField(
+        label='Priority',
+        choices= (
+        ('in-progress', 'In Progress'),
+        ('completed', 'Completed')
+    ),
+        required=True,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class': 'col-12'
+        },
+    )
+
+    class Meta:
+        model = Comment
+        fields = ['comment', 'status']
+    
+    def validate_message(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        is_blank_html = value.strip() == "<p><br></p>"
+        
+        if is_blank_html:
+            raise serializers.ValidationError("Message field is required.")
+        return value
