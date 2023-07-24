@@ -1,7 +1,14 @@
+from django.core.validators import RegexValidator
+
 from rest_framework import serializers
 from .models import Contact,ContactType,Conversation,ConversationType
 from cities_light.models import City, Country, Region
 from rest_framework.validators import UniqueValidator
+
+
+class PhoneNumberValidator(RegexValidator):
+    regex = r'^\d+$'
+    message = 'Phone number must contain only digits.'
 
 class ContactSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
@@ -71,6 +78,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "required": "This field is required.",
             "blank": "Phone number field is required.",
         },
+        validators=[PhoneNumberValidator()]
     )
    
 
@@ -114,6 +122,12 @@ class ContactSerializer(serializers.ModelSerializer):
         queryset=ContactType.objects.all(),
         style={
             'base_template': 'custom_required.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Contact Type field cannot be blank.",
+            "invalid": "Contact Type can only contain characters.",
+
         },
     )
      

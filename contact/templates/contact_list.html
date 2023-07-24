@@ -62,12 +62,14 @@
                       <i class="fas fa-user-edit text-dark"></i>
                     </a>
                     
-                    <a href="{% url 'contact_edit' contact.pk %}"  class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact">
+                    <a href="#" type="button" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" onclick="handleDeleteConfirmation({{ contact.pk }})">
                       <i class="fas fa-trash text-danger"></i>
                     </a>
+
                     <a href="{% url 'contact_conversation' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Conversion">
                       <i class="ni ni-chat-round text-primary"></i>
                     </a>
+                    
                   </td>
                 </tr>
                 {% endfor %}
@@ -87,19 +89,73 @@
 <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 
 <script>
-
   if (document.getElementById('contact-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
       searchable: true,
       fixedHeight: false,
       perPage: 25
     });
+  }
 
-    
-  };
 
+  function handleDeleteConfirmation(pk) {
+    swal.fire({
+      title: "Are you sure?",
+      text: "This contact will be permanently deleted!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#5e72e4",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // If the user clicks on "Yes, delete it!"
+        deleteContact(pk);
+      } else {
+        // If the user clicks on "Cancel"
+        swal.fire("Cancelled", "Your contact is safe!", "info");
+      }
+    });
+  }
+
+  // Function to delete the contact
+  function deleteContact(pk) {
+    // Send the DELETE request to the backend
+    fetch(`/contact/delete/${pk}/`, {
+      method: "DELETE",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          // Show the success alert (optional)
+          swal.fire({
+            title: "Success",
+            text: "Your contact has been deleted successfully!",
+            icon: "success",
+            confirmButtonColor: "#5e72e4",
+          });
+
+          // reload the page after successful deletion (optional)
+          window.location.reload();
+        } else {
+          // Show the error alert if deletion fails
+          swal.fire({
+            title: "Error",
+            text: "Failed to delete contact.",
+            icon: "error",
+            confirmButtonColor: "#5e72e4",
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("An error occurred during deletion:", error);
+      });
+  }
 </script>
 {% endblock %}     
 {% endblock %}
