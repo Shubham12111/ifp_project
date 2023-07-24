@@ -37,10 +37,10 @@
           </div>
         </div>
         <div class="card-body px-0 pb-0">
-          <div class="table-responsive">
+         <div class="table-responsive">
             <table class="table table-flush text-dark" id="contact-list">
-              <thead class="thead-dark">
-                <tr class="text-md">
+              <thead class="thead-light">
+                <tr>
                   <th class="">First Name</th>
                   <th class="">Last Name</th>
                   <th>Email</th>
@@ -51,18 +51,18 @@
               </thead>
               <tbody>
                 {% for contact in contacts %}
-                <tr class="text-sm">
+                <tr>
                   <td >{{contact.first_name}}</td>
                   <td >{{contact.last_name}}</td>
                   <td >{{contact.email}}</td>
                   <td >{{contact.phone_number}}</td>
                   <td >{{contact.contact_type}}</td>
-                  <td >
+                  <td>
                     <a href="{% url 'contact_edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
                       <i class="fas fa-user-edit text-dark"></i>
                     </a>
                     
-                    <a href="#" type="button" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" onclick="handleDeleteConfirmation({{ contact.pk }})">
+                    <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" onclick="handleDeleteConfirmation({{ contact.pk }})">
                       <i class="fas fa-trash text-danger"></i>
                     </a>
 
@@ -72,6 +72,7 @@
                     
                   </td>
                 </tr>
+              
                 {% endfor %}
               </tbody>
               

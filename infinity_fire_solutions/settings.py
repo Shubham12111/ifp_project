@@ -41,10 +41,10 @@ INSTALLED_APPS = [
     'contact',
     'common_app',
     'todo',
-
     'cities_light',
     'rest_framework',
     'rest_framework.authtoken',
+    'ckeditor',
     
 ]
 
@@ -86,12 +86,15 @@ WSGI_APPLICATION = 'infinity_fire_solutions.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-  
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
-
 
 
 

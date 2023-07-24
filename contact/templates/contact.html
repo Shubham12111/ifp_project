@@ -10,7 +10,7 @@
           <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8">
             <!--single form panel-->
             <div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
-              <h4 class="font-weight-bolder">Add Contact</h4>
+              <h4 class="font-weight-bolder">{% if contact %}Edit {% else %} Add {% endif %} Contact</h4>
               <div class="multisteps-form__content">
                 {% csrf_token %}
                 <div class="row mt-3">
@@ -35,6 +35,4 @@
   </div>
   {% endblock %}
   {% block extra_js %}
-  <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-  <script src="{% static 'assets/js/custom_country.js' %}"></script>
   {% endblock %}

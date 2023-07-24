@@ -121,7 +121,8 @@ class ContactSerializer(serializers.ModelSerializer):
         required=True,
         queryset=ContactType.objects.all(),
         style={
-            'base_template': 'custom_required.html'
+            'base_template': 'custom_select.html',
+             'custom_class':'col-12'
         },
         error_messages={
             "required": "This field is required.",

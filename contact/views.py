@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
 
-from infinity_fire_solutions.response_schemas import create_api_response,convert_serializer_errors
+from infinity_fire_solutions.response_schemas import create_api_response,convert_serializer_errors,render_html_response
 from cities_light.models import City, Country, Region
 
 from .models import Contact
@@ -44,12 +44,16 @@ class ContactListView(generics.ListAPIView):
             return self.handle_html_request(request)
     
     
-
+    def get_queryset(self):
+        queryset = Contact.objects.filter(user_id=self.request.user.id).order_by('-created_at')
+        return queryset
+    
     def handle_html_request(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(user_id=request.user).order_by('-created_at')
+        queryset = self.get_queryset()
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            return Response({'contacts': queryset}, template_name=self.template_name)
+            context = {'contacts':queryset}
+            return render_html_response(context,self.template_name)
         
        # If the client accepts JSON, serialize the data and return it
         serializer = self.serializer_class(queryset, many=True)
@@ -60,41 +64,32 @@ class ContactListView(generics.ListAPIView):
 
     
 
-class ContactAddUpdateView(APIView):
-    queryset = Contact.objects.all()
+class ContactAddUpdateView(generics.CreateAPIView):
     serializer_class = ContactSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     # permission_classes = [IsAuthenticated]
     template_name = 'contact.html'
 
-    def render_html_response(self, serializer):
-        """
-        Render HTML response using the provided serializer and template name.
-        """
-        return Response({'serializer': serializer}, template_name=self.template_name)
     
+    def get_queryset(self):
+        queryset = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).order_by('-created_at')
+        return queryset
 
     def get(self, request, *args, **kwargs):
         if kwargs.get('pk'):  # If a primary key is provided, it means we are editing an existing contact
-            contact = self.get_object(kwargs['pk'])
+            contact = self.get_queryset().get()
             serializer = self.serializer_class(instance=contact)
-            return self.render_html_response(serializer)
+            context = {'serializer':serializer, 'contact':contact}
+            return render_html_response(context,self.template_name)
         else:
             serializer = self.serializer_class()
-            return self.render_html_response(serializer)
-        
-    def get_object(self, pk):
-        try:
-            return Contact.objects.get(pk=pk)
-        except Contact.DoesNotExist:
-            raise Http404
-
-
-
+            context = {'serializer':serializer}
+            return render_html_response(context, self.template_name)
+    
     def post(self, request, *args, **kwargs):
         if kwargs.get('pk'):
             # If a primary key is provided, it means we are editing an existing contact
-            contact = self.get_object(kwargs['pk'])
+            contact = self.get_queryset().get()
             serializer = self.serializer_class(contact, data=request.data)
         else:
             # If no primary key is provided, it means we are adding a new contact
@@ -122,7 +117,8 @@ class ContactAddUpdateView(APIView):
         # Invalid serializer data
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template with invalid serializer data
-                return self.render_html_response(serializer)
+                context = {'serializer':serializer}
+                return render_html_response(context,self.template_name)
             else:   
                 # Return JSON response with error message
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
