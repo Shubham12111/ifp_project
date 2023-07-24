@@ -3,6 +3,9 @@ from rest_framework import serializers
 from .models import Todo, Module,Comment, STATUS_CHOICES,PRIORITY_CHOICES
 from authentication.models import User
 from rest_framework.exceptions import ValidationError
+from datetime import date
+
+
 
 class TodoAddSerializer(serializers.ModelSerializer):
     module = serializers.PrimaryKeyRelatedField(
@@ -43,7 +46,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
     assigned_to = serializers.PrimaryKeyRelatedField(
         label=('Assigned To'),
         required=True,
-        queryset=User.objects.all(),
+        queryset=User.objects.none(),
         style={
             'base_template': 'custom_select.html',
             'custom_class':'col-6'
@@ -79,14 +82,37 @@ class TodoAddSerializer(serializers.ModelSerializer):
         # Add any additional styles or validators if needed
     )
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user = self.context['request'].user
+        if user.is_authenticated:
+            self.fields['assigned_to'].queryset = User.objects.filter(is_active=True).exclude(pk=user.pk)
+
+
     def validate(self, data):
         start_date = data.get('start_date')
         end_date = data.get('end_date')
 
-        if start_date and end_date and start_date >= end_date:
+        if start_date and end_date and start_date > end_date:
             raise ValidationError({'end_date':'Start date should be greater than the start date.'})
 
         return data
+    
+    def validate_start_date(self, value):
+        """
+        Check that the start_date is not less than the current date.
+        """
+        if value < date.today():
+            raise serializers.ValidationError("Start date cannot be in the past.")
+        return value
+
+    def validate_description(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        is_blank_html = value.strip() == "<p><br></p>"
+        
+        if is_blank_html:
+            raise serializers.ValidationError("Description field is required.")
+        return value
     
     class Meta:
         model = Todo
@@ -123,10 +149,10 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['comment', 'status']
     
-    def validate_message(self, value):
+    def validate_comment(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
         is_blank_html = value.strip() == "<p><br></p>"
         
         if is_blank_html:
-            raise serializers.ValidationError("Message field is required.")
+            raise serializers.ValidationError("Comment field is required.")
         return value

@@ -16,6 +16,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework import filters
 from django.apps import apps
 from django.contrib.auth.models import Permission
+from django.db.models import Q
 
 
 class CanReadPermission(BasePermission):
@@ -72,12 +73,10 @@ class ToDoListAPIView(generics.ListAPIView):
         return apps.get_containing_app_config(self.__module__).name
     
     def get_queryset(self):
-        queryset = Todo.objects.all()
-        user_id = self.request.user.id
+        user_id = self.request.user
 
-        # Add filtering based on user ID
-        queryset = queryset.filter(user_id=user_id)
-
+        queryset = Todo.objects.filter( Q(user_id=user_id) | Q(assigned_to=user_id)
+        ).distinct().order_by('-created_at')
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -122,10 +121,10 @@ class ToDoAddView(generics.CreateAPIView):
 
         if pk:
             instance = self.get_queryset().get()
-            serializer = self.serializer_class(instance=instance)
+            serializer = self.serializer_class(instance=instance,context={'request': request})
         else:
             # If no primary key is provided, it means we are adding a new contact
-            serializer = self.serializer_class()
+            serializer = self.serializer_class(context={'request': request})
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
@@ -139,10 +138,10 @@ class ToDoAddView(generics.CreateAPIView):
         if pk:
             # If a primary key is provided, it means we are updating an existing contact
             todo_data =  self.get_queryset().get()
-            serializer = self.serializer_class(instance=todo_data, data=data)
+            serializer = self.serializer_class(instance=todo_data, data=data,context={'request': request})
         else:
             # If no primary key is provided, it means we are adding a new contact
-            serializer = self.serializer_class(data=data)
+            serializer = self.serializer_class(data=data,context={'request': request})
 
         
         if serializer.is_valid():
@@ -151,9 +150,9 @@ class ToDoAddView(generics.CreateAPIView):
             if request.accepted_renderer.format == 'html':
                 # For HTML rendering, redirect to the list view after successful save
                 if pk:
-                    messages.success(request, "Task Updated: Your TODO has been updated successfully!")
+                    messages.success(request, "Your TODO has been updated successfully!")
                 else:
-                    messages.success(request, "Task Added: Your TODO has been saved successfully!")
+                    messages.success(request, "Your TODO has been saved successfully!")
                 return redirect(reverse('todo_list'))
             else:
                 # For other formats (e.g., JSON), return success response
@@ -168,48 +167,96 @@ class ToDoAddView(generics.CreateAPIView):
             return Response(context, template_name=self.template_name)
            
 
+class ToDoDeleteView(generics.DestroyAPIView):
+    permission_classes = [CanWritePermission, IsAuthenticated]
+
+    def get_app_name(self):
+        return apps.get_containing_app_config(self.__module__).name
+
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return Todo.objects.filter(pk=self.kwargs.get('pk'), user_id=user_id)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_queryset().first()
+        if instance:
+            self.perform_destroy(instance)
+            return Response(
+                {"message": "Your TODO has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "TODO not found or you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class ToDoRetrieveAPIView(generics.RetrieveAPIView):
     permission_classes = [CanReadPermission, IsAuthenticated]
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
-    search_fields = ['title', 'description']  # Specify fields you want to allow searching on
-    template_name = 'todo_view.html'
     serializer_class = CommentSerializer
+    template_name = 'todo_view.html'
     
     def get_app_name(self):
         return apps.get_containing_app_config(self.__module__).name
     
     def get_queryset(self):
-        queryset = Todo.objects.filter(pk=self.kwargs.get('todo_id'),user_id = self.request.user.id)
+        user = self.request.user
+        todo_id = self.kwargs.get('todo_id')
+
+        # Build the queryset with OR condition
+        queryset = Todo.objects.filter(
+            Q(pk=todo_id, user_id=user.id) | Q(assigned_to=user, pk=todo_id)
+        )
+        return queryset
+
+    def get_comment_queryset(self):
+        todo_queryset = self.get_queryset()
+        queryset = Comment.objects.filter(todo_id=todo_queryset.get()).order_by('-created_at')
         return queryset
 
     def get(self, request, *args, **kwargs):
         queryset = self.get_queryset().get()
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            comment_list = Comment.objects.filter(todo_id=queryset).order_by('-created_at')
+            comment_id = self.kwargs.get('comment_id')
+            if comment_id:
+                comment_instance =  Comment.objects.filter(todo_id=queryset,pk=comment_id, user_id=request.user).get()
+                serializer = self.serializer_class(instance=comment_instance)
+            else:
+                serializer =  self.serializer_class()
+            
+            comment_list = self.get_comment_queryset()
             context = {'todo_data': queryset,
-                       'serializer':self.serializer_class,
+                       'serializer':serializer,
                        'comment_list':comment_list}
             return render_html_response(context,self.template_name)
        
     
     def post(self, request, *args, **kwargs):
         data = request.data
-        if self.get_queryset().get():
+        todo_data =  self.get_queryset().get()
+        if todo_data:
             # If a primary key is provided, it means we are updating an existing contact
-            todo_data =  self.get_queryset().get()
-            serializer = self.serializer_class(data=data)
+            comment_id = self.kwargs.get('comment_id')
+            if comment_id:
+                comment_instance =  Comment.objects.filter(todo_id=todo_data,pk=comment_id,user_id=request.user).first()
+                serializer = self.serializer_class(data=data, instance=comment_instance)
+            else:
+                serializer = self.serializer_class(data=data)
+            
             if serializer.is_valid():
                 serializer.validated_data['user_id'] = request.user
                 serializer.validated_data['todo_id'] = todo_data
                 serializer.save()
+                todo_data.status = serializer.data.get('status') 
+                todo_data.save()
                 if request.accepted_renderer.format == 'html':
-                    # For HTML rendering, redirect to the list view after successful save
-                
-                    return redirect(reverse('todo_list'))
+                    # For HTML rendering, redirect to the list view after successful savemessages.success(request, "Task Added: Your TODO and comments have been saved successfully!")
+                    messages.success(request, "Your comments have been saved successfully!")
+                    return redirect(reverse('todo_view', kwargs={'todo_id': kwargs['todo_id']}))
+
                 else:
                     # For other formats (e.g., JSON), return success response
                     return Response({
@@ -217,4 +264,33 @@ class ToDoRetrieveAPIView(generics.RetrieveAPIView):
                         "message": "Data retrieved successfully",
                         "data": serializer.data
                     })
-            
+            else:
+                # Render the HTML template with invalid serializer data
+                context = {'todo_data': todo_data,
+                       'serializer':serializer,
+                       'comment_list':self.get_comment_queryset()}
+                return Response(context, template_name=self.template_name)
+
+class ToDoDeleteCommentView(generics.DestroyAPIView):
+    def get_app_name(self):
+        return apps.get_containing_app_config(self.__module__).name
+    
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return Todo.objects.filter(pk=self.kwargs.get('todo_id'), user_id=user_id)
+    
+    def destroy(self, request, *args, **kwargs):
+        todo = self.get_queryset()
+        comment_id = kwargs.get('comment_id')
+        if comment_id:
+            comment = Comment.objects.filter(todo_id=todo.get(), user_id=request.user , pk=comment_id)
+            comment.delete()
+            return Response(
+                {"message": "Your comment has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "Comment not found or you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )

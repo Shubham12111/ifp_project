@@ -232,7 +232,6 @@ class ConversationView(APIView):
                     # Invalid serializer data
                     if request.accepted_renderer.format == 'html':
                         # Render the HTML template with invalid serializer data
-                        print(serializer.errors)
                         return render(request, self.template_name,{'conversation_list':conversation_list,
                                                            'serializer':serializer,
                                                            'contact_data':contact_data})
