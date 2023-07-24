@@ -86,15 +86,9 @@ WSGI_APPLICATION = 'infinity_fire_solutions.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'IFP_DB',
-        'USER': 'root',
-        'PASSWORD': 'Testing@123',
-        'HOST': '127.0.0.1',
-        'HOST': 'localhost', # or 'localhost' if MySQL is running on the same machine as Django
-        'PORT': '3306', # default port is usually 3306
-
+  
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 

@@ -38,6 +38,9 @@ class Contact(models.Model):
 
     def __str__(self):
         return self.first_name
+    class Meta:
+        permissions = (("list_contact", "Can list Contact"),)
+    
 
 class Conversation(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
