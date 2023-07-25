@@ -14,5 +14,5 @@ urlpatterns = [
     path('delete/<int:pk>/',login_required(ContactDeleteView.as_view()),name='delete_contact'),
     path('conversation/<int:contact_id>/', login_required(ConversationView.as_view()), name='contact_conversation'),
     path('conversation/edit/<int:contact_id>/<int:conversation_id>', login_required(ConversationView.as_view()), name='edit_conversation'),
-
+    path('conversation/delete/<int:contact_id>/<int:conversation_id>', login_required(ConversationCommentView.as_view()), name='delete_conversation'),
 ]

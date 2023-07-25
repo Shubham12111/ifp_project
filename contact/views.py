@@ -185,11 +185,7 @@ class ConversationView(APIView):
     
     def get_object(self):
         contact_id = self.kwargs.get('contact_id')
-        conversation_id = self.kwargs.get('conversation_id')
-        if conversation_id:
-            return self.get_conversation_queryset().filter(contact_id=contact_id, pk=conversation_id).first()
-        else:
-            return self.get_queryset().filter(pk=contact_id).first()
+        return self.get_queryset().filter(pk=contact_id).first()
 
     def render_html_response(self, serializer):
         """
@@ -199,12 +195,18 @@ class ConversationView(APIView):
 
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
+        conversation_id = self.kwargs.get('conversation_id')
         if instance:
+            if conversation_id:
+                conversation_data = self.get_conversation_queryset().filter(contact_id = instance, pk=conversation_id).first() 
+                serializer = self.serializer_class(instance=conversation_data)
+            else:
+                serializer = self.serializer_class()
             conversation_list = Conversation.objects.filter(user_id=request.user, 
                                                             contact_id = instance).order_by('-created_at')
             
             return render(request, self.template_name,{'conversation_list':conversation_list,
-                                                        'serializer':self.serializer_class(),
+                                                        'serializer':serializer,
                                                         'contact_data':instance})
         else:
             messages.error(request, " You are not authorized to perform this action.")
@@ -216,17 +218,24 @@ class ConversationView(APIView):
             contact_data = Contact.objects.filter(user_id = request.user, 
                                                   pk = kwargs.get('contact_id')).first()
             if contact_data:
+                conversation_id = self.kwargs.get('conversation_id')
                 conversation_list = Conversation.objects.filter(user_id=request.user, 
                                                                 contact_id = contact_data).order_by('-created_at')
                 
-                serializer = self.serializer_class(data=request.data)
+                if conversation_id:
+                    conversation_data = self.get_conversation_queryset().filter(contact_id = contact_data, pk=conversation_id).first() 
+                    serializer = self.serializer_class(data=request.data,instance=conversation_data)
+                    success = "Congratulations! your conversation has been updated successfully."
+                else:
+                    serializer = self.serializer_class(data=request.data)
+                    success = "Congratulations! your conversation has been added successfully."
                 
                 if serializer.is_valid():
                     serializer.validated_data['user_id'] = request.user  # Assign the current user instance
                     serializer.validated_data['contact_id'] = contact_data # Assign the current user instance
                     serializer.save()
                     if request.accepted_renderer.format == 'html':
-                        messages.success(request, "Congratulations! your conversation has been added successfully.")
+                        messages.success(request, success)
                         return redirect(reverse('contact_conversation', kwargs={'contact_id': kwargs['contact_id']}))
                 else:
                     # Invalid serializer data
@@ -248,3 +257,26 @@ class ConversationView(APIView):
         else:
             messages.error(request, " You are not authorized to perform this action.")
         return redirect(reverse('contact_list'))
+    
+
+class ConversationCommentView(generics.DestroyAPIView):
+    
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return Contact.objects.filter(pk=self.kwargs.get('contact_id'), user_id=user_id).get()
+    
+    def destroy(self, request, *args, **kwargs):
+        contact_data = self.get_queryset()
+        conversation_id = kwargs.get('conversation_id')
+        if conversation_id:
+            conversation = Conversation.objects.filter(contact_id=contact_data, pk=conversation_id)
+            conversation.delete()
+            return Response(
+                {"message": "Your conversation has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "Conversation not found or you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )
