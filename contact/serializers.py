@@ -4,7 +4,7 @@ from rest_framework import serializers
 from .models import Contact,ContactType,Conversation,ConversationType
 from cities_light.models import City, Country, Region
 from rest_framework.validators import UniqueValidator
-
+from django.conf import settings
 
 class PhoneNumberValidator(RegexValidator):
     regex = r'^\d+$'
@@ -184,7 +184,6 @@ class ConversationSerializer(serializers.ModelSerializer):
     # Custom FileField for handling file uploads
     file = serializers.FileField(
         label=('Document'),
-        max_length=6,
         required=False,
         style={
             "input_type": "file",
@@ -242,3 +241,5 @@ class ConversationSerializer(serializers.ModelSerializer):
         if is_blank_html:
             raise serializers.ValidationError("Message field is required.")
         return value
+    
+    
