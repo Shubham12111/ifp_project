@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infinity-fire-systems-namespace-dev
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: infinity-fire-systems-namespace-dev
+  name: infinity-fire-systems-deployment-dev
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: infinity-fire-systems-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: infinity-fire-systems-app
+    spec:
+      containers:
+      - image: 591836277216.dkr.ecr.eu-west-2.amazonaws.com/ifp-ecr-dev:latest
+        imagePullPolicy: Always
+        name: infinity-fire-systems-container-dev
+        ports:
+        - containerPort: 8000
+        env:
+          - name: DB_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: ifs-config
+                key: DB_NAME
+          - name: DB_USER
+            valueFrom:
+              configMapKeyRef:
+                name: ifs-config
+                key: DB_USER
+          - name: DB_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: ifs-config
+                key: DB_PASSWORD
+          - name: DB_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: ifs-config
+                key: DB_HOST
+          - name: DB_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: ifs-config
+                key: DB_PORT
+          - name: SU_EMAIL
+            valueFrom:
+              configMapKeyRef:
+                name: ifs-config
+                key: SU_EMAIL
+          - name: SU_PASSWORD
+            valueFrom:
+              configMapKeyRef:
+                name: ifs-config
+                key: SU_PASSWORD
+          
+          
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   namespace: infinity-fire-systems-namespace-dev
+#   name: infinity-fire-systems-service
+# spec:
+#   ports:
+#     - port: 80
+#       targetPort: 8000
+#       protocol: TCP
+#   type: NodePort
+#   selector:
+#     app.kubernetes.io/name: infinity-fire-systems-app
