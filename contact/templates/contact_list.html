@@ -48,15 +48,15 @@
             <table class="table table-flush text-dark" id="contact-list">
               <thead class="thead-light">
                 <tr>
-                  <th class="">First Name</th>
-                  <th class="">Last Name</th>
+                  <th>First Name</th>
+                  <th >Last Name</th>
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Contact Type</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody class="ml-4"> 
                 {% for contact in contacts %}
                 <tr>
                   <td >{{contact.first_name}}</td>
@@ -100,5 +100,15 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+  if (document.getElementById('contact-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25
+    });
+
+  };
+</script>
 {% endblock %}     
 {% endblock %}
