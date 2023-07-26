@@ -21,6 +21,13 @@
 {% include 'components/alert_small.html' %}
 <div class="container-fluid py-4">
   <div class="row">
+    <div class="row mt-4">
+      <div class="col-lg-8 col-8 mb-3">
+          <!-- Add your content here -->
+      </div>
+      <div class="col-lg-4 col-4 mb-3 text-right">
+          <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Contact</a>
+      </div>
     <div class="col-12">
       <div class="card">
         <!-- Card header -->
@@ -30,9 +37,9 @@
               <h4 class="mb-0">Contacts</h4>
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
-              <div class="ms-auto my-auto">
+              <!-- <div class="ms-auto my-auto">
                 <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-md mb-0" >+&nbsp; Add Contact</a>
-              </div>
+              </div> -->
             </div>
           </div>
         </div>
