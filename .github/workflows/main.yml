@@ -10,7 +10,6 @@ env:
   AWS_REGION: eu-west-2
   ECR_REGISTRY: 591836277216.dkr.ecr.eu-west-2.amazonaws.com
   IMAGE_NAME: ifp-ecr-dev
-
 jobs:
   build:
     runs-on: ubuntu-latest
