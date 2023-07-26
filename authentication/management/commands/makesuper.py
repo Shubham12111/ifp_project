@@ -21,4 +21,4 @@ class Command(BaseCommand):
         # check if a superuser already exist.
         if not User.objects.filter(is_superuser=1).exists():
             # This function creates a superuser if one does not already exist.
-            User.objects.create_superuser(os.environ['SU_EMAIL'], os.environ['SU_EMAIL'], os.environ['SU_PASSWORD'])
+            User.objects.create_superuser(os.environ['SU_EMAIL'], os.environ['SU_PASSWORD'])
