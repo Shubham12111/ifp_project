@@ -19,8 +19,22 @@
               <div class="row">
                 {% render_form serializer %}
               </div>
-             
-            </div>
+              {% if serializer.data.presigned_url %}
+              <div class="col-lg-6">
+                <div style="position: relative;">
+                  <a href="{{ serializer.data.presigned_url }}" download>
+                    <span class="text-sm me-2">{{ serializer.data.filename }}</span>
+                  </a>
+                  
+                  <a href="#" class="delete-icon" onclick="confirmDelete({{conversation_data.id}}{{contact_data.id}},
+                    'Are you sure you want to delete this conversation document?','The conversation document has been deleted successfully.',
+                    '{% url 'document_conversation' contact_data.id  serializer.data.id %}')" class="delete-link ms-2" data-title="{{ conversation_data.title }}">
+                    <i class="fas fa-times-circle text-danger"></i>
+                  </a>
+                </div>
+              </div>
+             {% endif %}
+          </div>
             <div class="card-footer p-3">
               <div class="row mt-2">
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
@@ -56,7 +70,10 @@
                     <a href="{% url 'edit_conversation' contact_data.id conversation_data.id  %}" class="">
                       <i class="fas fa-edit  text-info"></i>
                     </a>
-                    <a href="#" type="button"  onclick="confirmDelete({{conversation_data.id}}, 'Are you sure you want to delete this conversation?','The conversation has been deleted successfully.','{% url 'delete_conversation' contact_data.id  conversation_data.id %}')" class="delete-link ms-2" data-title="{{ conversation_data.title }}">
+                    <a href="#" type="button"  
+                    onclick="confirmDelete({{conversation_data.id}},
+                     'Are you sure you want to delete this conversation?','The conversation has been deleted successfully.',
+                     '{% url 'delete_conversation' contact_data.id  conversation_data.id %}')" class="delete-link ms-2" data-title="{{ conversation_data.title }}">
 
                       <i class="fas fa-trash-alt text-danger"></i>
                     </a>
@@ -65,9 +82,10 @@
                 <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ conversation_data.created_at|date:"F d, Y" }}</p>
                 <p class="text-sm mt-3 mb-2">
                   {{ conversation_data.message|safe }}
-                  <i class="fas fa-paperclip ml-1 text-warning"></i>
+             
                   {% if conversation_data.document_path %}
-                    <i class="fas fa-paperclip ml-1 text-info"></i>
+                  <a href="{{ conversation_data.presigned_url }}" download="{{ conversation_data.filename }}">
+                    <i class="fas fa-paperclip ml-1 text-warning"></i></a>
                   {% endif %}
 
                 </p>

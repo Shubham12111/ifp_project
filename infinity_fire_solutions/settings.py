@@ -161,8 +161,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = '/auth/login/'
 
-#COUNTRY
-# settings.py
+#AWS
+AWS_BUCKET_NAME = 'ifp-assets-dev'
+#supported file
+SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
+
 
 # Include data for English language translations
 CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
