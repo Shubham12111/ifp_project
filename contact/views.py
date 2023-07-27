@@ -1,35 +1,26 @@
 
 from django.contrib import messages
 from django.urls import reverse
-from django.shortcuts import render,redirect
-from django.http import Http404
-from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, redirect
+from django.http import Http404, JsonResponse, HttpResponse
 from django.conf import settings
+from infinity_fire_solutions.aws_helper import *
+from infinity_fire_solutions.permission import *
+from .models import *
+from .serializers import ContactSerializer, ConversationSerializer, ConversationViewSerializer
+from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
 
 from rest_framework import generics, status, filters
-
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.renderers import TemplateHTMLRenderer,JSONRenderer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
+from django.http import HttpResponseRedirect
 
-from infinity_fire_solutions.response_schemas import create_api_response,convert_serializer_errors,render_html_response
-
-from cities_light.models import City, Country, Region
-=======
-from infinity_fire_solutions.aws_helper import *
-
-
-from .models import *
-from .serializers import ContactSerializer,ConversationSerializer, ConversationViewSerializer
-
-
-class ContactListView(generics.ListAPIView):
+class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     View to get the listing of all contacts.
     Supports both HTML and JSON response formats.
     """
-    queryset = Contact.objects.all()
     serializer_class = ContactSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
@@ -37,18 +28,6 @@ class ContactListView(generics.ListAPIView):
     template_name = 'contact_list.html'
     ordering_fields = ['created_at'] 
 
-    def get(self, request, *args, **kwargs):
-        """
-        Handle both AJAX (JSON) and HTML requests.
-        """
-        if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-             # AJAX request, return JSON response
-            return self.handle_ajax_request(request)
-        else:
-             # HTML request, return HTML or JSON response based on client's Accept header
-            return self.handle_html_request(request)
-    
-    
     def get_queryset(self):
         """
         Get the filtered queryset for contacts based on the authenticated user.
@@ -56,26 +35,33 @@ class ContactListView(generics.ListAPIView):
         queryset = Contact.objects.filter(user_id=self.request.user.id).order_by('-created_at')
         return queryset
     
-    def handle_html_request(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
         """
-        Handle HTML request and return HTML or JSON response based on client's Accept header.
+        Handle both AJAX (JSON) and HTML requests.
         """
-        queryset = self.get_queryset()
-        if request.accepted_renderer.format == 'html':
-            # If the client accepts HTML, render the template
-            context = {'contacts':queryset}
-            return render_html_response(context,self.template_name)
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user = self.handle_unauthenticated()
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            # If the user is not authenticated and a redirect response is received
+            # (for HTML renderer), return the redirect response as it is.
+            return authenticated_user
         
-       # If the client accepts JSON, serialize the data and return it
-        serializer = self.serializer_class(queryset, many=True)
+        if not authenticated_user:
+            raise AuthenticationFailed("Authentication credentials were not provided")
+        else:
+            queryset = self.get_queryset()
+            
+            if request.accepted_renderer.format == 'html':
+                context = {'contacts':queryset}
+                return render_html_response(context,self.template_name)
+            else:
+                serializer = self.serializer_class(queryset, many=True)
+                return create_api_response(status_code=status.HTTP_200_OK,
+                                                message="Data retrieved",
+                                                data=serializer.data)
 
-        return create_api_response(status_code=status.HTTP_200_OK,
-                                    message="Data retrieved",
-                                    data=serializer.data)
-
-    
-
-class ContactAddUpdateView(generics.CreateAPIView):
+class ContactAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
     View for adding or updating a contact.
     Supports both HTML and JSON response formats.
@@ -89,7 +75,7 @@ class ContactAddUpdateView(generics.CreateAPIView):
         """
         Get the filtered queryset for contacts based on the authenticated user.
         """
-        queryset = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).order_by('-created_at')
+        queryset = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).order_by('-created_at').first()
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -98,60 +84,81 @@ class ContactAddUpdateView(generics.CreateAPIView):
         If the contact exists, retrieve the serialized data and render the HTML template.
         If the contact does not exist, render the HTML template with an empty serializer.
         """
-        if kwargs.get('pk'):  # If a primary key is provided, it means we are editing an existing contact
-            contact = self.get_queryset().get()
-            serializer = self.serializer_class(instance=contact)
-            context = {'serializer':serializer, 'contact':contact}
-            return render_html_response(context,self.template_name)
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user = self.handle_unauthenticated()
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            # If the user is not authenticated and a redirect response is received
+            # (for HTML renderer), return the redirect response as it is.
+            return authenticated_user
+        
+        if not authenticated_user:
+            raise AuthenticationFailed("Authentication credentials were not provided")
+        
         else:
-            serializer = self.serializer_class()
-            context = {'serializer':serializer}
-            return render_html_response(context, self.template_name)
-    
+            if kwargs.get('pk'):  # If a primary key is provided, it means we are editing an existing contact
+                contact = self.get_queryset()
+                serializer = self.serializer_class(instance=contact)
+                context = {'serializer':serializer, 'contact':contact}
+                return render_html_response(context,self.template_name)
+            else:
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                       message="GET Method Not Alloweded",)
+        
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to add or update a contact.
         """
-        if kwargs.get('pk'):
-            # If a primary key is provided, it means we are editing an existing contact
-            contact = self.get_queryset().get()
-            serializer = self.serializer_class(contact, data=request.data)
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user = self.handle_unauthenticated()
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            # If the user is not authenticated and a redirect response is received
+            # (for HTML renderer), return the redirect response as it is.
+            return authenticated_user
+        
+        if not authenticated_user:
+            raise AuthenticationFailed("Authentication credentials were not provided")
+        
         else:
-            # If no primary key is provided, it means we are adding a new contact
-            serializer = self.serializer_class(data=request.data)
-
-        if serializer.is_valid():
-            serializer.validated_data['user_id'] = request.user  # Assign the current user instance
-            serializer.save()
-
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                if kwargs.get('pk'):
-                    messages.success(request, "Congratulations! your contact has been updated successfully.")
-                else:
-                    messages.success(request, "Congratulations! your contact has been added successfully.")
-                return redirect(reverse('contact_list'))
-
+            if kwargs.get('pk'):
+                # If a primary key is provided, it means we are editing an existing contact
+                contact = self.get_queryset()
+                message = "Congratulations! your contact has been updated successfully."
+                serializer = self.serializer_class(contact, data=request.data)
             else:
-            # Return JSON response with success message and serialized data
-                return create_api_response(status_code=status.HTTP_201_CREATED,
-                                       message="Congratulations! your contact has been added/updated successfully.",
-                                       data=serializer.data
-                                       )
-        else:
-        # Invalid serializer data
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                context = {'serializer':serializer}
-                return render_html_response(context,self.template_name)
-            else:   
-                # Return JSON response with error message
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                       message="We apologize for the inconvenience, but please review the below information.",
-                                       data=convert_serializer_errors(serializer.errors))
+                # If no primary key is provided, it means we are adding a new contact
+                message = "Congratulations! your contact has been added successfully."
+                serializer = self.serializer_class(data=request.data)
+
+            if serializer.is_valid():
+                serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+                serializer.save()
+
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    return redirect(reverse('contact_list'))
+
+                else:
+                    # Return JSON response with success message and serialized data
+                    return create_api_response(status_code=status.HTTP_201_CREATED,
+                                        message="Congratulations! your contact has been added/updated successfully.",
+                                        data=serializer.data
+                                        )
+            else:
+                # Invalid serializer data
+                if request.accepted_renderer.format == 'html':
+                    # Render the HTML template with invalid serializer data
+                    context = {'serializer':serializer}
+                    return render_html_response(context,self.template_name)
+                else:   
+                    # Return JSON response with error message
+                    return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                        message="We apologize for the inconvenience, but please review the below information.",
+                                        data=convert_serializer_errors(serializer.errors))
 
             
-class ContactDeleteView(APIView):
+class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View for updating a contact.
     Supports both HTML and JSON response formats.
@@ -160,40 +167,25 @@ class ContactDeleteView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     # permission_classes = [IsAuthenticated]
     template_name = 'contact.html'
-
-    def get(self, request, *args, **kwargs):
-        """
-        Handle GET request to display a form for deleting a contact.
-        If the contact exists, retrieve the serialized data and render the HTML template.
-        If the contact does not exist, render the HTML template with an empty serializer.
-        """
-        if kwargs.get('pk'):  # If a primary key is provided, it means we are editing an existing contact
-            contact = self.get_object(kwargs['pk'])
-            serializer = self.serializer_class(instance=contact)
-        else:
-            serializer = self.serializer_class()
-        if request.accepted_renderer.format == 'html':
-            # If the client accepts HTML, render the template
-            return Response({'serializer': serializer}, template_name=self.template_name)
-        
-    def get_object(self, pk):
-        """
-        Get the contact instance based on the provided primary key (pk).
-        Raises Http404 if the contact does not exist.
-        """
-        try:
-            return Contact.objects.get(pk=pk)
-        except Contact.DoesNotExist:
-            raise Http404
-               
+    
     def delete(self, request, *args, **kwargs):
         """
         Handle DELETE request to delete a contact.
         """
         # Get the contact instance from the database
-        contact = self.get_object(kwargs['pk'])
-        if contact:
+         # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user = self.handle_unauthenticated()
 
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            # If the user is not authenticated and a redirect response is received
+            # (for HTML renderer), return the redirect response as it is.
+            return authenticated_user
+        
+        if not authenticated_user:
+            raise AuthenticationFailed("Authentication credentials were not provided")
+        
+        contact = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).first()
+        if contact:
             # Proceed with the deletion
             contact.delete()
         
@@ -202,13 +194,16 @@ class ContactDeleteView(APIView):
                 return HttpResponse(status=204)  # HTTP 204 No Content (optional, can be any status code)
             else:
                 # If the request is from API renderer, return a JSON response
-                return JsonResponse({"message": "Your contact has been deleted successfully!"})
+                return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Your contact has been deleted successfully!", )
         else:
             if request.accepted_renderer.format == 'html':
                 messages.error(request, "Contact not found")
                 return HttpResponse(status=404)  # HTTP 404 Not Found (optional, can be any status code)
             else:
-                return JsonResponse({"message": "Contact not found"}, status=404)
+                return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Contact not found", )
+               
 
       
       
