@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-3&1voj3_&(tzrsww4^_!x!wht%0a2&x@jc@vw(y!23di798(6^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['54ad-49-249-18-102.ngrok-free.app','127.0.0.1','192.168.1.210', 'k8s-infinity-infinity-f08d2dda41-780216487.eu-west-2.elb.amazonaws.com']
+ALLOWED_HOSTS = ['54ad-49-249-18-102.ngrok-free.app','127.0.0.1','192.168.1.210', 'app-dev.infinityfireprevention.com']
 
 
 # Application definition
