@@ -1,33 +1,29 @@
 
 from django.contrib import messages
-from django.views import View
 from django.urls import reverse
 from django.shortcuts import render,redirect
 from django.http import Http404
 from django.http import JsonResponse, HttpResponse
+from django.conf import settings
 
 from rest_framework import generics, status, filters
-from django.shortcuts import render
-from django.views import View
-from .models import *
-from rest_framework import generics, status
+
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer,JSONRenderer
-from rest_framework import generics, status
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-
 from infinity_fire_solutions.response_schemas import create_api_response,convert_serializer_errors,render_html_response
-from cities_light.models import City, Country, Region
+from infinity_fire_solutions.aws_helper import *
 
-from .models import Contact
-from .serializers import ContactSerializer,ConversationSerializer
+from .models import *
+from .serializers import ContactSerializer,ConversationSerializer, ConversationViewSerializer
 
 
 class ContactListView(generics.ListAPIView):
-    """ view to get the listing of all contacts
+    """
+    View to get the listing of all contacts.
+    Supports both HTML and JSON response formats.
     """
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
@@ -38,17 +34,28 @@ class ContactListView(generics.ListAPIView):
     ordering_fields = ['created_at'] 
 
     def get(self, request, *args, **kwargs):
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
         if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+             # AJAX request, return JSON response
             return self.handle_ajax_request(request)
         else:
+             # HTML request, return HTML or JSON response based on client's Accept header
             return self.handle_html_request(request)
     
     
     def get_queryset(self):
+        """
+        Get the filtered queryset for contacts based on the authenticated user.
+        """
         queryset = Contact.objects.filter(user_id=self.request.user.id).order_by('-created_at')
         return queryset
     
     def handle_html_request(self, request, *args, **kwargs):
+        """
+        Handle HTML request and return HTML or JSON response based on client's Accept header.
+        """
         queryset = self.get_queryset()
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
@@ -65,17 +72,28 @@ class ContactListView(generics.ListAPIView):
     
 
 class ContactAddUpdateView(generics.CreateAPIView):
+    """
+    View for adding or updating a contact.
+    Supports both HTML and JSON response formats.
+    """
     serializer_class = ContactSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    # permission_classes = [IsAuthenticated]
     template_name = 'contact.html'
 
     
     def get_queryset(self):
+        """
+        Get the filtered queryset for contacts based on the authenticated user.
+        """
         queryset = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).order_by('-created_at')
         return queryset
 
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for updating a contact.
+        If the contact exists, retrieve the serialized data and render the HTML template.
+        If the contact does not exist, render the HTML template with an empty serializer.
+        """
         if kwargs.get('pk'):  # If a primary key is provided, it means we are editing an existing contact
             contact = self.get_queryset().get()
             serializer = self.serializer_class(instance=contact)
@@ -87,6 +105,9 @@ class ContactAddUpdateView(generics.CreateAPIView):
             return render_html_response(context, self.template_name)
     
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add or update a contact.
+        """
         if kwargs.get('pk'):
             # If a primary key is provided, it means we are editing an existing contact
             contact = self.get_queryset().get()
@@ -127,12 +148,21 @@ class ContactAddUpdateView(generics.CreateAPIView):
 
             
 class ContactDeleteView(APIView):
+    """
+    View for updating a contact.
+    Supports both HTML and JSON response formats.
+    """
     serializer_class = ContactSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     # permission_classes = [IsAuthenticated]
     template_name = 'contact.html'
 
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for deleting a contact.
+        If the contact exists, retrieve the serialized data and render the HTML template.
+        If the contact does not exist, render the HTML template with an empty serializer.
+        """
         if kwargs.get('pk'):  # If a primary key is provided, it means we are editing an existing contact
             contact = self.get_object(kwargs['pk'])
             serializer = self.serializer_class(instance=contact)
@@ -143,12 +173,19 @@ class ContactDeleteView(APIView):
             return Response({'serializer': serializer}, template_name=self.template_name)
         
     def get_object(self, pk):
+        """
+        Get the contact instance based on the provided primary key (pk).
+        Raises Http404 if the contact does not exist.
+        """
         try:
             return Contact.objects.get(pk=pk)
         except Contact.DoesNotExist:
             raise Http404
                
     def delete(self, request, *args, **kwargs):
+        """
+        Handle DELETE request to delete a contact.
+        """
         # Get the contact instance from the database
         contact = self.get_object(kwargs['pk'])
         if contact:
@@ -187,6 +224,17 @@ class ConversationView(APIView):
         contact_id = self.kwargs.get('contact_id')
         return self.get_queryset().filter(pk=contact_id).first()
 
+    def serialized_conversation_list(self):
+        conversation_list = Conversation.objects.filter(user_id=self.request.user, 
+                                                            contact_id = self.get_object()).order_by('-created_at')
+        # Serialize the conversation list with pre-signed URLs using the ConversationViewSerializer
+        serializer = ConversationViewSerializer(conversation_list, many=True)
+
+        # Access the serialized data as a list using serializer.data
+        serialized_conversation_list = serializer.data
+        
+        return serialized_conversation_list
+
     def render_html_response(self, serializer):
         """
         Render HTML response using the provided serializer and template name.
@@ -202,10 +250,8 @@ class ConversationView(APIView):
                 serializer = self.serializer_class(instance=conversation_data)
             else:
                 serializer = self.serializer_class()
-            conversation_list = Conversation.objects.filter(user_id=request.user, 
-                                                            contact_id = instance).order_by('-created_at')
             
-            return render(request, self.template_name,{'conversation_list':conversation_list,
+            return render(request, self.template_name,{'conversation_list':self.serialized_conversation_list(),
                                                         'serializer':serializer,
                                                         'contact_data':instance})
         else:
@@ -219,9 +265,6 @@ class ConversationView(APIView):
                                                   pk = kwargs.get('contact_id')).first()
             if contact_data:
                 conversation_id = self.kwargs.get('conversation_id')
-                conversation_list = Conversation.objects.filter(user_id=request.user, 
-                                                                contact_id = contact_data).order_by('-created_at')
-                
                 if conversation_id:
                     conversation_data = self.get_conversation_queryset().filter(contact_id = contact_data, pk=conversation_id).first() 
                     serializer = self.serializer_class(data=request.data,instance=conversation_data)
@@ -234,6 +277,7 @@ class ConversationView(APIView):
                     serializer.validated_data['user_id'] = request.user  # Assign the current user instance
                     serializer.validated_data['contact_id'] = contact_data # Assign the current user instance
                     serializer.save()
+                    
                     if request.accepted_renderer.format == 'html':
                         messages.success(request, success)
                         return redirect(reverse('contact_conversation', kwargs={'contact_id': kwargs['contact_id']}))
@@ -241,7 +285,7 @@ class ConversationView(APIView):
                     # Invalid serializer data
                     if request.accepted_renderer.format == 'html':
                         # Render the HTML template with invalid serializer data
-                        return render(request, self.template_name,{'conversation_list':conversation_list,
+                        return render(request, self.template_name,{'conversation_list':self.serialized_conversation_list(),
                                                            'serializer':serializer,
                                                            'contact_data':contact_data})
                     else:   
@@ -257,7 +301,33 @@ class ConversationView(APIView):
         else:
             messages.error(request, " You are not authorized to perform this action.")
         return redirect(reverse('contact_list'))
+
+class ConversationRemoveDocumentView(generics.DestroyAPIView):
     
+    def get_queryset(self):
+        user_id = self.request.user.id
+        return Contact.objects.filter(pk=self.kwargs.get('contact_id'), user_id=user_id).get()
+    
+    def destroy(self, request, *args, **kwargs):
+        contact_data = self.get_queryset()
+        conversation_id = kwargs.get('conversation_id')
+        if conversation_id:
+            conversation_instance = Conversation.objects.filter(contact_id=contact_data, pk=conversation_id).get()
+            if conversation_instance and conversation_instance.document_path: 
+                
+                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = conversation_instance.document_path)
+                # Remove the document_path from the conversation instance and save
+                conversation_instance.document_path = ''
+                conversation_instance.save()
+            return Response(
+                {"message": "Your conversation has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "Conversation not found or you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class ConversationCommentView(generics.DestroyAPIView):
     
