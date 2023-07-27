@@ -13,8 +13,9 @@ ACCESS_CHOICES = [
 
 MODULE_CHOICES =[
     ('contact','Contact'),
-    ('costumer','Costumer')
-    
+    ('costumer','Costumer'),
+    ('todo','ToDo'),
+
 ]
 class UserRole(models.Model):
     """
@@ -124,6 +125,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
     post_code = models.CharField(max_length=10, null=True, blank=True)
 
+    # Many-to-many relationship with UserRole
+    roles = models.ManyToManyField(UserRole, verbose_name="UserRole")
+    
+    
     objects = UserManager()
 
     USERNAME_FIELD = 'email'

@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import User, UserRole,UserRolePermission
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.admin import UserAdmin
+from django import forms
 
 
 class UserRolePermissionInline(admin.TabularInline):
@@ -34,16 +35,19 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'last_name')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff','groups',)}),
+        ('Permissions', {'fields': ('is_active', 'is_staff','roles',)}),
 
     )
     
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'groups','is_staff'),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'roles','is_staff'),
         }),
     )
+    autocomplete_fields = ['roles',]
+
+ 
 
 admin.site.register(User, CustomUserAdmin)
 
