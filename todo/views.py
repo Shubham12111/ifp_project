@@ -106,9 +106,7 @@ class ToDoListAPIView(CustomAuthenticationMixin, generics.ListAPIView):
                     data=serializer.data
                 )
 
-
-        
-class ToDoAddUpdateView(generics.CreateAPIView):
+class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'todo_add.html'
     serializer_class = TodoAddSerializer
@@ -143,60 +141,103 @@ class ToDoAddUpdateView(generics.CreateAPIView):
             
     
     def post(self, request, *args, **kwargs):
+
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user = self.handle_unauthenticated()
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            # If the user is not authenticated and a redirect response is received
+            # (for HTML renderer), return the redirect response as it is.
+            return authenticated_user
+        
+        if not authenticated_user:
+            raise AuthenticationFailed("Authentication credentials were not provided")
+
+        request.user  = authenticated_user
+
         data = request.data
         pk = kwargs.get('pk')
         if pk:
             # If a primary key is provided, it means we are updating an existing contact
             todo_data =  self.get_queryset().get()
+
             serializer = self.serializer_class(instance=todo_data, data=data,context={'request': request})
         else:
             # If no primary key is provided, it means we are adding a new contact
             serializer = self.serializer_class(data=data,context={'request': request})
 
-        
+
         if serializer.is_valid():
+
             serializer.validated_data['user_id'] = request.user
             serializer.save()
+
+            if pk:
+                message = "Your TODO has been updated successfully!"
+                status_code = status.HTTP_200_OK
+            else:
+                message = "Your TODO has been saved successfully!"
+                status_code = status.HTTP_201_CREATED
+
             if request.accepted_renderer.format == 'html':
                 # For HTML rendering, redirect to the list view after successful save
-                if pk:
-                    messages.success(request, "Your TODO has been updated successfully!")
-                else:
-                    messages.success(request, "Your TODO has been saved successfully!")
+                
+                messages.success(request, message)
                 return redirect(reverse('todo_list'))
             else:
                 # For other formats (e.g., JSON), return success response
-                return Response({
-                    "status_code": status.HTTP_200_OK,
-                    "message": "Data retrieved successfully",
-                    "data": serializer.data
-                })
+                return create_api_response(
+                    status_code,
+                    f"{message}",
+                    serializer.data
+                )
         else:
             # Render the HTML template with invalid serializer data
-            context = {'serializer': serializer}
-            return Response(context, template_name=self.template_name)
-           
+            if request.accepted_renderer.format == 'html':
+                context = {'serializer': serializer}
+                return Response(context, template_name=self.template_name)
+            else:
+                # For JSON API response
+                return create_api_response(
+                    status.HTTP_400_BAD_REQUEST,
+                    "Something went wrong!",
+                    serializer.errors
+                )
 
-class ToDoDeleteView(generics.DestroyAPIView):
-    def get_app_name(self):
-        return apps.get_containing_app_config(self.__module__).name
+class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    
     def get_queryset(self):
         user_id = self.request.user.id
         return Todo.objects.filter(pk=self.kwargs.get('pk'), user_id=user_id)
 
-    def destroy(self, request, *args, **kwargs):
+    def delete(self, request, *args, **kwargs):
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user = self.handle_unauthenticated()
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            # If the user is not authenticated and a redirect response is received
+            # (for HTML renderer), return the redirect response as it is.
+            return authenticated_user
+        
+        if not authenticated_user:
+            raise AuthenticationFailed("Authentication credentials were not provided")
+
+        request.user  = authenticated_user
+        
         instance = self.get_queryset().first()
         if instance:
-            self.perform_destroy(instance)
-            return Response(
-                {"message": "Your TODO has been deleted successfully."},
-                status=status.HTTP_204_NO_CONTENT
+            instance.delete()
+            # self.perform_destroy(instance)
+            return create_api_response(
+                status.HTTP_204_NO_CONTENT,
+                "Your TODO has been deleted successfully.",
             )
         else:
-            return Response(
-                {"message": "TODO not found or you don't have permission to delete."},
-                status=status.HTTP_404_NOT_FOUND
+            return create_api_response(
+                status.HTTP_404_NOT_FOUND,
+                "TODO not found or you don't have permission to delete."
             )
 
 class ToDoRetrieveAPIView(generics.RetrieveAPIView):
