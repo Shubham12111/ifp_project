@@ -17,51 +17,13 @@ from django.db.models import Q
 from authentication.models import *
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import permission_classes
 
-class HasListDataPermission(BasePermission):
-    def __init__(self, module_name):
-        self.module_name = module_name
 
-    def has_permission(self, request, view):
-        user = request.user
-        for role in user.roles.all():
-            permission = UserRolePermission.objects.filter(role=role, module=self.module_name).first()
-            if permission:
-                if permission.can_list_data == "none":
-                    raise PermissionDenied()
-                else:
-                    return permission.can_list_data.lower()
-        
-        # If no permission is found, return False (no "self" or "all" permission)
-        return False
-    
-    
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     API view to list TODO items.
-
-    This view lists TODO items filtered based on the authenticated user's ID.
-    It supports filtering based on fields and searching based on title and description.
-
-    Filters:
-        - Ordering by 'created_at' field is allowed.
-
-    Searching:
-        - Searching is allowed on 'title' and 'description' fields.
-
-    Renderer:
-        - Supports both HTML and JSON renderers.
-
-    Template (for HTML renderer):
-        - Uses the 'todo_list.html' template to render HTML output.
-
-    Serializer:
-        - Uses the TodoListSerializer to serialize the data.
-
-    Authentication and Permissions:
-        - Inherits authentication and permission handling from CustomAuthenticationMixin.
     """
-
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
@@ -77,20 +39,24 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             list: List of permission classes.
         """
         # You can return multiple permission classes here if needed
-        authenticated_user = self.handle_unauthenticated()
-        
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            # If the user is not authenticated and a redirect response is received
-            # (for HTML renderer), return the redirect response as it is.
-            return authenticated_user
-        
-        if not authenticated_user:
-            raise AuthenticationFailed("Authentication credentials were not provided")
-        
-        
-        module_name = self.get_model_name()
-        return [HasListDataPermission(module_name=module_name.lower())]
-    
+        try:
+            authenticated_user = self.handle_unauthenticated()
+            
+            if isinstance(authenticated_user, HttpResponseRedirect):
+                # If the user is not authenticated and a redirect response is received
+                # (for HTML renderer), return the redirect response as it is.
+                return authenticated_user
+               
+            
+            if not authenticated_user:
+                raise AuthenticationFailed("Authentication credentials were not provided")
+            
+            request.user  = authenticated_user
+            module_name = self.get_model_name()
+            return [HasListDataPermission(module_name=module_name.lower())]
+        except Exception as e:
+            print(e)
+
     
     def get_model_name(self):
         return self.serializer_class.Meta.model.__name__
@@ -106,13 +72,12 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         module_name = self.get_model_name()
         
         permission_instance = self.get_permissions()[0]
-        print(permission_instance)
         if permission_instance:
             can_list_data_value = permission_instance.has_permission(self.request, None)
             queryset = get_generic_queryset(self.request, module_name, "todo", can_list_data_value)
             return queryset
 
-
+   
     def list(self, request, *args, **kwargs):
         """
         List view for TODO items.
@@ -136,13 +101,40 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             )
 
 class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
+
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'todo_add.html'
     serializer_class = TodoAddSerializer
 
-    def get_app_name(self):
-        return apps.get_containing_app_config(self.__module__).name
+    def get_model_name(self):
+        return self.serializer_class.Meta.model.__name__
     
+
+    def get_permissions(self):
+        """
+        Get the list of permission classes to apply.
+
+        Returns:
+            list: List of permission classes.
+        """
+        # You can return multiple permission classes here if needed
+        try:
+            authenticated_user = self.handle_unauthenticated()
+            
+            if isinstance(authenticated_user, HttpResponseRedirect):
+                # If the user is not authenticated and a redirect response is received
+                # (for HTML renderer), return the redirect response as it is.
+                return authenticated_user
+            
+            if not authenticated_user:
+                raise AuthenticationFailed("Authentication credentials were not provided")
+            
+            module_name = self.get_model_name()
+            return [HasCreateDataPermission(module_name=module_name.lower())]
+        
+        except Exception as e:
+            print(e)
+
     def get_queryset(self):
         queryset = Todo.objects.filter(pk=self.kwargs.get('pk'))
         user_id = self.request.user.id

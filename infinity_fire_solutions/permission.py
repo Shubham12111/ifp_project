@@ -5,6 +5,11 @@ from django.urls import reverse
 from django.shortcuts import redirect
 from django.apps import apps
 from django.http import HttpResponseRedirect
+from rest_framework.permissions import BasePermission
+from rest_framework.exceptions import PermissionDenied
+from authentication.models import *
+
+
 class CustomAuthenticationMixin:
     """
     Mixin to handle authentication based on request format.
@@ -63,7 +68,111 @@ class CustomAuthenticationMixin:
         else:
             raise AuthenticationFailed("Authentication credentials were not provided.")
         
-        
+
+def get_user_module_permissions(user, module_name):
+    """
+    Get the module permissions for a specific user.
+
+    Args:
+        user (User): The user for whom permissions are to be retrieved.
+        module_name (str): The name of the module for which permissions are required.
+
+    Returns:
+        dict: A dictionary containing the user's permissions for each role in the module.
+              The keys are role names, and the values are dictionaries with the following keys:
+              - 'can_list_data': Permission to list data (either "yes" or "none").
+              - 'can_create_data': Permission to create data (either True or "none").
+              - 'can_change_data': Permission to change data (either "yes" or "none").
+              - 'can_delete_data': Permission to delete data (either "yes" or "none").
+    """
+    user_permissions = {}
+
+    for role in user.roles.all():
+        permission = UserRolePermission.objects.filter(role=role, module=module_name).first()
+        if permission:
+            user_permissions[role.name] = {
+                'can_list_data': permission.can_list_data.lower(),
+                'can_create_data': permission.can_create_data,
+                'can_change_data': permission.can_change_data.lower(),
+                'can_delete_data': permission.can_delete_data.lower(),
+            }
+        else:
+            user_permissions[role.name] = {
+                'can_list_data': "none",
+                'can_create_data': "none",
+                'can_change_data': "none",
+                'can_delete_data': "none",
+            }
+
+    return user_permissions
+
+class HasListDataPermission(BasePermission):
+    """
+    Permission class to check if the user has permission to list data for a specific module.
+
+    Args:
+        module_name (str): The name of the module for which list data permission is required.
+    """
+    
+    def __init__(self, module_name):
+        self.module_name = module_name
+
+    def has_permission(self, request, view):
+        user = request.user
+        user_permissions = get_user_module_permissions(user, self.module_name)
+
+        for permission in user_permissions.values():
+            if permission['can_list_data'] != "none":
+                return permission['can_list_data']
+
+        # If no permission is found, raise PermissionDenied
+        raise PermissionDenied()
+
+class HasCreateDataPermission(BasePermission):
+    def __init__(self, module_name):
+        self.module_name = module_name
+
+    def has_permission(self, request, view):
+        user = request.user
+        user_permissions = get_user_module_permissions(user, self.module_name)
+
+        for permission in user_permissions.values():
+            if permission['can_create_data'] != "none":
+                return permission['can_create_data']
+
+        # If no permission is found, raise PermissionDenied
+        raise PermissionDenied()
+
+class HasUpdateDataPermission(BasePermission):
+    def __init__(self, module_name):
+        self.module_name = module_name
+
+    def has_permission(self, request, view):
+        user = request.user
+        user_permissions = get_user_module_permissions(user, self.module_name)
+
+        for permission in user_permissions.values():
+            if permission['can_change_data'] != "none":
+                return permission['can_change_data']
+
+        # If no permission is found, raise PermissionDenied
+        raise PermissionDenied()
+
+class HasDeleteDataPermission(BasePermission):
+    def __init__(self, module_name):
+        self.module_name = module_name
+
+    def has_permission(self, request, view):
+        user = request.user
+        user_permissions = get_user_module_permissions(user, self.module_name)
+
+        for permission in user_permissions.values():
+            if permission['can_delete_data'] != "none":
+                return permission['can_delete_data']
+
+        # If no permission is found, raise PermissionDenied
+        raise PermissionDenied()
+
 class AuthenticationPermissionMixin:
     """
     Mixin for handling authentication and permission checks.
@@ -118,8 +227,10 @@ def get_generic_queryset(request, module_name, app_label, data_access_value ):
         # Filter based on the user's ID and assigned_to field
         
         queryset = model.objects.filter(user_id=request.user).distinct().order_by('-created_at')
-    else:
+    elif data_access_value == "all":
         # Return all data
+        print("fjjs")
         queryset = model.objects.all().order_by('-created_at')
-
+    else:
+        queryset = model.objects.none()
     return queryset
