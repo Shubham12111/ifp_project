@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
+import re
 
 # Custom validation function for validating file size
 def validate_file_size(value):
@@ -95,6 +96,7 @@ class ContactSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(
         label=('Phone'),
         max_length=14,
+        min_length=10,
         required= True,
         style={
             "input_type": "text",
@@ -207,6 +209,16 @@ class ContactSerializer(serializers.ModelSerializer):
             'contact_type':{'required':True}
 
         }
+
+    def validate_last_name(self, value):
+        if not re.match(r'^[a-zA-Z]+$', value):
+            raise serializers.ValidationError("Last Name can only contain characters.")
+        return value
+
+    def validate_first_name(self, value):
+        if not re.match(r'^[a-zA-Z]+$', value):
+            raise serializers.ValidationError("Last Name can only contain characters.")
+        return value
 
 
 class ConversationViewSerializer(serializers.ModelSerializer):
