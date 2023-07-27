@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-3&1voj3_&(tzrsww4^_!x!wht%0a2&x@jc@vw(y!23di798(6^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['54ad-49-249-18-102.ngrok-free.app','127.0.0.1','192.168.1.210', 'k8s-infinity-infinity-f08d2dda41-780216487.eu-west-2.elb.amazonaws.com']
+ALLOWED_HOSTS = ['54ad-49-249-18-102.ngrok-free.app','127.0.0.1','192.168.1.210', 'app-dev.infinityfireprevention.com']
 
 
 # Application definition
@@ -161,8 +161,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = '/auth/login/'
 
-#COUNTRY
-# settings.py
+#AWS
+AWS_BUCKET_NAME = 'ifp-assets-dev'
+#supported file
+SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
+
 
 # Include data for English language translations
 CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']

@@ -5,8 +5,11 @@ from authentication.models import User
 from rest_framework.exceptions import ValidationError
 from datetime import date
 
-
-
+class TodoListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Todo
+        fields = ('id','module', 'assigned_to', 'title', 'description','priority', 'start_date', 'end_date', )
+    
 class TodoAddSerializer(serializers.ModelSerializer):
     module = serializers.PrimaryKeyRelatedField(
         label=('Module'),
@@ -94,17 +97,17 @@ class TodoAddSerializer(serializers.ModelSerializer):
         end_date = data.get('end_date')
 
         if start_date and end_date and start_date > end_date:
-            raise ValidationError({'end_date':'Start date should be greater than the start date.'})
+            raise ValidationError({'end_date':'End date should be greater than the start date.'})
 
         return data
     
-    def validate_start_date(self, value):
-        """
-        Check that the start_date is not less than the current date.
-        """
-        if value < date.today():
-            raise serializers.ValidationError("Start date cannot be in the past.")
-        return value
+    # def validate_start_date(self, value):
+    #     """
+    #     Check that the start_date is not less than the current date.
+    #     """
+    #     if value < date.today():
+    #         raise serializers.ValidationError("Start date cannot be in the past.")
+    #     return value
 
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
