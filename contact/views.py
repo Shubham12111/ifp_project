@@ -102,7 +102,11 @@ class ContactAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
                 context = {'serializer':serializer, 'contact':contact}
                 return render_html_response(context,self.template_name)
             else:
-                return create_api_response(status_code=status.HTTP_201_CREATED,
+                if request.accepted_renderer.format == 'html':
+                    context = {'serializer':self.serializer_class()}
+                    return render_html_response(context,self.template_name)
+                else:
+                    return create_api_response(status_code=status.HTTP_201_CREATED,
                                        message="GET Method Not Alloweded",)
         
     def post(self, request, *args, **kwargs):
