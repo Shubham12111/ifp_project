@@ -229,9 +229,9 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         instance = self.get_queryset().first()
         if instance:
             instance.delete()
-            # self.perform_destroy(instance)
+
             return create_api_response(
-                status.HTTP_204_NO_CONTENT,
+                status.HTTP_200_OK,
                 "Your TODO has been deleted successfully.",
             )
         else:
