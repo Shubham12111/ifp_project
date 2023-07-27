@@ -14,7 +14,11 @@ from rest_framework.renderers import TemplateHTMLRenderer,JSONRenderer
 from rest_framework.permissions import IsAuthenticated
 
 from infinity_fire_solutions.response_schemas import create_api_response,convert_serializer_errors,render_html_response
+
+from cities_light.models import City, Country, Region
+=======
 from infinity_fire_solutions.aws_helper import *
+
 
 from .models import *
 from .serializers import ContactSerializer,ConversationSerializer, ConversationViewSerializer
@@ -209,22 +213,37 @@ class ContactDeleteView(APIView):
       
       
 class ConversationView(APIView):
+    """
+    View to display and manage conversations related to a contact.
+    """
     serializer_class = ConversationSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'conversation.html'
     
     
     def get_queryset(self):
+        """
+        Get the queryset of contacts filtered by the current user.
+        """
         return Contact.objects.filter(user_id=self.request.user)
 
     def get_conversation_queryset(self):
+        """
+        Get the queryset of conversations filtered by the current user.
+        """
         return Conversation.objects.filter(user_id=self.request.user)
     
     def get_object(self):
+        """
+        Get the contact instance based on the 'contact_id' from the URL kwargs.
+        """
         contact_id = self.kwargs.get('contact_id')
         return self.get_queryset().filter(pk=contact_id).first()
 
     def serialized_conversation_list(self):
+        """
+        Serialize the list of conversations related to the contact.
+        """
         conversation_list = Conversation.objects.filter(user_id=self.request.user, 
                                                             contact_id = self.get_object()).order_by('-created_at')
         # Serialize the conversation list with pre-signed URLs using the ConversationViewSerializer
@@ -242,6 +261,10 @@ class ConversationView(APIView):
         return Response({'serializer': serializer}, template_name=self.template_name)
 
     def get(self, request, *args, **kwargs):
+        """
+        Handles GET request for the conversation view.
+        If a conversation_id is provided in the URL kwargs, it means we are viewing/editing an existing conversation.
+        """
         instance = self.get_object()
         conversation_id = self.kwargs.get('conversation_id')
         if instance:
@@ -260,6 +283,10 @@ class ConversationView(APIView):
 
 
     def post(self, request, *args, **kwargs):
+        """
+        Handles POST request for the conversation view.
+        If contact_id is provided in URL kwargs, it means we are adding/updating a conversation related to the contact.
+        """
         if kwargs.get('contact_id'):
             contact_data = Contact.objects.filter(user_id = request.user, 
                                                   pk = kwargs.get('contact_id')).first()
@@ -303,12 +330,21 @@ class ConversationView(APIView):
         return redirect(reverse('contact_list'))
 
 class ConversationRemoveDocumentView(generics.DestroyAPIView):
+    """
+    View to remove a document associated with a conversation.
+    """
     
     def get_queryset(self):
+        """
+        Get the queryset of contacts filtered by the current user.
+        """
         user_id = self.request.user.id
         return Contact.objects.filter(pk=self.kwargs.get('contact_id'), user_id=user_id).get()
     
     def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to remove the document associated with a conversation.
+        """
         contact_data = self.get_queryset()
         conversation_id = kwargs.get('conversation_id')
         if conversation_id:
@@ -330,12 +366,21 @@ class ConversationRemoveDocumentView(generics.DestroyAPIView):
             )
 
 class ConversationCommentView(generics.DestroyAPIView):
+    """
+    View to delete a conversation/comment.
+    """
     
     def get_queryset(self):
+        """
+        Get the queryset of contacts filtered by the current user.
+        """
         user_id = self.request.user.id
         return Contact.objects.filter(pk=self.kwargs.get('contact_id'), user_id=user_id).get()
     
     def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to delete a conversation/comment.
+        """
         contact_data = self.get_queryset()
         conversation_id = kwargs.get('conversation_id')
         if conversation_id:
