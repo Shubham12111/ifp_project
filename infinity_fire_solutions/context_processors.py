@@ -58,9 +58,9 @@ def generate_menu(request, menu_items):
 
     for item in menu_items:
         # Check if the menu item has 'permission_required' key and the user has the required permission
-        required_permissions = f"view_{item.name.lower()}"
-        if item.permission_required and not has_group_view_permission(user, required_permissions):
-            continue
+        # required_permissions = f"view_{item.name.lower()}"
+        # # if item.permission_required and not has_group_view_permission(user, required_permissions):
+        #     continue
             
         menu_item = {
             'url': item.url,
@@ -84,8 +84,8 @@ def custom_menu(request):
     """
     Context processor for generating a custom menu data structure.
     """
-    user = request.user
-    allowed_menu_items = MenuItem.objects.filter(permissions__in = user.groups.all(), parent=None).distinct().order_by('order')
+    #user = request.user
+    allowed_menu_items = MenuItem.objects.filter(parent=None).distinct().order_by('order')
     
     # Generate the final menu data structure using the generate_menu function
     menu_data = generate_menu(request, allowed_menu_items)

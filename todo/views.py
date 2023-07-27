@@ -9,96 +9,106 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.shortcuts import get_object_or_404
-from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import BasePermission,IsAuthenticated
-
-from rest_framework.exceptions import PermissionDenied
+from infinity_fire_solutions.permission import *
 from rest_framework import filters
 from django.apps import apps
-from django.contrib.auth.models import Permission
+from django.http import HttpResponseRedirect
 from django.db.models import Q
 
+class ToDoListAPIView(CustomAuthenticationMixin, generics.ListAPIView):
+    """
+    API view to list TODO items.
 
-class CanReadPermission(BasePermission):
-    READ_PERMISSIONS = {
-        'view': 'view_{}',
-    }
+    This view lists TODO items filtered based on the authenticated user's ID.
+    It supports filtering based on fields and searching based on title and description.
 
-    def has_permission(self, request, view):
-        app_name = view.get_app_name()
+    Filters:
+        - Ordering by 'created_at' field is allowed.
 
-        for group in request.user.groups.all():
-            for operation, codename in self.READ_PERMISSIONS.items():
-                required_permission = codename.format(app_name)
-                try:
-                    permission = Permission.objects.get(codename=required_permission, content_type__app_label=app_name)
-                    if permission in group.permissions.all():
-                        return True
-                except Permission.DoesNotExist:
-                    continue
+    Searching:
+        - Searching is allowed on 'title' and 'description' fields.
 
-        return PermissionDenied()
+    Renderer:
+        - Supports both HTML and JSON renderers.
 
-class CanWritePermission(BasePermission):
-    WRITE_PERMISSIONS = {
-        'add': 'add_{}',
-        'change': 'change_{}',
-        'delete': 'delete_{}',
-    }
+    Template (for HTML renderer):
+        - Uses the 'todo_list.html' template to render HTML output.
 
-    def has_permission(self, request, view):
-        app_name = view.get_app_name()
+    Serializer:
+        - Uses the TodoListSerializer to serialize the data.
 
-        for group in request.user.groups.all():
-            for operation, codename in self.WRITE_PERMISSIONS.items():
-                required_permission = codename.format(app_name)
-                try:
-                    permission = Permission.objects.get(codename=required_permission, content_type__app_label=app_name)
-                    if permission in group.permissions.all():
-                        return True
-                except Permission.DoesNotExist:
-                    continue
+    Authentication and Permissions:
+        - Inherits authentication and permission handling from CustomAuthenticationMixin.
+    """
 
-        return False
-    
-class ToDoListAPIView(generics.ListAPIView):
-    permission_classes = [CanReadPermission,IsAuthenticated]
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
     search_fields = ['title', 'description']  # Specify fields you want to allow searching on
     template_name = 'todo_list.html'
-    
-    def get_app_name(self):
-        return apps.get_containing_app_config(self.__module__).name
+    serializer_class = TodoListSerializer
     
     def get_queryset(self):
-        user_id = self.request.user
+        """
+        Get the queryset for listing TODO items.
 
-        queryset = Todo.objects.filter( Q(user_id=user_id) | Q(assigned_to=user_id)
+        Returns:
+            QuerySet: A queryset of TODO items filtered based on the authenticated user's ID.
+        """
+        user_id = self.request.user
+        queryset = Todo.objects.filter(
+            Q(user_id=user_id) | Q(assigned_to=user_id)
         ).distinct().order_by('-created_at')
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
+        """
+        List view for TODO items.
 
-        # Filter the queryset based on ordering and searching
-        queryset = self.filter_queryset(queryset)
+        This method handles both HTML and API renderers. For HTML, it renders the
+        template with the list of TODO items. For API renderers (JSON), it returns
+        the serialized data.
 
-        if request.accepted_renderer.format == 'html':
-            # If the client accepts HTML, render the template
-            context = {'todo_list': queryset}
-            return render_html_response(context,self.template_name)
+        Returns:
+            HttpResponse: HTML response if the client accepts HTML renderer.
+            Response: JSON response if the client accepts JSON renderer.
+
+        Raises:
+            AuthenticationFailed: If authentication credentials were not provided.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user = self.handle_unauthenticated()
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            # If the user is not authenticated and a redirect response is received
+            # (for HTML renderer), return the redirect response as it is.
+            return authenticated_user
+        
+        if not authenticated_user:
+            raise AuthenticationFailed("Authentication credentials were not provided")
+       
         else:
-            serializer = self.serializer_class(queryset, many=True)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                       message="Data Retrieved successfully",
-                                       data=serializer)
-    
+            # Rest of your existing list method code...
+            queryset = self.get_queryset()
+
+            # Filter the queryset based on ordering and searching
+            queryset = self.filter_queryset(queryset)
+
+            if request.accepted_renderer.format == 'html':
+                # If the client accepts HTML, render the template
+                context = {'todo_list': queryset}
+                return render_html_response(context, self.template_name)
+            else:
+                serializer = self.serializer_class(queryset, many=True)
+                return create_api_response(
+                    status_code=status.HTTP_200_OK,
+                    message="Todo data Retrieved successfully",
+                    data=serializer.data
+                )
+
 
         
-class ToDoAddView(generics.CreateAPIView):
-    permission_classes = [CanWritePermission,IsAuthenticated]
+class ToDoAddUpdateView(generics.CreateAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'todo_add.html'
     serializer_class = TodoAddSerializer
@@ -168,8 +178,6 @@ class ToDoAddView(generics.CreateAPIView):
            
 
 class ToDoDeleteView(generics.DestroyAPIView):
-    permission_classes = [CanWritePermission, IsAuthenticated]
-
     def get_app_name(self):
         return apps.get_containing_app_config(self.__module__).name
 
@@ -192,7 +200,6 @@ class ToDoDeleteView(generics.DestroyAPIView):
             )
 
 class ToDoRetrieveAPIView(generics.RetrieveAPIView):
-    permission_classes = [CanReadPermission, IsAuthenticated]
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = CommentSerializer
