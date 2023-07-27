@@ -312,6 +312,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     )
     phone_number = serializers.CharField(
         max_length=14,
+        min_length=10,
         required=False,
         validators=[phone_number_validator],
         style={
