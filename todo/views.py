@@ -57,22 +57,19 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         except Exception as e:
             print(e)
     
-    def get_queryset(self):
+    def list(self, request, *args, **kwargs):
         """
-        Get the queryset for listing TODO items.
+        List view for TODO items.
+
+        Args:
+            request (Request): The request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
 
         Returns:
-            QuerySet: A queryset of TODO items filtered based on the authenticated user's ID and data access permissions.
+            Response: The response containing the list of TODO items.
         """
-        # Get the user ID of the authenticated user
         user_id = self.request.user
-
-        # Get the name of the model associated with this view
-        module_name = self.get_model_name()
-
-        # Get the model class using the provided module_name string
-        model = apps.get_model(app_label=module_name.lower(), model_name=module_name)
-
         # Get the first permission instance from the list of permission classes
         permission_instance = self.get_permissions()[0]
 
@@ -87,26 +84,8 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = model.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-        return queryset
-            
-    
-    def list(self, request, *args, **kwargs):
-        """
-        List view for TODO items.
-
-        Args:
-            request (Request): The request object.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-
-        Returns:
-            Response: The response containing the list of TODO items.
-        """
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        queryset = self.get_queryset()
-
-        # Filter the queryset based on ordering and searching
+        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        
         queryset = self.filter_queryset(queryset)
 
         if request.accepted_renderer.format == 'html':
