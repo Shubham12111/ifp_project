@@ -34,7 +34,6 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     def get_model_name(self):
         return self.serializer_class.Meta.model.__name__
     
-    
     def get_permissions(self):
         """
         Get the list of permission classes to apply.
@@ -101,7 +100,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                 data=serializer.data
             )
         
-class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
+class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'todo_add.html'
@@ -130,76 +129,29 @@ class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
             if not authenticated_user:
                 raise AuthenticationFailed("Authentication credentials were not provided")
             
+            self.request.user  = authenticated_user
             module_name = self.get_model_name()
             return [HasCreateDataPermission(module_name=module_name.lower())]
         
         except Exception as e:
             print(e)
-
-    def get_queryset(self):
-        queryset = Todo.objects.filter(pk=self.kwargs.get('pk'))
-        user_id = self.request.user.id
-
-        # Add filtering based on user ID
-        queryset = queryset.filter(user_id=user_id)
-
-        return queryset
         
     def get(self, request, *args, **kwargs):
-        instance = None
-        pk = kwargs.get('pk')
-
-        if pk:
-            instance = self.get_queryset().get()
-            serializer = self.serializer_class(instance=instance,context={'request': request})
-        else:
-            # If no primary key is provided, it means we are adding a new contact
-            serializer = self.serializer_class(context={'request': request})
+        serializer = self.serializer_class(context={'request': request})
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            context = {'serializer':serializer, 'instance':instance}
+            context = {'serializer':serializer}
             return render_html_response(context,self.template_name)
-            
-    
+     
     def post(self, request, *args, **kwargs):
 
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user = self.handle_unauthenticated()
-
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            # If the user is not authenticated and a redirect response is received
-            # (for HTML renderer), return the redirect response as it is.
-            return authenticated_user
-        
-        if not authenticated_user:
-            raise AuthenticationFailed("Authentication credentials were not provided")
-
-        request.user  = authenticated_user
-
-        data = request.data
-        pk = kwargs.get('pk')
-        if pk:
-            # If a primary key is provided, it means we are updating an existing contact
-            todo_data =  self.get_queryset().get()
-
-            serializer = self.serializer_class(instance=todo_data, data=data,context={'request': request})
-        else:
-            # If no primary key is provided, it means we are adding a new contact
-            serializer = self.serializer_class(data=data,context={'request': request})
-
-
+        serializer = self.serializer_class(data=request.data,context={'request': request})
         if serializer.is_valid():
-
             serializer.validated_data['user_id'] = request.user
             serializer.save()
-
-            if pk:
-                message = "Your TODO has been updated successfully!"
-                status_code = status.HTTP_200_OK
-            else:
-                message = "Your TODO has been saved successfully!"
-                status_code = status.HTTP_201_CREATED
+            message = "Your TODO has been saved successfully!"
+            status_code = status.HTTP_201_CREATED
 
             if request.accepted_renderer.format == 'html':
                 # For HTML rendering, redirect to the list view after successful save
@@ -208,11 +160,7 @@ class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return redirect(reverse('todo_list'))
             else:
                 # For other formats (e.g., JSON), return success response
-                return create_api_response(
-                    status_code,
-                    f"{message}",
-                    serializer.data
-                )
+                return create_api_response(status_code, f"{message}",serializer.data)
         else:
             # Render the HTML template with invalid serializer data
             if request.accepted_renderer.format == 'html':
@@ -220,11 +168,7 @@ class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return Response(context, template_name=self.template_name)
             else:
                 # For JSON API response
-                return create_api_response(
-                    status.HTTP_400_BAD_REQUEST,
-                    "Something went wrong!",
-                    serializer.errors
-                )
+                return create_api_response(status.HTTP_400_BAD_REQUEST,"Something went wrong!",serializer.errors)
 
 
 class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
@@ -270,14 +214,25 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             QuerySet: A queryset of TODO items filtered based on the authenticated user's ID.
         """
         # Get the model class using the provided module_name string
-        module_name = self.get_model_name()
+        user_id = self.request.user
         
         permission_instance = self.get_permissions()[0]
-        if permission_instance:
-            data_access_value = permission_instance.has_permission(self.request, None)
-            queryset = get_generic_queryset(self.request, module_name, "todo", data_access_value)
-            queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
-            return queryset
+
+        # Get the data access value (either "self" or "all") from the permission instance
+        data_access_value = permission_instance.has_permission(self.request, None)
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=user_id) | Q(assigned_to=user_id),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        
+        return queryset
 
     
     def get(self, request, *args, **kwargs):
@@ -293,9 +248,10 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 return redirect(reverse('todo_list'))
     
     def put(self, request, *args, **kwargs):
-        data = request.data
-        instance = self.get_queryset()
         
+        data = request.data
+        
+        instance = self.get_queryset()
         if instance:
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():

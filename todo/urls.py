@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 
 urlpatterns = [
     path('list/', ToDoListAPIView.as_view(), name='todo_list'),
-    path('add/', ToDoAddUpdateView.as_view(), name='todo_add'),
+    path('add/', ToDoAddView.as_view(), name='todo_add'),
     path('edit/<int:pk>/', ToDoUpdateView.as_view(), name='todo_edit'),
     path('delete/<int:pk>/', ToDoDeleteView.as_view(), name='todo_delete'),
     path('view/<int:todo_id>/', login_required(ToDoRetrieveAPIView.as_view()), name='todo_view'), 
