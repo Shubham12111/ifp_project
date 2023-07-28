@@ -8,6 +8,7 @@ from django.http import HttpResponseRedirect
 from rest_framework.permissions import BasePermission
 from rest_framework.exceptions import PermissionDenied
 from authentication.models import *
+from django.db.models import Q
 
 
 class CustomAuthenticationMixin:
@@ -223,13 +224,12 @@ def get_generic_queryset(request, module_name, app_label, data_access_value ):
     """
     # Get the permission value ("self", "all", or None)
     model = apps.get_model(app_label=app_label, model_name=module_name)
+    user_id = request.user
     if data_access_value == "self":
-        # Filter based on the user's ID and assigned_to field
-        
-        queryset = model.objects.filter(user_id=request.user).distinct().order_by('-created_at')
+        # Filter model on the user's ID and assigned_to field
+        queryset = model.objects.filter( Q(user_id=user_id) | Q(assigned_to=user_id)).distinct().order_by('-created_at')
     elif data_access_value == "all":
         # Return all data
-        print("fjjs")
         queryset = model.objects.all().order_by('-created_at')
     else:
         queryset = model.objects.none()

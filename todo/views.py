@@ -31,6 +31,10 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
     
+    def get_model_name(self):
+        return self.serializer_class.Meta.model.__name__
+    
+    
     def get_permissions(self):
         """
         Get the list of permission classes to apply.
@@ -38,49 +42,66 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         Returns:
             list: List of permission classes.
         """
-        # You can return multiple permission classes here if needed
         try:
             authenticated_user = self.handle_unauthenticated()
-            
+
             if isinstance(authenticated_user, HttpResponseRedirect):
-                # If the user is not authenticated and a redirect response is received
-                # (for HTML renderer), return the redirect response as it is.
                 return authenticated_user
-               
-            
+
             if not authenticated_user:
                 raise AuthenticationFailed("Authentication credentials were not provided")
-            
-            self.request.user  = authenticated_user
+
+            self.request.user = authenticated_user
             module_name = self.get_model_name()
             return [HasListDataPermission(module_name=module_name.lower())]
         except Exception as e:
             print(e)
-
-    
-    def get_model_name(self):
-        return self.serializer_class.Meta.model.__name__
     
     def get_queryset(self):
         """
         Get the queryset for listing TODO items.
 
         Returns:
-            QuerySet: A queryset of TODO items filtered based on the authenticated user's ID.
+            QuerySet: A queryset of TODO items filtered based on the authenticated user's ID and data access permissions.
         """
-        # Get the model class using the provided module_name string
-        module_name = self.get_model_name()
-        
-        permission_instance = self.get_permissions()[0]
-        if permission_instance:
-            data_access_value = permission_instance.has_permission(self.request, None)
-            queryset = get_generic_queryset(self.request, module_name, "todo", data_access_value)
-            return queryset
+        # Get the user ID of the authenticated user
+        user_id = self.request.user
 
-   
+        # Get the name of the model associated with this view
+        module_name = self.get_model_name()
+
+        # Get the model class using the provided module_name string
+        model = apps.get_model(app_label=module_name.lower(), model_name=module_name)
+
+        # Get the first permission instance from the list of permission classes
+        permission_instance = self.get_permissions()[0]
+
+        # Get the data access value (either "self" or "all") from the permission instance
+        data_access_value = permission_instance.has_permission(self.request, None)
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=user_id) | Q(assigned_to=user_id),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = model.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        return queryset
+            
+    
     def list(self, request, *args, **kwargs):
         """
         List view for TODO items.
+
+        Args:
+            request (Request): The request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: The response containing the list of TODO items.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         queryset = self.get_queryset()
@@ -93,13 +114,14 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             context = {'todo_list': queryset}
             return render_html_response(context, self.template_name)
         else:
+            # If the client accepts other formats, serialize the data and return an API response
             serializer = self.serializer_class(queryset, many=True)
             return create_api_response(
                 status_code=status.HTTP_200_OK,
-                message="Todo data Retrieved successfully",
+                message="Todo data retrieved successfully",
                 data=serializer.data
             )
-
+        
 class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
