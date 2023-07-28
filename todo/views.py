@@ -51,7 +51,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             if not authenticated_user:
                 raise AuthenticationFailed("Authentication credentials were not provided")
             
-            request.user  = authenticated_user
+            self.request.user  = authenticated_user
             module_name = self.get_model_name()
             return [HasListDataPermission(module_name=module_name.lower())]
         except Exception as e:
@@ -73,8 +73,8 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         
         permission_instance = self.get_permissions()[0]
         if permission_instance:
-            can_list_data_value = permission_instance.has_permission(self.request, None)
-            queryset = get_generic_queryset(self.request, module_name, "todo", can_list_data_value)
+            data_access_value = permission_instance.has_permission(self.request, None)
+            queryset = get_generic_queryset(self.request, module_name, "todo", data_access_value)
             return queryset
 
    
@@ -224,6 +224,104 @@ class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
                     "Something went wrong!",
                     serializer.errors
                 )
+
+
+class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
+    
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'todo_add.html'
+    serializer_class = TodoAddSerializer
+
+    def get_model_name(self):
+        return self.serializer_class.Meta.model.__name__
+    
+
+    def get_permissions(self):
+        """
+        Get the list of permission classes to apply.
+
+        Returns:
+            list: List of permission classes.
+        """
+        # You can return multiple permission classes here if needed
+        try:
+            authenticated_user = self.handle_unauthenticated()
+            
+            if isinstance(authenticated_user, HttpResponseRedirect):
+                # If the user is not authenticated and a redirect response is received
+                # (for HTML renderer), return the redirect response as it is.
+                return authenticated_user
+            
+            if not authenticated_user:
+                raise AuthenticationFailed("Authentication credentials were not provided")
+            self.request.user  = authenticated_user
+            module_name = self.get_model_name()
+            return [HasUpdateDataPermission(module_name=module_name.lower())]
+        
+        except Exception as e:
+            print(e)
+
+    def get_queryset(self):
+        """
+        Get the queryset for listing TODO items.
+
+        Returns:
+            QuerySet: A queryset of TODO items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        module_name = self.get_model_name()
+        
+        permission_instance = self.get_permissions()[0]
+        if permission_instance:
+            data_access_value = permission_instance.has_permission(self.request, None)
+            queryset = get_generic_queryset(self.request, module_name, "todo", data_access_value)
+            queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+            return queryset
+
+    
+    def get(self, request, *args, **kwargs):
+        # This method handles GET requests for updating an existing ToDo object.
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            if instance:
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                context = {'serializer': serializer, 'instance': instance}
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('todo_list'))
+    
+    def put(self, request, *args, **kwargs):
+        data = request.data
+        instance = self.get_queryset()
+        
+        if instance:
+            serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
+            if serializer.is_valid():
+                serializer.validated_data['user_id'] = request.user
+                serializer.save()
+
+                message = "Your TODO has been updated successfully!"
+                status_code = status.HTTP_200_OK
+
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    return redirect(reverse('todo_list'))
+                else:
+                    return create_api_response(status_code, f"{message}", serializer.data)
+            else:
+                if request.accepted_renderer.format == 'html':
+                    context = {'serializer': serializer}
+                    return Response(context, template_name=self.template_name)
+                else:
+                    return create_api_response(status.HTTP_400_BAD_REQUEST, "Something went wrong!", serializer.errors)
+        else:
+            if request.accepted_renderer.format == 'html':
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('todo_list'))
+            else:
+                return create_api_response(status.HTTP_400_BAD_REQUEST, "You are not authorized to perform this action")
+                
 
 class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
