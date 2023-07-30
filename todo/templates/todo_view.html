@@ -34,9 +34,12 @@
                 {{ todo_data.description|safe}}
             </p>
             <hr class="horizontal dark my-3">
-          
+          </div>
+        </div>
+        <div class="card mt-4 scrollable-container">
+          <div class="card-body">
             <!-- Comments -->
-            <div class="mb-1 scrollable-container">
+            
               {% for comment_data in comment_list %}
                 <div class="d-flex mt-3">
                     <div class="flex-shrink-0">
@@ -64,9 +67,7 @@
                     </div>
                 </div>
             {% endfor %}
-
-         </div>
-         {% if todo_data.status != 'completed' %}
+          {% if todo_data.status != 'completed' %}
             <div class="d-flex mt-4">
                 <div class="flex-grow-1 my-auto">
                 <form role="form" method="POST" autocomplete="off" class="multisteps-form__form">

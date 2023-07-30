@@ -96,6 +96,7 @@ def get_user_module_permissions(user, module_name):
                 'can_create_data': permission.can_create_data,
                 'can_change_data': permission.can_change_data.lower(),
                 'can_delete_data': permission.can_delete_data.lower(),
+                'can_view_data': permission.can_view_data.lower(),
             }
         else:
             user_permissions[role.name] = {
@@ -103,6 +104,7 @@ def get_user_module_permissions(user, module_name):
                 'can_create_data': "none",
                 'can_change_data': "none",
                 'can_delete_data': "none",
+                'can_view_data': "none",
             }
 
     return user_permissions
@@ -138,7 +140,7 @@ class HasCreateDataPermission(BasePermission):
         user_permissions = get_user_module_permissions(user, self.module_name)
 
         for permission in user_permissions.values():
-            if permission['can_create_data'] != "none":
+            if permission['can_create_data'] != False:
                 return permission['can_create_data']
 
         # If no permission is found, raise PermissionDenied
@@ -170,6 +172,21 @@ class HasDeleteDataPermission(BasePermission):
         for permission in user_permissions.values():
             if permission['can_delete_data'] != "none":
                 return permission['can_delete_data']
+
+        # If no permission is found, raise PermissionDenied
+        raise PermissionDenied()
+
+class HasViewDataPermission(BasePermission):
+    def __init__(self, module_name):
+        self.module_name = module_name
+
+    def has_permission(self, request, view):
+        user = request.user
+        user_permissions = get_user_module_permissions(user, self.module_name)
+
+        for permission in user_permissions.values():
+            if permission['can_view_data'] != "none":
+                return permission['can_view_data']
 
         # If no permission is found, raise PermissionDenied
         raise PermissionDenied()
@@ -208,29 +225,19 @@ class AuthenticationPermissionMixin:
             raise AuthenticationFailed("Authentication credentials were not provided")
 
     
-def get_generic_queryset(request, module_name, app_label, data_access_value ):
-    """
-    Get the queryset for listing items based on the provided module name.
+def check_authentication_and_permissions(view_instance,module_name, permission_class, view_type):
+    authenticated_user = view_instance.handle_unauthenticated()
 
-    Args:
-        request (HttpRequest): The request object.
-        module_name (str): The name of the module for which the queryset is needed.
-        model (Model): The model class for which the queryset is needed.
-        user_id_field (str): The name of the field representing the user ID in the model (default is "user_id").
-        assigned_to_field (str): The name of the field representing the assigned_to field in the model (default is "assigned_to").
+    if isinstance(authenticated_user, HttpResponseRedirect):
+        return authenticated_user
 
-    Returns:
-        QuerySet: A queryset of items filtered based on the authenticated user's ID.
-    """
-    # Get the permission value ("self", "all", or None)
-    model = apps.get_model(app_label=app_label, model_name=module_name)
-    user_id = request.user
-    if data_access_value == "self":
-        # Filter model on the user's ID and assigned_to field
-        queryset = model.objects.filter( Q(user_id=user_id) | Q(assigned_to=user_id)).distinct().order_by('-created_at')
-    elif data_access_value == "all":
-        # Return all data
-        queryset = model.objects.all().order_by('-created_at')
-    else:
-        queryset = model.objects.none()
-    return queryset
+    if not authenticated_user:
+        raise AuthenticationFailed("Authentication credentials were not provided")
+
+    view_instance.request.user = authenticated_user
+    permission_instance = permission_class(module_name=module_name)
+
+    # Get the data access value (either "self" or "all") based on the view type
+    data_access_value = permission_instance.has_permission(view_instance.request, view_type)
+
+    return authenticated_user, data_access_value
