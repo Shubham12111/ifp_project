@@ -121,14 +121,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     address = models.CharField(max_length=255 , null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
-    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True )
     county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
     post_code = models.CharField(max_length=10, null=True, blank=True)
 
     # Many-to-many relationship with UserRole
-    roles = models.ManyToManyField(UserRole, verbose_name="UserRole")
-    
-    
+    roles = models.ForeignKey(UserRole,on_delete=models.PROTECT, null=True,verbose_name="UserRole")
     objects = UserManager()
 
     USERNAME_FIELD = 'email'

@@ -1,9 +1,9 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import User, UserRole,UserRolePermission
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.admin import UserAdmin
-from django import forms
+from django.contrib.auth.models import Group
+
 
 
 class UserRolePermissionInline(admin.TabularInline):
@@ -34,15 +34,16 @@ class CustomUserAdmin(UserAdmin):
     
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        ('Personal Info', {'fields': ('first_name', 'last_name')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff','roles',)}),
+        ('Personal Info', {'fields': ('first_name', 'last_name',)}),
+        ('Address', {'fields': ('city', 'county','country','post_code')}),
+        ('Permissions', {'fields': ('is_active','roles',)}),
 
     )
     
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'roles','is_staff'),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'roles'),
         }),
     )
     autocomplete_fields = ['roles',]
@@ -54,3 +55,4 @@ admin.site.register(User, CustomUserAdmin)
 # Register the models with the custom admin interface.
 admin.site.register(UserRole, UserRoleAdmin)
 admin.site.register(UserRolePermission)
+admin.site.unregister(Group)
