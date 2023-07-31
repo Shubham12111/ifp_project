@@ -1,12 +1,12 @@
 # Deploy to ECR & EKS
 # This GitHub Actions workflow automates the deployment of a Docker image to an Amazon ECR repository and deploys it to an Amazon EKS cluster.
-
 name: Deploy to ECR & EKS
 
 on:
   push:
-    # Trigger the workflow on push events to the "dev" branch.
-    branches: [dev]  
+    # Trigger the workflow on push events, but only when tags are pushed.
+    tags:
+      - '*'
 
 env:
   AWS_REGION: eu-west-2  # The AWS region in which the ECR and EKS resources are located.
