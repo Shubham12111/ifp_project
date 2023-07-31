@@ -4,9 +4,8 @@ name: Deploy to ECR & EKS
 
 on:
   push:
-    # Trigger the workflow on push events, but only when tags are pushed.
-    tags:
-      - '*'
+    # Trigger the workflow on push events, but only when beta is updated.
+    branches: [beta]
 
 env:
   AWS_REGION: eu-west-2  # The AWS region in which the ECR and EKS resources are located.
