@@ -8,17 +8,11 @@ from .serializers import *
 from django.contrib import messages 
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.shortcuts import get_object_or_404
 from infinity_fire_solutions.permission import *
 from rest_framework import filters
 from django.apps import apps
-from django.http import HttpResponseRedirect
 from django.db.models import Q
 from authentication.models import *
-from rest_framework.permissions import BasePermission
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.decorators import permission_classes
-
 
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -123,6 +117,18 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
 
 class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
+    """
+    API view for todo a contact.
+
+    This view handles both HTML and API requests for updating a todo instance.
+    If the todo instance exists, it will be updated with the provided data.
+    Otherwise, an error message will be returned.
+
+    The following request methods are supported:
+    - POST: Updates the todo instance.
+
+    Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
+    """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'todo_form.html'
     serializer_class = TodoAddSerializer
@@ -166,27 +172,54 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('todo_list'))
     
-    def put(self, request, *args, **kwargs):
-        print("sdjhaj")
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to update a contact instance.
+
+        Args:
+            request (rest_framework.request.Request): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            rest_framework.response.Response: HTTP response object.
+                If successful, the contact is updated, and the appropriate response is returned.
+                If unsuccessful, an error response is returned.
+        """
+        
         data = request.data
         
         instance = self.get_queryset()
         if instance:
+            # If the contact instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():
+                # If the serializer data is valid, save the updated todo instance.
                 serializer.validated_data['user_id'] = request.user
                 serializer.save()
                 message = "Your TODO has been updated successfully!"
                 status_code = status.HTTP_200_OK
-                messages.success(request, message)
-                return create_api_response(status_code, f"{message}", serializer.data)
+                if request.accepted_renderer.format == 'html':
+                    # For HTML requests, display a success message and redirect to todo list.
+                    messages.success(request,message)
+                    return redirect(reverse('todo_list'))
+                else:
+                    messages.success(request, message)
+                    return create_api_response(status_code, f"{message}", serializer.data)
             else:
-                return create_api_response(status.HTTP_400_BAD_REQUEST, "Something went wrong!", serializer.errors)
+                if request.accepted_renderer.format == 'html':
+                    context = {'serializer': serializer, 'instance': instance}
+                    return render_html_response(context, self.template_name)
+                else:
+                    # For API requests with invalid data, return an error response with serializer errors.
+                    return create_api_response(status.HTTP_400_BAD_REQUEST, "Something went wrong!", serializer.errors)
         else:
             if request.accepted_renderer.format == 'html':
+                # For HTML requests with no instance, display an error message and redirect to todo_list.
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('todo_list'))
             else:
+                # For API requests with no instance, return an error response with an error message.
                 return create_api_response(status.HTTP_400_BAD_REQUEST, "You are not authorized to perform this action")
                 
 

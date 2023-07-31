@@ -9,18 +9,8 @@
   {% include 'components/alert_small.html' %}
    <div class="row">
         <div class="col-12 col-lg-8 m-auto">
-          <form  role="form" method="POST"
-              autocomplete="off" class="multisteps-form__form mb-8"
-              {% if instance %}
-              data-url="{% url 'todo_edit' instance.id %}"
-              data-method="PUT"
-              id="form-handler"
-              {% endif %}>
-             
-
-          <form id="updateForm" role="form" method="POST"
-                autocomplete="off" class="multisteps-form__form mb-8">
-              {% csrf_token %}
+          <form  role="form" method="POST"autocomplete="off" class="multisteps-form__form mb-8">
+                {% csrf_token %}
               <input type="hidden" name="_method" value="PUT">
               <!--single form panel-->
               <div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
