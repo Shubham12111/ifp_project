@@ -1,0 +1,147 @@
+<!-- add_contact.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} Todo View {{ block.super }}{% endblock %}
+
+{% block content %}
+<style>
+  /* Set a fixed height for the scrollable container */
+  .scrollable-container {
+    max-height: 400px; /* Adjust this value to your desired height */
+    overflow-y: auto; /* Enable vertical scrolling */
+  }
+</style>
+{% include 'components/alert_small.html' %}
+<div class="container-fluid py-4">
+    <div class="row mt-4">
+      <div class="col-12 col-lg-8">
+        <div class="card">
+          <div class="card-header d-flex align-items-center border-bottom py-3">
+            <div class="d-flex align-items-center">
+              <a href="javascript:;">
+                <img src="{% static 'assets/img/demo.png' %}" class="avatar" alt="profile-image">
+                </a>
+                <div class="mx-3">
+                <a href="javascript:;" class="text-dark font-weight-600 text-sm">{{todo_data.user_id.first_name|title}} {{todo_data.user_id.last_name|title}}</a>
+                <small class="d-block text-muted">{{ todo_data.created_at|timesince }}</small>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h4>{{ todo_data.title}}</h4>
+            <p class="mb-4">
+                {{ todo_data.description|safe}}
+            </p>
+            <hr class="horizontal dark my-3">
+          
+            <!-- Comments -->
+            <div class="mb-1 scrollable-container">
+              {% for comment_data in comment_list %}
+                <div class="d-flex mt-3">
+                    <div class="flex-shrink-0">
+                        <img alt="Image placeholder" class="avatar rounded-circle" src="{% static 'assets/img/demo.png' %}">
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="h5 mt-0">{{ comment_data.user_id.first_name|title }} {{ comment_data.user_id.last_name|title }} <span class="text-sm text-muted">{{ comment_data.created_at|timesince }} ago</span></h6>
+                       {{ comment_data.comment|safe }}
+                        <div class="d-flex">
+                          {% if request.user == comment_data.user_id %}
+                              <div>
+                                  <a href="{% url 'edit_comment' todo_data.id comment_data.id %}" class="text-sm text-muted ">
+                                      Edit
+                                  </a>
+                                  <a href="#" class="text-sm text-muted ms-3 text-gray"
+                                  onclick="confirmDelete({{comment_data.id}},
+                                                          'Are you sure you want to delete this comment?',
+                                                          'The comment has been deleted successfully.',
+                                                          '{% url 'delete_comment' todo_data.id comment_data.id %}')">
+                                    Delete <!-- Delete icon -->
+                                </a>
+                                                              </div>
+                              {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+
+         </div>
+         {% if todo_data.status != 'completed' %}
+            <div class="d-flex mt-4">
+                <div class="flex-grow-1 my-auto">
+                <form role="form" method="POST" autocomplete="off" class="multisteps-form__form">
+                    {% csrf_token %}
+                    {% render_form serializer %}
+                    <div class="row mt-2">
+                        <div class="col-6 col-lg-6 m-auto text-end"></div>
+                        <div class="col-md-6 m-auto text-center text-md-end">
+                            <a class="btn bg-gradient-secondary mb-0 js-btn-prev " href="{% url 'todo_list' %}" title="Back">Back</a>
+                            <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
+                        </div>
+                      </div>
+                  </form>
+                </div>
+              </div>
+              {% endif %}
+        </div>
+      </div>
+</div>
+      
+      <div class="col-12 col-lg-4">
+        <div class="card mb-3 mt-lg-0 mt-4">
+          <div class="card-body pb-0">
+            <div class="row align-items-center mb-3">
+              <div class="col-9">
+                <h5 class="mb-1 text-gradient text-primary">
+                  <a href="javascript:;">Details</a>
+                </h5>
+              </div>
+             
+            </div>
+            <ul class="list-unstyled mx-auto">
+              <li class="d-flex">
+                <p class="mb-0">Module</p>
+                <span class="badge badge-secondary ms-auto">{{ todo_data.module.name|title }}</span>
+              </li>
+              <li>
+                <hr class="horizontal dark">
+              </li>
+              <li class="d-flex">
+                <p class="mb-0">Assgined To</p>
+                <span class="badge badge-secondary ms-auto">{{ todo_data.assigned_to }}</span>
+              </li>
+              <li>
+                <hr class="horizontal dark">
+              </li>
+              <li class="d-flex">
+                <p class="mb-0">Status</p>
+                <span class="badge  {% if todo_data.status == 'in-progress' %}badge-warning{% elif todo_data.status == 'completed' %}badge-success{% else %}badge-primary{% endif %} ms-auto">  {{ todo_data.status|title }}</span>
+              </li>
+              <li>
+                <hr class="horizontal dark">
+              </li>
+              <li class="d-flex">
+                <p class="mb-0">Priority</p>
+                <span class="badge  {% if todo_data.priority == 'high' %}badge-danger{% elif todo_data.priority == 'medium' %}badge-warning{% else %}badge-primary{% endif %} ms-auto">  {{ todo_data.priority|title }}</span>
+              </li>
+              <li>
+                <hr class="horizontal dark">
+              </li>
+              <li class="d-flex">
+                <p class="mb-0">Date</p>
+                <span class="ms-auto">{{ todo_data.start_date|date:"M d, Y" }} - {{ todo_data.end_date|date:"M d, Y" }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+
+{% endblock %}     
+  

@@ -1,0 +1,57 @@
+# Deploy to ECR & EKS
+# This GitHub Actions workflow automates the deployment of a Docker image to an Amazon ECR repository and deploys it to an Amazon EKS cluster.
+name: Deploy to ECR & EKS
+
+on:
+  push:
+    # Trigger the workflow on push events, but only when tags are pushed.
+    tags:
+      - '*'
+
+env:
+  AWS_REGION: eu-west-2  # The AWS region in which the ECR and EKS resources are located.
+  ECR_REGISTRY: 591836277216.dkr.ecr.eu-west-2.amazonaws.com  # The URL of the ECR registry.
+  ECR_REPOSITORY: ifp-ecr-dev  # The name of the ECR repository.
+  IMAGE_TAG: latest  # The tag to be used for the Docker image.
+  K8S_DEPLOYMENT: infinity-fire-systems-deployment-dev  # The name of the Kubernetes deployment.
+  K8S_NAMESPACE: infinity-fire-systems-namespace-dev  # The namespace in which the Kubernetes deployment will be created.
+  EKS_CLUSTER: infinity-system-eks-cluster # The name of the EKS cluster.
+
+jobs:
+  build-and-push:
+    name: Build Image
+    runs-on: ubuntu-latest  # Use an Ubuntu Linux runner.
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2  # Check out the code from the repository.
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1  # Configure AWS credentials using GitHub Actions secrets.
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{env.AWS_REGION}}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1  # Log in to the Amazon ECR registry.
+
+    - name: Build, tag, and push image to Amazon ECR
+      run: |
+        # Build the Docker image and tag it with the ECR registry, repository, and tag.
+        docker build -t ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.IMAGE_TAG}} .
+        # Push the Docker image to the Amazon ECR registry.
+        docker push ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.IMAGE_TAG }}
+
+    - name: Configure kubectl
+      run: |
+        # Configure kubectl to use the EKS cluster.
+        aws eks update-kubeconfig --name ${{env.EKS_CLUSTER}} --region ${{env.AWS_REGION}}
+
+    - name: Apply Kubernetes manifest
+      run: |
+        # Delete the existing Kubernetes deployment and apply the new one.
+        kubectl delete deployment.apps/${{ env.K8S_DEPLOYMENT }} -n ${{ env.K8S_NAMESPACE }}
+        kubectl apply -f deployment/deployment.yml
+        

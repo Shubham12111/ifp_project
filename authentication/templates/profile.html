@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} Profile Settings {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container-fluid my-3 py-3">
+    {% include 'authentication/profile_actions.html' %}
+
+    <div class="col-lg-9 mt-lg-0 mt-4">
+      {% include 'components/alert.html' %}
+      {% include 'authentication/profile_info.html' %}
+        <!-- Card Basic Info -->
+        <div class="card mt-4" id="basic-info">
+            <div class="card-header">
+            <h5>General Information</h5>
+            </div>
+            <div class="card-body pt-0">
+                <form role="form"  method="POST" autocomplete="off" >
+                    <div class='row'>
+                        {% csrf_token %}
+                        {% render_form serializer %}
+                    </div>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-6 mb-0">Update Profile</button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_country.js' %}"></script>
+{% endblock %}

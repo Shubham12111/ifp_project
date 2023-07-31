@@ -14,9 +14,25 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf.urls.static import static
+
+# admin Customization
+admin.site.site_header = "Infinity Fire Solutions Admin"
+admin.site.site_title = "Infinity Fire Solutions"
+admin.site.index_title = "Infinity Fire Solutions Management"
+
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-]
+    path('auth/', include('authentication.urls')),
+    path('contact/',include('contact.urls')),
+    path('todo/',include('todo.urls')),
+    path('',include('common_app.urls')),
+
+
+
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

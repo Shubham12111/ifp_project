@@ -1,0 +1,29 @@
+.help-block
+{
+    color: #fd5c70 !important;
+    font-size: 0.75rem !important;
+}
+
+.navbar-vertical .navbar-nav .nav-item .nav-link.active .icon i
+{
+    color : #fff !important;
+}
+
+.navbar-vertical .navbar-nav .nav-item .nav-link .icon i
+{
+    color : #000 !important;
+}
+
+.password-toggle 
+{
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+}
+
+
+
+  

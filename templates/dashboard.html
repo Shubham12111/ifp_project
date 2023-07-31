@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} Dashboard {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container-fluid py-4">
+    {% include 'components/alert.html' %}
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card p-3">
+        <div class="overflow-hidden position-relative border-radius-lg bg-cover h-100" style="background-image: url('../../assets/img/ivancik.jpg');">
+        <span class="mask bg-gradient-dark"></span>
+        <div class="card-body position-relative z-index-1 h-100 p-3">
+        <h6 class="text-white font-weight-bolder mb-3">Hello, {% if request.user.first_name %}{{ request.user.first_name|title }}  {% endif %}
+          {% if request.user.last_name %}{{ request.user.last_name|title }}   {% endif %}</h6>
+        <p class="text-white mb-3">Infinity Fire Prevention Ltd is an experienced provider of specialist passive fire protection solutions for all sectors and all types of building. Whatever the nature of your building, our aim is to provide our clients with an efficient and cost-effective products and services which exceed all their expectations. Our passive fire prevention services simply provide a total solution which entails one point of contact that is available throughout the year 24/7</p>
+        <a class="btn btn-round btn-outline-white mb-0" href="https://www.infinityfireprevention.com/" target="_blank">
+          Read More
+        </a>
+        </div>
+        </div>
+        </div>
+        </div>
+    
+  </div>
+{% endblock %}
+{% block extra_js %}
+
+{% endblock %}

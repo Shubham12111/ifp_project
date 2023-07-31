@@ -1,0 +1,65 @@
+{% load rest_framework %}
+{% load static %}
+<div class="form-group {% if style.custom_class %} {{style.custom_class}} {% else %}col-6  {% endif %}">
+  {% if field.label %}
+    <label {% if style.hide_label %}class="sr-only"{% endif %}>
+      {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
+    </label>
+  {% endif %}
+
+  <select class="form-control" name="{{ field.name }}" id="choices-{{ field.name }}">
+    {% if field.allow_null or field.allow_blank %}
+      <option value="" {% if not field.value %}selected{% endif %}>--------</option>
+    {% endif %}
+    {% for select in field.iter_options %}
+        {% if select.start_option_group %}
+          <optgroup label="{{ select.label }}">
+        {% elif select.end_option_group %}
+          </optgroup>
+        {% else %}
+          <option value="{{ select.value }}" {% if select.value|as_string == field.value|as_string %}selected{% endif %} {% if select.disabled %}disabled{% endif %}>{{ select.display_text }}</option>
+        {% endif %}
+    {% endfor %}
+  </select>
+
+  {% if field.errors %}
+    {% for error in field.errors %}
+      <span class="help-block">{{ error }}</span>
+    {% endfor %}
+  {% endif %}
+
+  {% if field.help_text %}
+    <span class="help-block">{{ field.help_text|safe }}</span>
+  {% endif %}
+</div>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+
+<script>
+  function initializeChoices(fieldId) {
+    var element = document.getElementById(fieldId);
+    if (element) {
+      const example = new Choices(element, {});
+    }
+  }
+
+  initializeChoices('choices-{{ field.name }}');
+
+  // Move this part inside the if statement to avoid errors
+  var choicesTags = document.getElementById('choices-tags');
+  if (choicesTags) {
+    var color = choicesTags.dataset.color;
+    const example = new Choices(choicesTags, {
+      delimiter: ',',
+      editItems: true,
+      maxItemCount: 5,
+      removeItemButton: true,
+      addItems: true,
+      classNames: {
+        item: 'badge rounded-pill choices-' + color + ' me-2'
+      },
+      noResultsText: 'No records found',
+      noChoicesText: 'No records found',
+      loadingText: 'Loading...',
+    });
+  }
+</script>

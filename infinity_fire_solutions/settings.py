@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-3&1voj3_&(tzrsww4^_!x!wht%0a2&x@jc@vw(y!23di798(6^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['54ad-49-249-18-102.ngrok-free.app','127.0.0.1','192.168.1.210', 'app-dev.infinityfireprevention.com']
 
 
 # Application definition
@@ -39,7 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'authentication',
     'contact',
-    'cities_light'
+    'common_app',
+    'todo',
+    'cities_light',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'ckeditor',
+    
 ]
 
 MIDDLEWARE = [
@@ -57,7 +63,7 @@ ROOT_URLCONF = 'infinity_fire_solutions.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -65,6 +71,9 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                 # Other context processors
+                'infinity_fire_solutions.context_processors.breadcrumbs', 
+                'infinity_fire_solutions.context_processors.custom_menu'
             ],
         },
     },
@@ -78,8 +87,12 @@ WSGI_APPLICATION = 'infinity_fire_solutions.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': '3306',
     }
 }
 
@@ -118,7 +131,25 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+# AWS
+STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
+# STATIC_URL = '/static/'
+# # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+# if not DEBUG:
+#     STATICFILES_DIRS = (
+#         os.path.join(BASE_DIR, "static",),
+#     )
+
+#     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# else:
+
+#     STATICFILES_DIRS = (
+#         os.path.join(BASE_DIR, "static"),
+#         os.path.join(BASE_DIR, 'static'),
+#     )
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -128,6 +159,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # USER MODEL 
 AUTH_USER_MODEL = 'authentication.User'
+LOGIN_URL = '/auth/login/'
 
-#COUNTRY
+#AWS
+AWS_BUCKET_NAME = 'ifp-assets-dev'
+#supported file
+SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
+
+
+# Include data for English language translations
+CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
+
+# Include data for the United Kingdom (UK)
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']

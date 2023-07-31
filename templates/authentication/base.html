@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="apple-touch-icon" sizes="76x76" href="{% static 'assets/img/apple-icon.png' %}">
+    <link rel="icon" type="image/png" href="{% static 'assets/img/favicon.png' %}">
+    <title>
+        {% block title %} - Infinity Fire Solutions {% endblock %}
+    </title>
+    <!-- Fonts and icons -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <!-- Nucleo Icons -->
+    <link href="{% static 'assets/css/nucleo-icons.css' %}" rel="stylesheet" />
+    <link href="{% static 'assets/css/nucleo-svg.css' %}" rel="stylesheet" />
+    <!-- CSS Files -->
+    <link id="pagestyle" href="{% static 'assets/css/soft-ui-dashboard.css' %}" rel="stylesheet" /> 
+     <!-- Custom CSS Files -->
+     <link id="pagestyle" href="{% static 'assets/css/custom.css' %}" rel="stylesheet" />
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <main class="main-content  mt-0">
+      <div class="page-header align-items-start min-vh-50 pt-5 pb-11 m-3 border-radius-lg" 
+        style="background-image: url('{% static 'assets/img/curved-images/curved9.jpg' %}' );">
+        <span class="mask bg-gradient-dark opacity-6"></span>
+        <div class="container">
+          <div class="row justify-content-center">
+            <div class="col-lg-5 text-center mx-auto">
+              <h1 class="text-white mb-2 mt-2">Welcome!</h1>
+              <p class="text-lead text-white">We ensure that excellent customer services is delivered through our Infinity company values and our Code of Conduct.</p>
+              {% include 'components/alert.html' %}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container">
+        <div class="row mt-lg-n12 mt-md-n12 mt-n12 justify-content-center">
+          {% if request.path == "/auth/signup/" %}
+          <div class="col-xl-5 col-lg-5 col-md-7 mx-auto ">
+          {% else %}
+            <div class="col-xl-4 col-lg-5 col-md-7 mx-auto ">
+          {% endif %}
+            <div class="card z-index-0">
+              <div class="position-relative text-center mt-5">
+                <img class="max-width-220 w-70 position-relative z-index-2 text-center" src="{% static 'assets/img/logo2.png' %}" alt="chat-img">
+              </div>
+              {% block content %}{% endblock %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+
+    <!-- Footer -->
+    <script src="{% static 'assets/js/core/popper.min.js' %}"></script>
+    <script src="{% static 'assets/js/core/bootstrap.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+    <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+    <script>
+        var win = navigator.platform.indexOf('Win') > -1;
+        if (win && document.querySelector('#sidenav-scrollbar')) {
+            var options = {
+                damping: '0.5'
+            }
+            Scrollbar.init(document.querySelector('#sidenav-scrollbar'), options);
+        }
+    </script>
+    <script>
+      var passwordToggleIcons = document.querySelectorAll('.password-toggle');
+
+      for (var i = 0; i < passwordToggleIcons.length; i++) {
+        passwordToggleIcons[i].addEventListener('click', togglePasswordVisibility);
+      }
+
+      function togglePasswordVisibility() {
+        var passwordInput = this.parentNode.parentNode.querySelector('input[type="password"]');
+        
+        var eyeIcon = this;
+        if (passwordInput) {
+              if (passwordInput.type === 'password') {
+              passwordInput.type = 'text';
+              eyeIcon.classList.remove('fa-eye-slash');
+              eyeIcon.classList.add('fa-eye');
+            }
+            else {
+              passwordInput.type = 'password';
+              eyeIcon.classList.remove('fa-eye');
+              eyeIcon.classList.add('fa-eye-slash');
+            }
+        }
+        else {
+            var passwordInput = this.parentNode.parentNode.querySelector('input[type="text"]');
+              passwordInput.type = 'password';
+              eyeIcon.classList.remove('fa-eye');
+              eyeIcon.classList.add('fa-eye-slash');
+            }
+        
+        
+      }
+    </script>
+
+   <!-- Github buttons -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages, etc -->
+    <script src="{% static 'assets/js/soft-ui-dashboard.min.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>
