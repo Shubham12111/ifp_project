@@ -87,25 +87,24 @@ def get_user_module_permissions(user, module_name):
               - 'can_delete_data': Permission to delete data (either "yes" or "none").
     """
     user_permissions = {}
-
-    for role in user.roles.all():
-        permission = UserRolePermission.objects.filter(role=role, module=module_name).first()
-        if permission:
-            user_permissions[role.name] = {
-                'can_list_data': permission.can_list_data.lower(),
-                'can_create_data': permission.can_create_data,
-                'can_change_data': permission.can_change_data.lower(),
-                'can_delete_data': permission.can_delete_data.lower(),
-                'can_view_data': permission.can_view_data.lower(),
-            }
-        else:
-            user_permissions[role.name] = {
-                'can_list_data': "none",
-                'can_create_data': "none",
-                'can_change_data': "none",
-                'can_delete_data': "none",
-                'can_view_data': "none",
-            }
+    role = user.roles
+    permission = UserRolePermission.objects.filter(role=role, module=module_name).first()
+    if permission:
+        user_permissions[role.name] = {
+            'can_list_data': permission.can_list_data.lower(),
+            'can_create_data': permission.can_create_data,
+            'can_change_data': permission.can_change_data.lower(),
+            'can_delete_data': permission.can_delete_data.lower(),
+            'can_view_data': permission.can_view_data.lower(),
+        }
+    else:
+        user_permissions[role.name] = {
+            'can_list_data': "none",
+            'can_create_data': "none",
+            'can_change_data': "none",
+            'can_delete_data': "none",
+            'can_view_data': "none",
+        }
 
     return user_permissions
 
