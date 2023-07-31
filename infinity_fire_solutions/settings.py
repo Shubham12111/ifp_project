@@ -132,7 +132,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 # AWS
-STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
+STATIC_URL= 'https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/'
 # STATIC_URL = '/static/'
 # # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
