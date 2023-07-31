@@ -136,7 +136,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     
     status = serializers.ChoiceField(
-        label='Priority',
+        label='Status',
         choices= (
         ('in-progress', 'In Progress'),
         ('completed', 'Completed')

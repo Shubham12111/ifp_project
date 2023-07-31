@@ -97,6 +97,13 @@ DATABASES = {
 }
 
 
+# settings.py
+REST_FRAMEWORK = {
+    # ... other settings ...
+    'EXCEPTION_HANDLER': 'infinity_fire_solutions.exceptions.custom_exception_handler'
+}
+
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -132,11 +139,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 # AWS
-STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
-# STATIC_URL = '/static/'
-# # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+# STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
+STATIC_URL = '/static/'
+#STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # if not DEBUG:
 #     STATICFILES_DIRS = (
