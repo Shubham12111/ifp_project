@@ -264,18 +264,19 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
         instance = queryset.first()
         
-        if instance:
-            instance.delete()
-            return create_api_response(
-                status.HTTP_200_OK,
-                "Your contact has been deleted successfully.",
-            )
+
+        contact = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).first()
+        if contact:
+            # Proceed with the deletion
+            contact.delete()
+            messages.success(request, "Your contact has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Your contact has been deleted successfully!", )
         else:
-            return create_api_response(
-                status.HTTP_404_NOT_FOUND,
-                "Contact not found or you don't have permission to delete."
-            )
-    
+            messages.error(request, "Contact not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Contact not found", )
+               
 
       
       
@@ -454,12 +455,10 @@ class ConversationCommentView(generics.DestroyAPIView):
         if conversation_id:
             conversation = Conversation.objects.filter(contact_id=contact_data, pk=conversation_id)
             conversation.delete()
-            return Response(
-                {"message": "Your conversation has been deleted successfully."},
-                status=status.HTTP_204_NO_CONTENT
-            )
+            messages.success(request, "Your Conversation has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Your Conversation has been deleted successfully!", )
         else:
-            return Response(
-                {"message": "Conversation not found or you don't have permission to delete."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            messages.error(request, "Conversation not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Conversation not found", )
