@@ -11,12 +11,16 @@ ACCESS_CHOICES = [
     ('none', 'None'),
 ]
 
-MODULE_CHOICES =[
-    ('contact','Contact'),
-    ('costumer','Costumer'),
-    ('todo','ToDo'),
-
+MODULE_CHOICES = [
+    ('contact', 'Contacts'),
+    ('todo', 'ToDo'),
+    ('customer', 'Customer'),
+    ('requirement', 'Requirement'),
+    ('survey', 'Survey (Scheduling)'),
+    ('stock_management', 'Stock Management'),
+    ('invoicing', 'Invoicing'),
 ]
+
 class UserRole(models.Model):
     """
     Represents a user role with associated permissions.

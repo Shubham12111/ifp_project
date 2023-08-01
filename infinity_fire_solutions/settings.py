@@ -75,7 +75,11 @@ TEMPLATES = [
                 'infinity_fire_solutions.context_processors.breadcrumbs', 
                 'infinity_fire_solutions.context_processors.custom_menu'
             ],
+            'libraries':  {
+                'custom_tags': 'authentication.templatetags.custom_tags',
+            }
         },
+        
     },
 ]
 

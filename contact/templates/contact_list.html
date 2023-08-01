@@ -3,6 +3,8 @@
 {% load static %}
 {% block title %} Add Contact {{ block.super }}{% endblock %}
 {% block content %}
+{% load custom_tags %}
+
 <style>
    /* Style for the table header text */
    table.table.table-flush thead {
@@ -26,7 +28,14 @@
           <!-- Add your content here -->
       </div>
       <div class="col-lg-4 col-4 mb-3 text-right">
+        
+        {% if request.user|has_permission:"contact" %}
+          <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
           <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Contact</a>
+        {% else %}
+          <!-- The user doesn't have the permission, so don't show the "Add" button -->
+        {% endif %}
+         
       </div>
     <div class="col-12">
       <div class="card">
