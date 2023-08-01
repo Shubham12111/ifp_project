@@ -13,9 +13,7 @@ from rest_framework import filters
 from django.apps import apps
 from django.db.models import Q
 from django.http import  HttpResponse
-class ToDoListAPIView(CustomAuthenticationMixin, generics.ListAPIView):
 from authentication.models import *
-
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
@@ -373,3 +371,4 @@ class ToDoDeleteCommentView(generics.DestroyAPIView):
         else:
             messages.error(request, "Comment not found")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND)
+
