@@ -7,6 +7,7 @@ python3 manage.py migrate
 # python3 manage.py cities_light
 
 #echo "[+] ------ Check for SuperUser and if not than create ------ [+]"
+
 python3 manage.py makesuper
 
 echo "Starting server"
