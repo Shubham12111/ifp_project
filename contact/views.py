@@ -261,8 +261,8 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
-        instance = queryset.first()
+        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q()))
+        instance = queryset.filter(pk=self.kwargs.get('pk')).first()
         
 
         contact = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).first()
