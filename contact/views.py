@@ -219,7 +219,7 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests with invalid data, render the template with error messages.
                     context = {'serializer': serializer, 'instance': instance}
-                    return render(request, 'your_template_name.html', context)
+                    return render(request, self.template_name, context)
                 else:
                     # For API requests with invalid data, return an error response with serializer errors.
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
