@@ -1,0 +1,33 @@
+{% load static %}
+<div class="form-group {% if field.errors %}has-error{% endif %} {% if style.custom_class %} {{style.custom_class}} {% else %}col-6  {% endif %}">
+    {% if field.label %}
+      <label {% if style.hide_label %}class="sr-only"{% endif %}>{{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}</label>
+    {% endif %}
+  
+    <input  name="{{ field.name }}" {% if style.input_type != "file" %}class="{{ field.name }} form-control"{% endif %} type="{{ style.input_type }}" {% if style.placeholder %}placeholder="{{ style.placeholder }}"{% endif %} {% if field.value is not None %}value="{{ field.value }}"{% endif %} {% if style.autofocus and style.input_type != "hidden" %}autofocus{% endif %} autocomplete="off" {%if field.required %} required {% endif %}  data-input >
+
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <span class="help-block">{{ error }}</span>
+      {% endfor %}
+    {% endif %}
+  
+    {% if field.help_text %}
+      <span class="help-block">{{ field.help_text|safe }}</span>
+    {% endif %}
+  </div>
+
+  <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+  <script>
+    // Check if the datetimepicker element exists
+    if (document.querySelector('.{{ field.name }}')) {
+      // Get the current date
+      const currentDate = new Date();
+      
+      // Create the flatpickr date-time picker and set the default date to the current date
+      flatpickr('.{{ field.name }}', {
+        allowInput: false,
+        defaultDate: currentDate
+      });
+    }
+  </script> 
