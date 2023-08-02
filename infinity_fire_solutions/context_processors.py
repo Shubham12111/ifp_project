@@ -83,10 +83,11 @@ def custom_menu(request):
     """
     menu_data = {}
     user = request.user
-    if user.roles:
-        allowed_menu_items = MenuItem.objects.filter(parent=None).distinct().order_by('order')
-        
-        # Generate the final menu data structure using the generate_menu function
-        menu_data = generate_menu(request, allowed_menu_items)
-        
+    if user.is_authenticated:
+        if user.roles:
+            allowed_menu_items = MenuItem.objects.filter(parent=None).distinct().order_by('order')
+            
+            # Generate the final menu data structure using the generate_menu function
+            menu_data = generate_menu(request, allowed_menu_items)
+            
     return {'menu_items': menu_data}
