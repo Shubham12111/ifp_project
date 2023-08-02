@@ -12,10 +12,11 @@ from infinity_fire_solutions.permission import *
 from rest_framework import filters
 from django.apps import apps
 from django.db.models import Q
+from django.http import  HttpResponse
 from authentication.models import *
 
-
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
+
     """
     API view to list TODO items.
     """
@@ -248,15 +249,14 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         
         if instance:
             instance.delete()
-            return create_api_response(
-                status.HTTP_200_OK,
-                "Your TODO has been deleted successfully.",
-            )
+
+            messages.success(request, "Your TODO has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                        message="Your TODO has been deleted successfully!", )
+
         else:
-            return create_api_response(
-                status.HTTP_404_NOT_FOUND,
-                "TODO not found or you don't have permission to delete."
-            )
+            messages.error(request, "Contact not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND)
 
 class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
@@ -357,7 +357,7 @@ class ToDoDeleteCommentView(generics.DestroyAPIView):
     
     def get_queryset(self):
         user_id = self.request.user.id
-        return Todo.objects.filter(pk=self.kwargs.get('todo_id'), user_id=user_id)
+        return Todo.objects.filter(pk=self.kwargs.get('todo_id'))
     
     def destroy(self, request, *args, **kwargs):
         todo = self.get_queryset()
@@ -365,12 +365,10 @@ class ToDoDeleteCommentView(generics.DestroyAPIView):
         if comment_id:
             comment = Comment.objects.filter(todo_id=todo.get(), user_id=request.user , pk=comment_id)
             comment.delete()
-            return Response(
-                {"message": "Your comment has been deleted successfully."},
-                status=status.HTTP_204_NO_CONTENT
-            )
+            messages.success(request, "Your comment has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                        message="Your comment has been deleted successfully!", )
         else:
-            return Response(
-                {"message": "Comment not found or you don't have permission to delete."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            messages.error(request, "Comment not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND)
+

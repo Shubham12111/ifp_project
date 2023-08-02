@@ -25,5 +25,16 @@
 }
 
 
+.sidebar-open {
+    transform: translateX(0);
+}
+.swal2-styled.swal2-confirm
+{
+    background-image : linear-gradient(310deg, #5d1a14 0%, #f64936 100%) !important;
+}
+.swal2-styled.swal2-confirm:hover, .swal2-styled.swal2-confirm:focus
+{
+    background-image : linear-gradient(310deg, #5d1a14 0%, #f64936 100%) !important;
+}
 
   

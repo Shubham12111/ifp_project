@@ -11,6 +11,8 @@ from django.core.validators import FileExtensionValidator
 from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
 import re
+from bs4 import BeautifulSoup
+
 
 # Custom validation function for validating file size
 def validate_file_size(value):
@@ -108,6 +110,8 @@ class ContactSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "This field is required.",
             "blank": "Phone number field is required.",
+            "max_length": "Invalid Phone number and max limit should be 14.",
+            "min_length": "Invalid Phone number and min limit should be 10."
         },
         validators=[PhoneNumberValidator()]
     )
@@ -195,6 +199,9 @@ class ContactSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             'base_template': 'custom_input.html'
+        },
+         error_messages={
+            "invalid": "Post code can only contain alphanumeric values.",
         }
     )
 
@@ -218,6 +225,11 @@ class ContactSerializer(serializers.ModelSerializer):
     def validate_first_name(self, value):
         if not re.match(r'^[a-zA-Z]+$', value):
             raise serializers.ValidationError("Last Name can only contain characters.")
+        return value
+    
+    def validate_post_code(self, value):
+        if not re.match(r'^[a-zA-Z0-9]+$', value):
+            raise serializers.ValidationError("Post code can only contain alphanumeric values.")
         return value
 
 
@@ -372,6 +384,13 @@ class ConversationSerializer(serializers.ModelSerializer):
             serializers.ValidationError: If the 'message' field is blank.
         """
         # Custom validation to treat "<p><br></p>" as blank
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        if not cleaned_comment:
+            raise serializers.ValidationError("Message is required.")
+        
         is_blank_html = value.strip() == "<p><br></p>"
 
         if is_blank_html:
@@ -417,6 +436,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         # Update 'title' and 'message' fields
         instance.title = validated_data.get('title', instance.title)
         instance.message = validated_data.get('message', instance.message)
+        instance.conversation_type = validated_data.get('conversation_type', instance.conversation_type)
 
         # Pop the 'file' field from validated_data
         file = validated_data.pop('file', None)
