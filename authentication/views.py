@@ -97,12 +97,12 @@ class SignupView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             user.set_password(serializer.validated_data["password"])
+            user_roles = UserRole.objects.filter(name="Contractor").first()
+            if user_roles:
+                user = user_roles
             user.save()
             
             #check the User Role 
-            user_roles = UserRole.objects.filter(name="Contractor")
-            if user_roles:
-                user.roles.set(user_roles)
             
             messages.success(request, "User registered successfully. Please login here.")
             return redirect(reverse('login'))
