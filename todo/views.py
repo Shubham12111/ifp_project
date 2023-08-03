@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.renderers import TemplateHTMLRenderer,JSONRenderer
 from infinity_fire_solutions.response_schemas import create_api_response, render_html_response
 from .models import *
+from datetime import date,timedelta,datetime
 from .serializers import *
 from django.contrib import messages 
 from django.shortcuts import redirect
@@ -26,7 +27,94 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     search_fields = ['title', 'description']  # Specify fields you want to allow searching on
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
+
+
+    def get_queryset(self):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "todo", HasListDataPermission, 'list'
+        )
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user) | Q(assigned_to=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        base_queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+
+        # Get the filtering parameters from the request's query parameters
+        status_filter = self.request.GET.get('status')
+        priority_filter = self.request.GET.get('priority')
+        module_filter = self.request.GET.get('module')
+        assigned_to_filter = self.request.GET.get('assigned_to')
+        start_date_filter = self.request.GET.get('start_date')
+        end_date_filter = self.request.GET.get('end_date')
+        # Apply additional filters based on the received parameters
+        if status_filter:
+            # If 'status' parameter is provided, filter TODO items by the given status
+            base_queryset = base_queryset.filter(status=status_filter)
+
+        if priority_filter:
+            # If 'priority' parameter is provided, filter TODO items by the given priority
+            base_queryset = base_queryset.filter(priority=priority_filter)
+
+        if module_filter:
+            # If 'module' parameter is provided, filter TODO items by the given module name
+            base_queryset = base_queryset.filter(module__name=module_filter)
+
+        if assigned_to_filter:
+            # If 'assigned_to' parameter is provided, filter TODO items by the given assigned_to user's email
+            base_queryset = base_queryset.filter(assigned_to__email=assigned_to_filter)
+
+        if start_date_filter and end_date_filter:
+            # If both 'start_date' and 'end_date' parameters are provided, filter TODO items within the date range
+            start_date = datetime.strptime(start_date_filter, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_filter, '%Y-%m-%d').date()
+            base_queryset = base_queryset.filter(start_date__gte=start_date, end_date__lte=end_date)
+
+        # Add more filtering conditions for other fields as needed
+
+        return base_queryset
     
+    def get_status_list(self):
+        """
+        Get a list of all status
+        """
+        return [choice[1] for choice in STATUS_CHOICES]
+    
+
+    def get_priority_list(self):
+        """
+        Get a list of all priority types
+        """
+        return [choice[1] for choice in PRIORITY_CHOICES]
+    
+    def get_module_list(self):
+        """
+        Get a list of all unique module names from the Module model.
+        """
+        return Module.objects.values_list('name', flat=True).distinct()
+
+    def get_assigned_to_users(self):
+        """
+        Get a list of all unique assigned_to users from the User model.
+        """
+        return User.objects.values_list('email', flat=True).distinct()
+
+
+    def get_date_range(self):
+        """
+        Get a date range for filtering by start and end dates.
+        """
+        today = date.today()
+        one_week_ago = today - timedelta(weeks=1)
+        start_date = self.request.GET.get('start_date', one_week_ago)
+        end_date = self.request.GET.get('end_date', today)
+        return {'start_date': start_date, 'end_date': end_date}
+
+
+        
+
     def list(self, request, *args, **kwargs):
         """
         List view for TODO items.
@@ -39,24 +127,22 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         Returns:
             Response: The response containing the list of TODO items.
         """
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"todo", HasListDataPermission, 'list'
-        )
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(user_id=request.user ) | Q(assigned_to=request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-        
+        queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
+        status_values = self.get_status_list()
+        module_list = self.get_module_list()
+        assigned_to_users = self.get_assigned_to_users()
+        priority_list = self.get_priority_list()
+        date_range = self.get_date_range()
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            context = {'todo_list': queryset}
+            context = {'todo_list': queryset,
+                    'status_values': status_values,
+                    'module_list': module_list,
+                    'assigned_to_users': assigned_to_users,
+                    'priority_list': priority_list,
+                    'date_range': date_range, }
             return render_html_response(context, self.template_name)
         else:
             # If the client accepts other formats, serialize the data and return an API response
@@ -66,7 +152,8 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                 message="Todo data retrieved successfully",
                 data=serializer.data
             )
-        
+    
+
 class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
