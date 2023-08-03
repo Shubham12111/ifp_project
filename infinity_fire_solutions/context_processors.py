@@ -15,16 +15,22 @@ def breadcrumbs(request):
     def underscore_to_space(word):
         return word.replace('_', ' ')
 
-    # Capitalize non-numeric segments and add to breadcrumbs_data
-    for segment in path_segments:
-        if segment.isdigit():
-            continue
-        name = underscore_to_space(segment)
-        breadcrumbs_data.append({'name': name.capitalize()})
+    # Remove "AUTH" from the segments
+    path_segments = [segment for segment in path_segments if segment.upper() != "AUTH"]
+
+    # Combine non-numeric segments and add to breadcrumbs_data
+    name = " ".join([underscore_to_space(segment) for segment in path_segments if not segment.isdigit()])
+    if name:
+        breadcrumbs_data.append({'name': name.capitalize(), 'url': current_path})
+
+    # Add default dashboard breadcrumb
+    breadcrumbs_data.insert(0, {'name': 'Dashboard', 'url': '/'})
 
     return {'breadcrumbs_data': breadcrumbs_data}
 
+
 def has_view_permission(user, module_name):
+
     """
     Custom template filter to check if the user has the 'add' permission for a specific module.
 

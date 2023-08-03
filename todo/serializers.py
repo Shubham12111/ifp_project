@@ -71,7 +71,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         label='Start Date',
         required=True,
         style={
-            'base_template': 'custom_input.html',
+            'base_template': 'custom_datepicker.html',
             'custom_class': 'col-4'
         },
         # Add any additional styles or validators if needed
@@ -80,7 +80,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         label='End Date',
         required=True,
         style={
-            'base_template': 'custom_input.html',
+            'base_template': 'custom_datepicker.html',
             'custom_class': 'col-4'
         },
         # Add any additional styles or validators if needed

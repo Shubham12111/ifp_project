@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
+from infinity_fire_solutions.custom_form_validation import *
 import re
 from bs4 import BeautifulSoup
 
@@ -113,7 +114,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "max_length": "Invalid Phone number and max limit should be 14.",
             "min_length": "Invalid Phone number and min limit should be 10."
         },
-        validators=[PhoneNumberValidator()]
+        validators=[validate_phone_number]
     )
    
 
@@ -200,9 +201,9 @@ class ContactSerializer(serializers.ModelSerializer):
             "autocomplete": "off",
             'base_template': 'custom_input.html'
         },
-         error_messages={
-            "invalid": "Post code can only contain alphanumeric values.",
-        }
+
+        validators=[validate_uk_postcode]
+
     )
 
     class Meta:

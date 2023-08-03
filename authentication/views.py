@@ -60,7 +60,7 @@ class LoginView(APIView):
                 return self.render_html_response(serializer)
             # Render the HTML template for successful login
             login(request, user)
-            messages.success(request, 'Congratulations! You have successfully logged in to your account. Enjoy your experience!')
+            #messages.success(request, 'Congratulations! You have successfully logged in to your account. Enjoy your experience!')
             return redirect(reverse('dashboard'))
 
         else:
