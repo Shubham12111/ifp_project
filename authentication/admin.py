@@ -11,7 +11,7 @@ class UserRolePermissionInline(admin.TabularInline):
     Inline representation of UserRolePermission model for the UserRole model.
     """
     model = UserRolePermission
-    extra = 1  # The number of empty forms to display for adding new UserRolePermission instances.
+    extra = 0  # The number of empty forms to display for adding new UserRolePermission instances.
     # Add any other customizations you want for the inline form.
 
 class UserRoleAdmin(admin.ModelAdmin):
