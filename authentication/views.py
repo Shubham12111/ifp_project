@@ -112,7 +112,7 @@ class SignupView(APIView):
             user.set_password(serializer.validated_data["password"])
             user_roles = UserRole.objects.filter(name="Contractor").first()
             if user_roles:
-                user = user_roles
+                user.roles = user_roles
             user.save()
             #check the User Role
             
