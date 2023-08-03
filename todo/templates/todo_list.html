@@ -18,6 +18,7 @@
       </div>
         <div class="col-lg-12 col-12">
           <div class="card">
+            {% if todo_list %}
             <div class="card-header pb-0">
               <div class="d-lg-flex">
                 <div>
@@ -168,6 +169,9 @@
                
               </ul>
             </div>
+            {% else %}
+            <h4 class="font-weight-bolder text-center  p-3 pt-0 mt-4">No records found</h4>
+          {% endif %}
           </div>
         </div>
       </div>
