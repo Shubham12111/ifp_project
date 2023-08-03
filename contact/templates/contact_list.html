@@ -47,7 +47,7 @@
             </div>
               <div class="dropdown d-inline">
                 <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle " data-bs-toggle="dropdown" id="navbarDropdownMenuLink2">
-                  Contact Type
+                   {% if contact_type_filter %} {{contact_type_filter}} {% else %}Contact Type {% endif %}
                 </a>
                 <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="navbarDropdownMenuLink2" data-popper-placement="bottom-end">
       
@@ -57,7 +57,7 @@
                   </li>
               {% endfor %}
               <li><hr class="horizontal dark my-2"></li>
-                              <li><a class="dropdown-item border-radius-md text-danger" onclick="removeContactTypeFilter()">Remove Filter</a></li>
+              <li><a class="dropdown-item border-radius-md text-danger" onclick="removeContactTypeFilter()">Remove Filter</a></li>
           
                 </ul>
               </div>

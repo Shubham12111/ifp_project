@@ -81,10 +81,11 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
         # Get the filtered queryset using get_queryset method
         queryset = self.get_queryset()
         contact_types = self.get_contact_types()
-
+        contact_type_filter = self.request.GET.get('contact_type')
         if request.accepted_renderer.format == 'html':
             context = {'contacts': queryset,
-                       'contact_types': contact_types,}
+                       'contact_types': contact_types,
+                       'contact_type_filter':contact_type_filter}
             return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
