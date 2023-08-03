@@ -1,4 +1,3 @@
-
 from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -36,6 +35,11 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "contact", HasListDataPermission, 'list'
         )
+        # Check if authenticated_user is a redirect response
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=self.request.user),
@@ -118,7 +122,11 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"contact", HasCreateDataPermission, 'add'
         )
-           
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+
         if request.accepted_renderer.format == 'html':
             context = {'serializer':self.serializer_class()}
             return render_html_response(context,self.template_name)
@@ -134,6 +142,9 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"contact", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         message = "Congratulations! your contact has been added successfully."
         serializer = self.serializer_class(data=request.data)
         
@@ -193,7 +204,9 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "contact", HasUpdateDataPermission, 'change'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=self.request.user ),
@@ -290,6 +303,9 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"contact", HasDeleteDataPermission, 'delete'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=request.user ),
@@ -336,7 +352,9 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"contact", HasViewDataPermission, 'view'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=self.request.user ),
