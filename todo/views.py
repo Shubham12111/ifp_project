@@ -199,14 +199,12 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         """
         
         data = request.data
-        
         instance = self.get_queryset()
         if instance and instance.status != 'completed':
             # If the contact instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated todo instance.
-                serializer.validated_data['user_id'] = request.user
                 serializer.save()
                 message = "Your TODO has been updated successfully!"
                 status_code = status.HTTP_200_OK

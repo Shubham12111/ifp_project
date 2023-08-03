@@ -90,7 +90,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         user = self.context['request'].user
         if user.is_authenticated:
-            self.fields['assigned_to'].queryset = User.objects.filter(is_active=True).exclude(pk=user.pk)
+            self.fields['assigned_to'].queryset = User.objects.filter(is_active=True)
 
 
     def validate(self, data):

@@ -36,7 +36,10 @@ def has_update_permission(user, module_name):
     user_permissions = get_user_module_permissions(user, module_name)
     for permission in user_permissions.values():
         if permission['can_change_data'] != "none":
-            return True
+            if permission['can_change_data'] == "all":
+                return permission['can_change_data']
+            else:
+                return True
     return False
 
 @register.filter
@@ -54,7 +57,10 @@ def has_delete_permission(user, module_name):
     user_permissions = get_user_module_permissions(user, module_name)
     for permission in user_permissions.values():
         if permission['can_delete_data'] != "none":
-            return True
+            if permission['can_delete_data'] == "all":
+                return permission['can_delete_data']
+            else:
+                return True
     return False
 
 
@@ -73,5 +79,8 @@ def has_view_permission(user, module_name):
     user_permissions = get_user_module_permissions(user, module_name)
     for permission in user_permissions.values():
         if permission['can_view_data'] != "none":
-            return True
+            if permission['can_view_data'] == "all":
+                return permission['can_view_data']
+            else:
+                return True
     return False
