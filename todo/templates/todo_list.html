@@ -77,7 +77,9 @@ display: inline-block;
                                   <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
                                 </a>
                                 <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">
-                                  {% if request.user|has_update_permission:"todo" == "all" or request.user == todo_data.user_id and request.user|has_update_permission:"todo" and todo_data.status != 'completed' %}
+                                  {% if todo_data.status != 'completed' and (request.user|has_update_permission:"todo" == "all" or request.user == todo_data.user_id and request.user|has_update_permission:"todo") %}
+
+
                                   <li><a class="dropdown-item border-radius-md" href="{% url 'todo_edit' todo_data.id %}">Edit</a></li>
                                     {% endif %}
                                     
