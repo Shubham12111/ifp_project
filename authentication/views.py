@@ -112,8 +112,9 @@ class SignupView(APIView):
             user.set_password(serializer.validated_data["password"])
             user_roles = UserRole.objects.filter(name="Contractor").first()
             if user_roles:
-                user.roles.add(user_roles)  # Assuming user has a ManyToManyField for roles
+                user = user_roles
             user.save()
+            #check the User Role
             
             # Redirect or respond with success message as needed
             messages.success(request, "User registered successfully. Please login here.")
