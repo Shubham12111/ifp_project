@@ -75,7 +75,11 @@ TEMPLATES = [
                 'infinity_fire_solutions.context_processors.breadcrumbs', 
                 'infinity_fire_solutions.context_processors.custom_menu'
             ],
+            'libraries':  {
+                'custom_tags': 'authentication.templatetags.custom_tags',
+            }
         },
+        
     },
 ]
 
@@ -94,6 +98,13 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': '3306',
     }
+}
+
+
+# settings.py
+REST_FRAMEWORK = {
+    # ... other settings ...
+    'EXCEPTION_HANDLER': 'infinity_fire_solutions.exceptions.custom_exception_handler'
 }
 
 
@@ -133,10 +144,10 @@ USE_TZ = True
 
 # AWS
 STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
-# STATIC_URL = '/static/'
-# # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+#STATIC_URL = '/static/'
+#STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+#STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # if not DEBUG:
 #     STATICFILES_DIRS = (

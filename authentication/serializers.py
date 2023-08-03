@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.renderers import HTMLFormRenderer
 from django.contrib.auth import update_session_auth_hash
-
+from infinity_fire_solutions.custom_form_validation import *
 from cities_light.models import City, Country, Region
 from .models import User
 import re
@@ -24,21 +24,6 @@ def custom_validate_password(value):
         raise serializers.ValidationError({"password":'The password must contain at least 1 lowercase letter (a-z).'})
     return value
 
-
-def phone_number_validator(value):
-    # Define your phone number validation regex pattern
-    pattern = r'^\d{1,14}$'
-    
-    # Validate the phone number format using the regex pattern
-    if not re.match(pattern, value):
-        raise serializers.ValidationError('Invalid phone number format.')
-    return value
-    
-def post_code_validator(value):
-    if not value.isdigit() or len(value) != 6:
-        raise serializers.ValidationError('Invalid post_code format.')
-    return value
-    
 
 class LoginSerializer(serializers.ModelSerializer):
     """
@@ -267,7 +252,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "This field is required.",
             "blank": "First Name is required.",
-            "invalid": "First Name can only contain characters.",
+            "invalid": "Invalid First Name. Only alphabets and spaces are allowed.",
         },
         style={
             "input_type": "text",
@@ -285,7 +270,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "This field is required.",
             "blank": "Last Name is required.",
-            "invalid": "Last Name can only contain characters.",
+            "invalid": "Invalid Last Name. Only alphabets are allowed.",
         },
 
         style={
@@ -314,7 +299,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         max_length=14,
         min_length=10,
         required=False,
-        validators=[phone_number_validator],
+        validators=[validate_phone_number],
         style={
             'base_template': 'custom_input.html'
         },
@@ -356,6 +341,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_input.html'
         },
+        validators=[validate_uk_postcode],
     )
 
     class Meta:
@@ -364,8 +350,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     
     def validate_first_name(self, value):
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
+        return value
+    
+    def validate_last_name(self, value):
         if not re.match(r'^[a-zA-Z]+$', value):
-            raise serializers.ValidationError("Last Name can only contain characters.")
+            raise serializers.ValidationError("Invalid Last Name. Only alphabets are allowed.")
         return value
 
     

@@ -8,11 +8,9 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth import login
-from django.contrib.auth.models import Group
 from django.contrib.auth import logout
 from .serializers import LoginSerializer, SignupSerializer, ForgotPasswordSerializer, VerifyOTPSerializer, UserProfileSerializer, ChangePasswordSerializer
-from .models import User
-from rest_framework.permissions import IsAuthenticated
+from .models import User,UserRole
 
 class LoginView(APIView):
     """
@@ -62,7 +60,7 @@ class LoginView(APIView):
                 return self.render_html_response(serializer)
             # Render the HTML template for successful login
             login(request, user)
-            messages.success(request, 'Congratulations! You have successfully logged in to your account. Enjoy your experience!')
+            #messages.success(request, 'Congratulations! You have successfully logged in to your account. Enjoy your experience!')
             return redirect(reverse('dashboard'))
 
         else:
@@ -99,12 +97,12 @@ class SignupView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             user.set_password(serializer.validated_data["password"])
+            user_roles = UserRole.objects.filter(name="Contractor").first()
+            if user_roles:
+                user = user_roles
             user.save()
             
             #check the User Role 
-            user_roles = Group.objects.filter(name="Contractor")
-            if user_roles:
-                user.groups.set(user_roles)
             
             messages.success(request, "User registered successfully. Please login here.")
             return redirect(reverse('login'))
