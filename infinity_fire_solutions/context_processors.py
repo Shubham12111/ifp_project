@@ -2,6 +2,8 @@
 from common_app.models import MenuItem
 from django.urls import reverse, resolve
 from infinity_fire_solutions.permission import get_user_module_permissions
+import re
+
 
 def breadcrumbs(request):
     """
@@ -54,7 +56,9 @@ def generate_menu(request, menu_items):
     menu_data = []
 
     for item in menu_items:
-        if item.name.lower() == 'dashboard':
+        pattern = r"s"
+        item.name = re.sub(pattern, "", item.name)
+        if not item.permission_required:
             # Add the dashboard menu item, visible to all users
             menu_item = {
                 'url': item.url,

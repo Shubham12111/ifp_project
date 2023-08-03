@@ -34,6 +34,7 @@ class Todo(models.Model):
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Low')
     start_date = models.DateField()
     end_date = models.DateField()
+    completed_at = models.DateField( null=True, blank=True)
     assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name="assignedto",verbose_name="Assigned To")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
