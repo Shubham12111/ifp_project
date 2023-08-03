@@ -246,7 +246,7 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
-        max_length=100,
+        max_length=50,
         label='First Name ',
         required=True,
         error_messages={
@@ -264,7 +264,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         },
     )
     last_name = serializers.CharField(
-        max_length=100,
+        max_length=50,
         label='Last Name ',
         required=True,
         error_messages={
@@ -349,15 +349,25 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'city', 'county', 'country', 'post_code']
 
     
+   
     def validate_first_name(self, value):
         if not re.match(r'^[a-zA-Z\s]+$', value):
             raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("First Name should be at least 2 characters long.")
+
         return value
-    
+
     def validate_last_name(self, value):
-        if not re.match(r'^[a-zA-Z]+$', value):
-            raise serializers.ValidationError("Invalid Last Name. Only alphabets are allowed.")
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid Last Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("Last Name should be at least 2 characters long.")
+
         return value
+
 
     
 class ChangePasswordSerializer(serializers.ModelSerializer):
