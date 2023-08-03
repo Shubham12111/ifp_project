@@ -24,36 +24,73 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = ContactSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['name', 'email','contact_type__name']
+    search_fields = ['first_name', 'last_name','email']
     template_name = 'contact_list.html'
     ordering_fields = ['created_at'] 
+
+    def get_queryset(self):
+        """
+        Get the queryset based on filtering parameters from the request.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "contact", HasListDataPermission, 'list'
+        )
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        base_queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+
+        # Get the filtering parameters from the request's query parameters
+        contact_type_filter = self.request.GET.get('contact_type')
+
+        # Apply additional filters based on the received parameters
+        if contact_type_filter:
+            # If 'contact_type' parameter is provided, filter contacts by the given contact_type
+            base_queryset = base_queryset.filter(contact_type__name=contact_type_filter)
+
+        # Add more filtering conditions as needed for other fields
+
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            base_queryset = base_queryset.order_by(ordering)
+
+        return base_queryset
+    
+
+    def get_contact_types(self):
+        """
+        Get a list of all contact types.
+        """
+        return ContactType.objects.all()
+    
 
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
         """
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"contact", HasListDataPermission, 'list'
-        )
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(user_id=request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-       
+        # Get the filtered queryset using get_queryset method
+        queryset = self.get_queryset()
+        contact_types = self.get_contact_types()
+
         if request.accepted_renderer.format == 'html':
-            context = {'contacts':queryset}
-            return render_html_response(context,self.template_name)
+            context = {'contacts': queryset,
+                       'contact_types': contact_types,}
+            return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                            message="Data retrieved",
-                                            data=serializer.data)
-
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Data retrieved",
+                data=serializer.data
+            )
+    
+    
 class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
     View for adding or updating a contact.
@@ -287,6 +324,9 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     serializer_class = ConversationSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'conversation.html'
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    ordering_fields = ['created_at'] 
     
     
     def get_queryset(self):
@@ -316,6 +356,15 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         Get the queryset of conversations filtered by the current user.
         """
         return Conversation.objects.filter(user_id=self.request.user)
+    
+
+    def get_conversation_types(self):
+        """
+        Get a list of all contact types.
+        """
+        return ConversationType.objects.all()
+    
+
 
     def serialized_conversation_list(self):
         """
