@@ -15,10 +15,7 @@
           <a href="{% url 'todo_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add ToDo</a>
         {% endif %}
         <div class="ms-md-auto pe-md-3 d-flex align-items-center">
-          <form id="searchForm" method="get" class="input-group">
-            <span class="input-group-text text-body"></span>
-            <input type="text" class="form-control" name="search" id="searchField" placeholder="Search..." value="{{ request.GET.search }}">
-          </form>
+            <input type="text" class="form-control" name="search" id="searchField" placeholder="Search..." autocomplete="off" value="{{ request.GET.search }}">
         </div>
       </div>
         <div class="col-lg-12 col-12">
@@ -300,12 +297,13 @@
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script>
  // JavaScript code to handle automatic search
-  document.getElementById('searchField').addEventListener('input', function(event) {
-    const searchValue = event.target.value;
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set('search', searchValue);
-    window.location.href = currentUrl.toString(); // Redirect to the URL with search query 
-  });
+ document.getElementById('searchField').addEventListener('input', function(event) {
+  event.preventDefault();
+  const searchValue = event.target.value;
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set('search', searchValue);
+  window.location.href = currentUrl.toString(); // Redirect to the URL with search query
+});
 // JavaScript code to handle filter for date range
   function applyDateRangeFilter() {
     const startDate = document.getElementById('startDatePicker').value;

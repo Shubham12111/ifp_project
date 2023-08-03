@@ -24,7 +24,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
-    search_fields = ['title', 'description']  # Specify fields you want to allow searching on
+    search_fields = ['title']  # Specify fields you want to allow searching on
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
 
@@ -50,6 +50,14 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         start_date_filter = self.request.GET.get('start_date')
         end_date_filter = self.request.GET.get('end_date')
         # Apply additional filters based on the received parameters
+
+        search_query = self.request.GET.get('search', '')
+
+        # Apply additional filters based on the received parameters
+        if search_query:
+            # If 'search' parameter is provided, filter TODO items by the given search query
+            base_queryset = base_queryset.filter(Q(title__icontains=search_query) | Q(description__icontains=search_query))
+            
         if status_filter:
             # If 'status' parameter is provided, filter TODO items by the given status
             base_queryset = base_queryset.filter(status=status_filter)
