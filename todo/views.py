@@ -15,6 +15,7 @@ from django.apps import apps
 from django.db.models import Q
 from django.http import  HttpResponse
 from authentication.models import *
+from datetime import datetime
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
@@ -127,7 +128,9 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         Returns:
             Response: The response containing the list of TODO items.
         """
+
         queryset = self.get_queryset()
+
         queryset = self.filter_queryset(queryset)
         status_values = self.get_status_list()
         module_list = self.get_module_list()
@@ -165,6 +168,8 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         serializer = self.serializer_class(context={'request': request})
 
@@ -177,6 +182,8 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"todo", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         serializer = self.serializer_class(data=request.data,context={'request': request})
 
@@ -233,7 +240,9 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "todo", HasUpdateDataPermission, 'change'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=self.request.user ) | Q(assigned_to=self.request.user ),
@@ -276,14 +285,12 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         """
         
         data = request.data
-        
         instance = self.get_queryset()
-        if instance:
+        if instance and instance.status != 'completed':
             # If the contact instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated todo instance.
-                serializer.validated_data['user_id'] = request.user
                 serializer.save()
                 message = "Your TODO has been updated successfully!"
                 status_code = status.HTTP_200_OK
@@ -323,6 +330,9 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasDeleteDataPermission, 'delete'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=request.user ) | Q(assigned_to=request.user ),
@@ -362,6 +372,9 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasViewDataPermission, 'view'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
@@ -418,6 +431,8 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
                 serializer.validated_data['todo_id'] = todo_data
                 serializer.save()
                 todo_data.status = serializer.data.get('status') 
+                if serializer.data.get('status') == 'completed':
+                    todo_data.completed_at = datetime.now() 
                 todo_data.save()
                 if request.accepted_renderer.format == 'html':
                     # For HTML rendering, redirect to the list view after successful savemessages.success(request, "Task Added: Your TODO and comments have been saved successfully!")
