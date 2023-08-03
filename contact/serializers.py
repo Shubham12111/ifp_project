@@ -142,7 +142,7 @@ class ContactSerializer(serializers.ModelSerializer):
     )
     address = serializers.CharField(
         label=('Address'),
-        max_length=100,
+        max_length=225,
         required=False,
         style={
             "input_type": "text",
