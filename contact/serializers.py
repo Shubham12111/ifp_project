@@ -129,7 +129,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "base_template": 'custom_input.html'
         }
     )
-    company = serializers.CharField(
+    company_name = serializers.CharField(
         label=('Company Name'),
         max_length=100,
         required=False,
@@ -208,7 +208,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company', 'job_title','address','town','county','country','post_code',]
+        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company_name', 'job_title','address','town','county','country','post_code',]
 
         extra_kwargs={
             'name':{'required':True},
