@@ -105,6 +105,12 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         Returns:
             Response: The response containing the list of TODO items.
         """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "todo", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
 
         queryset = self.get_queryset()
 
