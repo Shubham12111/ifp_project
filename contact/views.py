@@ -48,7 +48,7 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
         base_queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-
+        
         # Get the filtering parameters from the request's query parameters
         contact_type_filter = self.request.GET.get('contact_type')
 
@@ -317,19 +317,16 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # or use an empty Q() object if the value is not in the mapping
         queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q()))
         instance = queryset.filter(pk=self.kwargs.get('pk')).first()
-        
-
-        contact = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).first()
-        if contact:
+        if instance:
             # Proceed with the deletion
-            contact.delete()
+            instance.delete()
             messages.success(request, "Your contact has been deleted successfully!")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your contact has been deleted successfully!", )
         else:
-            messages.error(request, "Contact not found")
+            messages.error(request, "Contact not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Contact not found", )
+                                        message="Contact not found OR You are not authorized to perform this action.", )
                
 
       
@@ -346,7 +343,7 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     ordering_fields = ['created_at'] 
     
     
-    def get_queryset(self):
+    def get_queryset(self,*args, **kwargs):
         """
         Get the queryset of contacts filtered by the current user.
         """
@@ -364,9 +361,8 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
+        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q()))
         queryset = queryset.filter(pk=self.kwargs.get('contact_id')).first()
-        
         return queryset
     
 
@@ -404,8 +400,8 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         Handles GET request for the conversation view.
         If a conversation_id is provided in the URL kwargs, it means we are viewing/editing an existing conversation.
         """
-        instance = self.get_queryset()
         conversation_id = self.kwargs.get('conversation_id')
+        instance = self.get_queryset()
         if instance:
             if conversation_id:
                 conversation_data = self.get_conversation_queryset().filter(contact_id = instance, pk=conversation_id).first() 
@@ -428,8 +424,7 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         If contact_id is provided in URL kwargs, it means we are adding/updating a conversation related to the contact.
         """
         if kwargs.get('contact_id'):
-            contact_data = Contact.objects.filter(user_id = request.user, 
-                                                  pk = kwargs.get('contact_id')).first()
+            contact_data = self.get_queryset()
             if contact_data:
                 conversation_id = self.kwargs.get('conversation_id')
                 if conversation_id:
