@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'ckeditor',
     'customer_management',
+    'requirement_management'
     
 ]
 
@@ -101,6 +102,7 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
 
 
 # settings.py

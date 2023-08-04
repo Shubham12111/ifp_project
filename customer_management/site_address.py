@@ -37,7 +37,9 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "customer", HasUpdateDataPermission, 'change'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(created_by=self.request.user ),
@@ -46,7 +48,7 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name='customer')
+        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='customer')
         queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
         return queryset
 
@@ -65,6 +67,9 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"customer", HasCreateDataPermission, 'change'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         if request.accepted_renderer.format == 'html':
             address_instance = self.get_site_address_instance()
             if address_instance:
@@ -148,6 +153,8 @@ class CustomerRemoveSiteAddressView(CustomAuthenticationMixin, generics.DestroyA
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "customer", HasDeleteDataPermission, 'delete'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         site_address = SiteAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
