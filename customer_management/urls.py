@@ -9,6 +9,8 @@ urlpatterns = [
     path('list/', CustomerListView.as_view(), name='customer_list'),
     path('add/', CustomerAddView.as_view(), name='customer_add'),
     path('edit/<int:customer_id>/', CustomerUpdateView.as_view(), name='customer_edit'),
+    path('detail/<int:customer_id>/', CustomerDetailView.as_view(), name='customer_detail'),
+
     path('delete/<int:pk>/',CustomerDeleteView.as_view(),name='delete_customer'),
     path('convert_contact/<int:contact_id>/', CustomerAddView.as_view(), name='convert_to_custmoer'),
 

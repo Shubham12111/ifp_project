@@ -37,7 +37,9 @@ class CustomerContactPersonView(CustomAuthenticationMixin, generics.CreateAPIVie
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "customer", HasUpdateDataPermission, 'change'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(created_by=self.request.user ),
@@ -46,7 +48,7 @@ class CustomerContactPersonView(CustomAuthenticationMixin, generics.CreateAPIVie
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name='customer')
+        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='customer')
         queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
         return queryset
 
@@ -149,6 +151,9 @@ class CustomerRemoveContactPersonView(CustomAuthenticationMixin, generics.Destro
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "customer", HasDeleteDataPermission, 'delete'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
 
         contact_person = ContactPerson.objects.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()

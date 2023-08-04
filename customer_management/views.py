@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 import random
 import string
+from django.core.serializers import serialize
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.email import *
 from contact.models import Contact
@@ -45,6 +46,9 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"customer", HasListDataPermission, 'list'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(created_by=request.user),
@@ -52,7 +56,7 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         }
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name='Customer').exclude(pk=request.user.id)
+        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='Customer').exclude(pk=request.user.id)
         if request.accepted_renderer.format == 'html':
             context = {'customers':queryset}
             return render_html_response(context,self.template_name)
@@ -81,6 +85,11 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"customer", HasCreateDataPermission, 'add'
         )
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+  
+
         
         contact_id = kwargs.get('contact_id')
         if contact_id:
@@ -89,6 +98,7 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             print(serializer)
         else:
             serializer = self.serializer_class()  # Create an empty serializer
+
         if request.accepted_renderer.format == 'html':
             context = {'serializer':serializer}
             return render_html_response(context,self.template_name)
@@ -189,7 +199,9 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "customer", HasUpdateDataPermission, 'change'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(created_by=self.request.user ),
@@ -198,7 +210,7 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name='customer')
+        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='customer')
         queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
         return queryset
 
@@ -290,7 +302,9 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "customer", HasUpdateDataPermission, 'change'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(created_by=self.request.user ),
@@ -299,7 +313,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name='customer')
+        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='customer')
         queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
         return queryset
 
@@ -400,10 +414,12 @@ class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.Destr
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "customer", HasDeleteDataPermission, 'delete'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
 
         billing_address = BillingAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
-        print(billing_address)
         return billing_address
     
     def destroy(self, request, *args, **kwargs):
@@ -443,6 +459,8 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"customer", HasDeleteDataPermission, 'delete'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
@@ -453,7 +471,7 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
 
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'), roles__name='Customer').exclude(pk=request.user.id)
+        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'), roles__name__icontains='Customer').exclude(pk=request.user.id)
         
         customer = queryset.first()
         
@@ -468,3 +486,37 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Customer not found", )
        
+
+
+class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
+    """
+    View to get the listing of all contacts.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = CustomerSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    def get(self, request, *args, **kwargs):
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"requirement", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = User.objects.filter(pk=self.kwargs.get('customer_id'), roles__name__icontains='Customer').exclude(pk=request.user.id).first()
+        if queryset:
+            data = {
+                'company_name': queryset.company_name,  # Replace with the actual field name
+                'email': queryset.email,
+                'first_name': queryset.first_name,
+                'last_name': queryset.last_name,
+                # Include other file fields similarly
+            }
+        return create_api_response(status_code=status.HTTP_200_OK,
+                                            message="Data retrieved",
+                                            data=data)

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} Add Defect {{ block.super }}{% endblock %}
+{% load custom_tags %}
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="row mt-4">
+    <div class="col-8 col-lg-8 m-auto">
+        <div class="card" id="basic-info">
+            <div class="card-header">
+                <h4 class="font-weight-bolder">Add Defect </h4>
+            </div>
+            <div class="card-body pt-0">
+                <form role="form"  method="POST" autocomplete="off" action="{% url 'requirement_defect_add' instance.id %}">
+                    <div class='row'>
+                        {% csrf_token %}
+                        {% render_form serializer %}    
+                    </div>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0">Save</button>
+
+                </form>
+            </div>
+        </div>
+        <div class="card mt-4">
+            
+            <div class="card-body px-0 pb-0">
+              <div class="table-responsive">
+                <table class="table table-flush text-dark" id="requirement-list">
+                  <thead class="thead-light">
+                    <tr>
+                      <th>Action</th>
+                      <th>Description</th>
+                      <th>Defect Period</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                      <th>Opts</th>
+                    </tr>
+                  </thead>
+                  <tbody class="ml-4">
+                    {% for requirement_defect in requirement_serializer.data.requirementdefect_set %}
+                    <tr>
+                      <td>{{requirement_defect.action}}</td>
+                      <td>{{requirement_defect.description}}</td>
+                      <td>{{requirement_defect.defect_period}}</td>
+                      <td>{{requirement_defect.due_date}}</td>
+                      <td>{{requirement_defect.status}}</td>
+                      <td>
+                        {% if request.user|has_view_permission:"requirement" %}
+                        <a href="{% url 'requirement_defect_update' requirement_defect.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Defect">
+                          <i class="fas fa-user-edit text-secondary"></i>
+                        </a>    
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card mb-3 mt-lg-0 mt-4">
+            <div class="card-body pb-0">
+                <div class="row align-items-center mb-3">
+                    <div class="col-9">
+                        <h4 class="font-weight-bolder">
+                            <a href="javascript:;">Requirement Detail</a>
+                        </h4>
+                    </div>
+                    <p class=" mt-4">{{requirement_serializer.data.description|safe|truncatechars:200}}</p>
+                    <ul class="list-unstyled mx-auto mt-4">
+                        <li class="d-flex">
+                            <p class="mb-0 font-weight-bolder">Customer:</p>
+                            <span class="ms-auto">{{requirement_serializer.data.customer_name|title}}</span>
+                        </li>
+                        <li>
+                            <hr class="horizontal dark">
+                        </li>
+                        <li class="d-flex ">
+                            <p class="mb-0 font-weight-bolder">Quality Surveyor:</p>
+                            <span class="ms-auto">{{requirement_serializer.data.quality_surveyor_name|title}}</span>
+                        </li>
+                        <li>
+                            <hr class="horizontal dark">
+                        </li>
+                        <li class="d-flex">
+                            <p class="mb-0 font-weight-bolder">Date & Time:</p>
+                            <span class="ms-auto">{{requirement_serializer.data.requirement_date_time}}</span>
+                        </li>
+                        <li>
+                            <hr class="horizontal dark">
+                        </li>
+                        <li class="d-flex">
+                            <p class="mb-0 font-weight-bolder">Status:</p>
+                            <span class="ms-auto">{{requirement_serializer.data.status|title}}</span>
+                        </li>
+                        <li>
+                            <hr class="horizontal dark">
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+{% endblock %}
+{% block extra_js %}
+{% endblock %}
