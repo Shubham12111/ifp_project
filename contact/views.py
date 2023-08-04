@@ -79,6 +79,13 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
         Handle both AJAX (JSON) and HTML requests.
         """
         # Get the filtered queryset using get_queryset method
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "contact", HasListDataPermission, 'list'
+        )
+        # Check if authenticated_user is a redirect response
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         queryset = self.get_queryset()
         contact_types = self.get_contact_types()
         contact_type_filter = self.request.GET.get('contact_type')
