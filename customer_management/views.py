@@ -108,6 +108,7 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 user_role = UserRole.objects.create(name="Customer")
             
             user.roles = user_role
+            user.created_by = request.user 
             user.save()
             
             # Generate a strong password
