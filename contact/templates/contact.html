@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %} Add Contact {{ block.super }}{% endblock %}
+{% block title %} {% if contact %}Edit {% else %} Add {% endif %} Contact {{ block.super }}{% endblock %}
 {% block content %}
 <!-- base.html -->
 <div class="container-fluid py-4">
