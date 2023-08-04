@@ -3,17 +3,14 @@ function getCookie(name) {
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
-const csrfToken = getCookie('csrftoken');
-console.log('CSRF Token:', csrfToken);
-
-
+console.log("dshdsahdd")
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
-function confirmDelete(itemId, confirmMessage, successMessage, deleteUrl) {
+function CustomconfirmDelete(itemId, confirmMessage, successMessage, deleteUrl) {
     const csrfToken = getCookie('csrftoken');
 
     Swal.fire({
@@ -23,7 +20,8 @@ function confirmDelete(itemId, confirmMessage, successMessage, deleteUrl) {
         showCancelButton: true,
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'Cancel',
-        cancelButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonColor: '#6c757d',
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
@@ -34,24 +32,9 @@ function confirmDelete(itemId, confirmMessage, successMessage, deleteUrl) {
                     'Content-Type': 'application/json',
                 },
             })
-            .then(response => {
-                if (response.ok) {
-                    // If the delete operation is successful, show success message and reload the page
-                    Swal.fire({
-                        title: 'Deleted!',
-                        text: successMessage,
-                        icon: 'success',
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    // If the delete operation fails, show an error message
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Failed to delete.',
-                        icon: 'error',
-                    });
-                }
+            .then(data => {
+                window.location.reload();
+                
             })
             .catch(error => {
                 console.error("Error occurred during the delete operation:", error);

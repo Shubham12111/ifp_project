@@ -7,21 +7,38 @@
     </label>
   {% endif %}
 
-  <select class="form-control" name="{{ field.name }}" id="choices-{{ field.name }}">
-    {% if field.allow_null or field.allow_blank %}
-      <option value="" {% if not field.value %}selected{% endif %}>--------</option>
-    {% endif %}
-    {% for select in field.iter_options %}
-        {% if select.start_option_group %}
-          <optgroup label="{{ select.label }}">
-        {% elif select.end_option_group %}
-          </optgroup>
-        {% else %}
-          <option value="{{ select.value }}" {% if select.value|as_string == field.value|as_string %}selected{% endif %} {% if select.disabled %}disabled{% endif %}>{{ select.display_text }}</option>
-        {% endif %}
-    {% endfor %}
-  </select>
+    {% if field.label == 'Priority' %}
+    <select class="form-control" name="{{ field.name }}" id="choices-Priority">
+      {% if field.allow_null or field.allow_blank %}
+        <option value="" {% if not field.value %}selected{% endif %}>--------</option>
+      {% endif %}
+      {% for select in field.iter_options %}
+          {% if select.start_option_group %}
+            <optgroup label="{{ select.label }}">
+          {% elif select.end_option_group %}
+            </optgroup>
+          {% else %}
+            <option value="{{ select.value }}" {% if select.value|as_string == field.value|as_string %}selected{% endif %} {% if select.disabled %}disabled{% endif %}>{{ select.display_text }}</option>
+          {% endif %}
+      {% endfor %}
+    </select>
+    {% else %}
 
+        <select class="form-control" name="{{ field.name }}" id="choices-{{ field.name }}">
+          {% if field.allow_null or field.allow_blank %}
+            <option value="" {% if not field.value %}selected{% endif %}>--------</option>
+          {% endif %}
+          {% for select in field.iter_options %}
+              {% if select.start_option_group %}
+                <optgroup label="{{ select.label }}">
+              {% elif select.end_option_group %}
+                </optgroup>
+              {% else %}
+                <option value="{{ select.value }}" {% if select.value|as_string == field.value|as_string %}selected{% endif %} {% if select.disabled %}disabled{% endif %}>{{ select.display_text }}</option>
+              {% endif %}
+          {% endfor %}
+        </select>
+        {% endif %}
   {% if field.errors %}
     {% for error in field.errors %}
       <span class="help-block">{{ error }}</span>
@@ -35,6 +52,16 @@
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 
 <script>
+  if (document.getElementById('choices-Priority')) {
+  var element = document.getElementById('choices-Priority');
+  const example = new Choices(element, {
+    searchEnabled: false,
+    shouldSort: false // Keep the options in the original order
+  });
+};
+
+
+
   function initializeChoices(fieldId) {
     var element = document.getElementById(fieldId);
     if (element) {
@@ -51,6 +78,7 @@
     const example = new Choices(choicesTags, {
       delimiter: ',',
       editItems: true,
+      
       maxItemCount: 5,
       removeItemButton: true,
       addItems: true,

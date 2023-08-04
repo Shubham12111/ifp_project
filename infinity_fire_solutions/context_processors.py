@@ -1,6 +1,9 @@
 # context_processors.py'
 from common_app.models import MenuItem
 from django.urls import reverse, resolve
+from infinity_fire_solutions.permission import get_user_module_permissions
+import re
+
 
 def breadcrumbs(request):
     """
@@ -14,80 +17,87 @@ def breadcrumbs(request):
     def underscore_to_space(word):
         return word.replace('_', ' ')
 
-    # Capitalize non-numeric segments and add to breadcrumbs_data
-    for segment in path_segments:
-        if segment.isdigit():
-            continue
-        name = underscore_to_space(segment)
-        breadcrumbs_data.append({'name': name.capitalize()})
+    # Remove "AUTH" from the segments
+    path_segments = [segment for segment in path_segments if segment.upper() != "AUTH"]
+
+    # Combine non-numeric segments and add to breadcrumbs_data
+    name = " ".join([underscore_to_space(segment) for segment in path_segments if not segment.isdigit()])
+    if name:
+        breadcrumbs_data.append({'name': name.capitalize(), 'url': current_path})
+
+    # Add default dashboard breadcrumb
+    breadcrumbs_data.insert(0, {'name': 'Dashboard', 'url': '/'})
 
     return {'breadcrumbs_data': breadcrumbs_data}
 
-def has_group_view_permission(user, required_permissions):
+
+def has_view_permission(user, module_name):
+
     """
-    Checks if the user has the required group permissions to view a menu item.
+    Custom template filter to check if the user has the 'add' permission for a specific module.
 
     Args:
-        user (User): The user object to check permissions for.
-        required_permissions (list): List of required permissions for the menu item.
+        user (User): The user for whom permissions are to be checked.
+        module_name (str): The name of the module for which 'add' permission is required.
 
     Returns:
-        bool: True if the user has any of the required permissions, False otherwise.
+        bool: True if the user has the 'add' permission for the specified module, False otherwise.
     """
-    user_groups = user.groups.all()
-    for group in user_groups:
-        required_permissions = required_permissions.rstrip('s')
-        if f'{required_permissions}' in group.permissions.values_list('codename', flat=True):
+    user_permissions = get_user_module_permissions(user, module_name)
+    # Check both "can list data" and "can create data" permissions
+    for permission in user_permissions.values():
+        if permission.get('can_create_data') != 'none' or permission.get('can_list_data') != 'none':
             return True
-    return False
+    
+    return False  # If no appropriate permission found, return False
 
 
 def generate_menu(request, menu_items):
-    """
-    Recursively generates a menu data structure based on the provided menu items.
-
-    Args:
-        request (HttpRequest): The request object containing user information.
-        menu_items (list): A list of menu items to be included in the menu.
-
-    Returns:
-        list: A menu data structure containing the menu items that the user can access.
-    """
-    user = request.user
     menu_data = []
 
     for item in menu_items:
-        # Check if the menu item has 'permission_required' key and the user has the required permission
-        # required_permissions = f"view_{item.name.lower()}"
-        # # if item.permission_required and not has_group_view_permission(user, required_permissions):
-        #     continue
+        pattern = r"s"
+        item.name = re.sub(pattern, "", item.name)
+        if not item.permission_required:
+            # Add the dashboard menu item, visible to all users
+            menu_item = {
+                'url': item.url,
+                'name': item.name,
+                'submenu': None,
+                'icon': item.icon
+            }
+            menu_data.append(menu_item)
+        elif has_view_permission(request.user, item.name):
+            # Add other menu items with view permission
+            menu_item = {
+                'url': item.url,
+                'name': item.name,
+                'submenu': None,
+                'icon': item.icon
+            }
             
-        menu_item = {
-            'url': item.url,
-            'name': item.name,
-            'submenu': None,
-            'icon': item.icon
-        }
-
-         # Check for submenus of the current item
-        submenu_items = MenuItem.objects.filter(parent=item, permissions__in=request.user.groups.all())
+             # Check for submenus of the current item
+            submenu_items = MenuItem.objects.filter(parent=item)
         
-        if submenu_items.exists():
-            # Generate submenus recursively
-            menu_item['submenu'] = generate_menu(request, submenu_items)
+            if submenu_items.exists():
+             #Generate submenus recursively
+                menu_item['submenu'] = generate_menu(request, submenu_items)
 
-        menu_data.append(menu_item)
-
+            menu_data.append(menu_item)
+            
     return menu_data
 
 def custom_menu(request):
     """
     Context processor for generating a custom menu data structure.
     """
-    #user = request.user
-    allowed_menu_items = MenuItem.objects.filter(parent=None).distinct().order_by('order')
-    
-    # Generate the final menu data structure using the generate_menu function
-    menu_data = generate_menu(request, allowed_menu_items)
-    
+    menu_data = {}
+    user = request.user
+    if user.is_authenticated:
+        if user.roles:
+            allowed_menu_items = MenuItem.objects.filter(parent=None).distinct().order_by('order')
+            
+            # Generate the final menu data structure using the generate_menu function
+            menu_data = generate_menu(request, allowed_menu_items)
+            
     return {'menu_items': menu_data}

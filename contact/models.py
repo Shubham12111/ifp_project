@@ -30,7 +30,7 @@ class Contact(models.Model):
     company = models.CharField(max_length=255,null=True, blank=True)
     address = models.CharField(max_length=255 , null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
-    city = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
+    town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
     post_code = models.CharField(max_length=10, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

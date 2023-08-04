@@ -4,180 +4,173 @@ from rest_framework.response import Response
 from rest_framework.renderers import TemplateHTMLRenderer,JSONRenderer
 from infinity_fire_solutions.response_schemas import create_api_response, render_html_response
 from .models import *
+from datetime import date,timedelta,datetime
 from .serializers import *
 from django.contrib import messages 
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.shortcuts import get_object_or_404
 from infinity_fire_solutions.permission import *
 from rest_framework import filters
 from django.apps import apps
-from django.http import HttpResponseRedirect
 from django.db.models import Q
+from django.http import  HttpResponse
+from authentication.models import *
+from datetime import datetime
 
-class ToDoListAPIView(CustomAuthenticationMixin, generics.ListAPIView):
+class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
+
     """
     API view to list TODO items.
-
-    This view lists TODO items filtered based on the authenticated user's ID.
-    It supports filtering based on fields and searching based on title and description.
-
-    Filters:
-        - Ordering by 'created_at' field is allowed.
-
-    Searching:
-        - Searching is allowed on 'title' and 'description' fields.
-
-    Renderer:
-        - Supports both HTML and JSON renderers.
-
-    Template (for HTML renderer):
-        - Uses the 'todo_list.html' template to render HTML output.
-
-    Serializer:
-        - Uses the TodoListSerializer to serialize the data.
-
-    Authentication and Permissions:
-        - Inherits authentication and permission handling from CustomAuthenticationMixin.
     """
-
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
-    search_fields = ['title', 'description']  # Specify fields you want to allow searching on
+    search_fields = ['title']  # Specify fields you want to allow searching on
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
-    
+
+
     def get_queryset(self):
-        """
-        Get the queryset for listing TODO items.
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "todo", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        Returns:
-            QuerySet: A queryset of TODO items filtered based on the authenticated user's ID.
-        """
-        user_id = self.request.user
-        queryset = Todo.objects.filter(
-            Q(user_id=user_id) | Q(assigned_to=user_id)
-        ).distinct().order_by('-created_at')
-        return queryset
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user) | Q(assigned_to=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        base_queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        # Initialize the base queryset with the initial filtering conditions
+        base_queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
 
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'status': self.request.GET.get('status'),
+            'priority': self.request.GET.get('priority'),
+            'module': self.request.GET.get('module'),
+            'assigned_to': self.request.GET.get('assigned_to'),
+            'dateRange': self.request.GET.get('dateRange'),
+        }
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('_')
+                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                    base_queryset = base_queryset.filter(start_date__gte=start_date, end_date__lte=end_date)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                        'priority': 'priority',
+                        'module': 'module__name',
+                        'assigned_to': 'assigned_to__email',
+                    }
+                    base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
+
+        # Sort the queryset by 'created_at' in descending order
+        base_queryset = base_queryset.order_by('-created_at')
+
+        return base_queryset
+    
+    def get_module_list(self):
+        """
+        Get a list of all unique module names from the Module model.
+        """
+        return Module.objects.values_list('name', flat=True).distinct()
+
+    def get_assigned_to_users(self):
+        """
+        Get a list of all unique assigned_to users from the User model.
+        """
+        return User.objects.values_list('email', flat=True).distinct()
+    
     def list(self, request, *args, **kwargs):
         """
         List view for TODO items.
 
-        This method handles both HTML and API renderers. For HTML, it renders the
-        template with the list of TODO items. For API renderers (JSON), it returns
-        the serialized data.
+        Args:
+            request (Request): The request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
 
         Returns:
-            HttpResponse: HTML response if the client accepts HTML renderer.
-            Response: JSON response if the client accepts JSON renderer.
-
-        Raises:
-            AuthenticationFailed: If authentication credentials were not provided.
+            Response: The response containing the list of TODO items.
         """
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user = self.handle_unauthenticated()
-
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "todo", HasListDataPermission, 'list'
+        )
         if isinstance(authenticated_user, HttpResponseRedirect):
-            # If the user is not authenticated and a redirect response is received
-            # (for HTML renderer), return the redirect response as it is.
-            return authenticated_user
-        
-        if not authenticated_user:
-            raise AuthenticationFailed("Authentication credentials were not provided")
-       
-        else:
-            # Rest of your existing list method code...
-            queryset = self.get_queryset()
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-            # Filter the queryset based on ordering and searching
-            queryset = self.filter_queryset(queryset)
 
-            if request.accepted_renderer.format == 'html':
-                # If the client accepts HTML, render the template
-                context = {'todo_list': queryset}
-                return render_html_response(context, self.template_name)
-            else:
-                serializer = self.serializer_class(queryset, many=True)
-                return create_api_response(
-                    status_code=status.HTTP_200_OK,
-                    message="Todo data Retrieved successfully",
-                    data=serializer.data
-                )
+        queryset = self.get_queryset()
 
-class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
-    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'todo_add.html'
-    serializer_class = TodoAddSerializer
-
-    def get_app_name(self):
-        return apps.get_containing_app_config(self.__module__).name
-    
-    def get_queryset(self):
-        queryset = Todo.objects.filter(pk=self.kwargs.get('pk'))
-        user_id = self.request.user.id
-
-        # Add filtering based on user ID
-        queryset = queryset.filter(user_id=user_id)
-
-        return queryset
-        
-    def get(self, request, *args, **kwargs):
-        instance = None
-        pk = kwargs.get('pk')
-
-        if pk:
-            instance = self.get_queryset().get()
-            serializer = self.serializer_class(instance=instance,context={'request': request})
-        else:
-            # If no primary key is provided, it means we are adding a new contact
-            serializer = self.serializer_class(context={'request': request})
+        queryset = self.filter_queryset(queryset)
+        module_list = self.get_module_list()
+        assigned_to_users = self.get_assigned_to_users()
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            context = {'serializer':serializer, 'instance':instance}
-            return render_html_response(context,self.template_name)
-            
-    
-    def post(self, request, *args, **kwargs):
-
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user = self.handle_unauthenticated()
-
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            # If the user is not authenticated and a redirect response is received
-            # (for HTML renderer), return the redirect response as it is.
-            return authenticated_user
-        
-        if not authenticated_user:
-            raise AuthenticationFailed("Authentication credentials were not provided")
-
-        request.user  = authenticated_user
-
-        data = request.data
-        pk = kwargs.get('pk')
-        if pk:
-            # If a primary key is provided, it means we are updating an existing contact
-            todo_data =  self.get_queryset().get()
-
-            serializer = self.serializer_class(instance=todo_data, data=data,context={'request': request})
+            context = {'todo_list': queryset,
+                    'status_values': STATUS_CHOICES,
+                    'module_list': module_list,
+                    'assigned_to_users': assigned_to_users,
+                    'priority_list': PRIORITY_CHOICES,}
+            return render_html_response(context, self.template_name)
         else:
-            # If no primary key is provided, it means we are adding a new contact
-            serializer = self.serializer_class(data=data,context={'request': request})
+            # If the client accepts other formats, serialize the data and return an API response
+            serializer = self.serializer_class(queryset, many=True)
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Todo data retrieved successfully",
+                data=serializer.data
+            )
+    
 
+class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'todo_form.html'
+    serializer_class = TodoAddSerializer
+
+   
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"todo", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        serializer = self.serializer_class(context={'request': request})
+
+        if request.accepted_renderer.format == 'html':
+            # If the client accepts HTML, render the template
+            context = {'serializer':serializer}
+            return render_html_response(context,self.template_name)
+     
+    def post(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"todo", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        serializer = self.serializer_class(data=request.data,context={'request': request})
 
         if serializer.is_valid():
-
             serializer.validated_data['user_id'] = request.user
             serializer.save()
-
-            if pk:
-                message = "Your TODO has been updated successfully!"
-                status_code = status.HTTP_200_OK
-            else:
-                message = "Your TODO has been saved successfully!"
-                status_code = status.HTTP_201_CREATED
+            message = "Your TODO has been saved successfully!"
+            status_code = status.HTTP_201_CREATED
 
             if request.accepted_renderer.format == 'html':
                 # For HTML rendering, redirect to the list view after successful save
@@ -186,11 +179,7 @@ class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return redirect(reverse('todo_list'))
             else:
                 # For other formats (e.g., JSON), return success response
-                return create_api_response(
-                    status_code,
-                    f"{message}",
-                    serializer.data
-                )
+                return create_api_response(status_code, f"{message}",serializer.data)
         else:
             # Render the HTML template with invalid serializer data
             if request.accepted_renderer.format == 'html':
@@ -198,93 +187,215 @@ class ToDoAddUpdateView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return Response(context, template_name=self.template_name)
             else:
                 # For JSON API response
-                return create_api_response(
-                    status.HTTP_400_BAD_REQUEST,
-                    "Something went wrong!",
-                    serializer.errors
-                )
+                return create_api_response(status.HTTP_400_BAD_REQUEST,"Something went wrong!",serializer.errors)
+
+
+class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
+    """
+    API view for todo a contact.
+
+    This view handles both HTML and API requests for updating a todo instance.
+    If the todo instance exists, it will be updated with the provided data.
+    Otherwise, an error message will be returned.
+
+    The following request methods are supported:
+    - POST: Updates the todo instance.
+
+    Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'todo_form.html'
+    serializer_class = TodoAddSerializer
+
+    
+    def get_queryset(self):
+        """
+        Get the queryset for listing TODO items.
+
+        Returns:
+            QuerySet: A queryset of TODO items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "todo", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ) | Q(assigned_to=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        
+        return queryset
+
+    
+    def get(self, request, *args, **kwargs):
+        # This method handles GET requests for updating an existing ToDo object.
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            if instance:
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                context = {'serializer': serializer, 'instance': instance}
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('todo_list'))
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to update a contact instance.
+
+        Args:
+            request (rest_framework.request.Request): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            rest_framework.response.Response: HTTP response object.
+                If successful, the contact is updated, and the appropriate response is returned.
+                If unsuccessful, an error response is returned.
+        """
+        
+        data = request.data
+        instance = self.get_queryset()
+        if instance and instance.status != 'completed':
+            # If the contact instance exists, initialize the serializer with instance and provided data.
+            serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
+            if serializer.is_valid():
+                # If the serializer data is valid, save the updated todo instance.
+                serializer.save()
+                message = "Your TODO has been updated successfully!"
+                status_code = status.HTTP_200_OK
+                if request.accepted_renderer.format == 'html':
+                    # For HTML requests, display a success message and redirect to todo list.
+                    messages.success(request,message)
+                    return redirect(reverse('todo_list'))
+                else:
+                    messages.success(request, message)
+                    return create_api_response(status_code, f"{message}", serializer.data)
+            else:
+                if request.accepted_renderer.format == 'html':
+                    context = {'serializer': serializer, 'instance': instance}
+                    return render_html_response(context, self.template_name)
+                else:
+                    # For API requests with invalid data, return an error response with serializer errors.
+                    return create_api_response(status.HTTP_400_BAD_REQUEST, "Something went wrong!", serializer.errors)
+        else:
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests with no instance, display an error message and redirect to todo_list.
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('todo_list'))
+            else:
+                # For API requests with no instance, return an error response with an error message.
+                return create_api_response(status.HTTP_400_BAD_REQUEST, "You are not authorized to perform this action")
+                
 
 class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    serializer_class = TodoAddSerializer
     
-    def get_queryset(self):
-        user_id = self.request.user.id
-        return Todo.objects.filter(pk=self.kwargs.get('pk'), user_id=user_id)
-
+    def get_model_name(self):
+        return self.serializer_class.Meta.model.__name__
+    
     def delete(self, request, *args, **kwargs):
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user = self.handle_unauthenticated()
-
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"todo", HasDeleteDataPermission, 'delete'
+        )
         if isinstance(authenticated_user, HttpResponseRedirect):
-            # If the user is not authenticated and a redirect response is received
-            # (for HTML renderer), return the redirect response as it is.
-            return authenticated_user
-        
-        if not authenticated_user:
-            raise AuthenticationFailed("Authentication credentials were not provided")
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        request.user  = authenticated_user
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=request.user ) | Q(assigned_to=request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        instance = queryset.first()
         
-        instance = self.get_queryset().first()
         if instance:
             instance.delete()
 
-            return create_api_response(
-                status.HTTP_200_OK,
-                "Your TODO has been deleted successfully.",
-            )
-        else:
-            return create_api_response(
-                status.HTTP_404_NOT_FOUND,
-                "TODO not found or you don't have permission to delete."
-            )
+            messages.success(request, "Your TODO has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                        message="Your TODO has been deleted successfully!", )
 
-class ToDoRetrieveAPIView(generics.RetrieveAPIView):
+        else:
+            messages.error(request, "Contact not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND)
+
+class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = CommentSerializer
     template_name = 'todo_view.html'
     
-    def get_app_name(self):
-        return apps.get_containing_app_config(self.__module__).name
-    
     def get_queryset(self):
-        user = self.request.user
-        todo_id = self.kwargs.get('todo_id')
+        """
+        Get the queryset for listing TODO items.
 
-        # Build the queryset with OR condition
-        queryset = Todo.objects.filter(
-            Q(pk=todo_id, user_id=user.id) | Q(assigned_to=user, pk=todo_id)
+        Returns:
+            QuerySet: A queryset of TODO items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"todo", HasViewDataPermission, 'view'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ) | Q(assigned_to=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        queryset = queryset.filter(pk=self.kwargs.get('todo_id')).first()
+        
         return queryset
 
     def get_comment_queryset(self):
         todo_queryset = self.get_queryset()
-        queryset = Comment.objects.filter(todo_id=todo_queryset.get()).order_by('-created_at')
+        queryset = Comment.objects.filter(todo_id=todo_queryset).order_by('-created_at')
         return queryset
 
     def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset().get()
+        instance = self.get_queryset()
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
             comment_id = self.kwargs.get('comment_id')
             if comment_id:
-                comment_instance =  Comment.objects.filter(todo_id=queryset,pk=comment_id, user_id=request.user).get()
+                comment_instance =  Comment.objects.filter(todo_id=instance,pk=comment_id, user_id=request.user).get()
                 serializer = self.serializer_class(instance=comment_instance)
             else:
                 serializer =  self.serializer_class()
             
             comment_list = self.get_comment_queryset()
-            context = {'todo_data': queryset,
+            context = {'todo_data': instance,
                        'serializer':serializer,
                        'comment_list':comment_list}
             return render_html_response(context,self.template_name)
        
     
     def post(self, request, *args, **kwargs):
+        todo_data = self.get_queryset()
+    
+
         data = request.data
-        todo_data =  self.get_queryset().get()
         if todo_data:
             # If a primary key is provided, it means we are updating an existing contact
             comment_id = self.kwargs.get('comment_id')
@@ -299,6 +410,8 @@ class ToDoRetrieveAPIView(generics.RetrieveAPIView):
                 serializer.validated_data['todo_id'] = todo_data
                 serializer.save()
                 todo_data.status = serializer.data.get('status') 
+                if serializer.data.get('status') == 'completed':
+                    todo_data.completed_at = datetime.now() 
                 todo_data.save()
                 if request.accepted_renderer.format == 'html':
                     # For HTML rendering, redirect to the list view after successful savemessages.success(request, "Task Added: Your TODO and comments have been saved successfully!")
@@ -325,7 +438,7 @@ class ToDoDeleteCommentView(generics.DestroyAPIView):
     
     def get_queryset(self):
         user_id = self.request.user.id
-        return Todo.objects.filter(pk=self.kwargs.get('todo_id'), user_id=user_id)
+        return Todo.objects.filter(pk=self.kwargs.get('todo_id'))
     
     def destroy(self, request, *args, **kwargs):
         todo = self.get_queryset()
@@ -333,12 +446,10 @@ class ToDoDeleteCommentView(generics.DestroyAPIView):
         if comment_id:
             comment = Comment.objects.filter(todo_id=todo.get(), user_id=request.user , pk=comment_id)
             comment.delete()
-            return Response(
-                {"message": "Your comment has been deleted successfully."},
-                status=status.HTTP_204_NO_CONTENT
-            )
+            messages.success(request, "Your comment has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                        message="Your comment has been deleted successfully!", )
         else:
-            return Response(
-                {"message": "Comment not found or you don't have permission to delete."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            messages.error(request, "Comment not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND)
+

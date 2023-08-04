@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework.renderers import HTMLFormRenderer
 from django.contrib.auth import update_session_auth_hash
-
+from infinity_fire_solutions.custom_form_validation import *
 from cities_light.models import City, Country, Region
 from .models import User
 import re
@@ -24,21 +24,6 @@ def custom_validate_password(value):
         raise serializers.ValidationError({"password":'The password must contain at least 1 lowercase letter (a-z).'})
     return value
 
-
-def phone_number_validator(value):
-    # Define your phone number validation regex pattern
-    pattern = r'^\d{1,14}$'
-    
-    # Validate the phone number format using the regex pattern
-    if not re.match(pattern, value):
-        raise serializers.ValidationError('Invalid phone number format.')
-    return value
-    
-def post_code_validator(value):
-    if not value.isdigit() or len(value) != 6:
-        raise serializers.ValidationError('Invalid post_code format.')
-    return value
-    
 
 class LoginSerializer(serializers.ModelSerializer):
     """
@@ -261,13 +246,13 @@ class VerifyOTPSerializer(serializers.Serializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
-        max_length=100,
+        max_length=50,
         label='First Name ',
         required=True,
         error_messages={
             "required": "This field is required.",
             "blank": "First Name is required.",
-            "invalid": "First Name can only contain characters.",
+            "invalid": "Invalid First Name. Only alphabets and spaces are allowed.",
         },
         style={
             "input_type": "text",
@@ -279,13 +264,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
         },
     )
     last_name = serializers.CharField(
-        max_length=100,
+        max_length=50,
         label='Last Name ',
         required=True,
         error_messages={
             "required": "This field is required.",
             "blank": "Last Name is required.",
-            "invalid": "Last Name can only contain characters.",
+            "invalid": "Invalid Last Name. Only alphabets are allowed.",
         },
 
         style={
@@ -314,7 +299,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         max_length=14,
         min_length=10,
         required=False,
-        validators=[phone_number_validator],
+        validators=[validate_phone_number],
         style={
             'base_template': 'custom_input.html'
         },
@@ -334,7 +319,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
-    city = serializers.PrimaryKeyRelatedField(
+    town = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.all(),
         default=None,
         style={
@@ -356,17 +341,33 @@ class UserProfileSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_input.html'
         },
+        validators=[validate_uk_postcode],
     )
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'city', 'county', 'country', 'post_code']
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'town', 'county', 'country', 'post_code']
 
     
+   
     def validate_first_name(self, value):
-        if not re.match(r'^[a-zA-Z]+$', value):
-            raise serializers.ValidationError("Last Name can only contain characters.")
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("First Name should be at least 2 characters long.")
+
         return value
+
+    def validate_last_name(self, value):
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid Last Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("Last Name should be at least 2 characters long.")
+
+        return value
+
 
     
 class ChangePasswordSerializer(serializers.ModelSerializer):

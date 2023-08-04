@@ -1,4 +1,5 @@
 # todo_app/serializers.py
+from bs4 import BeautifulSoup
 from rest_framework import serializers
 from .models import Todo, Module,Comment, STATUS_CHOICES,PRIORITY_CHOICES
 from authentication.models import User
@@ -70,7 +71,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         label='Start Date',
         required=True,
         style={
-            'base_template': 'custom_input.html',
+            'base_template': 'custom_datepicker.html',
             'custom_class': 'col-4'
         },
         # Add any additional styles or validators if needed
@@ -79,7 +80,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         label='End Date',
         required=True,
         style={
-            'base_template': 'custom_input.html',
+            'base_template': 'custom_datepicker.html',
             'custom_class': 'col-4'
         },
         # Add any additional styles or validators if needed
@@ -89,7 +90,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         user = self.context['request'].user
         if user.is_authenticated:
-            self.fields['assigned_to'].queryset = User.objects.filter(is_active=True).exclude(pk=user.pk)
+            self.fields['assigned_to'].queryset = User.objects.filter(is_active=True)
 
 
     def validate(self, data):
@@ -111,6 +112,12 @@ class TodoAddSerializer(serializers.ModelSerializer):
 
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        if not cleaned_comment:
+            raise serializers.ValidationError("Description is required.")
+        
         is_blank_html = value.strip() == "<p><br></p>"
         
         if is_blank_html:
@@ -136,7 +143,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     
     status = serializers.ChoiceField(
-        label='Priority',
+        label='Status',
         choices= (
         ('in-progress', 'In Progress'),
         ('completed', 'Completed')
@@ -154,8 +161,13 @@ class CommentSerializer(serializers.ModelSerializer):
     
     def validate_comment(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
-        is_blank_html = value.strip() == "<p><br></p>"
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        if not cleaned_comment:
+            raise serializers.ValidationError("Comment is required.")
         
+        is_blank_html = value.strip() == "<p><br></p>"
         if is_blank_html:
             raise serializers.ValidationError("Comment field is required.")
         return value

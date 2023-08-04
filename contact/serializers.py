@@ -10,7 +10,10 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
+from infinity_fire_solutions.custom_form_validation import *
 import re
+from bs4 import BeautifulSoup
+
 
 # Custom validation function for validating file size
 def validate_file_size(value):
@@ -42,7 +45,7 @@ class PhoneNumberValidator(RegexValidator):
 
 class ContactSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
-        max_length=100,
+        max_length=50,
         required= True,
         label='First Name',
         error_messages={
@@ -59,7 +62,7 @@ class ContactSerializer(serializers.ModelSerializer):
         },
     )
     last_name = serializers.CharField(
-        max_length=100,
+        max_length=50,
         required= True,
         label='Last Name',
         error_messages={
@@ -108,8 +111,10 @@ class ContactSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "This field is required.",
             "blank": "Phone number field is required.",
+            "max_length": "Invalid Phone number and max limit should be 14.",
+            "min_length": "Invalid Phone number and min limit should be 10."
         },
-        validators=[PhoneNumberValidator()]
+        validators=[validate_phone_number]
     )
    
 
@@ -137,7 +142,7 @@ class ContactSerializer(serializers.ModelSerializer):
     )
     address = serializers.CharField(
         label=('Address'),
-        max_length=100,
+        max_length=225,
         required=False,
         style={
             "input_type": "text",
@@ -170,7 +175,7 @@ class ContactSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
-    city = serializers.PrimaryKeyRelatedField(
+    town = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.all(),
         default=None,
         style={
@@ -195,12 +200,15 @@ class ContactSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             'base_template': 'custom_input.html'
-        }
+        },
+
+        validators=[validate_uk_postcode]
+
     )
 
     class Meta:
         model = Contact
-        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company', 'job_title','address','city','county','country','post_code',]
+        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company', 'job_title','address','town','county','country','post_code',]
 
         extra_kwargs={
             'name':{'required':True},
@@ -210,14 +218,27 @@ class ContactSerializer(serializers.ModelSerializer):
 
         }
 
-    def validate_last_name(self, value):
-        if not re.match(r'^[a-zA-Z]+$', value):
-            raise serializers.ValidationError("Last Name can only contain characters.")
+    def validate_first_name(self, value):
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("First Name should be at least 2 characters long.")
+
         return value
 
-    def validate_first_name(self, value):
-        if not re.match(r'^[a-zA-Z]+$', value):
-            raise serializers.ValidationError("Last Name can only contain characters.")
+    def validate_last_name(self, value):
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid Last Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("Last Name should be at least 2 characters long.")
+
+        return value
+    
+    def validate_post_code(self, value):
+        if not re.match(r'^[a-zA-Z0-9]+$', value):
+            raise serializers.ValidationError("Post code can only contain alphanumeric values.")
         return value
 
 
@@ -372,6 +393,13 @@ class ConversationSerializer(serializers.ModelSerializer):
             serializers.ValidationError: If the 'message' field is blank.
         """
         # Custom validation to treat "<p><br></p>" as blank
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        if not cleaned_comment:
+            raise serializers.ValidationError("Message is required.")
+        
         is_blank_html = value.strip() == "<p><br></p>"
 
         if is_blank_html:
@@ -417,6 +445,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         # Update 'title' and 'message' fields
         instance.title = validated_data.get('title', instance.title)
         instance.message = validated_data.get('message', instance.message)
+        instance.conversation_type = validated_data.get('conversation_type', instance.conversation_type)
 
         # Pop the 'file' field from validated_data
         file = validated_data.pop('file', None)
