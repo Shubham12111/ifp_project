@@ -95,8 +95,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
-        'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'root'),
+        'USER': os.environ.get('DB_USER', ''),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': '3306',
     }
@@ -147,7 +147,7 @@ USE_TZ = True
 # AWS
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
-STATIC_URL= 'https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/'
+STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
 # STATIC_URL = '/static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
