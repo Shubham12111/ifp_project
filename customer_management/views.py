@@ -62,7 +62,7 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
 
 class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
-    View for adding or updating a contact.
+    View for adding or updating a customer.
     Supports both HTML and JSON response formats.
     """
     serializer_class = CustomerSerializer
@@ -71,13 +71,13 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
     def get(self, request, *args, **kwargs):
         """
-        Handle GET request to display a form for updating a contact.
-        If the contact exists, retrieve the serialized data and render the HTML template.
-        If the contact does not exist, render the HTML template with an empty serializer.
+        Handle GET request to display a form for updating a customer.
+        If the customer exists, retrieve the serialized data and render the HTML template.
+        If the customer does not exist, render the HTML template with an empty serializer.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"contact", HasCreateDataPermission, 'add'
+           self,"customer", HasCreateDataPermission, 'add'
         )
            
         if request.accepted_renderer.format == 'html':
@@ -89,11 +89,11 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request to add or update a contact.
+        Handle POST request to add or update a customer.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"contact", HasCreateDataPermission, 'add'
+           self,"customer", HasCreateDataPermission, 'add'
         )
         message = "Congratulations! your customer has been added successfully."
         serializer = self.serializer_class(data=request.data)
@@ -149,14 +149,14 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
 class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
-    API view for updating a contact.
+    API view for updating a customer.
 
-    This view handles both HTML and API requests for updating a contact instance.
-    If the contact instance exists, it will be updated with the provided data.
+    This view handles both HTML and API requests for updating a customer instance.
+    If the customer instance exists, it will be updated with the provided data.
     Otherwise, an error message will be returned.
 
     The following request methods are supported:
-    - POST: Updates the contact instance.
+    - POST: Updates the customer instance.
 
     Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
     """
@@ -207,7 +207,7 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request to update a contact instance.
+        Handle POST request to update a customer instance.
 
         Args:
             request (rest_framework.request.Request): The HTTP request object.
@@ -216,17 +216,17 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
         Returns:
             rest_framework.response.Response: HTTP response object.
-                If successful, the contact is updated, and the appropriate response is returned.
+                If successful, the customer is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
         data = request.data
         instance = self.get_queryset()
         if instance:
-            # If the contact instance exists, initialize the serializer with instance and provided data.
+            # If the customer instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
 
             if serializer.is_valid():
-                # If the serializer data is valid, save the updated contact instance.
+                # If the serializer data is valid, save the updated customer instance.
                 serializer.save()
                 message = "Your Customer has been updated successfully!"
 
@@ -257,7 +257,7 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
 class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
-    View for adding or updating a contact.
+    View for adding or updating a customer.
     Supports both HTML and JSON response formats.
     """
     serializer_class = BillingAddressSerializer
@@ -300,9 +300,9 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         
     def get(self, request, *args, **kwargs):
         """
-        Handle GET request to display a form for updating a contact.
-        If the contact exists, retrieve the serialized data and render the HTML template.
-        If the contact does not exist, render the HTML template with an empty serializer.
+        Handle GET request to display a form for updating a customer.
+        If the customer exists, retrieve the serialized data and render the HTML template.
+        If the customer does not exist, render the HTML template with an empty serializer.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -421,13 +421,13 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     # permission_classes = [IsAuthenticated]
-    template_name = 'contact.html'
+    template_name = 'customer.html'
     
     def delete(self, request, *args, **kwargs):
         """
-        Handle DELETE request to delete a contact.
+        Handle DELETE request to delete a customer.
         """
-        # Get the contact instance from the database
+        # Get the customer instance from the database
         # Call the handle_unauthenticated method to handle unauthenticated access
 
         authenticated_user, data_access_value = check_authentication_and_permissions(
