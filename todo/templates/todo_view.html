@@ -48,7 +48,7 @@
                         <h6 class="h5 mt-0">{{ comment_data.user_id.first_name|title }} {{ comment_data.user_id.last_name|title }} <span class="text-sm text-muted">{{ comment_data.created_at|timesince }} ago</span></h6>
                        {{ comment_data.comment|safe }}
                         <div class="d-flex">
-                          {% if request.user == comment_data.user_id %}
+                          {% if request.user == comment_data.user_id and todo_data.status != 'completed'  %}
                               <div>
                                   <a href="{% url 'edit_comment' todo_data.id comment_data.id %}" class="text-sm text-muted "
                                   data-bs-toggle="tooltip" data-bs-original-title="Edit Comment">
