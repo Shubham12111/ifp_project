@@ -15,6 +15,8 @@ import random
 import string
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.email import *
+from contact.models import Contact
+
 
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -79,9 +81,16 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"contact", HasCreateDataPermission, 'add'
         )
-           
+        
+        contact_id = kwargs.get('contact_id')
+        if contact_id:
+            contact = Contact.objects.get(pk=contact_id)
+            serializer = self.serializer_class(contact)  # Serialize the contact data
+            print(serializer)
+        else:
+            serializer = self.serializer_class()  # Create an empty serializer
         if request.accepted_renderer.format == 'html':
-            context = {'serializer':self.serializer_class()}
+            context = {'serializer':serializer}
             return render_html_response(context,self.template_name)
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
