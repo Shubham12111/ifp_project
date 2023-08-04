@@ -12,6 +12,7 @@ from django.contrib.auth import logout
 from .serializers import *
 from .models import User,UserRole
 from infinity_fire_solutions.email import *
+from infinity_fire_solutions.custom_form_validation import *
 from django.contrib import messages
 from django.utils import timezone
 from django.contrib.auth.tokens import default_token_generator
