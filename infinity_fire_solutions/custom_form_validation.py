@@ -1,5 +1,13 @@
 import re
 from rest_framework import serializers
+from django.contrib.sites.shortcuts import get_current_site
+
+def get_site_url(request):
+    current_site = get_current_site(request)
+    protocol = 'https' if request.is_secure() else 'http'
+    domain = current_site.domain
+    site_url = f'{protocol}://{domain}'
+    return site_url
 
 
 def validate_phone_number(value):

@@ -9,8 +9,17 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth import login
 from django.contrib.auth import logout
-from .serializers import LoginSerializer, SignupSerializer, ForgotPasswordSerializer, VerifyOTPSerializer, UserProfileSerializer, ChangePasswordSerializer
+from .serializers import *
 from .models import User,UserRole
+from infinity_fire_solutions.email import *
+from django.contrib import messages
+from django.utils import timezone
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+from django.shortcuts import get_object_or_404
+import hashlib
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 
 class LoginView(APIView):
     """
@@ -114,6 +123,13 @@ class SignupView(APIView):
             if user_roles:
                 user.roles = user_roles
             user.save()
+            
+            context = {
+            'user': user,
+            'site_url':get_site_url(request)
+            }
+            email = Email()  # Replace with your Email class instantiation
+            email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to  Infinity Fire Prevention Ltd - Your Journey Begins Here')
             #check the User Role
             
             # Redirect or respond with success message as needed
@@ -145,7 +161,6 @@ class ForgotPasswordView(APIView):
     serializer_class = ForgotPasswordSerializer
     template_name = "forgot.html"
 
-    
     def render_html_response(self, serializer):
         """
         Render HTML response using the provided serializer and template name.
@@ -170,11 +185,25 @@ class ForgotPasswordView(APIView):
             email = serializer.validated_data.get('email')
         
             try:
-                user = User.objects.get(email=email)
+                user = User.objects.get(email=email, is_superuser = False)
                 # Email exists in the system, proceed with sending the OTP
-                # Render the HTML template with invalid serializer data
-                messages.info(request, f"Please note that an OTP (One-Time Password) has been sent to the email address {email}.")
-                return redirect(reverse('verify_otp'))
+                token = default_token_generator.make_token(user)
+                uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+                user.reset_token = token
+                user.token_expiry = timezone.now() + timezone.timedelta(minutes=30)
+                user.save()
+                reset_url = reverse('password_reset_confirm', args=[uidb64, token])
+                site_url = get_site_url(request)
+        
+                context = {
+                    'user': user,
+                    'redirect_link': reset_url,
+                    'site_url': site_url,
+                }
+                email = Email()  # Replace with your Email class instantiation
+                email.send_mail(user.email, 'email_templates/forgot_password.html', context, 'Reset Your Password')
+                messages.success(request, f"Please note that an OTP (One-Time Password) has been sent to the email address {user.email}.")
+                return redirect(reverse('login'))
 
             except User.DoesNotExist:
                 # Email does not exist in the system
@@ -188,41 +217,91 @@ class ForgotPasswordView(APIView):
             return self.render_html_response(serializer)
 
 
-class VerifyOTPView(APIView):
-    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    serializer_class = VerifyOTPSerializer
-    template_name = "verify_otp.html"
-
+class ResetPasswordView(APIView):
     
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = "reset_password.html"  # Use your actual template name
+    serializer_class = ResetPasswordSerializer
+
     def render_html_response(self, serializer):
         """
         Render HTML response using the provided serializer and template name.
         """
         return Response({'serializer': serializer}, template_name=self.template_name)
-
-    def get(self, request):
+    
+    def get(self, request, *args, **kwargs):
         """
-        Handle GET request for login page.
+        Handle GET request for reset password page.
         """
         if self.request.user.is_authenticated:
             return redirect(reverse('dashboard'))
-        
+       
         serializer = self.serializer_class()
-        # Render the HTML template for login page
-        return self.render_html_response(serializer)
+        
+        # Extract token and uidb64 from the URL kwargs
+        token = kwargs['token']
+        uidb64 = kwargs['uidb64']
+        try:
+            uid = urlsafe_base64_decode(uidb64).decode()  # Decoding uidb64 to get user ID
+            user = User.objects.get(pk=uid)
+           
+            # Check if the token is valid for the user
+            if default_token_generator.check_token(user, token):
+                # Token is valid, render the reset password page
+                return self.render_html_response(serializer)
+            else:
+                messages.error(request, "Invalid token. Please request a new password reset link.")
+                return redirect(reverse('forgot_password'))  # Redirect to the forgot password page
+            
+        except (User.DoesNotExist, ValueError, OverflowError):
+            messages.error(request, "Invalid link. Please request a new password reset link.")
+            return redirect(reverse('forgot_password'))  # Redirect to the forgot password page
+    
+    
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
-            # Render the HTML template with invalid serializer data
-            messages.warning(request, "Not Implemented yet")
-            return self.render_html_response(serializer)
-
+            new_password = serializer.validated_data['password']
+            
+            # Extract token and uidb64 from the URL kwargs
+            token = kwargs['token']
+            uidb64 = kwargs['uidb64']
+            
+            try:
+                uid = urlsafe_base64_decode(uidb64).decode()  # Decoding uidb64 to get user ID
+                user = User.objects.get(pk=uid)
+                
+                # Check if the token is valid for the user
+                if default_token_generator.check_token(user, token):
+                    # Token is valid, update the user's password
+                    user.set_password(new_password)
+                    user.save()
+                    
+                    context = {
+                    'user': user,
+                    'site_url':get_site_url(request)
+                    }
+                    email = Email()  # Replace with your Email class instantiation
+                    email.send_mail(user.email, 'email_templates/rest_password.html', context, 'Password Reset Confirmation')
+                    
+                    messages.success(request, "Your password has been reset successfully. You can now log in with your new password.")
+                    return redirect(reverse('login'))  # Redirect to the login page
+                
+                else:
+                    messages.error(request, "Invalid token. Please request a new password reset link.")
+                    return redirect(reverse('login'))  # Redirect to the forgot password page
+            
+            except (User.DoesNotExist, ValueError, OverflowError):
+                messages.error(request, "Invalid link. Please request a new password reset link.")
+                return redirect(reverse('login'))  # Redirect to the forgot password page
+        
         else:
-            # Invalid serializer data
+            # Invalid form submission
             # Render the HTML template with invalid serializer data
             return self.render_html_response(serializer)
+    
 
 class ProfileView(APIView):
     
