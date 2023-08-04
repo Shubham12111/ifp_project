@@ -219,29 +219,55 @@ class ForgotPasswordSerializer(serializers.Serializer):
     class Meta:
         fields = ('email')
 
-class VerifyOTPSerializer(serializers.Serializer):
-    
-    otp = serializers.CharField(
-        label=('OTP '),
+class ResetPasswordSerializer(serializers.Serializer):
+    password = serializers.CharField(
+        label=('New Password '),
         required=True,
         max_length=100,
         style={
-            "input_type": "text",
+            "input_type": "password",
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            "autofocus": False,
+            'base_template': 'custom_full_width_password.html'
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "OTP cannot be blank.",
+            "blank": "Password is required.",
         },
     )
-
+    
+    confirm_new_password = serializers.CharField(
+        label=('Confirm New Password '),
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "password",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+           'base_template': 'custom_full_width_password.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Confirm Password is required.",
+        },
+        write_only=True
+    )
     class Meta:
-        fields = ('otp')
+        model = User
+        fields = ('password', 'confirm_new_password')
+        
+    def validate(self, data):
+        custom_validate_password(data.get('password'))
+        
+        password = data.get('password')
+        confirm_password = data.get('confirm_new_password')
 
+        if password and confirm_password and password != confirm_password:
+            raise serializers.ValidationError({"confirm_new_password": "Passwords do not match."})
 
+        return data
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
