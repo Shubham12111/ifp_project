@@ -11,7 +11,17 @@ from rest_framework import generics, status, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
-from django.http import HttpResponseRedirect
+import random
+import string
+from infinity_fire_solutions.custom_form_validation import *
+from infinity_fire_solutions.email import *
+
+def generate_strong_password(length=12):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join(random.choice(characters) for _ in range(length))
+    return password
+
+
 
 class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -21,7 +31,7 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['name', 'email']
+    search_fields = ['first_name','last_name', 'email','company_name']
     template_name = 'customer_list.html'
     ordering_fields = ['created_at'] 
 
@@ -99,6 +109,21 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             
             user.roles = user_role
             user.save()
+            
+            # Generate a strong password
+            strong_password = generate_strong_password()
+            user.set_password(strong_password)
+            user.save()
+                    
+            site_url = get_site_url(request)
+        
+            context = {
+                'user': user,
+                'site_url': site_url,
+                'user_password':strong_password
+            }
+            email = Email()  # Replace with your Email class instantiation
+            email.send_mail(user.email, 'email_templates/customer_password.html', context, 'Your New Account Password')
             
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
