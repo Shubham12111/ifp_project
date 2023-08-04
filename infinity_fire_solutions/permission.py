@@ -89,7 +89,7 @@ def get_user_module_permissions(user, module_name):
     user_permissions = {}
     if user.roles:
         role = user.roles
-        permission = UserRolePermission.objects.filter(role=role, module__icontains=module_name).first()
+        permission = UserRolePermission.objects.filter(role=role, module=module_name).first()
         if permission:
             user_permissions[role.name] = {
                 'can_list_data': permission.can_list_data.lower(),
