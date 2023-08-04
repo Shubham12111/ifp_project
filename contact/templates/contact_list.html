@@ -104,9 +104,12 @@
                     </a>
                     {% endif %}
                     
+                    <a href="#" data-bs-toggle="tooltip" data-bs-original-title="Customer" class="mx-3">
+                      <i class="fas fa-user text-secondary" onclick="showPopupAndRedirect('{% url 'customer_add' %}')"></i>
+                    </a>
+
                   </td>
                 </tr>
-              
                 {% endfor %}
               </tbody>
               
@@ -126,6 +129,7 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/custom_question.js' %}"></script>
 <script>
   if (document.getElementById('contact-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
