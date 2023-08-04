@@ -21,6 +21,12 @@ MODULE_CHOICES = [
     ('invoicing', 'Invoicing'),
 ]
 
+CUSTOMER_TYPES = (
+    ('business', 'Business'),
+    ('individual', 'Individual'),
+)
+
+
 class UserRole(models.Model):
     """
     Represents a user role with associated permissions.
@@ -129,8 +135,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
     post_code = models.CharField(max_length=10, null=True, blank=True)
 
-    # Many-to-many relationship with UserRole
+    # relationship with UserRole
+    company_name = models.CharField(max_length=100, blank=True, null=True)
+    customer_type = models.CharField(max_length=10, choices=CUSTOMER_TYPES, default='individual')
     roles = models.ForeignKey(UserRole,on_delete=models.PROTECT, null=True,verbose_name="UserRole")
+    created_by = models.ForeignKey("self", on_delete=models.PROTECT, null=True, blank=True, related_name='created_users')
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
