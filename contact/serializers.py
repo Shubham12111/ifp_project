@@ -175,7 +175,7 @@ class ContactSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
-    city = serializers.PrimaryKeyRelatedField(
+    town = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.all(),
         default=None,
         style={
@@ -208,7 +208,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company', 'job_title','address','city','county','country','post_code',]
+        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company', 'job_title','address','town','county','country','post_code',]
 
         extra_kwargs={
             'name':{'required':True},

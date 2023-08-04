@@ -319,7 +319,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
-    city = serializers.PrimaryKeyRelatedField(
+    town = serializers.PrimaryKeyRelatedField(
         queryset=City.objects.all(),
         default=None,
         style={
@@ -346,7 +346,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'city', 'county', 'country', 'post_code']
+        fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'town', 'county', 'country', 'post_code']
 
     
    
