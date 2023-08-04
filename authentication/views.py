@@ -60,7 +60,7 @@ class LoginView(APIView):
                 return self.render_html_response(serializer)
             # Render the HTML template for successful login
             login(request, user)
-            messages.success(request, 'Congratulations! You have successfully logged in to your account. Enjoy your experience!')
+            #messages.success(request, 'Congratulations! You have successfully logged in to your account. Enjoy your experience!')
             return redirect(reverse('dashboard'))
 
         else:
@@ -95,22 +95,35 @@ class SignupView(APIView):
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
+            # Check if the checkbox is checked
+            agreed_to_terms = request.data.get('agreed_to_terms', False)
+            if not agreed_to_terms:
+                if request.accepted_renderer.format == 'html':
+                    return Response(
+                        {'serializer': serializer, 'error_message': 'You must agree to the Terms and Conditions.'},
+                        template_name=self.template_name,
+                        status=400,
+                    )
+                else:
+                    return Response({'error': 'You must agree to the Terms and Conditions.'}, status=400)
+
+
             user = serializer.save()
             user.set_password(serializer.validated_data["password"])
-            user.save()
-            
-            #check the User Role 
-            user_roles = UserRole.objects.filter(name="Contractor")
+            user_roles = UserRole.objects.filter(name="Contractor").first()
             if user_roles:
-                user.roles.set(user_roles)
+                user.roles = user_roles
+            user.save()
+            #check the User Role
             
+            # Redirect or respond with success message as needed
             messages.success(request, "User registered successfully. Please login here.")
             return redirect(reverse('login'))
         
         else:
             # Render the HTML template with invalid serializer data
             return self.render_html_response(serializer)
-
+        
 class LogoutView(APIView):
     """
     View for user logout.

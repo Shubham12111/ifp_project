@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.renderers import TemplateHTMLRenderer,JSONRenderer
 from infinity_fire_solutions.response_schemas import create_api_response, render_html_response
 from .models import *
+from datetime import date,timedelta,datetime
 from .serializers import *
 from django.contrib import messages 
 from django.shortcuts import redirect
@@ -14,6 +15,7 @@ from django.apps import apps
 from django.db.models import Q
 from django.http import  HttpResponse
 from authentication.models import *
+from datetime import datetime
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
@@ -23,9 +25,73 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
-    search_fields = ['title', 'description']  # Specify fields you want to allow searching on
+    search_fields = ['title']  # Specify fields you want to allow searching on
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
+
+
+    def get_queryset(self):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "todo", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user) | Q(assigned_to=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        base_queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        # Initialize the base queryset with the initial filtering conditions
+        base_queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'status': self.request.GET.get('status'),
+            'priority': self.request.GET.get('priority'),
+            'module': self.request.GET.get('module'),
+            'assigned_to': self.request.GET.get('assigned_to'),
+            'dateRange': self.request.GET.get('dateRange'),
+        }
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('_')
+                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                    base_queryset = base_queryset.filter(start_date__gte=start_date, end_date__lte=end_date)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                        'priority': 'priority',
+                        'module': 'module__name',
+                        'assigned_to': 'assigned_to__email',
+                    }
+                    base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
+
+        # Sort the queryset by 'created_at' in descending order
+        base_queryset = base_queryset.order_by('-created_at')
+
+        return base_queryset
+    
+    def get_module_list(self):
+        """
+        Get a list of all unique module names from the Module model.
+        """
+        return Module.objects.values_list('name', flat=True).distinct()
+
+    def get_assigned_to_users(self):
+        """
+        Get a list of all unique assigned_to users from the User model.
+        """
+        return User.objects.values_list('email', flat=True).distinct()
     
     def list(self, request, *args, **kwargs):
         """
@@ -40,23 +106,25 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             Response: The response containing the list of TODO items.
         """
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"todo", HasListDataPermission, 'list'
+            self, "todo", HasListDataPermission, 'list'
         )
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(user_id=request.user ) | Q(assigned_to=request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-        
+
+        queryset = self.get_queryset()
+
         queryset = self.filter_queryset(queryset)
+        module_list = self.get_module_list()
+        assigned_to_users = self.get_assigned_to_users()
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            context = {'todo_list': queryset}
+            context = {'todo_list': queryset,
+                    'status_values': STATUS_CHOICES,
+                    'module_list': module_list,
+                    'assigned_to_users': assigned_to_users,
+                    'priority_list': PRIORITY_CHOICES,}
             return render_html_response(context, self.template_name)
         else:
             # If the client accepts other formats, serialize the data and return an API response
@@ -66,7 +134,8 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                 message="Todo data retrieved successfully",
                 data=serializer.data
             )
-        
+    
+
 class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
@@ -78,6 +147,8 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         serializer = self.serializer_class(context={'request': request})
 
@@ -90,6 +161,8 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"todo", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         serializer = self.serializer_class(data=request.data,context={'request': request})
 
@@ -146,7 +219,9 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "todo", HasUpdateDataPermission, 'change'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=self.request.user ) | Q(assigned_to=self.request.user ),
@@ -189,14 +264,12 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         """
         
         data = request.data
-        
         instance = self.get_queryset()
-        if instance:
+        if instance and instance.status != 'completed':
             # If the contact instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated todo instance.
-                serializer.validated_data['user_id'] = request.user
                 serializer.save()
                 message = "Your TODO has been updated successfully!"
                 status_code = status.HTTP_200_OK
@@ -236,6 +309,9 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasDeleteDataPermission, 'delete'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=request.user ) | Q(assigned_to=request.user ),
@@ -275,6 +351,9 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasViewDataPermission, 'view'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
@@ -331,6 +410,8 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
                 serializer.validated_data['todo_id'] = todo_data
                 serializer.save()
                 todo_data.status = serializer.data.get('status') 
+                if serializer.data.get('status') == 'completed':
+                    todo_data.completed_at = datetime.now() 
                 todo_data.save()
                 if request.accepted_renderer.format == 'html':
                     # For HTML rendering, redirect to the list view after successful savemessages.success(request, "Task Added: Your TODO and comments have been saved successfully!")

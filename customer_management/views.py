@@ -13,7 +13,6 @@ from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.http import HttpResponseRedirect
 
-
 class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     View to get the listing of all contacts.
@@ -50,7 +49,6 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return create_api_response(status_code=status.HTTP_200_OK,
                                             message="Data retrieved",
                                             data=serializer.data)
-
 
 class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -123,7 +121,6 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
-
 
 class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
@@ -232,8 +229,6 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             else:
                 # For API requests with no instance, return an error response with an error message.
                 return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
-
-        
 
 class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -355,8 +350,6 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customer_list'))
 
-
-
 class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View to remove a BillingAddress associated with a Customer.
@@ -394,40 +387,49 @@ class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.Destr
             messages.error(request,error_message)
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message=error_message, )
-
-                    
-class CustomerView(CustomAuthenticationMixin, generics.CreateAPIView):
+    
+class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
-    View for adding or updating a customer.
+    View for deleteing .
     Supports both HTML and JSON response formats.
     """
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'customer.html'
-
+    # permission_classes = [IsAuthenticated]
+    template_name = 'contact.html'
     
-    def get_queryset(self):
+    def delete(self, request, *args, **kwargs):
         """
-        Get the filtered queryset for customers based on the authenticated user.
+        Handle DELETE request to delete a contact.
         """
-        queryset = User.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).order_by('-created_at').first()
-        return queryset
-
-    def get(self, request, *args, **kwargs):
-        """
-        Handle GET request to display a form for updating a customer.
-        If the customer exists, retrieve the serialized data and render the HTML template.
-        If the customer does not exist, render the HTML template with an empty serializer.
-        """
+        # Get the contact instance from the database
         # Call the handle_unauthenticated method to handle unauthenticated access
+
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"customer", HasCreateDataPermission, 'add'
+            self,"customer", HasDeleteDataPermission, 'delete'
         )
-           
-        if request.accepted_renderer.format == 'html':
-            context = {'serializer':self.serializer_class()}
-            return render_html_response(context,self.template_name)
-        else:
-            return create_api_response(status_code=status.HTTP_201_CREATED,
-                                message="GET Method Not Alloweded",)
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+
+        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'), roles__name='Customer').exclude(pk=request.user.id)
         
+        customer = queryset.first()
+        
+        if customer:
+            # Proceed with the deletion
+            customer.delete()
+            messages.success(request, "Customer has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Your Customer has been deleted successfully!", )
+        else:
+            messages.error(request, "Customer not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Customer not found", )
+       

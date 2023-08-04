@@ -1,4 +1,3 @@
-
 from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -24,36 +23,86 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = ContactSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['name', 'email','contact_type__name']
+    search_fields = ['first_name', 'last_name','email']
     template_name = 'contact_list.html'
     ordering_fields = ['created_at'] 
+
+    def get_queryset(self):
+        """
+        Get the queryset based on filtering parameters from the request.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "contact", HasListDataPermission, 'list'
+        )
+        # Check if authenticated_user is a redirect response
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        base_queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        
+        # Get the filtering parameters from the request's query parameters
+        contact_type_filter = self.request.GET.get('contact_type')
+
+        # Apply additional filters based on the received parameters
+        if contact_type_filter:
+            # If 'contact_type' parameter is provided, filter contacts by the given contact_type
+            base_queryset = base_queryset.filter(contact_type__name=contact_type_filter)
+
+        # Add more filtering conditions as needed for other fields
+
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            base_queryset = base_queryset.order_by(ordering)
+
+        return base_queryset
+    
+
+    def get_contact_types(self):
+        """
+        Get a list of all contact types.
+        """
+        return ContactType.objects.all()
+    
 
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
         """
-        # Call the handle_unauthenticated method to handle unauthenticated access
+        # Get the filtered queryset using get_queryset method
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"contact", HasListDataPermission, 'list'
+            self, "contact", HasListDataPermission, 'list'
         )
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(user_id=request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-       
+        # Check if authenticated_user is a redirect response
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        queryset = self.get_queryset()
+        contact_types = self.get_contact_types()
+        contact_type_filter = self.request.GET.get('contact_type')
         if request.accepted_renderer.format == 'html':
-            context = {'contacts':queryset}
-            return render_html_response(context,self.template_name)
+            context = {'contacts': queryset,
+                       'contact_types': contact_types,
+                       'contact_type_filter':contact_type_filter}
+            return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                            message="Data retrieved",
-                                            data=serializer.data)
-
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Data retrieved",
+                data=serializer.data
+            )
+    
+    
 class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
     View for adding or updating a contact.
@@ -81,7 +130,11 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"contact", HasCreateDataPermission, 'add'
         )
-           
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+
         if request.accepted_renderer.format == 'html':
             context = {'serializer':self.serializer_class()}
             return render_html_response(context,self.template_name)
@@ -97,6 +150,9 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"contact", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         message = "Congratulations! your contact has been added successfully."
         serializer = self.serializer_class(data=request.data)
         
@@ -156,7 +212,9 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "contact", HasUpdateDataPermission, 'change'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=self.request.user ),
@@ -253,6 +311,9 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"contact", HasDeleteDataPermission, 'delete'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=request.user ),
@@ -261,21 +322,18 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
-        instance = queryset.first()
-        
-
-        contact = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).first()
-        if contact:
+        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q()))
+        instance = queryset.filter(pk=self.kwargs.get('pk')).first()
+        if instance:
             # Proceed with the deletion
-            contact.delete()
+            instance.delete()
             messages.success(request, "Your contact has been deleted successfully!")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your contact has been deleted successfully!", )
         else:
-            messages.error(request, "Contact not found")
+            messages.error(request, "Contact not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Contact not found", )
+                                        message="Contact not found OR You are not authorized to perform this action.", )
                
 
       
@@ -287,16 +345,21 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     serializer_class = ConversationSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'conversation.html'
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    ordering_fields = ['created_at'] 
     
     
-    def get_queryset(self):
+    def get_queryset(self,*args, **kwargs):
         """
         Get the queryset of contacts filtered by the current user.
         """
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"contact", HasViewDataPermission, 'view'
         )
-        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=self.request.user ),
@@ -305,9 +368,8 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
+        queryset = Contact.objects.filter(filter_mapping.get(data_access_value, Q()))
         queryset = queryset.filter(pk=self.kwargs.get('contact_id')).first()
-        
         return queryset
     
 
@@ -316,6 +378,15 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         Get the queryset of conversations filtered by the current user.
         """
         return Conversation.objects.filter(user_id=self.request.user)
+    
+
+    def get_conversation_types(self):
+        """
+        Get a list of all contact types.
+        """
+        return ConversationType.objects.all()
+    
+
 
     def serialized_conversation_list(self):
         """
@@ -336,8 +407,8 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         Handles GET request for the conversation view.
         If a conversation_id is provided in the URL kwargs, it means we are viewing/editing an existing conversation.
         """
-        instance = self.get_queryset()
         conversation_id = self.kwargs.get('conversation_id')
+        instance = self.get_queryset()
         if instance:
             if conversation_id:
                 conversation_data = self.get_conversation_queryset().filter(contact_id = instance, pk=conversation_id).first() 
@@ -360,8 +431,7 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         If contact_id is provided in URL kwargs, it means we are adding/updating a conversation related to the contact.
         """
         if kwargs.get('contact_id'):
-            contact_data = Contact.objects.filter(user_id = request.user, 
-                                                  pk = kwargs.get('contact_id')).first()
+            contact_data = self.get_queryset()
             if contact_data:
                 conversation_id = self.kwargs.get('conversation_id')
                 if conversation_id:

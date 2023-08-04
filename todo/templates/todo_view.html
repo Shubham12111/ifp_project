@@ -8,7 +8,7 @@
 <style>
   /* Set a fixed height for the scrollable container */
   .scrollable-container {
-    max-height: 400px; /* Adjust this value to your desired height */
+    max-height: 600px; /* Adjust this value to your desired height */
     overflow-y: auto; /* Enable vertical scrolling */
   }
 </style>
@@ -34,23 +34,21 @@
             <p class="mb-4">
                 {{ todo_data.description|safe}}
             </p>
-            <hr class="horizontal dark my-3">
+            
           </div>
         </div>
-        <div class="card mt-4 scrollable-container">
-          <div class="card-body">
-            <!-- Comments -->
-            
-              {% for comment_data in comment_list %}
+        <div class="card mt-4 ">
+          <div class="card-body scrollable-container">
+            {% for comment_data in comment_list %}
                 <div class="d-flex mt-3">
-                    <div class="flex-shrink-0">
+                    <div class="flex-shrink-0 ">
                         <img alt="Image placeholder" class="avatar rounded-circle" src="{% static 'assets/img/demo.png' %}">
                     </div>
                     <div class="flex-grow-1 ms-3">
                         <h6 class="h5 mt-0">{{ comment_data.user_id.first_name|title }} {{ comment_data.user_id.last_name|title }} <span class="text-sm text-muted">{{ comment_data.created_at|timesince }} ago</span></h6>
                        {{ comment_data.comment|safe }}
                         <div class="d-flex">
-                          {% if request.user == comment_data.user_id %}
+                          {% if request.user == comment_data.user_id and todo_data.status != 'completed'  %}
                               <div>
                                   <a href="{% url 'edit_comment' todo_data.id comment_data.id %}" class="text-sm text-muted "
                                   data-bs-toggle="tooltip" data-bs-original-title="Edit Comment">
@@ -143,6 +141,15 @@
                 <p class="mb-0">End Date</p>
                 <span class="ms-auto">{{ todo_data.end_date|date:"M d, Y" }}</span>
               </li>
+              {% if todo_data.completed_at %}
+                <li>
+                  <hr class="horizontal dark">
+                </li>
+                <li class="d-flex">
+                  <p class="mb-0">Completed At</p>
+                  <span class="ms-auto">{{ todo_data.completed_at|date:"M d, Y" }}</span>
+                </li>
+              {% endif %}
             </ul>
           </div>
         </div>

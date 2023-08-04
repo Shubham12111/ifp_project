@@ -231,7 +231,7 @@ def check_authentication_and_permissions(view_instance,module_name, permission_c
     authenticated_user = view_instance.handle_unauthenticated()
 
     if isinstance(authenticated_user, HttpResponseRedirect):
-        return authenticated_user
+        return authenticated_user, None
 
     if not authenticated_user:
         raise AuthenticationFailed("Authentication credentials were not provided")
@@ -241,5 +241,5 @@ def check_authentication_and_permissions(view_instance,module_name, permission_c
 
     # Get the data access value (either "self" or "all") based on the view type
     data_access_value = permission_instance.has_permission(view_instance.request, view_type)
-
+    
     return authenticated_user, data_access_value

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %} Add Contact {{ block.super }}{% endblock %}
+{% block title %} {% if contact %}Edit {% else %} Add {% endif %} Contact {{ block.super }}{% endblock %}
 {% block content %}
 <!-- base.html -->
 <div class="container-fluid py-4">
@@ -22,8 +22,8 @@
                 <div class="row mt-4">
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 m-auto text-center text-md-end">
-                  <a class="btn bg-gradient-secondary mb-0 js-btn-prev" href="{% url 'contact_list' %}" title="Back">Back</a>
-                  <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
+                  <a class="btn bg-gradient-secondary mb-0 js-btn-prev"  href="{% url 'contact_list' %}" title="Back">Back</a>
+                  <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Submit</button>
                 </div>
               </div>
                
@@ -35,4 +35,9 @@
   </div>
   {% endblock %}
   {% block extra_js %}
+  <script src="{% static 'assets/js/custom_button.js' %}"></script>
   {% endblock %}
+
+  
+  
+  

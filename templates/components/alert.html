@@ -19,18 +19,17 @@
     
     </style>
     <div class="row" id="alert-row">
-        <div class="col-md-6 mx-auto">
+        <div class="col-md-6">
             {% if messages %}
-            <div class="p-2">
-                {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show text-white slide-down-alert col" role="alert">
-                    <span class="alert-text">{{ message }}</span>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                {% endfor %}
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show text-white slide-down-alert col" role="alert">
+                <span class="alert-text">{{ message }}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
+            {% endfor %}
+            
             {% endif %}
         </div>
     </div>

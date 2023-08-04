@@ -58,9 +58,10 @@
                     </a>
                     {% endif %}
                     {% if request.user|has_delete_permission:"customer" %}
+
                     <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" 
 
-                      onclick="CustomconfirmDelete({{customer.id}}, 'Are you sure you want to delete this customer?','The customer has been deleted successfully.','')">
+                      onclick="CustomconfirmDelete({{customer.id}}, 'Are you sure you want to delete this customer?','The customer has been deleted successfully.','{% url 'delete_customer' customer.id %}')">
                      <i class="fas fa-trash text-secondary"></i>
 
                     </a>

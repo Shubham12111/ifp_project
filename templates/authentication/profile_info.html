@@ -3,14 +3,12 @@
       <div class="col-sm-auto col-8 my-auto">
         <div class="h-100">
           <h5 class="mb-1 font-weight-bolder">
-            {{ request.user.first_name|title }} {{ request.user.last_name|title }}  
+            {{ request.user.first_name|title|truncatechars:50 }} {{ request.user.last_name|title|truncatechars:50 }}
+
           </h5>
           <p class="mb-0 font-weight-bold text-sm">
             
-            {% for group in user.groups.all %}
-            {{ group.name }}
-            {% if not forloop.last %} / {% endif %}
-            {% endfor %}
+            {{ request.user.roles.name }}
           </p>
         </div>
       </div>
