@@ -351,55 +351,24 @@ class RequirementDefectAddView(CustomAuthenticationMixin, generics.CreateAPIView
         """
         Get the filtered queryset for requirements based on the authenticated user.
         """
-        queryset = Requirement.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).order_by('-created_at').first()
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"Requirement", HasCreateDataPermission, 'detail'
+        )
+        
+        queryset = Requirement.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).first()
         return queryset
-    
-    # def get(self, request, *args, **kwargs):
-    #     """
-    #     Handle GET request to display a form for adding a requirement.
-    #     If the requirement exists, retrieve the serialized data and render the HTML template.
-    #     If the requirement does not exist, render the HTML template with an empty serializer.
-    #     """
-    #     # Call the handle_unauthenticated method to handle unauthenticated access
-    #     authenticated_user, data_access_value = check_authentication_and_permissions(
-    #        self,"requirement", HasCreateDataPermission, 'detail'
-    #     ) 
-    #     requirement_id = kwargs["pk"]
-    #     instance = self.get_queryset()
-    #     # breakpoint() 
-    #     if request.accepted_renderer.format == 'html':
-    #         # context = {'serializer':self.serializer_class()}
-    #         # return render_html_response(context,self.template_name)
-    #         # instance = self.get_queryset()
-    #         if instance:
-    #             requirement_serializer = RequirementDetailSerializer(instance=instance, context={'request': request})
-    #             # breakpoint()
-    #             context = {
-    #                 'serializer': self.serializer_class(),
-    #                 'requirement_serializer': requirement_serializer, 
-    #                 'instance': instance
-    #                 }
-    #             return render_html_response(context, self.template_name)
-    #         else:
-    #             messages.error(request, "You are not authorized to perform this action")
-    #             return redirect(reverse('requirement_list'))
-    #     else:
-    #         return create_api_response(status_code=status.HTTP_201_CREATED,
-    #                             message="GET Method Not Alloweded",)
         
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to add a requirement.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"Requirement", HasCreateDataPermission, 'detail'
-        )
+        
         message = "Congratulations! your requirement has been added successfully."
         serializer = self.serializer_class(data=request.data)
-        
+        requirement_data = self.get_queryset()
         if serializer.is_valid():
-            # serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
+            serializer.validated_data['requirement_id'] = requirement_data
             serializer.save()
 
             if request.accepted_renderer.format == 'html':

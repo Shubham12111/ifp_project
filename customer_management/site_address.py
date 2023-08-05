@@ -158,7 +158,6 @@ class CustomerRemoveSiteAddressView(CustomAuthenticationMixin, generics.DestroyA
 
         site_address = SiteAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
-        print(site_address)
         return site_address
     
     def destroy(self, request, *args, **kwargs):

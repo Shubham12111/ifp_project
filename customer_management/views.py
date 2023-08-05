@@ -510,12 +510,20 @@ class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         # or use an empty Q() object if the value is not in the mapping
         queryset = User.objects.filter(pk=self.kwargs.get('customer_id'), roles__name__icontains='Customer').exclude(pk=request.user.id).first()
         if queryset:
+            site_address = SiteAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'))
+            site_data = []
+            for site_address in site_address:
+                site_data.append({
+                    'id': site_address.id,
+                    'site_name': site_address.site_name,
+                })
             data = {
                 'company_name': queryset.company_name,  # Replace with the actual field name
                 'email': queryset.email,
                 'first_name': queryset.first_name,
                 'last_name': queryset.last_name,
-                # Include other file fields similarly
+                'site_address':site_data,
+                
             }
         return create_api_response(status_code=status.HTTP_200_OK,
                                             message="Data retrieved",

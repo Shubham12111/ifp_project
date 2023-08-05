@@ -22,11 +22,12 @@
                 </form>
             </div>
         </div>
+        
         <div class="card mt-4">
             
             <div class="card-body px-0 pb-0">
               <div class="table-responsive">
-                <table class="table table-flush text-dark" id="requirement-list">
+                <table class="table table-flush text-dark" id="requirement-defect-list">
                   <thead class="thead-light">
                     <tr>
                       <th>Action</th>
@@ -40,8 +41,8 @@
                   <tbody class="ml-4">
                     {% for requirement_defect in requirement_serializer.data.requirementdefect_set %}
                     <tr>
-                      <td>{{requirement_defect.action}}</td>
-                      <td>{{requirement_defect.description}}</td>
+                      <td>{{requirement_defect.action|safe|truncatechars:50}}</td>
+                      <td>{{requirement_defect.description|safe|truncatechars:50}}</td>
                       <td>{{requirement_defect.defect_period}}</td>
                       <td>{{requirement_defect.due_date}}</td>
                       <td>{{requirement_defect.status}}</td>
@@ -111,4 +112,17 @@
 
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+  if (document.getElementById('requirement-defect-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#requirement-defect-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25
+    });
+
+  };
+</script>
 {% endblock %}

@@ -42,7 +42,7 @@
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 
 <script>
-  function initializeChoices(fieldId) {
+ function initializeChoices(fieldId) {
     var element = document.getElementById(fieldId);
     if (element) {
       const example = new Choices(element, {});
@@ -80,10 +80,7 @@
         fetch(`/customer/detail/${customerId}/`)
             .then(response => response.json())
             .then(data => {
-                console.log(data);
-
-                
-                const customerDetails = `
+                 const customerDetails = `
                   <div class = "row">
                   <div class="form-group  col-6">
                             <label for="email">First Name</label>
@@ -104,13 +101,59 @@
                        
                       </div>
                      `;
+                  const siteDropdown = `
+                  <div class="form-group">
+                    <label>
+                      Site Address  <span class="text-danger">*</span> 
+                    </label>
+                      <select class="form-control choices__input" name="site_address" id="choices-site_address">
+                          ${data.data.site_address.map(site => `<option value="${site.id}">${site.site_name}</option>`).join('')}
+                      </select>
+                  </div>
+              `;
+              customerDetailsCard.querySelector('.customer-body').innerHTML = customerDetails;
 
-                customerDetailsCard.querySelector('.customer-body').innerHTML = customerDetails;
-                customerDetailsCard.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Error fetching customer details:', error);
-            });
+            // Check if the site selection dropdown container already exists
+            let siteDropdownContainer = customerDetailsCard.querySelector('.site-dropdown');
+
+            // If the siteDropdownContainer doesn't exist, create it
+          if (!siteDropdownContainer) {
+              siteDropdownContainer = document.createElement('div');
+              siteDropdownContainer.className = 'site-dropdown col-6';  // Add col-6 class here
+
+                          // Set site selection dropdown HTML
+                          siteDropdownContainer.innerHTML = siteDropdown;
+
+                // Append the site selection dropdown container to the customer details card
+                customerDetailsCard.appendChild(siteDropdownContainer);
+
+                // Initialize Choices dropdown
+                initializeChoices('choices-site_address');
+            }
+
+            // Show the customer details card
+            customerDetailsCard.style.display = 'block';
+
+            // Move this part inside the if statement to ensure it's executed after the Choices dropdown is initialized
+            var choicesTags = document.getElementById('choices-site_address');
+            if (choicesTags) {
+                var color = choicesTags.dataset.color;
+                const example = new Choices(choicesTags, {
+                    delimiter: ',',
+                    editItems: true,
+                    maxItemCount: 5,
+                    removeItemButton: true,
+                    addItems: true,
+                    classNames: {
+                        item: 'badge rounded-pill choices-' + color + ' me-2'
+                    },
+                    noResultsText: 'No records found',
+                    noChoicesText: 'No records found',
+                    loadingText: 'Loading...',
+                });
+            }
+        })
+            
     }
 
     // Event listener for select element change

@@ -89,15 +89,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             'custom_class': 'col-6'
         },
     )
-    site_address = serializers.PrimaryKeyRelatedField(
-        label=('Site Address'),
-        queryset=SiteAddress.objects.all(),
-        required=True,
-        style={
-            'base_template': 'custom_customer_select.html',
-            'custom_class':'col-6'
-        },
-    )
+   
     quality_surveyor = serializers.PrimaryKeyRelatedField(
         label=('Quality Surveyor'),
         required=True,
@@ -124,10 +116,38 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Requirement
-        fields = ('customer_id', 'quality_surveyor','site_address','description', 'UPRN', 'requirement_date_time')
+        fields = ('customer_id', 'quality_surveyor','description', 'UPRN', 'requirement_date_time')
       
 
 class RequirementDefectAddSerializer(serializers.ModelSerializer):
+    
+    description = serializers.CharField(
+        max_length=1000, 
+        required=True, 
+        style={'base_template': 'rich_textarea.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "description is required.",
+        }
+    )
+
+    defect_period = serializers.DateTimeField(
+        label='Defect Period',
+        required=True,
+        style={
+            'base_template': 'custom_date_time.html',
+            'custom_class': 'col-6'
+        },
+    )
+
+    due_date = serializers.DateTimeField(
+        label='Due Date',
+        required=True,
+        style={
+            'base_template': 'custom_date_time.html',
+            'custom_class': 'col-6'
+        },
+    )
 
     class Meta:
         model = RequirementDefect
