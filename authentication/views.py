@@ -29,6 +29,7 @@ class LoginView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = LoginSerializer
     template_name = "login.html"
+    swagger_schema = None
 
     def render_html_response(self, serializer):
         """
@@ -82,7 +83,7 @@ class SignupView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = SignupSerializer
     template_name = "signup.html"
-
+    swagger_schema = None
     
     def render_html_response(self, serializer):
         """
@@ -145,6 +146,7 @@ class LogoutView(APIView):
     """
     View for user logout.
     """
+    swagger_schema = None
     def get(self, request):
         """
         Handle GET request for user logout.
@@ -161,7 +163,7 @@ class ForgotPasswordView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = ForgotPasswordSerializer
     template_name = "forgot.html"
-
+    swagger_schema = None
     def render_html_response(self, serializer):
         """
         Render HTML response using the provided serializer and template name.
@@ -223,6 +225,7 @@ class ResetPasswordView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = "reset_password.html"  # Use your actual template name
     serializer_class = ResetPasswordSerializer
+    swagger_schema = None
 
     def render_html_response(self, serializer):
         """
@@ -309,6 +312,7 @@ class ProfileView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = UserProfileSerializer
     template_name = "profile.html"
+    swagger_schema = None
 
     
     def render_html_response(self, serializer):
@@ -347,6 +351,7 @@ class ChangePasswordView(APIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = ChangePasswordSerializer
     template_name = "change_password.html"
+    swagger_schema = None
 
     
     def render_html_response(self, serializer):

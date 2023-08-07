@@ -22,24 +22,21 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
 
-
 # swagger settings
 schema_view = get_schema_view(
    openapi.Info(
       title="Infinity Fire solution APIs",
-      default_version='v1',
-      description="API documentation",
+      default_version='v0.1.0',
+      description="Welcome to the Infinity Fire Solution API Documentation, offering effortless integration with our platform. </br><b>Please note that certain modules currently do not have associated APIs.</b> </br>These modules include:</br></br>1. Authentication </br> </br>2. Contact Conversation </br></br>3. Todo Comments",
    ),
    public=True,
-   permission_classes=[permissions.AllowAny],
+   permission_classes=[permissions.AllowAny]
 )
 
 # admin Customization
 admin.site.site_header = "Infinity Fire Solutions Admin"
 admin.site.site_title = "Infinity Fire Solutions"
 admin.site.index_title = "Infinity Fire Solutions Management"
-
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
