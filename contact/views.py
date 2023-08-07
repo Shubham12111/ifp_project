@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse, HttpResponse
 from django.conf import settings
+from drf_yasg.utils import swagger_auto_schema
+
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from .models import *
@@ -14,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.http import HttpResponseRedirect
+from infinity_fire_solutions.utils import docs_schema_response_new
 
 class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -27,6 +30,8 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'contact_list.html'
     ordering_fields = ['created_at'] 
 
+
+    
     def get_queryset(self):
         """
         Get the queryset based on filtering parameters from the request.
@@ -73,7 +78,16 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         return ContactType.objects.all()
     
+    common_get_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Data retrieved",
+                )
+    }
 
+    @swagger_auto_schema(operation_id='Contact listing', responses={**common_get_response}) 
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
@@ -120,6 +134,7 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         queryset = Contact.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).order_by('-created_at').first()
         return queryset
 
+    @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         """
         Handle GET request to display a form for updating a contact.
@@ -141,7 +156,24 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
                                 message="GET Method Not Alloweded",)
-        
+
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Congratulations! your contact has been added successfully.",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "We apologize for the inconvenience, but please review the below information.",
+                ),
+
+    }  
+
+    @swagger_auto_schema(operation_id='Contact Add', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to add or update a contact.
@@ -228,7 +260,7 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         
         return queryset
 
-    
+    @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing Conatct object.
         if request.accepted_renderer.format == 'html':
@@ -240,7 +272,32 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             else:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('contact_list'))
-    
+            
+    common_put_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your Contact has been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "You are not authorized to perform this action",
+                ),
+
+    }
+
+    @swagger_auto_schema(auto_schema=None) 
+    def put(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(auto_schema=None) 
+    def patch(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(operation_id='Contact Edit', responses={**common_put_response})
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to update a contact instance.
@@ -302,6 +359,23 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     # permission_classes = [IsAuthenticated]
     template_name = 'contact.html'
     
+
+    common_delete_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your contact has been deleted successfully!",
+                ),
+        status.HTTP_404_NOT_FOUND: 
+            docs_schema_response_new(
+                status_code=status.HTTP_404_NOT_FOUND,
+                serializer_class=serializer_class,
+                message = "Contact not found OR You are not authorized to perform this action.",
+                ),
+
+    }
+    @swagger_auto_schema(operation_id='Contact delete', responses={**common_delete_response})
     def delete(self, request, *args, **kwargs):
         """
         Handle DELETE request to delete a contact.

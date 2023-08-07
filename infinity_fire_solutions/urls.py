@@ -18,6 +18,21 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
+
+
+# swagger settings
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Infinity Fire solution APIs",
+      default_version='v1',
+      description="API documentation",
+   ),
+   public=True,
+   permission_classes=[permissions.AllowAny],
+)
 
 # admin Customization
 admin.site.site_header = "Infinity Fire Solutions Admin"
@@ -34,6 +49,10 @@ urlpatterns = [
     path('',include('common_app.urls')),
     path('customer/',include('customer_management.urls')),
     path('requirement/',include('requirement_management.urls')),
+
+    #swagger links for the api documentation
+    path('api/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
 
 
