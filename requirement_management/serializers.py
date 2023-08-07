@@ -16,6 +16,11 @@ class RequirementDefectSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequirementDefect
         fields = ('id', 'requirement_id', 'action', 'description', 'defect_period', 'due_date', 'status')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        return data
     
 
 class RequirementDetailSerializer(serializers.ModelSerializer):
