@@ -87,7 +87,7 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
                 )
     }
 
-    @swagger_auto_schema(operation_id='Contact listing', responses={**common_get_response}) 
+    @swagger_auto_schema(operation_id='Contact Listing', responses={**common_get_response}) 
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
@@ -375,7 +375,7 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
                 ),
 
     }
-    @swagger_auto_schema(operation_id='Contact delete', responses={**common_delete_response})
+    @swagger_auto_schema(operation_id='Contact Delete', responses={**common_delete_response})
     def delete(self, request, *args, **kwargs):
         """
         Handle DELETE request to delete a contact.
@@ -422,6 +422,7 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     ordering_fields = ['created_at'] 
+    swagger_schema = None
     
     
     def get_queryset(self,*args, **kwargs):
@@ -546,6 +547,7 @@ class ConversationRemoveDocumentView(generics.DestroyAPIView):
     """
     View to remove a document associated with a conversation.
     """
+    swagger_schema = None
     
     def get_queryset(self):
         """
@@ -582,6 +584,7 @@ class ConversationCommentView(generics.DestroyAPIView):
     """
     View to delete a conversation/comment.
     """
+    swagger_schema = None
     
     def get_queryset(self):
         """

@@ -48,7 +48,7 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             )
     }
     
-    @swagger_auto_schema(operation_id='Customer listing', responses={**common_get_response})
+    @swagger_auto_schema(operation_id='Customer Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
@@ -107,7 +107,6 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if contact_id:
             contact = Contact.objects.get(pk=contact_id)
             serializer = self.serializer_class(contact)  # Serialize the contact data
-            print(serializer)
         else:
             serializer = self.serializer_class()  # Create an empty serializer
 
@@ -520,7 +519,7 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
                 ),
 
     }
-    @swagger_auto_schema(operation_id='Customer delete', responses={**common_delete_response})
+    @swagger_auto_schema(operation_id='Customer Delete', responses={**common_delete_response})
     
     def delete(self, request, *args, **kwargs):
         """

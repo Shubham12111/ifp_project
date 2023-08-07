@@ -105,8 +105,8 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             )
     }
     
-    @swagger_auto_schema(operation_id='Todo listing', responses={**common_list_response})
-    def list(self, request, *args, **kwargs):
+    @swagger_auto_schema(operation_id='Todo Listing', responses={**common_list_response})
+    def get(self, request, *args, **kwargs):
         """
         List view for TODO items.
 
@@ -221,7 +221,7 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
 class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
-    API view for todo a contact.
+    API view for todo a todo.
 
     This view handles both HTML and API requests for updating a todo instance.
     If the todo instance exists, it will be updated with the provided data.
@@ -305,7 +305,7 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     @swagger_auto_schema(operation_id='Todo Edit', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request to update a contact instance.
+        Handle POST request to update a todo instance.
 
         Args:
             request (rest_framework.request.Request): The HTTP request object.
@@ -314,14 +314,14 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
         Returns:
             rest_framework.response.Response: HTTP response object.
-                If successful, the contact is updated, and the appropriate response is returned.
+                If successful, the todo is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
         
         data = request.data
         instance = self.get_queryset()
         if instance and instance.status != 'completed':
-            # If the contact instance exists, initialize the serializer with instance and provided data.
+            # If the todo instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated todo instance.
@@ -360,6 +360,22 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     def get_model_name(self):
         return self.serializer_class.Meta.model.__name__
     
+    common_delete_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your TODO has been deleted successfully!",
+                ),
+        status.HTTP_404_NOT_FOUND: 
+            docs_schema_response_new(
+                status_code=status.HTTP_404_NOT_FOUND,
+                serializer_class=serializer_class,
+                message = "Todo not found OR You are not authorized to perform this action.",
+                ),
+
+    }
+    @swagger_auto_schema(operation_id='Todo Delete', responses={**common_delete_response})
     def delete(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasDeleteDataPermission, 'delete'
@@ -386,7 +402,7 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
                                         message="Your TODO has been deleted successfully!", )
 
         else:
-            messages.error(request, "Contact not found")
+            messages.error(request, "Todo not found OR You are not authorized to perform this action")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND)
 
 class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
@@ -453,7 +469,7 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
 
         data = request.data
         if todo_data:
-            # If a primary key is provided, it means we are updating an existing contact
+            # If a primary key is provided, it means we are updating an existing todo
             comment_id = self.kwargs.get('comment_id')
             if comment_id:
                 comment_instance =  Comment.objects.filter(todo_id=todo_data,pk=comment_id,user_id=request.user).first()
