@@ -36,7 +36,7 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('email', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'last_name',)}),
         ('Address', {'fields': ('town', 'county','country','post_code','created_by')}),
-        ('Permissions', {'fields': ('is_active','roles',)}),
+        ('Permissions', {'fields': ('is_active','roles','enforce_password_change')}),
 
     )
     

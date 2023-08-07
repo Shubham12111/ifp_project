@@ -59,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'authentication.middleware.CheckAdminUserMiddleware',
+    'authentication.middleware.ForcePasswordChangeBackend',
 ]
 
 ROOT_URLCONF = 'infinity_fire_solutions.urls'

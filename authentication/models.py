@@ -140,7 +140,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     customer_type = models.CharField(max_length=10, choices=CUSTOMER_TYPES, default='individual')
     roles = models.ForeignKey(UserRole,on_delete=models.PROTECT, null=True,verbose_name="UserRole")
     created_by = models.ForeignKey("self", on_delete=models.PROTECT, null=True, blank=True, related_name='created_users')
-
+    enforce_password_change = models.BooleanField(default = False)
+    
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
