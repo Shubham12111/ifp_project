@@ -53,8 +53,9 @@ class Vendor(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=50)
+    description = models.TextField(null=True, blank=True)
     image_path = models.CharField(max_length=255)
-    category_status = models.CharField(max_length=50, choices=CATEGORY_STATUS_CHOICES, default='active')
+    status = models.CharField(max_length=50, choices=CATEGORY_STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -69,9 +70,8 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     sku = models.CharField(max_length=50)
-    quantity_per_box = models.DecimalField(max_digits=10, decimal_places=2)
-    stock_in_hand = models.DecimalField(max_digits=10, decimal_places=2)
-    product_status = models.CharField(max_length=50, choices=PRODUCT_STATUS_CHOICES)
+    quantity_per_box = models.DecimalField(max_digits=10, default=1.0, decimal_places=2)
+    status = models.CharField(max_length=50, choices=PRODUCT_STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -101,3 +101,11 @@ class InventoryLocation(models.Model):
 
     def __str__(self):
         return self.name
+
+class StoreLocation(models.Model):
+    product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
+    inventory_location = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE)
+    total_inventory = models.DecimalField(max_digits=10, decimal_places=2)
+    assigned_inventory = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
