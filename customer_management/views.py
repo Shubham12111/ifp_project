@@ -17,7 +17,8 @@ from django.core.serializers import serialize
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.email import *
 from contact.models import Contact
-
+from drf_yasg.utils import swagger_auto_schema
+from infinity_fire_solutions.utils import docs_schema_response_new
 
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -38,6 +39,16 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'customer_list.html'
     ordering_fields = ['created_at'] 
 
+    common_get_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message = "Data retrieved",
+            )
+    }
+    
+    @swagger_auto_schema(operation_id='Customer listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
@@ -75,6 +86,7 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer.html'
 
+    @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         """
         Handle GET request to display a form for updating a customer.
@@ -105,7 +117,24 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
                                 message="GET Method Not Alloweded",)
-        
+
+    common_post_response = {
+        status.HTTP_201_CREATED: 
+            docs_schema_response_new(
+                status_code=status.HTTP_201_CREATED,
+                serializer_class=serializer_class,
+                message = "Congratulations! your customer has been added successfully.",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "We apologize for the inconvenience, but please review the below information.",
+                ),
+
+    } 
+
+    @swagger_auto_schema(operation_id='Customer Add', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to add or update a customer.
@@ -214,7 +243,7 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
         return queryset
 
-    
+    @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing Conatct object.
         if request.accepted_renderer.format == 'html':
@@ -227,6 +256,31 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_list'))
     
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your Customer has been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "You are not authorized to perform this action",
+                ),
+
+    }
+
+    @swagger_auto_schema(auto_schema=None) 
+    def put(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(auto_schema=None) 
+    def patch(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(operation_id='Customer Edit', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to update a customer instance.
@@ -285,6 +339,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
     serializer_class = BillingAddressSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer_billing_address.html'
+    swagger_schema = None
 
     def get_billing_address(self):
         billing_address_list = BillingAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'))
@@ -321,7 +376,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         billing_address = BillingAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
         return billing_address
-        
+
     def get(self, request, *args, **kwargs):
         """
         Handle GET request to display a form for updating a customer.
@@ -352,7 +407,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
                                 message="GET Method Not Alloweded",)
-            
+
     def post(self, request, *args, **kwargs):
         data = request.data
         company_instance = self.get_queryset()
@@ -404,7 +459,8 @@ class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.Destr
     View to remove a BillingAddress associated with a Customer.
     """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    
+    swagger_schema = None
+
     def get_queryset(self):
         """
         Get the queryset of contacts filtered by the current user.
@@ -438,7 +494,7 @@ class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.Destr
             messages.error(request,error_message)
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message=error_message, )
-    
+
 class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View for deleteing .
@@ -448,6 +504,23 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     # permission_classes = [IsAuthenticated]
     template_name = 'customer.html'
+    
+    common_delete_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Customer has been deleted successfully!",
+                ),
+        status.HTTP_404_NOT_FOUND: 
+            docs_schema_response_new(
+                status_code=status.HTTP_404_NOT_FOUND,
+                serializer_class=serializer_class,
+                message = "Customer not found.",
+                ),
+
+    }
+    @swagger_auto_schema(operation_id='Customer delete', responses={**common_delete_response})
     
     def delete(self, request, *args, **kwargs):
         """
@@ -485,8 +558,6 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             messages.error(request, "Customer not found")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Customer not found", )
-       
-
 
 class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     """
@@ -495,6 +566,8 @@ class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     """
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.

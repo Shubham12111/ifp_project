@@ -20,7 +20,7 @@ class CustomerContactPersonView(CustomAuthenticationMixin, generics.CreateAPIVie
     serializer_class = ContactPersonSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer_contact_person.html'
-
+    swagger_schema = None
     def get_contact_person(self):
         contact_person_list = ContactPerson.objects.filter(user_id__id=self.kwargs.get('customer_id'))
     
@@ -141,7 +141,7 @@ class CustomerRemoveContactPersonView(CustomAuthenticationMixin, generics.Destro
     View to remove a ContactPerson associated with a Customer.
     """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    
+    swagger_schema = None
     def get_queryset(self):
         """
         Get the queryset of contacts filtered by the current user.

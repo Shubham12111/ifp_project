@@ -23,6 +23,11 @@ from drf_yasg import openapi
 from rest_framework import permissions
 
 
+excluded_patterns = [
+    r'api/customer/billing_address/',
+    r'api/customer/contact_person/'
+]
+
 # swagger settings
 schema_view = get_schema_view(
    openapi.Info(
@@ -31,7 +36,7 @@ schema_view = get_schema_view(
       description="API documentation",
    ),
    public=True,
-   permission_classes=[permissions.AllowAny],
+   permission_classes=[permissions.AllowAny]
 )
 
 # admin Customization

@@ -16,6 +16,9 @@ from django.db.models import Q
 from django.http import  HttpResponse
 from authentication.models import *
 from datetime import datetime
+from drf_yasg.utils import swagger_auto_schema
+from infinity_fire_solutions.utils import docs_schema_response_new
+
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
@@ -93,6 +96,16 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         return User.objects.values_list('email', flat=True).distinct()
     
+    common_list_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message = "Todo data retrieved successfully.",
+            )
+    }
+    
+    @swagger_auto_schema(operation_id='Todo listing', responses={**common_list_response})
     def list(self, request, *args, **kwargs):
         """
         List view for TODO items.
@@ -142,7 +155,7 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     template_name = 'todo_form.html'
     serializer_class = TodoAddSerializer
 
-   
+    @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasCreateDataPermission, 'add'
@@ -156,7 +169,23 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             # If the client accepts HTML, render the template
             context = {'serializer':serializer}
             return render_html_response(context,self.template_name)
-     
+    
+    common_post_response = {
+        status.HTTP_201_CREATED: 
+            docs_schema_response_new(
+                status_code=status.HTTP_201_CREATED,
+                serializer_class=TodoAddSerializer,
+                message = "Your TODO has been saved successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "Something went wrong!",
+                )
+        } 
+
+    @swagger_auto_schema(operation_id='Todo Add', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"todo", HasCreateDataPermission, 'add'
@@ -235,7 +264,7 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         
         return queryset
 
-    
+    @swagger_auto_schema(auto_schema=None)     
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing ToDo object.
         if request.accepted_renderer.format == 'html':
@@ -248,6 +277,32 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('todo_list'))
     
+    
+    @swagger_auto_schema(auto_schema=None) 
+    def put(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(auto_schema=None) 
+    def patch(self, request, *args, **kwargs):
+        pass
+    
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your TODO has been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "You are not authorized to perform this action",
+                ),
+
+    }
+    
+    @swagger_auto_schema(operation_id='Todo Edit', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to update a contact instance.
@@ -339,7 +394,8 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = CommentSerializer
     template_name = 'todo_view.html'
-    
+    swagger_schema = None
+
     def get_queryset(self):
         """
         Get the queryset for listing TODO items.
@@ -433,6 +489,8 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
                 return Response(context, template_name=self.template_name)
 
 class ToDoDeleteCommentView(generics.DestroyAPIView):
+    swagger_schema = None
+
     def get_app_name(self):
         return apps.get_containing_app_config(self.__module__).name
     
