@@ -20,9 +20,9 @@
 
   <script>
     // Get all elements with the class 'datepicker' using the Django template syntax
-    const datepickerFields = document.querySelectorAll('.datepicker-{{ field.name }}');
+    const datepickerFields_{{ field.name }} = document.querySelectorAll('.datepicker-{{ field.name }}');
 
-  datepickerFields.forEach(datepickerField => {
+    datepickerFields_{{ field.name }}.forEach(datepickerField => {
       flatpickr(datepickerField, {
           enableTime: true,
           dateFormat: "Y-m-d H:i",

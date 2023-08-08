@@ -71,11 +71,6 @@
 
                     </a>
                     {% endif %}
-                    {% if request.user|has_view_permission:"requirement" %}
-                    <a href="{% url 'requirement_detail' requirement.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Add Defect">
-                      <i class="fas fa-plus"></i>
-                    </a>
-                    {% endif %}
                     
                   </td>
                 </tr>
