@@ -15,7 +15,7 @@
                     <h5>Add Defects</h5>
                 </div>
                 <div class="card-body pt-0">
-                    <form role="form" method="POST" autocomplete="off" enctype="multipart/form-data">
+                    <form role="form" method="POST" enctype="multipart/form-data">
                         <div class='row'>
                             {% csrf_token %}
                             {% render_form serializer %}
@@ -52,7 +52,7 @@
                                 <th>Defect Period</th>
                                 <th>Due Date</th>
                                 <th>Status</th>
-                                <th>Opts</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody class="ml-4">

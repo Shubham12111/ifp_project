@@ -17,7 +17,7 @@ class Requirement(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_requirement')
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_requirement')
     description = RichTextField()
-    UPRN = models.CharField(max_length=12, unique=True)
+    UPRN = models.CharField(max_length=12)
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
     requirement_date_time = models.DateTimeField()
     quality_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor_requirement')

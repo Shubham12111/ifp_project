@@ -52,19 +52,18 @@ def validate_uk_postcode(value):
 
     return value
 
-
 def validate_description(value):
     # Custom validation for the message field to treat <p><br></p> as blank
     soup = BeautifulSoup(value, 'html.parser')
     cleaned_comment = soup.get_text().strip()
 
+    # Check if the cleaned comment consists only of whitespace characters
     if not cleaned_comment:
         raise serializers.ValidationError("Description is required.")
-    
-    is_blank_html = value.strip() == "<p><br></p>"
-    
-    if is_blank_html:
-        raise serializers.ValidationError("Description field is required.")
+
+    if all(char.isspace() for char in cleaned_comment):
+        raise serializers.ValidationError("Description cannot consist of only spaces and tabs.")
+
     return value
 
 # Custom validation function for validating file size
@@ -112,4 +111,9 @@ def validate_company_name(value):
         raise serializers.ValidationError("Company name cannot contain repeating special characters.")
 
     return value
+
+def no_spaces_or_tabs_validator(value):
+    if all(char.isspace() for char in value):
+        raise ValidationError("Cannot consist of only spaces and/or tabs.")
+
 

@@ -9,6 +9,7 @@ from customer_management.models import SiteAddress
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 from django.db import transaction
+
 class CustomerNameField(serializers.RelatedField):
     def to_representation(self, value):
         return f"{value.first_name} {value.last_name}"
@@ -67,16 +68,14 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "This field is required.",
             "blank": "description is required.",
-        }
+        },
+        validators=[validate_description],
     )
     UPRN = serializers.CharField(
     max_length=12, 
     label=('UPRN'),
     required=False,  # Make it optional
     style={
-        "input_type": "number",  # Use "number" input type
-        "min": 0,  # Optional: Set minimum value if needed
-        "max": 999999999999,  # Optional: Set maximum value if needed
         "autocomplete": "off",
         "required": False,  # Adjust as needed
         'base_template': 'custom_input.html',
@@ -129,12 +128,19 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         validators=[file_extension_validator, validate_file_size],
         help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
-    
-    def validate_description(self, value):
-        # Custom validation for the message field to treat <p><br></p> as blank
-        validate_description(value)
+    def validate_UPRN(self, value):
+        cleaned_value = str(value).replace(" ", "")  # Remove spaces
+
+        if not cleaned_value.isdigit() or len(cleaned_value) != 12:
+            raise serializers.ValidationError("UPRN must be a 12-digit number.")
+
+        queryset = Requirement.objects.all().exclude(id=self.instance.id)
+        if queryset.filter(UPRN=cleaned_value).exists():
+            raise serializers.ValidationError("A record with UPRN '{}' already exists.".format(cleaned_value))
+
+        
         return value
-    
+
     class Meta:
         model = Requirement
         fields = ('customer_id','description','site_address', 'quality_surveyor', 'UPRN', 'requirement_date_time','file')
@@ -212,7 +218,8 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "This field is required.",
             "blank": "Action is required.",
-        }
+        },
+        validators=[no_spaces_or_tabs_validator],
     )
     
     description = serializers.CharField(
@@ -222,7 +229,8 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "This field is required.",
             "blank": "Description is required.",
-        }
+        },
+        validators=[validate_description],
     )
 
     defect_period = serializers.DateTimeField(
@@ -253,19 +261,20 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         "class": "form-control",
         "autofocus": False,
         "autocomplete": "off",
-        'base_template': 'custom_file.html',
+        'base_template': 'custom_multiple_file.html',
         'help_text': True,
         'multiple': True,
         'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
+        'allow_null': True,  # Allow None values
     },
     help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
     
-    
     class Meta:
         model = RequirementDefect
         fields = ('action', 'description', 'defect_period', 'due_date', 'status','file_list')
-        
+    
+    
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
         file_list = validated_data.pop('file_list', None)
