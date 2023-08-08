@@ -587,8 +587,7 @@ class ConversationCommentView(generics.DestroyAPIView):
         """
         Get the queryset of contacts filtered by the current user.
         """
-        user_id = self.request.user.id
-        return Contact.objects.filter(pk=self.kwargs.get('contact_id'), user_id=user_id).get()
+        return Contact.objects.filter(pk=self.kwargs.get('contact_id')).get()
     
     def destroy(self, request, *args, **kwargs):
         """

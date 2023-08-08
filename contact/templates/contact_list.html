@@ -73,7 +73,7 @@
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Contact Type</th>
-                  <th>Actions</th>
+                  <th class="custom-last-column">Actions</th>
                 </tr>
               </thead>
               <tbody class="ml-4"> 
@@ -90,6 +90,7 @@
                       <i class="fas fa-user-edit text-secondary"></i>
                     </a>
                     {% endif %}
+
                     {% if request.user|has_delete_permission:"contact" %}
                     <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" 
 
@@ -98,13 +99,14 @@
 
                     </a>
                     {% endif %}
+
                     {% if request.user|has_view_permission:"contact" %}
-                    <a href="{% url 'contact_conversation' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Conversion">
+                    <a href="{% url 'contact_conversation' contact.pk %}" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Conversion">
                       <i class="fas fa-comment text-secondary"></i>
                     </a>
                     {% endif %}
                     
-                    <a href="#" data-bs-toggle="tooltip" data-bs-original-title="Convert TO Customer" class="mx-3">
+                    <a href="#" data-bs-toggle="tooltip"  data-bs-original-title="Convert TO Customer" class="mx-2">
                       <i class="fas fa-exchange-alt text-secondary" onclick="showPopupAndRedirect('{% url 'convert_to_custmoer' contact.pk %}')"></i>
                     </a>
 
@@ -124,8 +126,6 @@
 
 {% endblock %} 
 {% block extra_js %}
-<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
-<script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>

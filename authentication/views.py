@@ -69,7 +69,6 @@ class LoginView(APIView):
             if user.is_superuser:
                 messages.error(request, 'Login failed. The credentials provided are incorrect. Please verify your login information and try again.')
                 return self.render_html_response(serializer)
-            # Render the HTML template for successful login
             login(request, user)
             #messages.success(request, 'Congratulations! You have successfully logged in to your account. Enjoy your experience!')
             return redirect(reverse('dashboard'))
@@ -121,11 +120,10 @@ class SignupView(APIView):
 
             user = serializer.save()
             user.set_password(serializer.validated_data["password"])
-            user_roles = UserRole.objects.filter(name="Contractor").first()
-            if user_roles:
-                user.roles = user_roles
+            user.enforce_password_change = True
+
             user.save()
-            
+
             context = {
             'user': user,
             'site_url':get_site_url(request)
@@ -378,6 +376,45 @@ class ChangePasswordView(APIView):
             serializer.save()
             messages.success(request, f"Password updated successfully. Please use your new password for future logins.")
             return redirect(reverse('profile'))
+
+        else:
+            return self.render_html_response(serializer)
+
+
+
+class EnforceChangePasswordView(APIView):
+    
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    serializer_class = ChangePasswordSerializer
+    template_name = "enforce_password_change.html"
+
+    
+    def render_html_response(self, serializer):
+        """
+        Render HTML response using the provided serializer and template name.
+        """
+        return Response({'serializer': serializer}, template_name=self.template_name)
+
+    def get(self, request):
+        """
+        Handle GET request for login page.
+        """
+        # return redirect(reverse('dashboard'))
+        
+        serializer = self.serializer_class()
+        # Render the HTML template for login page
+
+        return self.render_html_response(serializer)
+
+    def post(self, request):
+        data = request.data
+        serializer = self.serializer_class(data=data, instance=request.user, context={'request': request})
+        if serializer.is_valid():
+            user = serializer.save()
+            user.enforce_password_change = True
+            user.save()
+            messages.success(request, f"Password updated successfully. Please use your new password for future logins.")
+            return redirect(reverse('dashboard'))
 
         else:
             return self.render_html_response(serializer)

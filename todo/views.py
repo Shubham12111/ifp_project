@@ -18,6 +18,7 @@ from authentication.models import *
 from datetime import datetime
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -32,6 +33,21 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
 
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 1 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
 
     def get_queryset(self):
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -80,8 +96,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                     base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
 
         # Sort the queryset by 'created_at' in descending order
-        base_queryset = base_queryset.order_by('-created_at')
-
+        base_queryset = self.get_paginated_queryset(base_queryset.order_by('-created_at'))
         return base_queryset
     
     def get_module_list(self):
