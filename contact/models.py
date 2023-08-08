@@ -21,8 +21,8 @@ class ContactType(models.Model):
 
 class Contact(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    first_name = models.CharField(max_length=30,null=True)
-    last_name = models.CharField(max_length=30,null=True)
+    first_name = models.CharField(max_length=50,null=True)
+    last_name = models.CharField(max_length=50,null=True)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20)
     contact_type = models.ForeignKey(ContactType, on_delete=models.CASCADE)

@@ -73,7 +73,7 @@ class SignupSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         label=('First Name '),
         required=True,
-        max_length=100,
+        max_length=50,
         style={
             "input_type": "text",
             "autofocus": False,
@@ -92,7 +92,7 @@ class SignupSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(
         label=('Last Name '),
         required=True,
-        max_length=100,
+        max_length=50,
         style={
             "input_type": "text",
             "autofocus": False,
