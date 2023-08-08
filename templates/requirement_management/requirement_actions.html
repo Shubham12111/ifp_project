@@ -2,28 +2,26 @@
 <div class="col-lg-3">
     <div class="card position-sticky top-1">
         <ul class="nav flex-column bg-white border-radius-lg p-3">
-            <li class="nav-item {% if '/customer/edit/' in request.path or request.path == '/customer/add/' %}active{% endif %}">
+            <li class="mb-2 nav-item {% if '/requirement/edit/' in request.path or request.path == '/requirement/add/' %}active{% endif %}">
                 {% if requirement_instance %}
                     <a class="nav-link text-body" data-scroll="" href="{% url 'requirement_edit' requirement_instance.id  %}">
                     {% else %}
                     <a class="nav-link text-body" data-scroll="" href="">
                 {% endif %}
-
-                
                     <div class="icon me-2">
-                        <i class="fa fa-user me-sm-1 text-dark mb-1" aria-hidden="true"></i>
+                        <i class="fas fa-clipboard-list me-sm-1 text-dark mb-1" aria-hidden="true"></i>
                     </div>
                     <span class="text-sm">Requirement Information</span>
                 </a>
             </li>
-            <li class="nav-item {% if '/customer/billing_address/' in request.path %}active{% endif %}">
+            <li class="nav-item {% if '/requirement/defects/' in request.path %}active{% endif %}">
                     {% if requirement_instance %}
-                        <a class="nav-link text-body" data-scroll="" href="{% url 'requirement_defect_add' requirement_instance.id  %}">
+                        <a class="nav-link text-body" data-scroll="" href="{% url 'requirement_defects' requirement_instance.id  %}">
                         {% else %}
                         <a class="nav-link text-body" data-scroll="" href="">
                     {% endif %}
                     <div class="icon me-2">
-                        <i class="fas fa-address-card me-sm-1 text-dark mb-1" aria-hidden="true"></i>
+                        <i class="fas fas fa-tasks me-sm-1 text-dark mb-1" aria-hidden="true"></i>
                     </div>
                     <span class="text-sm"> Requirement Defects</span>
                 </a>

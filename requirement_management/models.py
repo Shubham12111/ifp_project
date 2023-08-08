@@ -21,7 +21,8 @@ class Requirement(models.Model):
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
     requirement_date_time = models.DateTimeField()
     quality_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor_requirement')
-    status = models.CharField(max_length=30, choices=requirement_status, default='pending')
+    document_path = models.CharField(max_length=256, null=True, blank=True)
+    status = models.CharField(max_length=30,choices = requirement_status, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

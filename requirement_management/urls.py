@@ -8,9 +8,14 @@ urlpatterns = [
     path('add/', RequirementAddView.as_view(), name='requirement_add'),
     path('edit/<int:pk>/', RequirementUpdateView.as_view(), name='requirement_edit'),
     path('delete/<int:pk>/',RequirementDeleteView.as_view(),name='requirement_delete'),
-    path('defect/add/<int:pk>/', RequirementDefectAddView.as_view(), name='requirement_defect_add'),
-    path('defect/edit/<int:pk>/', RequirementDefectUpdateView.as_view(), name='requirement_defect_update'),
-    path('defect/delete/<int:pk>/', RequirementDefectDeleteView.as_view(), name='requirement_defect_delete'),
-    path('detail/<int:pk>/', RequirementDetailView.as_view(), name='requirement_detail'),
+    path('delete/document/<int:requirement_id>', login_required(RequirementRemoveDocumentView.as_view()), name='remove_requirement_document'),
+    
+    path('defects/<int:requirement_id>/', RequirementDefectView.as_view(), name='requirement_defects'),
+    path('defects/edit/<int:requirement_id>/<int:pk>/', RequirementDefectView.as_view(), name='requirement_defect_update'),
+    
+    
+    path('defects/delete/<int:pk>/', RequirementDefectDeleteView.as_view(), name='requirement_defect_delete'),
+    path('defects/delete/document/<int:defect_id>/<int:pk>/', login_required(RequirementDefectRemoveDocumentView.as_view()), name='remove_requirement_defect_document'),
+
 
 ]

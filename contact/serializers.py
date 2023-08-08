@@ -241,7 +241,6 @@ class ContactSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Post code can only contain alphanumeric values.")
         return value
 
-
 class ConversationViewSerializer(serializers.ModelSerializer):
     presigned_url = serializers.SerializerMethodField()
     filename = serializers.SerializerMethodField()
@@ -299,8 +298,6 @@ class ConversationViewSerializer(serializers.ModelSerializer):
             representation['conversation_type'] = instance.conversation_type.name
         return representation
 
-    
-    
 class ConversationSerializer(serializers.ModelSerializer):
     # Custom FileField for handling file uploads
     file = serializers.FileField(
@@ -316,7 +313,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     },
     validators=[file_extension_validator, validate_file_size],
     help_text=_('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
-        )    
+    )    
     # Custom CharField for the message with more rows (e.g., 5 rows)
     message = serializers.CharField(max_length=1000, 
                                     required=True, 

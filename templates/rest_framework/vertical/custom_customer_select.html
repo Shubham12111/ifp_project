@@ -38,123 +38,43 @@
   <div class="d-flex justify-content-between align-items-center customer-body">
     </div>
 </div>
-
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 
 <script>
- function initializeChoices(fieldId) {
-    var element = document.getElementById(fieldId);
-    if (element) {
-      const example = new Choices(element, {});
-    }
-  }
 
-  initializeChoices('choices-{{ field.name }}');
-
-  // Move this part inside the if statement to avoid errors
-  var choicesTags = document.getElementById('choices-tags');
-  if (choicesTags) {
-    var color = choicesTags.dataset.color;
-    const example = new Choices(choicesTags, {
-      delimiter: ',',
-      editItems: true,
-      
-      maxItemCount: 5,
-      removeItemButton: true,
-      addItems: true,
-      classNames: {
-        item: 'badge rounded-pill choices-' + color + ' me-2'
-      },
-      noResultsText: 'No records found',
-      noChoicesText: 'No records found',
-      loadingText: 'Loading...',
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
     const selectElement = document.getElementById('choices-customer_id');
     const customerDetailsCard = document.getElementById('customer-details-card');
-
-    // Function to fetch and display customer details
+  // Function to fetch and display customer details
     function displayCustomerDetails(customerId) {
         fetch(`/customer/detail/${customerId}/`)
             .then(response => response.json())
             .then(data => {
                  const customerDetails = `
-                  <div class = "row">
-                  <div class="form-group  col-6">
-                            <label for="email">First Name</label>
-                            <input type="email" id="email" class="form-control" value="${data.data.first_name}" disabled>
-                        </div>
-                      <div class="form-group  col-6">
-                          <label for="email">Last Name</label>
-                          <input type="email" id="email" class="form-control" value="${data.data.last_name}" disabled>
-                      </div>
-                      <div class="form-group  col-6">
-                          <label for="email">Email</label>
-                          <input type="email" id="email" class="form-control" value="${data.data.email}" disabled>
-                      </div>
-                     <div class="form-group  col-6">
-                            <label for="companyName">Company Name</label>
-                            <input type="text" id="companyName" class="form-control" value="${data.data.company_name}" disabled>
-                        </div>
-                       
-                      </div>
-                     `;
-                  const siteDropdown = `
-                  <div class="form-group">
-                    <label>
-                      Site Address  <span class="text-danger">*</span> 
-                    </label>
-                      <select class="form-control choices__input" name="site_address" id="choices-site_address">
-                          ${data.data.site_address.map(site => `<option value="${site.id}">${site.site_name}</option>`).join('')}
-                      </select>
-                  </div>
-              `;
-              customerDetailsCard.querySelector('.customer-body').innerHTML = customerDetails;
-
-            // Check if the site selection dropdown container already exists
-            let siteDropdownContainer = customerDetailsCard.querySelector('.site-dropdown');
-
-            // If the siteDropdownContainer doesn't exist, create it
-          if (!siteDropdownContainer) {
-              siteDropdownContainer = document.createElement('div');
-              siteDropdownContainer.className = 'site-dropdown col-6';  // Add col-6 class here
-
-                          // Set site selection dropdown HTML
-                          siteDropdownContainer.innerHTML = siteDropdown;
-
-                // Append the site selection dropdown container to the customer details card
-                customerDetailsCard.appendChild(siteDropdownContainer);
-
-                // Initialize Choices dropdown
-                initializeChoices('choices-site_address');
-            }
-
-            // Show the customer details card
-            customerDetailsCard.style.display = 'block';
-
-            // Move this part inside the if statement to ensure it's executed after the Choices dropdown is initialized
-            var choicesTags = document.getElementById('choices-site_address');
-            if (choicesTags) {
-                var color = choicesTags.dataset.color;
-                const example = new Choices(choicesTags, {
-                    delimiter: ',',
-                    editItems: true,
-                    maxItemCount: 5,
-                    removeItemButton: true,
-                    addItems: true,
-                    classNames: {
-                        item: 'badge rounded-pill choices-' + color + ' me-2'
-                    },
-                    noResultsText: 'No records found',
-                    noChoicesText: 'No records found',
-                    loadingText: 'Loading...',
-                });
-            }
-        })
-            
-    }
+                    <ul class="list-group col-12">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                          <div class="d-flex flex-column">
+                          <span class="mb-2 text-md">Customer Name: <span class="text-dark font-weight-bold ms-2">${data.data.first_name} ${data.data.last_name}</span></span>
+                          <span class="mb-2 text-md">Company Name: <span class="text-dark font-weight-bold ms-2">${data.data.company_name}</span></span>
+                          <span class="mb-2 text-md">Email Address: <span class="text-dark ms-2 font-weight-bold">${data.data.email}</span></span>
+                          </div>
+                        </li>
+                      </ul>`;
+                const siteDropdown = data.data.site_address.map(site => `<option value="${site.id}">${site.site_name}</option>`).join('');
+                customerDetailsCard.querySelector('.customer-body').innerHTML = customerDetails;
+                // Show the customer details card
+                customerDetailsCard.style.display = 'block';
+                // Generate the siteDropdown options
+                // Get a reference to the <select> element
+                const selectElement = document.getElementById('choices-site_address'); // Replace 'your-select-element-id' with the actual ID
+               
+                // Clear existing options and selected choices
+                selectElement.innerHTML = '';
+                  // Append the new options
+                selectElement.insertAdjacentHTML('beforeend', siteDropdown);
+                
+              })
+          }
 
     // Event listener for select element change
     selectElement.addEventListener('change', function() {
@@ -173,4 +93,30 @@
     }
 });
 
+ function initializeChoices(fieldId) {
+    var element = document.getElementById(fieldId);
+    if (element) {
+      const example = new Choices(element, {});
+    }
+  }
+  initializeChoices('choices-{{ field.name }}');
+  
+  var choicesTags = document.getElementById('choices-{{ field.name }}');
+  if (choicesTags) {
+    var color = choicesTags.dataset.color;
+    const example = new Choices(choicesTags, {
+      delimiter: ',',
+      editItems: true,
+      
+      maxItemCount: 5,
+      removeItemButton: true,
+      addItems: true,
+      classNames: {
+        item: 'badge rounded-pill choices-' + color + ' me-2'
+      },
+      noResultsText: 'No records found',
+      noChoicesText: 'No records found',
+      loadingText: 'Loading...',
+    });
+  }
 </script>

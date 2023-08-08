@@ -1,6 +1,10 @@
 import re
+from django.conf import settings
+from bs4 import BeautifulSoup
 from rest_framework import serializers
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
 
 def get_site_url(request):
     current_site = get_current_site(request)
@@ -38,3 +42,40 @@ def validate_uk_postcode(value):
         )
 
     return value
+
+def validate_description(value):
+    # Custom validation for the message field to treat <p><br></p> as blank
+    soup = BeautifulSoup(value, 'html.parser')
+    cleaned_comment = soup.get_text().strip()
+
+    if not cleaned_comment:
+        raise serializers.ValidationError("Description is required.")
+    
+    is_blank_html = value.strip() == "<p><br></p>"
+    
+    if is_blank_html:
+        raise serializers.ValidationError("Description field is required.")
+    return value
+
+# Custom validation function for validating file size
+def validate_file_size(value):
+    """
+    Validate the file size is within the allowed limit.
+
+    Parameters:
+        value (File): The uploaded file.
+
+    Raises:
+        ValidationError: If the file size exceeds the maximum allowed size (5 MB).
+    """
+    # Maximum file size in bytes (5 MB)
+    max_size = 5 * 1024 * 1024
+
+    if value.size > max_size:
+        raise ValidationError(_('File size must be up to 5 MB.'))
+
+# Validator for checking the supported file extensions
+file_extension_validator = FileExtensionValidator(
+    allowed_extensions=settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS,
+    message =('Unsupported file extension. Please upload a valid file.'),
+)

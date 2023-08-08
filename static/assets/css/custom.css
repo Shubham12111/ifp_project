@@ -24,7 +24,6 @@
     z-index: 1;
 }
 
-
 .sidebar-open {
     transform: translateX(0);
 }
@@ -55,3 +54,5 @@ li.nav-item.active a.nav-link {
     background: #e9ecef !important;
     color: #000;
 }
+
+  
