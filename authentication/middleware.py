@@ -100,17 +100,18 @@ class ForcePasswordChangeBackend:
             HttpResponse: The response object for the request.
         """
         # Define a list of URL paths that should bypass password change enforcement
-        allowed_paths = [
-            reverse('login'),
-            reverse('signup'),
-            reverse('forgot_password')
-        ]  # Add other allowed paths if needed
+        if not request.path.startswith('/admin/'):
+            allowed_paths = [
+                reverse('login'),
+                reverse('signup'),
+                reverse('forgot_password')
+            ]  # Add other allowed paths if needed
 
-        if request.user.is_authenticated:
-            if request.path in allowed_paths:
-                logout(request)
-            elif not request.user.enforce_password_change and request.path != reverse('enforce_password_change'):
-                return redirect('enforce_password_change')
+            if request.user.is_authenticated:
+                if request.path in allowed_paths:
+                    logout(request)
+                elif not request.user.enforce_password_change and request.path != reverse('enforce_password_change'):
+                    return redirect('enforce_password_change')
 
         response = self.get_response(request)
         return response
