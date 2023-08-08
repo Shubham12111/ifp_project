@@ -310,8 +310,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
 
             # Update associated documents if file_list is provided
             if file_list and len(file_list) > 0:
-                RequirementDocument.objects.filter(defect_id=instance).delete()
-
+                
                 for file in file_list:
                     unique_filename = f"{str(uuid.uuid4())}_{file.name}"
                     upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}/defects')
