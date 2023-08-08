@@ -269,7 +269,18 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     },
     help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
-    
+    def validate(self, data):
+        """
+        Check that due_date is greater than defect_period.
+        """
+        defect_period = data.get('defect_period')
+        due_date = data.get('due_date')
+
+        if defect_period and due_date and defect_period >= due_date:
+            raise serializers.ValidationError("Due date must be greater than defect period.")
+
+        return data
+        
     class Meta:
         model = RequirementDefect
         fields = ('action', 'description', 'defect_period', 'due_date', 'status','file_list')
@@ -310,8 +321,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
 
             # Update associated documents if file_list is provided
             if file_list and len(file_list) > 0:
-                RequirementDocument.objects.filter(defect_id=instance).delete()
-
+                
                 for file in file_list:
                     unique_filename = f"{str(uuid.uuid4())}_{file.name}"
                     upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}/defects')
