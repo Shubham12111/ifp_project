@@ -33,14 +33,14 @@
                         <th>First Name</th>
                         <th>Email</th>
                         <th>Phone Number</th>
-                        <th>Actions</th>
+                        <th class="custom-last-column">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="ml-4">
                     {% for contact_person in contact_person_list %}
                     <tr>
-                        <td>{{ contact_person.first_name }}</td>
-                        <td>{{ contact_person.last_name }}</td>
+                        <td>{{ contact_person.first_name|default:''|truncatechars:20  }}</td>
+                        <td>{{ contact_person.last_name|default:''|truncatechars:20  }}</td>
                         <td>{{ contact_person.email }}</td>
                         <td>{{ contact_person.phone_number }}</td>
                     

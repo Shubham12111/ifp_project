@@ -9,6 +9,15 @@ def get_site_url(request):
     site_url = f'{protocol}://{domain}'
     return site_url
 
+def validate_first_name(value):
+    # Check if the first name contains only characters or letters with spaces
+    if not re.match("^[a-zA-Z ]*$", value):
+        raise serializers.ValidationError("First Name can only contain letters and spaces.")
+
+def validate_last_name(value):
+    # Check if the first name contains only characters
+    if not re.match("^[a-zA-Z ]*$", value):
+        raise serializers.ValidationError("First Name can only contain letters and spaces.")
 
 def validate_phone_number(value):
     # Remove any non-digit characters from the input
@@ -36,5 +45,28 @@ def validate_uk_postcode(value):
         raise serializers.ValidationError(
             "Invalid UK postcode format. The postcode should have the format: 'SW1A0NY', 'W1J6LE', 'EC2R7DG'."
         )
+
+    return value
+
+def validate_company_name(value):
+    # Check if the company name has more than one character
+    if len(value) == 3:
+        raise serializers.ValidationError("Company name must have more than three character.")
+        
+        # Check if the company name consists of only spaces and/or tabs
+    if value.strip() == "":
+        raise serializers.ValidationError("Company name cannot consist of only spaces and/or tabs.")
+    
+    # Check if the company name is a whole number
+    if value.isdigit():
+        raise serializers.ValidationError("Company name cannot be a whole number.")
+    
+    # Check if the company name consists of only special characters
+    if re.match("^[&$^#]+$", value):
+        raise serializers.ValidationError("Company name cannot consist of only special characters.")
+
+    # Check if the company name contains repeating characters
+    if re.search(r'(.)\1{2,}', value):
+        raise serializers.ValidationError("Company name cannot contain repeating special characters.")
 
     return value
