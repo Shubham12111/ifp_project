@@ -72,11 +72,11 @@
         <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" id="dateRangeDropdown">
           Date Range
         </a>
-        <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="dateRangeDropdown" data-popper-placement="left-start">
-          <li>
-            <input class="form-control datepicker" placeholder="Date Range" type="text" id="dateRangeInput" onfocus="focused(this)" onfocusout="defocused(this)">
-          </li>
-          <li><hr class="horizontal dark my-2"></li>
+        <ul class="dropdown-menu dropdown-menu-lg-start px 8 py 8" aria-labelledby="dateRangeDropdown" data-popper-placement="left-start">
+            <li>
+                <input class="form-control datepicker" placeholder="Date Range" type="text" id="dateRangeInput" onfocus="focused(this)" onfocusout="defocused(this)" style="width: 200px;"> <!-- Increase the width here -->
+            </li>
+          <li><hr class="horizontal dark my-3"></li>
           <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('dateRange')">Remove Filter</a></li>
         </ul>
       </div>
