@@ -2,44 +2,17 @@ from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
+from infinity_fire_solutions.custom_form_validation import *
 from authentication.models import CUSTOMER_TYPES, User
 from rest_framework.validators import UniqueValidator
 from .models import *
 import re
 
-def validate_phone_number(value):
-    # Remove any non-digit characters from the input
-    cleaned_number = re.sub(r'\D', '', value)
-
-    # Check if the cleaned number has exactly 12 digits
-    if len(cleaned_number) != 12:
-        raise serializers.ValidationError("Phone number should have 12 digits, including the country code.")
-
-    # Check if the cleaned number starts with the country code +44
-    if not cleaned_number.startswith('44'):
-        raise serializers.ValidationError("Phone number should start with the country code +44.")
-
-    return value
-
-def validate_uk_postcode(value):
-    # Remove any spaces from the input
-    cleaned_postcode = value.replace(' ', '').upper()
-
-    # Define a regular expression pattern for a valid UK postcode
-    pattern = r'^[A-Z]{1,2}\d{1,2}[A-Z]?\d[A-Z]{2}$'
-
-    # Check if the cleaned postcode matches the pattern
-    if not re.match(pattern, cleaned_postcode):
-        raise serializers.ValidationError(
-            "Invalid UK postcode format. The postcode should have the format: 'SW1A0NY', 'W1J6LE', 'EC2R7DG'."
-        )
-
-    return value
 class CustomerSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         label=('First Name '),
         required=True,
-        max_length=100,
+        max_length=50,
         style={
             "input_type": "text",
             "autofocus": False,
@@ -53,12 +26,14 @@ class CustomerSerializer(serializers.ModelSerializer):
             "invalid": "First Name can only contain characters.",
 
         },
+        validators=[validate_first_name] 
+        
     )
     
     last_name = serializers.CharField(
         label=('Last Name '),
         required=True,
-        max_length=100,
+        max_length=50,
         style={
             "input_type": "text",
             "autofocus": False,
@@ -71,6 +46,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "blank": "Last Name is required.",
             "invalid": "Last Name can only contain characters.",
         },
+        validators=[validate_last_name] 
     )
     
     email = serializers.EmailField(
@@ -103,13 +79,20 @@ class CustomerSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(
         label=('Company Name'),
         max_length=100,
+        min_length=3,
         required=True,
         style={
             "input_type": "text",
             "autocomplete": "off",
             "autofocus": False,
             "base_template": 'custom_input.html'
-        }
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Company Name is required.",
+            "min_length": "Company name must consist of at least 3 characters."
+        },
+        validators=[validate_company_name] 
     )
     customer_type = serializers.ChoiceField(
         label='Customer Type',
@@ -120,7 +103,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             'custom_class': 'col-6'
         },
     )
-        
+   
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'email','company_name','phone_number','customer_type')
@@ -136,7 +119,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         },
     )
     pan_number = serializers.CharField(
-        label='PAN Number',
+        label='NION',
         required=True,
         style={
             'base_template': 'custom_input.html'
@@ -145,6 +128,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     place_to_supply = serializers.CharField(
         label='Place To Supply',
         required=False,
+        max_length=50,
         style={
             'base_template': 'custom_input.html'
         },
@@ -161,6 +145,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
    
     address = serializers.CharField(
         max_length=255,
+        min_length=5,
         required=False,
         allow_blank=True,
         allow_null=True,
@@ -205,9 +190,9 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         return value
     
     def validate_pan_number(self, value):
-        # Custom validation for PAN number format (National Insurance Number in the UK)
+        # Custom validation for NION format (National Insurance Number in the UK)
         if not re.match(r'^[A-Z]{2}\d{6}[A-Z]$', value):
-            raise serializers.ValidationError("Invalid PAN number format. It should consist of two letters, six digits, and a final letter (e.g., AB123456C).")
+            raise serializers.ValidationError("Invalid NION format. It should consist of two letters, six digits, and a final letter (e.g., AB123456C).")
         return value
     
     class Meta:

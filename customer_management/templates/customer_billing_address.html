@@ -26,30 +26,31 @@
             </div>
         </div>
         <div class="card mt-4" id="basic-info">
-            <table class="table table-flush text-dark" id="billing-address-list">
+            <table class="table table-flush text-dark " id="billing-address-list">
                 <thead class="thead-light">
                     <tr>
-                        <th>VAT Number</th>
-                        <th>PAN Number</th>
-                        <th>Tax Preference</th>
+                        <th>VAT</th>
+                        <th>NION</th>
+                        <th>Tax</th>
                         <th>Place To Supply</th>
                         <th>Address</th>
-                        <th>Actions</th>
+                        <th class="custom-last-column">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="ml-4">
+                <tbody >
                     {% for billing_address in billing_address_list %}
                     <tr>
-                        <td>{{ billing_address.vat_number }}</td>
-                        <td>{{ billing_address.pan_number }}</td>
-                        <td>{{ billing_address.get_tax_preference_display }}</td>
-                        <td>{{ billing_address.place_to_supply }}</td>
-                        <td>{{ billing_address.address }}<br>
-                            {{ billing_address.town }}, {{ billing_address.county }}<br>
-                            {{ billing_address.country }}<br>
-                            {{ billing_address.post_code }}
-                            
-                        </td>
+                      <td>{{ billing_address.vat_number|default:'' }}</td>
+                      <td>{{ billing_address.pan_number|default:'' }}</td>
+                      <td>{{ billing_address.get_tax_preference_display|default:'' }}</td>
+                      <td>{{ billing_address.place_to_supply|default:''|truncatechars:20 }}</td>
+                      <td >
+                        {{ billing_address.address|default:''|truncatechars:20 }}<br>
+                        {% if billing_address.town %}{{ billing_address.town.name }} <br>{% endif %}
+                        {% if billing_address.county %}{{ billing_address.county.name}}<br>{% endif %}
+                        {{ billing_address.country|default:'' }}<br>
+                        {{ billing_address.post_code|default:'' }}
+                    </td>
                         <td> 
                             <a href="{% url 'customer_billing_address_edit' customer_instance.id billing_address.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
                                 <i class="fas fa-edit text-secondary"></i>

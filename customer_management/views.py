@@ -536,7 +536,7 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
-            "self": Q(user_id=request.user ),
+            "self": Q(created_by=request.user ),
             "all": Q(),  # An empty Q() object returns all data
         }
 
@@ -554,9 +554,9 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your Customer has been deleted successfully!", )
         else:
-            messages.error(request, "Customer not found")
+            messages.error(request, "Contact not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Customer not found", )
+                                        message="Contact not found OR You are not authorized to perform this action.d", )
 
 class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     """
