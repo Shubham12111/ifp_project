@@ -204,14 +204,21 @@ class BillingAddressSerializer(serializers.ModelSerializer):
 class SiteAddressSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(
         max_length=255,
+        min_length=3,
         required=True,
         style={
             'base_template': 'custom_fullwidth_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Site Name is required.",
+            "min_length": "Site name must consist of at least 3 characters."
         },
         
     )
     address = serializers.CharField(
         max_length=255,
+        min_length=5,
         required=True,
         style={
             'base_template': 'custom_fullwidth_input.html'
@@ -275,6 +282,7 @@ class ContactPersonSerializer(serializers.ModelSerializer):
             "invalid": "First Name can only contain characters.",
 
         },
+        validators=[validate_first_name] 
     )
     
     last_name = serializers.CharField(
@@ -293,6 +301,7 @@ class ContactPersonSerializer(serializers.ModelSerializer):
             "blank": "Last Name is required.",
             "invalid": "Last Name can only contain characters.",
         },
+        validators=[validate_last_name] 
     )
     
     email = serializers.EmailField(

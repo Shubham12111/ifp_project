@@ -60,6 +60,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "required": True,
             'base_template': 'custom_input.html'
         },
+        validators=[validate_first_name] 
     )
     last_name = serializers.CharField(
         max_length=50,
@@ -78,6 +79,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "required": True,
             'base_template': 'custom_input.html'
         },
+        validators=[validate_last_name]
     )
     email = serializers.EmailField(
         label=('Email'),
@@ -132,17 +134,20 @@ class ContactSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(
         label=('Company Name'),
         max_length=100,
+        min_length=3,
         required=False,
         style={
             "input_type": "text",
             "autocomplete": "off",
             "autofocus": False,
             "base_template": 'custom_input.html'
-        }
+        },
+        validators=[validate_company_name]
     )
     address = serializers.CharField(
         label=('Address'),
         max_length=225,
+        min_length=5,
         required=False,
         style={
             "input_type": "text",
@@ -241,7 +246,6 @@ class ContactSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Post code can only contain alphanumeric values.")
         return value
 
-
 class ConversationViewSerializer(serializers.ModelSerializer):
     presigned_url = serializers.SerializerMethodField()
     filename = serializers.SerializerMethodField()
@@ -299,8 +303,6 @@ class ConversationViewSerializer(serializers.ModelSerializer):
             representation['conversation_type'] = instance.conversation_type.name
         return representation
 
-    
-    
 class ConversationSerializer(serializers.ModelSerializer):
     # Custom FileField for handling file uploads
     file = serializers.FileField(
@@ -316,7 +318,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     },
     validators=[file_extension_validator, validate_file_size],
     help_text=_('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
-        )    
+    )    
     # Custom CharField for the message with more rows (e.g., 5 rows)
     message = serializers.CharField(max_length=1000, 
                                     required=True, 
@@ -392,18 +394,17 @@ class ConversationSerializer(serializers.ModelSerializer):
         Raises:
             serializers.ValidationError: If the 'message' field is blank.
         """
-        # Custom validation to treat "<p><br></p>" as blank
         # Custom validation for the message field to treat <p><br></p> as blank
         soup = BeautifulSoup(value, 'html.parser')
         cleaned_comment = soup.get_text().strip()
 
+        # Check if the cleaned comment consists only of whitespace characters
         if not cleaned_comment:
             raise serializers.ValidationError("Message is required.")
-        
-        is_blank_html = value.strip() == "<p><br></p>"
 
-        if is_blank_html:
-            raise serializers.ValidationError("Message field is required.")
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Message cannot consist of only spaces and tabs.")
+
         return value
 
     def create(self, validated_data):

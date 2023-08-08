@@ -101,8 +101,6 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
   
-
-        
         contact_id = kwargs.get('contact_id')
         if contact_id:
             contact = Contact.objects.get(pk=contact_id)
@@ -212,8 +210,6 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer.html'
-
-
     
     def get_queryset(self):
         """

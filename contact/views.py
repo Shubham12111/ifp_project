@@ -408,10 +408,7 @@ class ContactDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             messages.error(request, "Contact not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Contact not found OR You are not authorized to perform this action.", )
-               
-
-      
-      
+                   
 class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     """
     View to display and manage conversations related to a contact.
