@@ -9,6 +9,9 @@ from .models import Requirement, RequirementDefect,RequirementDocument
 from django.contrib import messages
 from rest_framework.response import Response
 from rest_framework import filters
+from drf_yasg.utils import swagger_auto_schema
+from infinity_fire_solutions.utils import docs_schema_response_new
+
 
 class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -22,6 +25,16 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'requirement_list.html'
     ordering_fields = ['created_at'] 
 
+    common_get_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message = "Data retrieved",
+            )
+    }
+    
+    @swagger_auto_schema(operation_id='Requirement Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
@@ -59,7 +72,8 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     serializer_class = RequirementAddSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'requirement.html'
-   
+    
+    @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         """
         Handle GET request to display a form for adding a requirement.
@@ -79,7 +93,24 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
                                 message="GET Method Not Alloweded",)
-        
+
+    common_post_response = {
+        status.HTTP_201_CREATED: 
+            docs_schema_response_new(
+                status_code=status.HTTP_201_CREATED,
+                serializer_class=serializer_class,
+                message = "Congratulations! requirement re has been added successfully.",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "We apologize for the inconvenience, but please review the below information.",
+                ),
+
+    } 
+
+    @swagger_auto_schema(operation_id='Requirement Add', responses={**common_post_response})  
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to add a requirement.
@@ -93,7 +124,6 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid():
-            print("skdkds")
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
             serializer.save()
 
@@ -162,7 +192,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
         
         return queryset
-    
+    @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing Requirement object.
         if request.accepted_renderer.format == 'html':
@@ -175,6 +205,31 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('requirement_list'))
     
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your Requirement has been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "You are not authorized to perform this action",
+                ),
+
+    }
+
+    @swagger_auto_schema(auto_schema=None) 
+    def put(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(auto_schema=None) 
+    def patch(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(operation_id='Requirement Edit', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to update a requirement instance.
@@ -232,8 +287,23 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     serializer_class = RequirementSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    # permission_classes = [IsAuthenticated]
-    template_name = 'requirement.html'
+    
+    common_delete_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Requirement has been deleted successfully!",
+                ),
+        status.HTTP_404_NOT_FOUND: 
+            docs_schema_response_new(
+                status_code=status.HTTP_404_NOT_FOUND,
+                serializer_class=serializer_class,
+                message = "Requirement not found.",
+                ),
+
+    }
+    @swagger_auto_schema(operation_id='Requirement Delete', responses={**common_delete_response})
     
     def delete(self, request, *args, **kwargs):
         """
@@ -275,6 +345,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
     serializer_class = RequirementDefectAddSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'defects.html'
+    swagger_schema = None
     
     def get_queryset(self):
         """
@@ -382,9 +453,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
-            
-
-      
+   
 class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View for deleting a requirement.
@@ -394,6 +463,7 @@ class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     # permission_classes = [IsAuthenticated]
     template_name = 'defects.html'
+    swagger_schema = None
     
     def delete(self, request, *args, **kwargs):
         """
