@@ -120,12 +120,10 @@ class SignupView(APIView):
 
             user = serializer.save()
             user.set_password(serializer.validated_data["password"])
-            user_roles = UserRole.objects.filter(name="Contractor").first()
-            if user_roles:
-                user.roles = user_roles
             user.enforce_password_change = True
+
             user.save()
-            
+
             context = {
             'user': user,
             'site_url':get_site_url(request)

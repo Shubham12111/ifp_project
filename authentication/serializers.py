@@ -79,7 +79,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_fullwidth_input.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -98,7 +98,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_fullwidth_input.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -133,7 +133,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-           'base_template': 'custom_password.html'
+           'base_template': 'custom_full_width_password.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -150,7 +150,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-           'base_template': 'custom_password.html'
+           'base_template': 'custom_full_width_password.html'
         },
         error_messages={
             "required": "This field is required.",
