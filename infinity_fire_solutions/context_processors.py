@@ -48,8 +48,8 @@ def has_view_permission(user, module_name):
     for permission in user_permissions.values():
         return permission.get('can_create_data') or permission.get('can_list_data') != 'none'
             
-    
-    return True  # If no appropriate permission found, return False
+    # If no appropriate permission found, return False
+    return False
 
 
 def generate_menu(request, menu_items):
