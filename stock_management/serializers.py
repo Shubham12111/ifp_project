@@ -92,6 +92,34 @@ class VendorSerializer(serializers.ModelSerializer):
             "base_template": 'custom_input.html'
         }
     )
+    class Meta:
+        model = Vendor
+        fields = ('first_name','last_name','email','phone_number','company')
+
+
+    def validate_first_name(self, value):
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("First Name should be at least 2 characters long.")
+
+        return value
+
+    def validate_last_name(self, value):
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid Last Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("Last Name should be at least 2 characters long.")
+
+        return value
+    
+
+
+
+class BillingDetailSerializer(serializers.ModelSerializer):
+
     vat_number = serializers.CharField(
         label='VAT Number',
         max_length=20,
@@ -114,9 +142,10 @@ class VendorSerializer(serializers.ModelSerializer):
             "base_template": 'custom_input.html'
         },
     )
-    tax_preference = serializers.CharField(
+    tax_preference = serializers.ChoiceField(
         label='Tax Preferences',
         choices= TAX_PREFERENCE_CHOICES,
+        required=False,
         style={
             'base_template': 'custom_select.html',
             'custom_class': 'col-6'
@@ -130,7 +159,7 @@ class VendorSerializer(serializers.ModelSerializer):
            "input_type": "text",
             "autocomplete": "off",
             "autofocus": False,
-            "base_template": 'custom_input.html'
+            
         },
     )
     country = serializers.PrimaryKeyRelatedField(
@@ -170,9 +199,10 @@ class VendorSerializer(serializers.ModelSerializer):
         validators=[validate_uk_postcode]
 
     )
-    vendor_status = serializers.CharField(
-        label='Customer Type',
+    vendor_status = serializers.ChoiceField(
+        label='Vendor Status',
         choices=VENDOR_STATUS_CHOICES,
+        required=False,
         style={
             'base_template': 'custom_select.html',
             'custom_class': 'col-6'
@@ -180,24 +210,32 @@ class VendorSerializer(serializers.ModelSerializer):
     )
         
     class Meta:
-        model = Vendor
-        fields = ('first_name','last_name','email','phone_number','company')
+        model = Vendor 
+        fields = ('vat_number','pan_number','tax_preference','post_code','address','country','town','county','vendor_status')
 
-    def validate_first_name(self, value):
-        if not re.match(r'^[a-zA-Z\s]+$', value):
-            raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
-
-        if len(value) < 2:
-            raise serializers.ValidationError("First Name should be at least 2 characters long.")
-
+    def validate_vat_number(self, value):
+        # Custom validation for VAT number format (United Kingdom VAT number)
+        if not re.match(r'^\d{9}$', value):
+            raise serializers.ValidationError("Invalid VAT number format. It should be a 9-digit number.")
+        return value
+    
+    def validate_pan_number(self, value):
+        # Custom validation for PAN number format (National Insurance Number in the UK)
+        if not re.match(r'^[A-Z]{2}\d{6}[A-Z]$', value):
+            raise serializers.ValidationError("Invalid PAN number format. It should consist of two letters, six digits, and a final letter (e.g., AB123456C).")
         return value
 
-    def validate_last_name(self, value):
-        if not re.match(r'^[a-zA-Z\s]+$', value):
-            raise serializers.ValidationError("Invalid Last Name. Only alphabets and spaces are allowed.")
 
-        if len(value) < 2:
-            raise serializers.ValidationError("Last Name should be at least 2 characters long.")
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
 
-        return value
+        # Check if the representation is empty (no records found)
+        if not any(representation.values()):
+            representation = {'message': 'No records found for this vendor.'}
+        else:
+            # Remove None values from the representation
+            representation = {key: value for key, value in representation.items() if value is not None}
+
+        return representation
+
     
