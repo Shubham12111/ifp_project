@@ -60,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'authentication.middleware.CheckAdminUserMiddleware',
+    'authentication.middleware.ForcePasswordChangeBackend',
 ]
 
 ROOT_URLCONF = 'infinity_fire_solutions.urls'
@@ -151,7 +152,7 @@ USE_TZ = True
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
 STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
-# STATIC_URL = '/static/'
+#STATIC_URL = '/static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 
@@ -184,7 +185,7 @@ LOGIN_URL = '/auth/login/'
 AWS_BUCKET_NAME = 'ifp-assets-dev'
 #supported file
 SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
-
+IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov']
 
 # Include data for English language translations
 CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']

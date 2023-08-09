@@ -24,6 +24,7 @@ from infinity_fire_solutions.permission import *
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
+from common_app.models import EmailNotificationTemplate
 
 class LoginView(APIView):
     """
@@ -72,6 +73,7 @@ class LoginView(APIView):
             if not user or user.is_superuser:
                 # User authentication failed or is a superuser
                 # Render the HTML template with error message
+
                 error_message = 'Login failed. The credentials provided are incorrect. Please verify your login information and try again.'
                 messages.error(request, error_message)
 
@@ -116,6 +118,7 @@ class LoginView(APIView):
                             status_code=status.HTTP_403_FORBIDDEN,
                             message="Login Failed"
                         )
+
 
         else:
             # Serializer data is invalid
@@ -186,16 +189,17 @@ class SignupView(APIView):
 
             user = serializer.save()
             user.set_password(serializer.validated_data["password"])
-            user_roles = UserRole.objects.filter(name="Contractor").first()
-            if user_roles:
-                user.roles = user_roles
+            user.enforce_password_change = True
+
             user.save()
 
             context = {
                 'user': user,
                 'site_url': get_site_url(request)
             }
+
             email = Email()  # Replace with your Email class instantiation
+
             email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to Infinity Fire Prevention Ltd - Your Journey Begins Here')
 
             # Respond with success message as needed
@@ -207,6 +211,18 @@ class SignupView(APIView):
                     status_code=status.HTTP_201_CREATED,
                     message="Registration complete! Log in now to explore and enjoy our platform. Welcome aboard!"
                     )
+
+            email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to  Infinity Fire Prevention Ltd - Your Journey Begins Here')
+            #check admin email
+            email_template = EmailNotificationTemplate.objects.filter(purpose = "new_user_registration")
+            if email_template:
+                email_template = email_template.first()
+                context = {'user':user}
+                email.send_mail(email_template.recipient, 'email_templates/admin_new_user_registration.html', context, email_template.subject)
+            # Redirect or respond with success message as needed
+            messages.success(request, "User registered successfully. Please login here.")
+            return redirect(reverse('login'))
+
         else:
             # Render the HTML template with invalid serializer data or return API response with validation errors
             if request.accepted_renderer.format == 'html':
@@ -489,4 +505,43 @@ class ChangePasswordView(APIView):
             else:
                 return render_html_response({'serializer': serializer}, self.template_name)
 
+
+
+
+class EnforceChangePasswordView(APIView):
+    
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    serializer_class = ChangePasswordSerializer
+    template_name = "enforce_password_change.html"
+
+    
+    def render_html_response(self, serializer):
+        """
+        Render HTML response using the provided serializer and template name.
+        """
+        return Response({'serializer': serializer}, template_name=self.template_name)
+
+    def get(self, request):
+        """
+        Handle GET request for login page.
+        """
+        # return redirect(reverse('dashboard'))
+        
+        serializer = self.serializer_class()
+        # Render the HTML template for login page
+
+        return self.render_html_response(serializer)
+
+    def post(self, request):
+        data = request.data
+        serializer = self.serializer_class(data=data, instance=request.user, context={'request': request})
+        if serializer.is_valid():
+            user = serializer.save()
+            user.enforce_password_change = True
+            user.save()
+            messages.success(request, f"Password updated successfully. Please use your new password for future logins.")
+            return redirect(reverse('dashboard'))
+
+        else:
+            return self.render_html_response(serializer)
 

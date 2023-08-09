@@ -36,7 +36,7 @@ display: inline-block;
               </div>
             </div>
             
-              {% if todo_list %}
+            {% if todo_list %}
             <div class="card-body p-3 pt-0 mt-4">
               <ul class="list-group list-group-flush" data-toggle="checklist">
                 {% for todo_data in todo_list %}
@@ -105,6 +105,44 @@ display: inline-block;
                 {% endfor %}
                
               </ul>
+              <div class="row mt-2">
+                <div class="col-lg-12 col-12 start-end">
+                 <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-start">
+                    {% if todo_list.has_previous %}
+                     <li class="page-item">
+                            <a class="page-link" href="?page={{ todo_list.previous_page_number }}">
+                                <i class="fa fa-angle-left"></i>
+                              
+                            </a>
+                        </li>
+                    {% else %}
+                        <!-- Render disabled or hidden previous navigation -->
+                    {% endif %}
+                    {% for page in todo_list.paginator.page_range %}
+                    
+                        <li class="page-item {% if todo_list.number == page %}active{% endif %}">
+                            <a class="page-link" href="?page={{ page }}">{{ page }}</a>
+                        </li>
+                    {% endfor %}
+
+                    {% if todo_list.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ todo_list.next_page_number }}">
+                                <i class="fa fa-angle-right"></i>
+                                
+                            </a>
+                        </li>
+                       
+                    {% else %}
+                        <!-- Render disabled or hidden next navigation -->
+                    {% endif %}
+                </ul>
+                </nav>
+
+                </div>
+              </div>
+              
             </div>
             {% else %}
             <h4 class="font-weight-bolder text-center  p-3 pt-0 mt-4">No records found</h4>
@@ -124,16 +162,6 @@ display: inline-block;
 
 <script>
 
-// // JavaScript code to handle automatic search
-// document.getElementById('searchField').addEventListener('input', function(event) {
-//   const searchValue = event.target.value;
-//   const currentUrl = new URL(window.location.href);
-//   currentUrl.searchParams.set('search', searchValue);
-//   window.location.href = currentUrl.toString(); // Redirect to the URL with search query
-//   localStorage.setItem('searchValue', searchValue); // Store search value in localStorage
-// });
-
-
  // JavaScript code to apply the filter on each field
  function applyFilter(filterName, filterValue) {
     // Handle date range filter
@@ -149,7 +177,7 @@ display: inline-block;
 
     // Update the button text with the selected status value
     document.getElementById(`${filterName}Dropdown`).textContent = `${filterValue.replace('_', ' to ')}`; // Update button text with human-readable format
-    localStorage.setItem(filterName, filterValue); // Store filter value in localStorage
+    localStorage.setItem(filterName, filterValue.replace('_', ' to ')); // Store filter value in localStorage
   }
 
 // JavaScript code to clear single filter on onclick event
