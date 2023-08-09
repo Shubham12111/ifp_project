@@ -73,13 +73,13 @@ class SignupSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         label=('First Name '),
         required=True,
-        max_length=100,
+        max_length=50,
         style={
             "input_type": "text",
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_fullwidth_input.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -92,13 +92,13 @@ class SignupSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(
         label=('Last Name '),
         required=True,
-        max_length=100,
+        max_length=50,
         style={
             "input_type": "text",
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_fullwidth_input.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -133,7 +133,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-           'base_template': 'custom_password.html'
+           'base_template': 'custom_full_width_password.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -150,7 +150,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-           'base_template': 'custom_password.html'
+           'base_template': 'custom_full_width_password.html'
         },
         error_messages={
             "required": "This field is required.",

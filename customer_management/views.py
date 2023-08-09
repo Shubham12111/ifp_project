@@ -4,7 +4,7 @@ from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from .models import *
-from .serializers import CustomerSerializer , BillingAddressSerializer#, ConversationSerializer, ConversationViewSerializer
+from .serializers import *
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
 from django.contrib import messages
 from rest_framework import generics, status, filters
@@ -17,7 +17,10 @@ from django.core.serializers import serialize
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.email import *
 from contact.models import Contact
+from drf_yasg.utils import swagger_auto_schema
+from infinity_fire_solutions.utils import docs_schema_response_new
 
+from django.contrib.auth.hashers import make_password
 
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -25,6 +28,43 @@ def generate_strong_password(length=12):
     return password
 
 
+def create_customer(customer, request):
+    """
+    Create a new customer, assign role, generate password, send email, and save changes.
+
+    Args:
+        customer (Customer): The customer instance to be created.
+        request (HttpRequest): The request object containing user information.
+
+    Returns:
+        None
+    """
+    # Check if the 'Customer' role exists, otherwise create it
+    user_role, created = UserRole.objects.get_or_create(name="Customer")
+
+    # Assign the 'Customer' role and creator to the customer
+    customer.roles = user_role
+    customer.created_by = request.user
+    customer.save()
+
+    # Generate a strong password for the customer
+    strong_password = generate_strong_password()  # Implement your generate_strong_password function
+    customer.password = make_password(strong_password)
+    customer.save()
+
+    # Get the site URL for the email context
+    site_url = get_site_url(request)  # Implement your get_site_url function
+
+    # Prepare context for the email template
+    context = {
+        'user': customer,
+        'site_url': site_url,
+        'user_password': strong_password
+    }
+
+    # Send an email with the new account password
+    email = Email()  # Instantiate your Email class
+    email.send_mail(customer.email, 'email_templates/customer_password.html', context, 'Your New Account Password')
 
 class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -38,6 +78,16 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'customer_list.html'
     ordering_fields = ['created_at'] 
 
+    common_get_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message = "Data retrieved",
+            )
+    }
+    
+    @swagger_auto_schema(operation_id='Customer Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
@@ -75,6 +125,7 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer.html'
 
+    @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         """
         Handle GET request to display a form for updating a customer.
@@ -89,13 +140,10 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
   
-
-        
         contact_id = kwargs.get('contact_id')
         if contact_id:
             contact = Contact.objects.get(pk=contact_id)
             serializer = self.serializer_class(contact)  # Serialize the contact data
-            print(serializer)
         else:
             serializer = self.serializer_class()  # Create an empty serializer
 
@@ -105,7 +153,24 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
                                 message="GET Method Not Alloweded",)
-        
+
+    common_post_response = {
+        status.HTTP_201_CREATED: 
+            docs_schema_response_new(
+                status_code=status.HTTP_201_CREATED,
+                serializer_class=serializer_class,
+                message = "Congratulations! your customer has been added successfully.",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "We apologize for the inconvenience, but please review the below information.",
+                ),
+
+    } 
+
+    @swagger_auto_schema(operation_id='Customer Add', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to add or update a customer.
@@ -119,32 +184,8 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if serializer.is_valid():
             user = serializer.save()
             user.save()
-            #check the User Role 
-            user_role = UserRole.objects.filter(name="Customer").first()
-            if user_role:
-                user_role = user_role
-            else:
-                user_role = UserRole.objects.create(name="Customer")
             
-            user.roles = user_role
-            user.created_by = request.user 
-            user.save()
-            
-            # Generate a strong password
-            strong_password = generate_strong_password()
-            user.set_password(strong_password)
-            user.save()
-                    
-            site_url = get_site_url(request)
-        
-            context = {
-                'user': user,
-                'site_url': site_url,
-                'user_password':strong_password
-            }
-            email = Email()  # Replace with your Email class instantiation
-            email.send_mail(user.email, 'email_templates/customer_password.html', context, 'Your New Account Password')
-            
+            create_customer(user, request)
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
                 return redirect(reverse('customer_list'))
@@ -184,8 +225,6 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer.html'
-
-
     
     def get_queryset(self):
         """
@@ -214,7 +253,7 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
         return queryset
 
-    
+    @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing Conatct object.
         if request.accepted_renderer.format == 'html':
@@ -227,6 +266,31 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_list'))
     
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your Customer has been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "You are not authorized to perform this action",
+                ),
+
+    }
+
+    @swagger_auto_schema(auto_schema=None) 
+    def put(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(auto_schema=None) 
+    def patch(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(operation_id='Customer Edit', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
         Handle POST request to update a customer instance.
@@ -285,6 +349,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
     serializer_class = BillingAddressSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer_billing_address.html'
+    swagger_schema = None
 
     def get_billing_address(self):
         billing_address_list = BillingAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'))
@@ -321,7 +386,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         billing_address = BillingAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
         return billing_address
-        
+
     def get(self, request, *args, **kwargs):
         """
         Handle GET request to display a form for updating a customer.
@@ -352,7 +417,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
                                 message="GET Method Not Alloweded",)
-            
+
     def post(self, request, *args, **kwargs):
         data = request.data
         company_instance = self.get_queryset()
@@ -404,7 +469,8 @@ class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.Destr
     View to remove a BillingAddress associated with a Customer.
     """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    
+    swagger_schema = None
+
     def get_queryset(self):
         """
         Get the queryset of contacts filtered by the current user.
@@ -438,7 +504,7 @@ class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.Destr
             messages.error(request,error_message)
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message=error_message, )
-    
+
 class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View for deleteing .
@@ -448,6 +514,23 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     # permission_classes = [IsAuthenticated]
     template_name = 'customer.html'
+    
+    common_delete_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Customer has been deleted successfully!",
+                ),
+        status.HTTP_404_NOT_FOUND: 
+            docs_schema_response_new(
+                status_code=status.HTTP_404_NOT_FOUND,
+                serializer_class=serializer_class,
+                message = "Customer not found.",
+                ),
+
+    }
+    @swagger_auto_schema(operation_id='Customer Delete', responses={**common_delete_response})
     
     def delete(self, request, *args, **kwargs):
         """
@@ -464,7 +547,7 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
-            "self": Q(user_id=request.user ),
+            "self": Q(created_by=request.user ),
             "all": Q(),  # An empty Q() object returns all data
         }
 
@@ -482,11 +565,9 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your Customer has been deleted successfully!", )
         else:
-            messages.error(request, "Customer not found")
+            messages.error(request, "Contact not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Customer not found", )
-       
-
+                                        message="Contact not found OR You are not authorized to perform this action.d", )
 
 class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     """
@@ -495,6 +576,8 @@ class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     """
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
@@ -528,3 +611,53 @@ class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         return create_api_response(status_code=status.HTTP_200_OK,
                                             message="Data retrieved",
                                             data=data)
+
+
+class ConvertToCustomerView(CustomAuthenticationMixin,generics.CreateAPIView):
+    """
+    View to get the listing of all contacts.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = ContactCustomerSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        contact_id = kwargs.get('contact_id')
+        if contact_id:
+            contact = Contact.objects.get(pk=contact_id)
+            
+            data = {
+                'email': contact.email,
+                'first_name': contact.first_name,
+                'last_name': contact.last_name,
+                
+                
+            }
+            
+            serializer = self.serializer_class(data=data)  # Serialize the contact data
+            # Check if the serialized data is valid
+            if serializer.is_valid():
+                customer = serializer.save()  # Save the serialized data and get the customer instance
+                create_customer(customer, request)  # Create customer, assign role, generate password, and send email
+
+                # Update customer details if available in the original contact data
+                if contact.company_name:
+                    customer.company_name = contact.company_name
+                if contact.phone_number:
+                    customer.phone_number = contact.phone_number
+
+                customer.save()  # Save the updated customer details
+                messages.success(request, 'The contact has been successfully converted into a customer.')
+                return redirect(reverse('customer_edit', kwargs={'customer_id': customer.id}))
+            else:
+                # If serialized data is invalid, display error messages for each field
+                for field, errors in serializer.errors.items():
+                    error_message = f"{field.capitalize()}: {', '.join(errors)}"
+                    messages.error(request, error_message)
+
+            # Redirect back to the contact list page
+            return redirect(reverse('contact_list'))

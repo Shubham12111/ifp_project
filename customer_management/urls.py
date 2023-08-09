@@ -12,7 +12,7 @@ urlpatterns = [
     path('detail/<int:customer_id>/', CustomerDetailView.as_view(), name='customer_detail'),
 
     path('delete/<int:pk>/',CustomerDeleteView.as_view(),name='delete_customer'),
-    path('convert_contact/<int:contact_id>/', CustomerAddView.as_view(), name='convert_to_custmoer'),
+    path('convert_contact/<int:contact_id>/', ConvertToCustomerView.as_view(), name='convert_to_custmoer'),
 
 
     path('billing_address/<int:customer_id>/', CustomerBillingAddressView.as_view(), name='customer_billing_address'),
