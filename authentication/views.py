@@ -21,7 +21,7 @@ from django.shortcuts import get_object_or_404
 import hashlib
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-
+from common_app.models import EmailNotificationTemplate
 class LoginView(APIView):
     """
     API view for user login.
