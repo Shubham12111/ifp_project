@@ -1,7 +1,6 @@
 from django.db import models
 from ckeditor.fields import RichTextField
 from cities_light.models import City, Country, Region
-
 from authentication.models import User
 
 
@@ -26,6 +25,10 @@ PRODUCT_STATUS_CHOICES = (
         ('approved', 'Approved'),
         ('inactive', 'Inactive'),
 )
+ITEM_TYPE_CHOICES = (
+        ('item', 'Item'),
+        ('sor', 'SOR'),
+    )
 
 # Create your models here.
 class Vendor(models.Model):
@@ -71,6 +74,7 @@ class Item(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     sku = models.CharField(max_length=50)
     quantity_per_box = models.DecimalField(max_digits=10, default=1.0, decimal_places=2)
+    item_type = models.CharField(max_length=10, choices=ITEM_TYPE_CHOICES, default='item')
     status = models.CharField(max_length=50, choices=PRODUCT_STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
