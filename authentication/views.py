@@ -21,7 +21,6 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from infinity_fire_solutions.response_schemas import create_api_response, render_html_response
 from infinity_fire_solutions.permission import *
-
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
@@ -137,7 +136,7 @@ class SignupView(APIView):
     serializer_class = SignupSerializer
     template_name = "signup.html"
 
-
+    @swagger_auto_schema(auto_schema=None)
     def get(self, request):
         """
         Handle GET request for signup page.
@@ -149,6 +148,17 @@ class SignupView(APIView):
 
         # Render the HTML template for signup page
         return render_html_response({'serializer': serializer}, self.template_name)
+
+    common_post_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message = "Registration complete! Log in now to explore and enjoy our platform. Welcome aboard!",
+            )
+    }
+    
+    @swagger_auto_schema(operation_id='Signup', responses={**common_post_response})
 
     def post(self, request):
         """
@@ -185,17 +195,17 @@ class SignupView(APIView):
                 'user': user,
                 'site_url': get_site_url(request)
             }
-            # email = Email()  # Replace with your Email class instantiation
-            # email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to Infinity Fire Prevention Ltd - Your Journey Begins Here')
+            email = Email()  # Replace with your Email class instantiation
+            email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to Infinity Fire Prevention Ltd - Your Journey Begins Here')
 
             # Respond with success message as needed
             if request.accepted_renderer.format == 'html':
-                messages.success(request, "User registered successfully. Please login here.")
+                messages.success(request, "Registration complete! Log in now to explore and enjoy our platform. Welcome aboard!")
                 return redirect(reverse('login'))
             else:
                 return create_api_response(
                     status_code=status.HTTP_201_CREATED,
-                    message="User registered successfully. Please login."
+                    message="Registration complete! Log in now to explore and enjoy our platform. Welcome aboard!"
                     )
         else:
             # Render the HTML template with invalid serializer data or return API response with validation errors
@@ -215,11 +225,18 @@ class LogoutView(APIView):
     View for user logout.
     """
 
-    swagger_schema = None
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     authentication_classes = [SessionAuthentication, TokenAuthentication]
         
-    swagger_schema = None
+    common_post_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            message = "User logged out successfully",
+            )
+    }
+    
+    @swagger_auto_schema(operation_id='Logout', responses={**common_post_response})
 
     def get(self, request):
         # self.handle_unauthenticated()
