@@ -88,10 +88,12 @@ class TodoAddSerializer(serializers.ModelSerializer):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        user = self.context['request'].user
-        if user.is_authenticated:
-            self.fields['assigned_to'].queryset = User.objects.filter(is_active=True)
-
+        try:
+            user = self.context['request'].user
+            if user.is_authenticated:
+                self.fields['assigned_to'].queryset = User.objects.filter(is_active=True)
+        except Exception as e:
+            pass
 
     def validate(self, data):
         start_date = data.get('start_date')

@@ -20,7 +20,7 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
     serializer_class = SiteAddressSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer_site_address.html'
-
+    swagger_schema = None
     def get_site_address(self):
         site_address_list = SiteAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'))
     
@@ -135,15 +135,12 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
             # If the company instance does not exist, return an error response.
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customer_list'))
-
-
-
 class CustomerRemoveSiteAddressView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View to remove a SiteAddress associated with a Customer.
     """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    
+    swagger_schema = None
     def get_queryset(self):
         """
         Get the queryset of contacts filtered by the current user.
