@@ -198,9 +198,18 @@ class SignupView(APIView):
                 'site_url': get_site_url(request)
             }
 
-            email = Email()  # Replace with your Email class instantiation
-
+            # Replace with your Email class instantiation
+            email = Email()
             email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to Infinity Fire Prevention Ltd - Your Journey Begins Here')
+
+            
+            email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to  Infinity Fire Prevention Ltd - Your Journey Begins Here')
+            #check admin email
+            email_template = EmailNotificationTemplate.objects.filter(purpose = "new_user_registration")
+            if email_template:
+                email_template = email_template.first()
+                context = {'user':user}
+                email.send_mail(email_template.recipient, 'email_templates/admin_new_user_registration.html', context, email_template.subject)
 
             # Respond with success message as needed
             if request.accepted_renderer.format == 'html':
@@ -211,17 +220,6 @@ class SignupView(APIView):
                     status_code=status.HTTP_201_CREATED,
                     message="Registration complete! Log in now to explore and enjoy our platform. Welcome aboard!"
                     )
-
-            email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to  Infinity Fire Prevention Ltd - Your Journey Begins Here')
-            #check admin email
-            email_template = EmailNotificationTemplate.objects.filter(purpose = "new_user_registration")
-            if email_template:
-                email_template = email_template.first()
-                context = {'user':user}
-                email.send_mail(email_template.recipient, 'email_templates/admin_new_user_registration.html', context, email_template.subject)
-            # Redirect or respond with success message as needed
-            messages.success(request, "User registered successfully. Please login here.")
-            return redirect(reverse('login'))
 
         else:
             # Render the HTML template with invalid serializer data or return API response with validation errors
