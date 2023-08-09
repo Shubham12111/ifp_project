@@ -41,8 +41,6 @@ class UserRole(models.Model):
 
     # CharField for the 'description' field
     description = RichTextField()
-
-    # BooleanField for managing permissions
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True,null=True)
 

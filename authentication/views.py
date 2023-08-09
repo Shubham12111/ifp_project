@@ -21,7 +21,7 @@ from django.shortcuts import get_object_or_404
 import hashlib
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-
+from common_app.models import EmailNotificationTemplate
 class LoginView(APIView):
     """
     API view for user login.
@@ -128,10 +128,15 @@ class SignupView(APIView):
             'user': user,
             'site_url':get_site_url(request)
             }
+
             email = Email()  # Replace with your Email class instantiation
             email.send_mail(user.email, 'email_templates/welcome.html', context, 'Welcome to  Infinity Fire Prevention Ltd - Your Journey Begins Here')
-            #check the User Role
-            
+            #check admin email
+            email_template = EmailNotificationTemplate.objects.filter(purpose = "new_user_registration")
+            if email_template:
+                email_template = email_template.first()
+                context = {'user':user}
+                email.send_mail(email_template.recipient, 'email_templates/admin_new_user_registration.html', context, email_template.subject)
             # Redirect or respond with success message as needed
             messages.success(request, "User registered successfully. Please login here.")
             return redirect(reverse('login'))
