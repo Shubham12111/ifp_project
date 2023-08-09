@@ -18,13 +18,25 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.static import static
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+from rest_framework import permissions
+
+# swagger settings
+schema_view = get_schema_view(
+   openapi.Info(
+      title="Infinity Fire solution APIs",
+      default_version='v0.2.0',
+      description="Welcome to the Infinity Fire Solution API Documentation, offering effortless integration with our platform. </br><b>Please note that certain modules currently do not have associated APIs.</b> </br>These modules include:</br></br>1. Contact </br> </br>2. Todo Comments </br></br>3. Customer Billing Address </br></br>4. Customer Site Address  </br></br>5. Customer Contact Person  </br></br>6. Requriment Defect",
+   ),
+   public=True,
+   permission_classes=[permissions.AllowAny]
+)
 
 # admin Customization
 admin.site.site_header = "Infinity Fire Solutions Admin"
 admin.site.site_title = "Infinity Fire Solutions"
 admin.site.index_title = "Infinity Fire Solutions Management"
-
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,6 +44,12 @@ urlpatterns = [
     path('contact/',include('contact.urls')),
     path('todo/',include('todo.urls')),
     path('',include('common_app.urls')),
+    path('customer/',include('customer_management.urls')),
+    path('requirement/',include('requirement_management.urls')),
+
+    #swagger links for the api documentation
+    path('api/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
 
 

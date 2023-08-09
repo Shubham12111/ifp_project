@@ -24,7 +24,6 @@
     z-index: 1;
 }
 
-
 .sidebar-open {
     transform: translateX(0);
 }
@@ -37,4 +36,30 @@
     background-image : linear-gradient(310deg, #5d1a14 0%, #f64936 100%) !important;
 }
 
-  
+/* Style for the table header text */
+table.table.table-flush thead {
+color: #000; /* Light text color for header */
+}
+
+/* Style for the table body text */
+table.table.table-flush tbody {
+color: #000; /* Light text color for body */
+}
+/* Style for the table body text */
+.dataTable-table th a {
+color: #000; /* Light text color for body */
+}
+
+li.nav-item.active a.nav-link {
+    background: #e9ecef !important;
+    color: #000;
+}
+
+/* Hide sorting icon for the last column where sorting is disabled */
+th.custom-last-column {
+pointer-events: none;
+}
+th.custom-last-column a.dataTable-sorter::before,
+th.custom-last-column a.dataTable-sorter::after {
+content: none;
+}

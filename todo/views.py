@@ -16,6 +16,10 @@ from django.db.models import Q
 from django.http import  HttpResponse
 from authentication.models import *
 from datetime import datetime
+from drf_yasg.utils import swagger_auto_schema
+from infinity_fire_solutions.utils import docs_schema_response_new
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
@@ -29,6 +33,21 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
 
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 10 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
 
     def get_queryset(self):
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -77,8 +96,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                     base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
 
         # Sort the queryset by 'created_at' in descending order
-        base_queryset = base_queryset.order_by('-created_at')
-
+        base_queryset = self.get_paginated_queryset(base_queryset.order_by('-created_at'))
         return base_queryset
     
     def get_module_list(self):
@@ -93,7 +111,17 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         return User.objects.values_list('email', flat=True).distinct()
     
-    def list(self, request, *args, **kwargs):
+    common_list_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message = "Todo data retrieved successfully.",
+            )
+    }
+    
+    @swagger_auto_schema(operation_id='Todo Listing', responses={**common_list_response})
+    def get(self, request, *args, **kwargs):
         """
         List view for TODO items.
 
@@ -142,7 +170,7 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     template_name = 'todo_form.html'
     serializer_class = TodoAddSerializer
 
-   
+    @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasCreateDataPermission, 'add'
@@ -156,7 +184,23 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             # If the client accepts HTML, render the template
             context = {'serializer':serializer}
             return render_html_response(context,self.template_name)
-     
+    
+    common_post_response = {
+        status.HTTP_201_CREATED: 
+            docs_schema_response_new(
+                status_code=status.HTTP_201_CREATED,
+                serializer_class=TodoAddSerializer,
+                message = "Your TODO has been saved successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "Something went wrong!",
+                )
+        } 
+
+    @swagger_auto_schema(operation_id='Todo Add', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"todo", HasCreateDataPermission, 'add'
@@ -192,7 +236,7 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
 class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
-    API view for todo a contact.
+    API view for todo a todo.
 
     This view handles both HTML and API requests for updating a todo instance.
     If the todo instance exists, it will be updated with the provided data.
@@ -235,7 +279,7 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         
         return queryset
 
-    
+    @swagger_auto_schema(auto_schema=None)     
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing ToDo object.
         if request.accepted_renderer.format == 'html':
@@ -248,9 +292,35 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('todo_list'))
     
+    
+    @swagger_auto_schema(auto_schema=None) 
+    def put(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(auto_schema=None) 
+    def patch(self, request, *args, **kwargs):
+        pass
+    
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your TODO has been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "You are not authorized to perform this action",
+                ),
+
+    }
+    
+    @swagger_auto_schema(operation_id='Todo Edit', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request to update a contact instance.
+        Handle POST request to update a todo instance.
 
         Args:
             request (rest_framework.request.Request): The HTTP request object.
@@ -259,14 +329,14 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
         Returns:
             rest_framework.response.Response: HTTP response object.
-                If successful, the contact is updated, and the appropriate response is returned.
+                If successful, the todo is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
         
         data = request.data
         instance = self.get_queryset()
         if instance and instance.status != 'completed':
-            # If the contact instance exists, initialize the serializer with instance and provided data.
+            # If the todo instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated todo instance.
@@ -305,6 +375,22 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     def get_model_name(self):
         return self.serializer_class.Meta.model.__name__
     
+    common_delete_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Your TODO has been deleted successfully!",
+                ),
+        status.HTTP_404_NOT_FOUND: 
+            docs_schema_response_new(
+                status_code=status.HTTP_404_NOT_FOUND,
+                serializer_class=serializer_class,
+                message = "Todo not found OR You are not authorized to perform this action.",
+                ),
+
+    }
+    @swagger_auto_schema(operation_id='Todo Delete', responses={**common_delete_response})
     def delete(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self,"todo", HasDeleteDataPermission, 'delete'
@@ -331,7 +417,7 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
                                         message="Your TODO has been deleted successfully!", )
 
         else:
-            messages.error(request, "Contact not found")
+            messages.error(request, "Todo not found OR You are not authorized to perform this action")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND)
 
 class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
@@ -339,7 +425,8 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = CommentSerializer
     template_name = 'todo_view.html'
-    
+    swagger_schema = None
+
     def get_queryset(self):
         """
         Get the queryset for listing TODO items.
@@ -397,7 +484,7 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
 
         data = request.data
         if todo_data:
-            # If a primary key is provided, it means we are updating an existing contact
+            # If a primary key is provided, it means we are updating an existing todo
             comment_id = self.kwargs.get('comment_id')
             if comment_id:
                 comment_instance =  Comment.objects.filter(todo_id=todo_data,pk=comment_id,user_id=request.user).first()
@@ -433,6 +520,8 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
                 return Response(context, template_name=self.template_name)
 
 class ToDoDeleteCommentView(generics.DestroyAPIView):
+    swagger_schema = None
+
     def get_app_name(self):
         return apps.get_containing_app_config(self.__module__).name
     

@@ -1,0 +1,122 @@
+{% load rest_framework %}
+{% load static %}
+<div class="form-group {% if style.custom_class %} {{style.custom_class}} {% else %}col-6  {% endif %}">
+  {% if field.label %}
+    <label {% if style.hide_label %}class="sr-only"{% endif %}>
+      {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
+    </label>
+  {% endif %}
+
+
+    <select class="form-control" name="{{ field.name }}" id="choices-{{ field.name }}">
+      {% if field.allow_null or field.allow_blank %}
+        <option value="" {% if not field.value %}selected{% endif %}>--------</option>
+      {% endif %}
+      {% for select in field.iter_options %}
+          {% if select.start_option_group %}
+            <optgroup label="{{ select.label }}">
+          {% elif select.end_option_group %}
+            </optgroup>
+          {% else %}
+            <option value="{{ select.value }}" {% if select.value|as_string == field.value|as_string %}selected{% endif %} {% if select.disabled %}disabled{% endif %}>{{ select.display_text }}</option>
+          {% endif %}
+      {% endfor %}
+    </select>
+       
+  {% if field.errors %}
+    {% for error in field.errors %}
+      <span class="help-block">{{ error }}</span>
+    {% endfor %}
+  {% endif %}
+
+  {% if field.help_text %}
+    <span class="help-block">{{ field.help_text|safe }}</span>
+  {% endif %}
+</div>
+
+<div class="customer-data" id="customer-details-card" style="display: none;">
+  <div class="d-flex justify-content-between align-items-center customer-body">
+    </div>
+</div>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const selectElement = document.getElementById('choices-customer_id');
+    const customerDetailsCard = document.getElementById('customer-details-card');
+  // Function to fetch and display customer details
+    function displayCustomerDetails(customerId) {
+        fetch(`/customer/detail/${customerId}/`)
+            .then(response => response.json())
+            .then(data => {
+                 const customerDetails = `
+                    <ul class="list-group col-12">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                          <div class="d-flex flex-column">
+                          <span class="mb-2 text-md">Customer Name: <span class="text-dark font-weight-bold ms-2">${data.data.first_name} ${data.data.last_name}</span></span>
+                          <span class="mb-2 text-md">Company Name: <span class="text-dark font-weight-bold ms-2">${data.data.company_name}</span></span>
+                          <span class="mb-2 text-md">Email Address: <span class="text-dark ms-2 font-weight-bold">${data.data.email}</span></span>
+                          </div>
+                        </li>
+                      </ul>`;
+                const siteDropdown = data.data.site_address.map(site => `<option value="${site.id}">${site.site_name}</option>`).join('');
+                customerDetailsCard.querySelector('.customer-body').innerHTML = customerDetails;
+                // Show the customer details card
+                customerDetailsCard.style.display = 'block';
+                // Generate the siteDropdown options
+                // Get a reference to the <select> element
+                const selectElement = document.getElementById('choices-site_address'); // Replace 'your-select-element-id' with the actual ID
+               
+                // Clear existing options and selected choices
+                selectElement.innerHTML = '';
+                  // Append the new options
+                selectElement.insertAdjacentHTML('beforeend', siteDropdown);
+                
+              })
+          }
+
+    // Event listener for select element change
+    selectElement.addEventListener('change', function() {
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        if (selectedOption.value !== '') {
+            const customerId = selectedOption.value;
+            displayCustomerDetails(customerId);
+        } else {
+            customerDetailsCard.style.display = 'none';
+        }
+    });
+
+    // Trigger the 'change' event if preselected value exists
+    if (selectElement.value !== '') {
+        selectElement.dispatchEvent(new Event('change'));
+    }
+});
+
+ function initializeChoices(fieldId) {
+    var element = document.getElementById(fieldId);
+    if (element) {
+      const example = new Choices(element, {});
+    }
+  }
+  initializeChoices('choices-{{ field.name }}');
+  
+  var choicesTags = document.getElementById('choices-{{ field.name }}');
+  if (choicesTags) {
+    var color = choicesTags.dataset.color;
+    const example = new Choices(choicesTags, {
+      delimiter: ',',
+      editItems: true,
+      
+      maxItemCount: 5,
+      removeItemButton: true,
+      addItems: true,
+      classNames: {
+        item: 'badge rounded-pill choices-' + color + ' me-2'
+      },
+      noResultsText: 'No records found',
+      noChoicesText: 'No records found',
+      loadingText: 'Loading...',
+    });
+  }
+</script>

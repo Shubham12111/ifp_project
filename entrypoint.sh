@@ -1,8 +1,8 @@
 #!/bin/bash
 echo "[+] ------ Apply database migrations ------ [+]"
 
-python3 manage.py migrate
-
+# python3 manage.py makemigrations --merge --no-input 
+python3 manage.py migrate 
 # echo "[+] ------ Populating Cities Light Data ------ [+]"
 # python3 manage.py cities_light
 

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} Customer Site Address {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container-fluid my-3 py-3">
+  <div class="row mt-4">
+    {% include 'customer_management/customer_actions.html' %}
+    <div class="col-lg-9 mt-lg-0">
+      {% include 'components/alert.html' %}
+      {% include 'customer_management/customer_info.html' %}
+        <!-- Card Basic Info -->
+        <div class="card" id="basic-info">
+            <div class="card-header">
+              <h5>Site Address </h5>
+            </div>
+            <div class="card-body pt-0">
+                <form role="form"  method="POST" autocomplete="off" >
+                    <div class='row'>
+                        {% csrf_token %}
+                        {% render_form serializer %}
+                    </div>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0">Save</button>
+
+                </form>
+            </div>
+        </div>
+        <div class="card mt-4" id="basic-info">
+            <table class="table table-flush text-dark" id="site-address-list">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Site Name</th>
+                        <th>Address</th>
+                        <th>Town</th>
+                        <th>County</th>
+                        <th>Country</th>
+                        <th>Post Code</th>
+                        <th class="custom-last-column">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="ml-4">
+                    {% for site_address in site_address_list %}
+                    <tr>
+                        <td>{{ site_address.site_name|default:''|truncatechars:20 }}</td>
+                        <td>{{ site_address.address|default:''|truncatechars:20 }}</td>
+                        <td>{{ site_address.town.name|default:'' }}</td>
+                        <td>{{ site_address.county.name|default:'' }}</td>
+                        <td>{{ site_address.country|default:'' }}<br>
+                        <td> {{ site_address.post_code|default:'' }}<br>
+                           
+                            
+                        </td>
+                        <td> 
+                            <a href="{% url 'customer_site_address_edit' customer_instance.id site_address.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
+                                <i class="fas fa-edit text-secondary"></i>
+                            </a>
+                            <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" 
+                            onclick="CustomconfirmDelete({{customer_instance.id}}{{site_address.id}}, 'Are you sure you want to delete this site address??','The site address has been deleted successfully.','{% url 'customer_site_address_delete' customer_instance.id site_address.id %}')">
+                                <i class="fas fa-trash text-secondary"></i>
+
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+       
+
+        
+    
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_country.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+  if (document.getElementById('site-address-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#site-address-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 10
+    });
+
+  };
+</script>
+{% endblock %}

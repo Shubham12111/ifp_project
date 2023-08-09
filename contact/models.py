@@ -21,13 +21,13 @@ class ContactType(models.Model):
 
 class Contact(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    first_name = models.CharField(max_length=30,null=True)
-    last_name = models.CharField(max_length=30,null=True)
+    first_name = models.CharField(max_length=50,null=True)
+    last_name = models.CharField(max_length=50,null=True)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=20)
     contact_type = models.ForeignKey(ContactType, on_delete=models.CASCADE)
     job_title = models.CharField(max_length=255, null=True, blank=True)
-    company = models.CharField(max_length=255,null=True, blank=True)
+    company_name = models.CharField(max_length=255,null=True, blank=True)
     address = models.CharField(max_length=255 , null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
     town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
