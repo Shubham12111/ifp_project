@@ -48,8 +48,8 @@
               <tbody class="ml-4"> 
                 {% for customer in customers %}
                 <tr>
-                  <td >{{customer.first_name|default:''}}</td>
-                  <td >{{customer.last_name|default:''}}</td>
+                  <td >{{customer.first_name|default:''|truncatechars:20}}</td>
+                  <td >{{customer.last_name|default:''|truncatechars:20}}</td>
                   <td >{{customer.company_name|truncatechars:20}}</td>
                   <td >{{customer.email}}</td>
                   <td >{% if customer.phone_number %}{{customer.phone_number}}{% endif %}</td>

@@ -8,6 +8,89 @@ from rest_framework.validators import UniqueValidator
 from .models import *
 import re
 
+
+class ContactCustomerSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(
+        label=('First Name '),
+        required=True,
+        max_length=50,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "First Name is required.",
+            "invalid": "First Name can only contain characters.",
+
+        },
+        validators=[validate_first_name] 
+        
+    )
+    
+    last_name = serializers.CharField(
+        label=('Last Name '),
+        required=True,
+        max_length=50,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Last Name is required.",
+            "invalid": "Last Name can only contain characters.",
+        },
+        validators=[validate_last_name] 
+    )
+    
+    email = serializers.EmailField(
+        label=('Email '),
+        validators=[UniqueValidator(queryset=User.objects.all(), message="Email already exists. Please use a different email.")],
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "email",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Email is required.",
+        },
+    )
+    
+    phone_number = serializers.CharField(
+        label='Phone Number',
+        max_length=14,
+        min_length=10,
+        required=False,
+        style={
+            'base_template': 'custom_input.html'
+        },
+        validators=[validate_phone_number] 
+    )
+    company_name = serializers.CharField(
+        label=('Company Name'),
+        max_length=100,
+        min_length=3,
+        required=False,
+        
+    )
+  
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email','company_name','phone_number')
+  
+  
 class CustomerSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
         label=('First Name '),

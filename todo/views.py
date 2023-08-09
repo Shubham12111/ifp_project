@@ -34,7 +34,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = TodoListSerializer
 
     def get_paginated_queryset(self, base_queryset):
-        items_per_page = 1 
+        items_per_page = 10 
         paginator = Paginator(base_queryset, items_per_page)
         page_number = self.request.GET.get('page')
         

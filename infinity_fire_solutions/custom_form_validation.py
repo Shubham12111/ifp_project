@@ -107,9 +107,9 @@ def validate_company_name(value):
         raise serializers.ValidationError("Company name cannot consist of only special characters.")
 
     # Check if the company name contains repeating characters
-    if re.search(r'(.)\1{2,}', value):
+    if re.search(r'([^a-zA-Z0-9])\1{2,}', value):
         raise serializers.ValidationError("Company name cannot contain repeating special characters.")
-
+    
     return value
 
 def no_spaces_or_tabs_validator(value):
