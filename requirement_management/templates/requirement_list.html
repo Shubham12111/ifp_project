@@ -47,10 +47,10 @@
               <tbody class="ml-4"> 
                 {% for requirement in requirements %}
                 <tr>
-                   <td>{{requirement.customer_id.first_name}} {{requirement.customer_id.last_name}}<br>
+                   <td>{{requirement.customer_id.first_name|default:''|truncatechars:20}} {{requirement.customer_id.last_name|default:''|truncatechars:20}}<br>
                     <span class="text-sm text-muted">{{requirement.customer_id.email}} </span>
                    </td>
-                   <td >{{requirement.quality_surveyor.first_name}} {{requirement.quality_surveyor.last_name}}<br>
+                   <td >{{requirement.quality_surveyor.first_name|default:''|truncatechars:20}} {{requirement.quality_surveyor.last_name|default:''|truncatechars:20}}<br>
                     <span class="text-sm text-muted">{{requirement.quality_surveyor.email}} </span>
                    </td>
                   <td >{{requirement.UPRN}}</td>
