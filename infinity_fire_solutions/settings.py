@@ -183,7 +183,7 @@ AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = '/auth/login/'
 
 #AWS
-AWS_BUCKET_NAME = 'ifp-assets-dev'
+AWS_BUCKET_NAME = 'ifp-assets-beta'
 #supported file
 SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
 IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov']
