@@ -26,8 +26,8 @@ from rest_framework import permissions
 schema_view = get_schema_view(
    openapi.Info(
       title="Infinity Fire solution APIs",
-      default_version='v0.1.0',
-      description="Welcome to the Infinity Fire Solution API Documentation, offering effortless integration with our platform. </br><b>Please note that certain modules currently do not have associated APIs.</b> </br>These modules include:</br></br>1. Authentication </br> </br>2. Contact Conversation </br></br>3. Todo Comments",
+      default_version='v0.2.0',
+      description="Welcome to the Infinity Fire Solution API Documentation, offering effortless integration with our platform. </br><b>Please note that certain modules currently do not have associated APIs.</b> </br>These modules include:</br></br>1. Contact </br> </br>2. Todo Comments </br></br>3. Customer Billing Address </br></br>4. Customer Site Address  </br></br>5. Customer Contact Person  </br></br>6. Requriment Defect",
    ),
    public=True,
    permission_classes=[permissions.AllowAny]

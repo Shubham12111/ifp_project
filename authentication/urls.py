@@ -6,11 +6,12 @@ from .views import LoginView, SignupView, ForgotPasswordView, ResetPasswordView,
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('signup/', SignupView.as_view(), name='signup'),
+    path('logout/',  LogoutView.as_view(), name='logout'),
+
     path('forgot_password/', ForgotPasswordView.as_view(), name='forgot_password'),
     path('reset-password/<str:uidb64>/<str:token>/', ResetPasswordView.as_view(), name='password_reset_confirm'),
-    path('enforce/change_password/',  login_required(EnforceChangePasswordView.as_view()), name='enforce_password_change'),
-
-    path('logout/',  login_required(LogoutView.as_view()), name='logout'),
     path('profile/',  login_required(ProfileView.as_view()), name='profile'),
-    path('change_password/',  login_required(ChangePasswordView.as_view()), name='change_password')
+    path('change_password/',  ChangePasswordView.as_view(), name='change_password')]
+    path('enforce/change_password/',  login_required(EnforceChangePasswordView.as_view()), name='enforce_password_change'),
     ]
+
