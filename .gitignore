@@ -36,3 +36,6 @@ Thumbs.db
 # Compiled translations
 locale/
 
+*.yml
+*.yaml
+
