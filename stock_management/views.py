@@ -257,7 +257,7 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
-            "self": Q(created_by=self.request.user ),
+            "self": Q(user_id=self.request.user ),
             "all": Q(),  # An empty Q() object returns all data
         }
 
@@ -451,7 +451,7 @@ class VendorBillingDetailView(CustomAuthenticationMixin, generics.CreateAPIView)
 
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
-            "self": Q(created_by=self.request.user ),
+            "self": Q(user_id=self.request.user ),
             "all": Q(),  # An empty Q() object returns all data
         }
 

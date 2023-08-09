@@ -114,8 +114,6 @@ class VendorSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Last Name should be at least 2 characters long.")
 
         return value
-    
-
 
 
 class BillingDetailSerializer(serializers.ModelSerializer):
@@ -123,7 +121,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
     vat_number = serializers.CharField(
         label='VAT Number',
         max_length=20,
-        required=False,
+        required=True,
         style={
            "input_type": "text",
             "autocomplete": "off",
@@ -134,7 +132,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
     pan_number = serializers.CharField(
         label='PAN Number',
         max_length=20,
-        required=False,
+        required=True,
         style={
            "input_type": "text",
             "autocomplete": "off",
@@ -211,7 +209,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = Vendor 
-        fields = ('vat_number','pan_number','tax_preference','post_code','address','country','town','county','vendor_status')
+        fields = ('vat_number','pan_number','tax_preference','vendor_status','address','town','county','country','post_code')
 
     def validate_vat_number(self, value):
         # Custom validation for VAT number format (United Kingdom VAT number)

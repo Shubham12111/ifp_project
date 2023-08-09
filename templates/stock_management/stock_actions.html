@@ -2,7 +2,7 @@
 <div class="col-lg-3">
     <div class="card position-sticky top-1">
         <ul class="nav flex-column bg-white border-radius-lg p-3">
-            <li class="nav-item  {% if '/stock/edit/' in request.path or request.path == '/stock/add/' %}active{% endif %}">
+            <li class="nav-item  {% if '/stock/vendor/edit/' in request.path or request.path == '/stock/add/' %}active{% endif %}">
                 {% if vendor_instance %}
                     <a class="nav-link text-body" data-scroll="" href="{% url 'vendor_edit' vendor_instance.id  %}">
                     {% else %}
@@ -16,7 +16,7 @@
                     <span class="text-sm">General Information</span>
                 </a>
             </li>
-            <li class="nav-item mt-2 {% if '/stock/billing_detail/' in request.path %}active{% endif %}">
+            <li class="nav-item mt-2 {% if '/stock/vendor/billing/' in request.path %}active{% endif %}">
                     {% if vendor_instance %}
                         <a class="nav-link text-body" data-scroll="" href="{% url 'vendor_billing_detail' vendor_instance.id  %}">
                         {% else %}

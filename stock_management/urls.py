@@ -1,12 +1,16 @@
 from django.contrib import admin
 from django.urls import path
 from .views import *
+from .category import *
+
 
 urlpatterns = [
-   path('list/', VendorListView.as_view(), name='vendor_list'),
-   path('add/', VendorAddView.as_view(), name='vendor_add'),
-   path('edit/<int:vendor_id>/', VendorUpdateView.as_view(), name='vendor_edit'),
-   path('delete/<int:pk>/',VendorDeleteView.as_view(),name='delete_vendor'),
+   path('vendor/list/', VendorListView.as_view(), name='vendor_list'),
+   path('vendor/add/', VendorAddView.as_view(), name='vendor_add'),
+   path('vendor/edit/<int:vendor_id>/', VendorUpdateView.as_view(), name='vendor_edit'),
+   path('vendor/delete/<int:pk>/',VendorDeleteView.as_view(),name='delete_vendor'),
+   path('vendor/billing/<int:vendor_id>/', VendorBillingDetailView.as_view(), name='vendor_billing_detail'),
    
-   path('billing_detail/<int:vendor_id>/', VendorBillingDetailView.as_view(), name='vendor_billing_detail'),
+   path('category/list/', CategoryListView.as_view(), name='category_list'),
+   path('category/add/', CategoryAddView.as_view(), name='category_add'),
 ]
