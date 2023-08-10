@@ -29,6 +29,11 @@ ITEM_TYPE_CHOICES = (
         ('item', 'Item'),
         ('sor', 'SOR'),
     )
+SALUTATION_CHOICES = [
+        ('Mr.', 'Mr.'),
+        ('Mrs.', 'Mrs.'),
+        ('Miss', 'Miss'),
+    ]
 
 # Create your models here.
 class Vendor(models.Model):
@@ -46,18 +51,37 @@ class Vendor(models.Model):
     town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
     county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
     post_code = models.CharField(max_length=10, null=True, blank=True)
+    billing_phone_number = models.CharField(max_length=20, null=True, blank=True)
     vendor_status = models.CharField(max_length=30, choices=VENDOR_STATUS_CHOICES,null=True, blank=True)
+    remarks = RichTextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
 
     def __str__(self):
         return self.email
+    
+
+class VendorContactPerson(models.Model):
+    
+    """
+    Vendor Contact Person model
+    """
+    
+    vendor_id = models.ForeignKey(Vendor, on_delete=models.CASCADE, verbose_name="Vendor")
+    salutation = models.CharField(max_length=10, choices=SALUTATION_CHOICES,)
+    first_name = models.CharField(max_length=127)
+    last_name = models.CharField(max_length=127) 
+    email = models.EmailField(max_length=254)
+    phone_number = models.CharField(max_length=127)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
 
 class Category(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='category_user')
     name = models.CharField(max_length=50)
-    description = models.TextField(null=True, blank=True)
+    description = RichTextField(null=True)
     image_path = models.CharField(max_length=255)
     status = models.CharField(max_length=50, choices=CATEGORY_STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -70,7 +94,7 @@ class Item(models.Model):
     category_id = models.ForeignKey(Category, on_delete=models.CASCADE)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     item_name = models.CharField(max_length=50)
-    description = models.TextField()
+    description =  RichTextField(null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     sku = models.CharField(max_length=50)
     quantity_per_box = models.DecimalField(max_digits=10, default=1.0, decimal_places=2)
@@ -94,7 +118,7 @@ class ItemImage(models.Model):
 class InventoryLocation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
+    description = RichTextField(null=True)
     address = models.CharField(max_length=255)
     town = models.ForeignKey(City, on_delete=models.CASCADE)
     county = models.ForeignKey(Region, on_delete=models.CASCADE)
