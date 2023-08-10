@@ -64,7 +64,6 @@ class CategoryListView(CustomAuthenticationMixin,generics.ListAPIView):
                                             message="Data retrieved",
                                             data=serializer.data)
             
-
 class CategoryAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
     View for adding or updating a category.
