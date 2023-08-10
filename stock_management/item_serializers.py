@@ -74,7 +74,7 @@ class ItemSerializer(serializers.ModelSerializer):
         required=True,
         style={
             'base_template': 'custom_select.html',
-            'custom_class':'col-6'
+            'custom_class':'col-6 units'
         },
     )
     
@@ -105,6 +105,11 @@ class ItemSerializer(serializers.ModelSerializer):
         },
         help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_SUPPORTED_EXTENSIONS))
         )
+        
+    class Meta:
+        model = Item
+        fields = ['item_name','category_id','price', 'description', 'units', 'quantity_per_box','reference_number','status','file_list']
+
     def validate_item_name(self, value):
         # Check for minimum length of 3 characters
         if len(value) < 3:
@@ -115,6 +120,8 @@ class ItemSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Item Name can only contain alphanumeric characters and spaces.")
 
         return value
+
+    
     def validate_reference_number(self, value):
         """
         Validate that the reference number (SKU) is unique.
@@ -127,10 +134,7 @@ class ItemSerializer(serializers.ModelSerializer):
         
         return value
 
-    class Meta:
-        model = Item
-        fields = ['item_name','category_id','price', 'description', 'units', 'quantity_per_box','reference_number','status','file_list']
-
+    
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
         file_list = validated_data.pop('file_list', None)

@@ -3,7 +3,7 @@ from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from .models import *
-from .item_serializers import *
+from .inventory_serializers import *
 from infinity_fire_solutions.response_schemas import *
 from django.contrib import messages
 from rest_framework import generics, status, filters
@@ -12,17 +12,16 @@ from django.core.serializers import serialize
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
-
-class ItemSorListView(CustomAuthenticationMixin,generics.ListAPIView):
+class InventoryLocationListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     View to get the listing of all contacts.
     Supports both HTML and JSON response formats.
     """
-    serializer_class = ItemSerializer
+    serializer_class = InventoryLocationSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
-    template_name = 'sor_list.html'
+    template_name = 'inventory_location_list.html'
     ordering_fields = ['created_at'] 
 
     common_get_response = {
@@ -34,7 +33,7 @@ class ItemSorListView(CustomAuthenticationMixin,generics.ListAPIView):
             )
     }
     
-    @swagger_auto_schema(operation_id='SOR Listing', responses={**common_get_response})
+    @swagger_auto_schema(operation_id='Inventory Location Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
@@ -53,12 +52,9 @@ class ItemSorListView(CustomAuthenticationMixin,generics.ListAPIView):
         }
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('created_at')
-
-        queryset = queryset.filter(item_type = 'sor')
-
+        queryset = InventoryLocation.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('created_at')
         if request.accepted_renderer.format == 'html':
-            context = {'list_sor':queryset}
+            context = {'inventory_location_list':queryset}
             return render_html_response(context,self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -66,22 +62,21 @@ class ItemSorListView(CustomAuthenticationMixin,generics.ListAPIView):
                                             message="Data retrieved",
                                             data=serializer.data)
 
-
-class ItemSorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
+class InventoryLocationAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
-    View for adding or updating a item.
+    View for adding or updating a inventory_location.
     Supports both HTML and JSON response formats.
     """
-    serializer_class = ItemSerializer
+    serializer_class = InventoryLocationSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'sor_form.html'
+    template_name = 'inventory_location_form.html'
 
     @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         """
-        Handle GET request to display a form for updating a item.
-        If the item exists, retrieve the serialized data and render the HTML template.
-        If the item does not exist, render the HTML template with an empty serializer.
+        Handle GET request to display a form for updating a inventory_location.
+        If the inventory_location exists, retrieve the serialized data and render the HTML template.
+        If the inventory_location does not exist, render the HTML template with an empty serializer.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -104,7 +99,7 @@ class ItemSorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "Congratulations! SOR has been added successfully.",
+                message = "Congratulations! inventory location has been added successfully.",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -115,31 +110,21 @@ class ItemSorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
     }  
 
-    @swagger_auto_schema(operation_id='Add SOR', responses={**common_post_response})
+    @swagger_auto_schema(operation_id='Add Inventory Location', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request to add a item.
+        Handle POST request to add a inventory_location.
         """
-        message = "Congratulations! sor has been added successfully."
-        
-        data = request.data.copy()
-        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
-        file_list = data.get('file_list', None)
-
-        if file_list is not None and not any(file_list):
-            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-        
-
-        serializer = self.serializer_class(data=data)
+        message = "Congratulations! inventory location has been added successfully."
+        serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
-            item = serializer.save()
-            item.item_type = 'sor'
-            item.save()
+            user = serializer.save()
+            user.save()
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
-                return redirect(reverse('list_sor'))
+                return redirect(reverse('inventory_location_list'))
 
             else:
                 # Return JSON response with success message and serialized data
@@ -160,32 +145,30 @@ class ItemSorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
 
-class ItemSorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
+class InventoryLocationUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
-    API view for updating a SOR.
+    API view for updating a InventoryLocation.
 
-    This view handles both HTML and API requests for updating a SOR instance.
-    If the SOR instance exists, it will be updated with the provided data.
+    This view handles both HTML and API requests for updating a InventoryLocation instance.
+    If the InventoryLocation instance exists, it will be updated with the provided data.
     Otherwise, an error message will be returned.
 
     The following request methods are supported:
-    - POST: Updates the SOR instance.
+    - POST: Updates the InventoryLocation instance.
 
     Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
     """
     
-    serializer_class = ItemSerializer
+    serializer_class = InventoryLocationSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'sor_form.html'
+    template_name = 'inventory_location_form.html'
 
-
-    
     def get_queryset(self):
         """
-        Get the queryset for listing SOR items.
+        Get the queryset for listing Inventory Location items.
 
         Returns:
-            QuerySet: A queryset of SOR items filtered based on the authenticated user's ID.
+            QuerySet: A queryset of Inventory Location items filtered based on the authenticated user's ID.
         """
         
         # Get the model class using the provided module_name string
@@ -201,31 +184,31 @@ class ItemSorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             "all": Q(),  # An empty Q() object returns all data
         }
 
-        queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = InventoryLocation.objects.filter(filter_mapping.get(data_access_value, Q()))
 
-        # Filter the queryset based on the provided 'item_id'
-        instance = queryset.filter(pk= self.kwargs.get('item_id')).first()
+        # Filter the queryset based on the provided 'inventory_locationid'
+        instance = queryset.filter(pk= self.kwargs.get('inventory_location_id')).first()
         return instance
 
     @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
-        # This method handles GET requests for updating an existing list_sor object.
+        # This method handles GET requests for updating an existing inventory_locationlist object.
         if request.accepted_renderer.format == 'html':
             instance = self.get_queryset()
             if instance:
                 serializer = self.serializer_class(instance=instance, context={'request': request})
-                context = {'serializer': serializer, 'item_instance': instance}
+                context = {'serializer': serializer, 'inventory_location_instance': instance}
                 return render_html_response(context, self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action")
-                return redirect(reverse('list_sor'))
+                return redirect(reverse('inventory_location_list'))
             
     common_put_response = {
         status.HTTP_200_OK: 
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "Item has been updated successfully!",
+                message = "Inventory Location has been updated successfully!",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -233,7 +216,6 @@ class ItemSorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 serializer_class=serializer_class,
                 message = "You are not authorized to perform this action",
                 ),
-
     }
 
     @swagger_auto_schema(auto_schema=None) 
@@ -244,10 +226,10 @@ class ItemSorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     def patch(self, request, *args, **kwargs):
         pass
 
-    @swagger_auto_schema(operation_id='Edit SOR', responses={**common_put_response})
+    @swagger_auto_schema(operation_id='Edit InventoryLocation', responses={**common_put_response})
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request to update a SOR instance.
+        Handle POST request to update a InventoryLocation instance.
 
         Args:
             request (rest_framework.request.Request): The HTTP request object.
@@ -256,40 +238,30 @@ class ItemSorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
         Returns:
             rest_framework.response.Response: HTTP response object.
-                If successful, the SOR is updated, and the appropriate response is returned.
+                If successful, the InventoryLocation is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
-
-        data = request.data.copy()
-        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
-        file_list = data.get('file_list', None)
-
-        if file_list is not None and not any(file_list):
-            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-
-        data['item_type'] = 'sor'
-        
         instance = self.get_queryset()
         if instance:
-            # If the Item instance exists, initialize the serializer with instance and provided data.
-            serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
+            # If the InventoryLocation instance exists, initialize the serializer with instance and provided data.
+            serializer = self.serializer_class(instance=instance, data=request.data, context={'request': request})
 
             if serializer.is_valid():
-                # If the serializer data is valid, save the updated Item instance.
+                # If the serializer data is valid, save the updated InventoryLocation instance.
                 serializer.save()
-                message = "Item has been updated successfully!"
+                message = "Inventory Location has been updated successfully!"
 
                 if request.accepted_renderer.format == 'html':
-                    # For HTML requests, display a success message and redirect to list_sor.
+                    # For HTML requests, display a success message and redirect to inventory_locationlist.
                     messages.success(request, message)
-                    return redirect(reverse('list_sor'))
+                    return redirect(reverse('inventory_location_list'))
                 else:
                     # For API requests, return a success response with serialized data.
                     return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
             else:
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'instance': instance}
+                    context = {'serializer': serializer, 'inventory_location_instance': instance}
                     return render(request, self.template_name, context)
                 else:
                     # For API requests with invalid data, return an error response with serializer errors.
@@ -297,38 +269,37 @@ class ItemSorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         else:
             error_message = "You are not authorized to perform this action"
             if request.accepted_renderer.format == 'html':
-                # For HTML requests with no instance, display an error message and redirect to list_sor.
+                # For HTML requests with no instance, display an error message and redirect to inventory_locationlist.
                 messages.error(request, error_message)
-                return redirect('list_sor')
+                return redirect('inventory_location_list')
             else:
                 # For API requests with no instance, return an error response with an error message.
                 return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
             
-class ItemSorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+class InventoryLocationDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View for deleteing .
     Supports both HTML and JSON response formats.
     """
-    serializer_class = ItemSerializer
+    serializer_class = InventoryLocationSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-
 
     common_delete_response = {
         status.HTTP_200_OK: 
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "SOR has been deleted successfully!",
+                message = "Inventory Location has been deleted successfully!",
                 ),
         status.HTTP_404_NOT_FOUND: 
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "SOR not found",
+                message = "Inventory Location not found",
                 ),
 
     }
-    @swagger_auto_schema(operation_id='Delete SOR', responses={**common_delete_response})
+    @swagger_auto_schema(operation_id='Delete Inventory Location', responses={**common_delete_response})
     def delete(self, request, *args, **kwargs):
         """
         Handle DELETE request to delete a item.
@@ -351,23 +322,16 @@ class ItemSorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
 
-        queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q()))
-        item = queryset.filter(pk= self.kwargs.get('item_id'), item_type='sor').first()
-
-        if item:
-            images = ItemImage.objects.filter(item_id=item)
+        queryset = InventoryLocation.objects.filter(filter_mapping.get(data_access_value, Q()))
+        inventory_location_instance = queryset.filter(pk= self.kwargs.get('inventory_location_id')).first()
+        
+        if inventory_location_instance:
             # Proceed with the deletion
-            # check if any image on s3
-            for image in images:
-                if image.image_path:
-                    s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=item.image_path)
-                    image.delete()
-
-            item.delete()
-            messages.success(request, "SOR has been deleted successfully!")
+            inventory_location_instance.delete()
+            messages.success(request, "Inventory Location has been deleted successfully!")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="SOR has been deleted successfully!", )
+                                        message="InventoryLocation has been deleted successfully!", )
         else:
-            messages.error(request, "SOR not found")
+            messages.error(request, "Inventory Location not found")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="SOR not found", )
+                                        message="InventoryLocation not found", )

@@ -1,0 +1,32 @@
+<div class="col-lg-3">
+    <div class="card position-sticky top-1">
+        <ul class="nav flex-column bg-white border-radius-lg p-3">
+            <li class="nav-item {% if '/stock/item/' in request.path or request.path == '/stock/item/add/' %}active{% endif %}">
+                {% if item_instance %}
+                    <a class="nav-link text-body" data-scroll="" href="{% url 'item_edit' item_instance.id  %}">
+                    {% else %}
+                    <a class="nav-link text-body" data-scroll="">
+                {% endif %}
+
+                
+                    <div class="icon me-2">
+                        <i class="fa fa-box-open me-sm-1 text-dark mb-1" aria-hidden="true"></i>
+                    </div>
+                    <span class="text-sm">Item Information</span>
+                </a>
+            </li>
+            <li class="nav-item {% if '/stock/inventory/' in request.path %}active{% endif %} mt-2">
+                    {% if item_instance %}
+                        <a class="nav-link text-body" data-scroll="" href="{% url 'inventory_view' item_instance.id  %}">
+                        {% else %}
+                        <a class="nav-link text-body" data-scroll="">
+                    {% endif %}
+                    <div class="icon me-2">
+                        <i class="fas fa-warehouse me-sm-1 text-dark mb-1" aria-hidden="true"></i>
+                    </div>
+                    <span class="text-sm">Inventory</span>
+                </a>
+            </li>
+            </ul>
+        </div>
+    </div>

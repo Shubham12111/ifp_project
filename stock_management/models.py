@@ -22,15 +22,9 @@ CATEGORY_STATUS_CHOICES = (
 
 PRODUCT_STATUS_CHOICES = (
 
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('inactive', 'Inactive'),
-)
-
         ('active', 'Active'),
         ('expired', 'Expired'),
 )
-
 
 ITEM_TYPE_CHOICES = (
         ('item', 'Item'),
@@ -135,7 +129,7 @@ class ItemImage(models.Model):
         return f"Image for {self.item_id.name}"
 
 class InventoryLocation(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     description = RichTextField(null=True)
     address = models.CharField(max_length=255)
@@ -149,11 +143,11 @@ class InventoryLocation(models.Model):
     def __str__(self):
         return self.name
 
-class StoreLocation(models.Model):
+class Inventory(models.Model):
     item_id = models.ForeignKey(Item, on_delete=models.CASCADE,null=True)
     inventory_location = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE)
     total_inventory = models.DecimalField(max_digits=10, decimal_places=2)
-    assigned_inventory = models.DecimalField(max_digits=10, decimal_places=2)
+    assigned_inventory = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

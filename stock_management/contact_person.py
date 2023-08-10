@@ -47,7 +47,7 @@ class VendorContactPersonView(CustomAuthenticationMixin, generics.CreateAPIView)
 
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
-            "self": Q(created_by=self.request.user ),
+            "self": Q(user_id=self.request.user ),
             "all": Q(),  # An empty Q() object returns all data
         }
 
@@ -123,7 +123,7 @@ class VendorContactPersonView(CustomAuthenticationMixin, generics.CreateAPIView)
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests, display a success message and redirect to the vendor's contact person list.
                     messages.success(request, message)
-                    return redirect(reverse('vendor_remarks', kwargs={'vendor_id': kwargs['vendor_id']}))
+                    return redirect(reverse('vendor_contact_person', kwargs={'vendor_id': kwargs['vendor_id']}))
                 else:
                     # For API requests, return a success response with serialized data.
                     return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
@@ -167,7 +167,7 @@ class VendorRemoveContactPersonView(CustomAuthenticationMixin, generics.DestroyA
 
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
-            "self": Q(created_by=self.request.user),
+            "self": Q(vendor_id__user_id=self.request.user),
             "all": Q(),  # An empty Q() object returns all data 
         }
 

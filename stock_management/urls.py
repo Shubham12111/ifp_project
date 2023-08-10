@@ -2,9 +2,10 @@ from django.contrib import admin
 from django.urls import path
 from .views import *
 from .category import *
-
 from .contact_person import *
 from .item import *
+from .inventory_location import *
+from .inventory import *
 from .item_sor import *
 
 
@@ -29,15 +30,20 @@ urlpatterns = [
    
    path('item/list/', ItemListView.as_view(), name='item_list'),
    path('item/add/', ItemAddView.as_view(), name='item_add'),
-   
    path('item/edit/<int:item_id>/', ItemUpdateView.as_view(), name='item_edit'),
    path('item/delete/<int:item_id>/', ItemDeleteView.as_view(), name='item_delete'),
+   path('inventory/<int:item_id>/', InventoryView.as_view(), name='inventory_view'),
    
-   path('item_sor/list/', ItemSorListView.as_view(), name='item_list_sor'),
-   path('item_sor/add/', ItemSorAddView.as_view(), name='item_add_sor'),
+   path('inventory_location/list/', InventoryLocationListView.as_view(), name='inventory_location_list'),
+   path('inventory_location/add/', InventoryLocationAddView.as_view(), name='inventory_location_add'),
+   path('inventory_location/edit/<int:inventory_location_id>/', InventoryLocationUpdateView.as_view(), name='inventory_location_edit'),
+   path('inventory_location/delete/<int:inventory_location_id>/', InventoryLocationDeleteView.as_view(), name='inventory_location_delete'),
    
-   path('item_sor/edit/<int:item_id>/', ItemSorUpdateView.as_view(), name='item_edit_sor'),
-   path('item_sor/delete/<int:item_id>/', ItemSorDeleteView.as_view(), name='item_delete_sor'),
+   path('sor/list/', ItemSorListView.as_view(), name='list_sor'),
+   path('sor/add/', ItemSorAddView.as_view(), name='add_sor'),
+   
+   path('sor/edit/<int:item_id>/', ItemSorUpdateView.as_view(), name='edit_sor'),
+   path('sor/delete/<int:item_id>/', ItemSorDeleteView.as_view(), name='delete_sor'),
 
 
 ]
