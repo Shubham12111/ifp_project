@@ -237,6 +237,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
         return representation
 
     
+
 class VendorContactPersonSerializer(serializers.ModelSerializer):
 
     salutation = serializers.ChoiceField(
@@ -354,5 +355,6 @@ class VendorRemarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vendor
         fields = ['remarks',]
+
 
 

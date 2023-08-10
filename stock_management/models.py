@@ -21,10 +21,17 @@ CATEGORY_STATUS_CHOICES = (
 )
 
 PRODUCT_STATUS_CHOICES = (
+
         ('pending', 'Pending'),
         ('approved', 'Approved'),
         ('inactive', 'Inactive'),
 )
+
+        ('active', 'Active'),
+        ('expired', 'Expired'),
+)
+
+
 ITEM_TYPE_CHOICES = (
         ('item', 'Item'),
         ('sor', 'SOR'),
@@ -35,7 +42,14 @@ SALUTATION_CHOICES = [
         ('Miss', 'Miss'),
     ]
 
-# Create your models here.
+
+
+UNIT_CHOICES = (
+    ('single', 'Single Unit'),
+    ('box', 'Box'),
+    ('mm', 'mm'),
+)
+
 class Vendor(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vendor_user')
     first_name = models.CharField(max_length=255)
@@ -77,8 +91,10 @@ class VendorContactPerson(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
     def __str__(self):
         return self.email
+
     
 
 class Category(models.Model):
@@ -99,13 +115,13 @@ class Item(models.Model):
     item_name = models.CharField(max_length=50)
     description =  RichTextField(null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    sku = models.CharField(max_length=50)
+    reference_number = models.CharField(max_length=50)
+    units = models.CharField(max_length=10, choices=UNIT_CHOICES, default='single')
     quantity_per_box = models.DecimalField(max_digits=10, default=1.0, decimal_places=2)
     item_type = models.CharField(max_length=10, choices=ITEM_TYPE_CHOICES, default='item')
     status = models.CharField(max_length=50, choices=PRODUCT_STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     def __str__(self):
         return self.item_name
 
@@ -140,3 +156,4 @@ class StoreLocation(models.Model):
     assigned_inventory = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+

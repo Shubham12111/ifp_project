@@ -9,6 +9,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from rest_framework import generics, status, filters
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 
 from infinity_fire_solutions.aws_helper import *
@@ -17,7 +18,11 @@ from infinity_fire_solutions.response_schemas import create_api_response, conver
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
+
 from .serializers import *
+
+from .serializers import VendorSerializer,BillingDetailSerializer
+
 
 
 
@@ -26,7 +31,9 @@ from .serializers import *
 
 class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
+
     View to get the listing of all vendors.
+
     Supports both HTML and JSON response formats.
     """
     serializer_class = VendorSerializer
@@ -332,7 +339,9 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 message = "Vendor has been updated successfully!"
 
                 if request.accepted_renderer.format == 'html':
+
                     # For HTML requests, display a success message and redirect to vendor.
+
                     messages.success(request, message)
                     return redirect(reverse('vendor_billing_detail', kwargs={'vendor_id': kwargs['vendor_id']}))
                 else:
@@ -349,10 +358,12 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         else:
             error_message = "You are not authorized to perform this action"
             if request.accepted_renderer.format == 'html':
+
                 # For HTML requests with no instance, display an error message and redirect to vendor.
 
                 messages.error(request, error_message)
                 return redirect('vendor/vendor_list')
+
             else:
                 # For API requests with no instance, return an error response with an error message.
                 return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
@@ -387,8 +398,10 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         """
         Handle DELETE request to delete a vendor.
         """
+
         # Get the vendor ID from the URL kwargs
         vendor_id = kwargs.get('pk')
+
         # Get the vendor instance from the database
         # Call the handle_unauthenticated method to handle unauthenticated access
 
@@ -408,8 +421,10 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # or use an empty Q() object if the value is not in the mapping
 
         queryset = Vendor.objects.filter(filter_mapping.get(data_access_value, Q()))
-        
+
         vendor = queryset.filter(id=vendor_id).first()
+
+
         
         if vendor:
             # Proceed with the deletion
@@ -523,6 +538,7 @@ class VendorBillingDetailView(CustomAuthenticationMixin, generics.CreateAPIView)
             # Update existing vendor's billing details
             message = "Vendor billing details have been updated successfully!"
             serializer = self.serializer_class(instance=vendor_instance, data=data, context={'request': request})
+
         else:
             # Add a new vendor's billing details
             message = "Vendor has been added successfully!"
@@ -651,7 +667,7 @@ class VendorRemarkView(CustomAuthenticationMixin, generics.CreateAPIView):
         serializer = self.serializer_class(data=data, context={'request': request})
     
         if vendor_instance:
-            # Update existing vendor's marks
+            # Update existing vendor's remarks
             message = "Vendor Remarks have been updated successfully!"
             serializer = self.serializer_class(instance=vendor_instance, data=data, context={'request': request})
         else:
@@ -682,3 +698,5 @@ class VendorRemarkView(CustomAuthenticationMixin, generics.CreateAPIView):
                                        message="We apologize for the inconvenience, but please review the below information.",
                                        data=convert_serializer_errors(serializer.errors))
 
+
+            
