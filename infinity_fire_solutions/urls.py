@@ -47,6 +47,8 @@ urlpatterns = [
     path('customer/',include('customer_management.urls')),
     path('requirement/',include('requirement_management.urls')),
     path('stock/',include('stock_management.urls')),
+    path('fire_risk_assessment/',include('requirement_management.urls')),
+
 
     #swagger links for the api documentation
     path('api/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

@@ -1,7 +1,7 @@
 import uuid
 from django.conf import settings
 from rest_framework import serializers
-from .models import Requirement, RequirementDefect, RequirementDocument
+from .models import Requirement, RequirementDefect, RequirementDocument,REQUIREMENT_DEFECT_CHOICES
 from django.utils.html import strip_tags
 from authentication.models import User
 from bs4 import BeautifulSoup
@@ -29,11 +29,11 @@ class RequirementDefectSerializer(serializers.ModelSerializer):
 
 class RequirementDetailSerializer(serializers.ModelSerializer):
     customer_name = CustomerNameField(source='customer_id', read_only=True)
-    quality_surveyor_name = CustomerNameField(source='quality_surveyor', read_only=True)
+    quantity_surveyor_name = CustomerNameField(source='quantity_surveyor', read_only=True)
     requirementdefect_set = RequirementDefectSerializer(many=True, read_only=True)
     class Meta:
         model = Requirement
-        fields = ('user_id', 'customer_id', 'description', 'UPRN', 'requirement_date_time', 'quality_surveyor', 'status', 'customer_name', 'quality_surveyor_name', 'requirementdefect_set')
+        fields = ('user_id', 'customer_id', 'description', 'UPRN', 'requirement_date_time', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -44,7 +44,7 @@ class RequirementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requirement
-        fields = ('user_id', 'customer_id', 'description', 'UPRN', 'requirement_date_time', 'quality_surveyor', 'status')
+        fields = ('user_id', 'customer_id', 'description', 'requirement_date_time', 'quantity_surveyor', 'status')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -71,23 +71,9 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         },
         validators=[validate_description],
     )
-    UPRN = serializers.CharField(
-    max_length=12, 
-    label=('UPRN'),
-    required=False,  # Make it optional
-    style={
-        "autocomplete": "off",
-        "required": False,  # Adjust as needed
-        'base_template': 'custom_input.html',
-        'custom_class': 'col-6'
-    },
-    error_messages={
-            "blank": "UPRN Name is required.",
-            "invalid": "It must contain a 12-digit number.",
-        },
-    )
+    
     requirement_date_time = serializers.DateTimeField(
-        label='Requirement Date Time',
+        label='Date/Time',
         required=True,
         style={
             'base_template': 'custom_date_time.html',
@@ -95,15 +81,16 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         },
     )
    
-    quality_surveyor = serializers.PrimaryKeyRelatedField(
-        label=('Quality Surveyor'),
+    quantity_surveyor = serializers.PrimaryKeyRelatedField(
+        label=('Quantity Surveyor'),
         required=True,
-        queryset=User.objects.all(),
+        queryset=User.objects.filter(roles__name = "Quantity Surveyor"),
         style={
             'base_template': 'custom_select.html',
             'custom_class':'col-6'
         },
     )
+    
     site_address = serializers.PrimaryKeyRelatedField(
         label=('Site Address'),
         required=True,
@@ -128,22 +115,11 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         validators=[file_extension_validator, validate_file_size],
         help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
-    def validate_UPRN(self, value):
-        cleaned_value = str(value).replace(" ", "")  # Remove spaces
-
-        if not cleaned_value.isdigit() or len(cleaned_value) != 12:
-            raise serializers.ValidationError("UPRN must be a 12-digit number.")
-
-        queryset = Requirement.objects.all().exclude(id=self.instance.id)
-        if queryset.filter(UPRN=cleaned_value).exists():
-            raise serializers.ValidationError("A record with UPRN '{}' already exists.".format(cleaned_value))
-
-        
-        return value
+    
 
     class Meta:
         model = Requirement
-        fields = ('customer_id','description','site_address', 'quality_surveyor', 'UPRN', 'requirement_date_time','file')
+        fields = ('customer_id','description','site_address', 'quantity_surveyor', 'requirement_date_time','file')
     
     def create(self, validated_data):
         # Pop the 'file' field from validated_data
@@ -165,8 +141,11 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         instance.customer_id = validated_data.get('customer_id', instance.customer_id)
         instance.description = validated_data.get('description', instance.description)
         instance.site_address = validated_data.get('site_address', instance.site_address)
-        instance.quality_surveyor = validated_data.get('quality_surveyor', instance.quality_surveyor)
+        instance.quantity_surveyor = validated_data.get('quantity_surveyor', instance.quantity_surveyor)
+        instance.requirement_date_time = validated_data.get('requirement_date_time', instance.site_address)
+        
         instance.UPRN = validated_data.get('UPRN', instance.UPRN)
+
         
 
         # Pop the 'file' field from validated_data
@@ -269,6 +248,49 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     },
     help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
+    
+    UPRN = serializers.CharField(
+    max_length=12, 
+    label=('UPRN'),
+    required=False,  # Make it optional
+    style={
+        "autocomplete": "off",
+        "required": False,  # Adjust as needed
+        'base_template': 'custom_input.html',
+        'custom_class': 'col-6'
+    },
+    error_messages={
+            "blank": "UPRN Name is required.",
+            "invalid": "It must contain a 12-digit number.",
+        },
+    )
+    
+    status = serializers.ChoiceField(
+        label='Status',
+        choices=REQUIREMENT_DEFECT_CHOICES,
+        required=True,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class': 'col-6'
+        },
+    )
+    
+    def validate_UPRN(self, value):
+        cleaned_value = str(value).replace(" ", "")  # Remove spaces
+
+        if not cleaned_value.isdigit() or len(cleaned_value) != 12:
+            raise serializers.ValidationError("UPRN must be a 12-digit number.")
+
+        if self.instance:
+            queryset = RequirementDefect.objects.all().exclude(id=self.instance.id)
+        else:
+            queryset = RequirementDefect.objects.filter(UPRN=value)
+        if queryset.filter(UPRN=cleaned_value).exists():
+            raise serializers.ValidationError("A record with UPRN '{}' already exists.".format(cleaned_value))
+
+        
+        return value
+    
     def validate(self, data):
         """
         Check that due_date is greater than defect_period.
@@ -277,14 +299,13 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         due_date = data.get('due_date')
 
         if defect_period and due_date and defect_period >= due_date:
-            raise serializers.ValidationError("Due date must be greater than defect period.")
+            raise serializers.ValidationError({"due_date": "Due date must be greater than defect period."})
 
         return data
         
     class Meta:
         model = RequirementDefect
-        fields = ('action', 'description', 'defect_period', 'due_date', 'status','file_list')
-    
+        fields = ('action',  'description', 'defect_period', 'due_date', 'UPRN', 'status','file_list')
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data

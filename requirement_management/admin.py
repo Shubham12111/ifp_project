@@ -4,11 +4,11 @@ from .models import Requirement, RequirementDefect, RequirementDocument
 # Register your models here.
 
 class RequirementAdmin(admin.ModelAdmin):
-    list_display = ('user_id', 'customer_id', 'description', 'UPRN', 'requirement_date_time', 'quality_surveyor', 'status')
+    list_display = ('user_id', 'customer_id', 'description',  'requirement_date_time', 'quantity_surveyor', 'status')
 
 
 class RequirementDefectAdmin(admin.ModelAdmin):
-    list_display = ('requirement_id', 'action', 'description', 'defect_period', 'due_date', 'status')
+    list_display = ('requirement_id', 'action','UPRN', 'description', 'defect_period', 'due_date', 'status')
 
 
 class RequirementDocumentAdmin(admin.ModelAdmin):
