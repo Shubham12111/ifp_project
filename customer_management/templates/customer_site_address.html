@@ -35,18 +35,18 @@
                         <th>County</th>
                         <th>Country</th>
                         <th>Post Code</th>
-                        <th>Actions</th>
+                        <th class="custom-last-column">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="ml-4">
                     {% for site_address in site_address_list %}
                     <tr>
-                        <td>{{ site_address.site_name }}</td>
-                        <td>{{ site_address.address }}</td>
-                        <td>{{ site_address.town }}</td>
-                        <td>{{ site_address.county }}</td>
-                        <td>{{ site_address.country }}<br>
-                        <td> {{ site_address.post_code }}<br>
+                        <td>{{ site_address.site_name|default:''|truncatechars:20 }}</td>
+                        <td>{{ site_address.address|default:''|truncatechars:20 }}</td>
+                        <td>{{ site_address.town.name|default:'' }}</td>
+                        <td>{{ site_address.county.name|default:'' }}</td>
+                        <td>{{ site_address.country|default:'' }}<br>
+                        <td> {{ site_address.post_code|default:'' }}<br>
                            
                             
                         </td>

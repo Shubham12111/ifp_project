@@ -46,18 +46,17 @@ def has_view_permission(user, module_name):
     user_permissions = get_user_module_permissions(user, module_name)
     # Check both "can list data" and "can create data" permissions
     for permission in user_permissions.values():
-        if permission.get('can_create_data') != 'none' or permission.get('can_list_data') != 'none':
-            return True
-    
-    return False  # If no appropriate permission found, return False
+        return permission.get('can_create_data') or permission.get('can_list_data') != 'none'
+            
+    # If no appropriate permission found, return False
+    return False
 
 
 def generate_menu(request, menu_items):
     menu_data = []
 
     for item in menu_items:
-        pattern = r"s"
-        item.name = re.sub(pattern, "", item.name)
+        pattern = r"s$"
         if not item.permission_required:
             # Add the dashboard menu item, visible to all users
             menu_item = {
@@ -67,7 +66,7 @@ def generate_menu(request, menu_items):
                 'icon': item.icon
             }
             menu_data.append(menu_item)
-        elif has_view_permission(request.user, item.name):
+        elif has_view_permission(request.user, re.sub(pattern, "", item.name)):
             # Add other menu items with view permission
             menu_item = {
                 'url': item.url,

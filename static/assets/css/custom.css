@@ -24,7 +24,6 @@
     z-index: 1;
 }
 
-
 .sidebar-open {
     transform: translateX(0);
 }
@@ -54,4 +53,13 @@ color: #000; /* Light text color for body */
 li.nav-item.active a.nav-link {
     background: #e9ecef !important;
     color: #000;
+}
+
+/* Hide sorting icon for the last column where sorting is disabled */
+th.custom-last-column {
+pointer-events: none;
+}
+th.custom-last-column a.dataTable-sorter::before,
+th.custom-last-column a.dataTable-sorter::after {
+content: none;
 }

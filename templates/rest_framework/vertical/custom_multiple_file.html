@@ -1,0 +1,36 @@
+<div class="form-group {% if field.errors %}has-error{% endif %} col-6">
+    {% if field.label %}
+      <label {% if style.hide_label %}class="sr-only"{% endif %}>
+        {{ field.label }}
+        {% if field.required %}<span class="text-danger">*</span>{% endif %}
+      </label>
+    {% endif %}
+  
+    <input
+      name="{{ field.name }}"
+      class="form-control"
+      type="{{ style.input_type }}"
+      {% if style.placeholder %}placeholder="{{ style.placeholder }}"{% endif %}
+      {% if field.value is not None %}value="{{ field.value }}"{% endif %}
+      {% if style.autofocus and style.input_type != "hidden" %}autofocus{% endif %}
+      autocomplete="off"
+      {% if field.required %}required{% endif %}
+      {% if style.multiple %}multiple{% endif %}
+      accept="{{ field.style.accept }}"
+    >
+  
+    {% if field.help_text %}
+      <span class="text-sm text-muted mt-1" style="font-size: 0.775rem !important;">
+        Note: {{ field.help_text|safe }}
+      </span>
+    {% endif %}
+  
+    {% if field.errors %}
+      <div class="invalid-feedback">
+        {% for error in field.errors %}
+          <span class="help-block">{{ error }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+  

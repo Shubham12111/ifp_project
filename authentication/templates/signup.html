@@ -3,41 +3,44 @@
 {% load rest_framework %}
 {% block title %} Signup {{ block.super }}{% endblock %}
 {% block content %}
-<div class="card-header pb-0 text-start text-center">
-    <h5 class="font-weight-bolder">Sign Up</h5>
-    <p class="mb-0">Enter your details to register</p>
-</div>
-<div class="card-body pb-3">
-    <form role="form" method="POST" autocomplete="off" class="row">
-        {% csrf_token %}
-        
-        {% render_form serializer %}
-        
-        <!-- Add a checkbox for agreeing to terms and conditions -->
-        <div class="form-check form-check-info pt-0 px-sm-5">
-          <input class="form-check-input" type="checkbox" value="True" name="agreed_to_terms" id="flexCheckDefault" {% if error_message %}{% else %} checked=""{% endif %}>
-          <label class="form-check-label" for="flexCheckDefault">
-              I agree the <span class="text-dark font-weight-bolder">Terms and Conditions</span>
-              <a href="https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/Terms+%26+Conditions.pdf" target="_blank" class="text-dark font-weight-bolder px-1" download="Terms_and_Conditions.pdf">
-                  <i class="fas fa-download"></i>
-              </a>
-          </label>
-        </div>
+<div class="card card-plain">
+    <div class="card-header pb-0 text-left">
+      <h4 class="font-weight-bolder">Sign Up</h4>
+      <p class="mb-0">Enter your details to register</p>
+    </div>
 
-          {% if error_message%}
-              <span class="help-block pt-0 px-sm-4">{{ error_message|safe }}</span>
-          {% endif %}
-        
-        <div class="text-center">
-            <button type="submit" class="btn btn-lg bg-gradient-primary w-100 mt-4 mb-0">Sign up</button>
-        </div>
-    </form>
-</div>
-<div class="card-footer text-center pt-0 px-sm-4 px-1">
-    <p class="mb-4 mx-auto">
-        Already have an account?
-        <a href="{% url 'login' %}" class="text-primary text-gradient font-weight-bold">Sign in</a>
-    </p>
+    <div class="card-body pb-3">
+        <form role="form" method="POST" autocomplete="off" class="row">
+            {% csrf_token %}
+            
+            {% render_form serializer %}
+            
+            <!-- Add a checkbox for agreeing to terms and conditions -->
+            <div class="form-check form-check-info pt-0 px-sm-5">
+            <input class="form-check-input" type="checkbox" value="True" name="agreed_to_terms" id="flexCheckDefault" {% if error_message %}{% else %} {% endif %}>
+            <label class="form-check-label" for="flexCheckDefault">
+                I agree the <span class="text-dark font-weight-bolder">Terms and Conditions</span>
+                <a href="https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/Terms+%26+Conditions.pdf" target="_blank" class="text-dark font-weight-bolder px-1" download="Terms_and_Conditions.pdf">
+                    <i class="fas fa-download"></i>
+                </a>
+            </label>
+            </div>
+
+            {% if error_message%}
+                <span class="help-block pt-0 px-sm-4">{{ error_message|safe }}</span>
+            {% endif %}
+            
+            <div class="text-center">
+                <button type="submit" class="btn btn-lg bg-gradient-primary w-100 mt-4 mb-0">Sign up</button>
+            </div>
+        </form>
+    </div>
+    <div class="card-footer text-center pt-0 px-sm-4 px-1">
+        <p class="mb-4 mx-auto">
+            Already have an account?
+            <a href="{% url 'login' %}" class="text-primary text-gradient font-weight-bold">Sign in</a>
+        </p>
+    </div>
 </div>
 
 {% endblock %}

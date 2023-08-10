@@ -4,7 +4,7 @@ from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from .models import *
-from .serializers import CustomerSerializer , BillingAddressSerializer#, ConversationSerializer, ConversationViewSerializer
+from .serializers import *
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
 from django.contrib import messages
 from rest_framework import generics, status, filters
@@ -20,12 +20,51 @@ from contact.models import Contact
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
+from django.contrib.auth.hashers import make_password
+
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
     password = ''.join(random.choice(characters) for _ in range(length))
     return password
 
 
+def create_customer(customer, request):
+    """
+    Create a new customer, assign role, generate password, send email, and save changes.
+
+    Args:
+        customer (Customer): The customer instance to be created.
+        request (HttpRequest): The request object containing user information.
+
+    Returns:
+        None
+    """
+    # Check if the 'Customer' role exists, otherwise create it
+    user_role, created = UserRole.objects.get_or_create(name="Customer")
+
+    # Assign the 'Customer' role and creator to the customer
+    customer.roles = user_role
+    customer.created_by = request.user
+    customer.save()
+
+    # Generate a strong password for the customer
+    strong_password = generate_strong_password()  # Implement your generate_strong_password function
+    customer.password = make_password(strong_password)
+    customer.save()
+
+    # Get the site URL for the email context
+    site_url = get_site_url(request)  # Implement your get_site_url function
+
+    # Prepare context for the email template
+    context = {
+        'user': customer,
+        'site_url': site_url,
+        'user_password': strong_password
+    }
+
+    # Send an email with the new account password
+    email = Email()  # Instantiate your Email class
+    email.send_mail(customer.email, 'email_templates/customer_password.html', context, 'Your New Account Password')
 
 class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -101,8 +140,6 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
   
-
-        
         contact_id = kwargs.get('contact_id')
         if contact_id:
             contact = Contact.objects.get(pk=contact_id)
@@ -147,32 +184,8 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if serializer.is_valid():
             user = serializer.save()
             user.save()
-            #check the User Role 
-            user_role = UserRole.objects.filter(name="Customer").first()
-            if user_role:
-                user_role = user_role
-            else:
-                user_role = UserRole.objects.create(name="Customer")
             
-            user.roles = user_role
-            user.created_by = request.user 
-            user.save()
-            
-            # Generate a strong password
-            strong_password = generate_strong_password()
-            user.set_password(strong_password)
-            user.save()
-                    
-            site_url = get_site_url(request)
-        
-            context = {
-                'user': user,
-                'site_url': site_url,
-                'user_password':strong_password
-            }
-            email = Email()  # Replace with your Email class instantiation
-            email.send_mail(user.email, 'email_templates/customer_password.html', context, 'Your New Account Password')
-            
+            create_customer(user, request)
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
                 return redirect(reverse('customer_list'))
@@ -212,8 +225,6 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer.html'
-
-
     
     def get_queryset(self):
         """
@@ -536,7 +547,7 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
-            "self": Q(user_id=request.user ),
+            "self": Q(created_by=request.user ),
             "all": Q(),  # An empty Q() object returns all data
         }
 
@@ -554,9 +565,9 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your Customer has been deleted successfully!", )
         else:
-            messages.error(request, "Customer not found")
+            messages.error(request, "Contact not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Customer not found", )
+                                        message="Contact not found OR You are not authorized to perform this action.d", )
 
 class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     """
@@ -600,3 +611,53 @@ class CustomerDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         return create_api_response(status_code=status.HTTP_200_OK,
                                             message="Data retrieved",
                                             data=data)
+
+
+class ConvertToCustomerView(CustomAuthenticationMixin,generics.CreateAPIView):
+    """
+    View to get the listing of all contacts.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = ContactCustomerSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        contact_id = kwargs.get('contact_id')
+        if contact_id:
+            contact = Contact.objects.get(pk=contact_id)
+            
+            data = {
+                'email': contact.email,
+                'first_name': contact.first_name,
+                'last_name': contact.last_name,
+                
+                
+            }
+            
+            serializer = self.serializer_class(data=data)  # Serialize the contact data
+            # Check if the serialized data is valid
+            if serializer.is_valid():
+                customer = serializer.save()  # Save the serialized data and get the customer instance
+                create_customer(customer, request)  # Create customer, assign role, generate password, and send email
+
+                # Update customer details if available in the original contact data
+                if contact.company_name:
+                    customer.company_name = contact.company_name
+                if contact.phone_number:
+                    customer.phone_number = contact.phone_number
+
+                customer.save()  # Save the updated customer details
+                messages.success(request, 'The contact has been successfully converted into a customer.')
+                return redirect(reverse('customer_edit', kwargs={'customer_id': customer.id}))
+            else:
+                # If serialized data is invalid, display error messages for each field
+                for field, errors in serializer.errors.items():
+                    error_message = f"{field.capitalize()}: {', '.join(errors)}"
+                    messages.error(request, error_message)
+
+            # Redirect back to the contact list page
+            return redirect(reverse('contact_list'))

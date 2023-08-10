@@ -104,26 +104,19 @@ class TodoAddSerializer(serializers.ModelSerializer):
 
         return data
     
-    # def validate_start_date(self, value):
-    #     """
-    #     Check that the start_date is not less than the current date.
-    #     """
-    #     if value < date.today():
-    #         raise serializers.ValidationError("Start date cannot be in the past.")
-    #     return value
 
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
         soup = BeautifulSoup(value, 'html.parser')
         cleaned_comment = soup.get_text().strip()
 
+        # Check if the cleaned comment consists only of whitespace characters
         if not cleaned_comment:
             raise serializers.ValidationError("Description is required.")
-        
-        is_blank_html = value.strip() == "<p><br></p>"
-        
-        if is_blank_html:
-            raise serializers.ValidationError("Description field is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Description cannot consist of only spaces and tabs.")
+
         return value
     
     class Meta:
@@ -166,10 +159,11 @@ class CommentSerializer(serializers.ModelSerializer):
         soup = BeautifulSoup(value, 'html.parser')
         cleaned_comment = soup.get_text().strip()
 
+        # Check if the cleaned comment consists only of whitespace characters
         if not cleaned_comment:
             raise serializers.ValidationError("Comment is required.")
-        
-        is_blank_html = value.strip() == "<p><br></p>"
-        if is_blank_html:
-            raise serializers.ValidationError("Comment field is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Comment cannot consist of only spaces and tabs.")
+
         return value
