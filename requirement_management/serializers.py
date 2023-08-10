@@ -165,6 +165,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         instance.customer_id = validated_data.get('customer_id', instance.customer_id)
         instance.description = validated_data.get('description', instance.description)
         instance.site_address = validated_data.get('site_address', instance.site_address)
+        instance.requirement_date_time = validated_data.get('requirement_date_time', instance.site_address)
         instance.quality_surveyor = validated_data.get('quality_surveyor', instance.quality_surveyor)
         instance.UPRN = validated_data.get('UPRN', instance.UPRN)
         
