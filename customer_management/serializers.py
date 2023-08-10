@@ -190,6 +190,29 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'email','company_name','phone_number','customer_type')
+
+
+    def update(self, instance, validated_data):
+        """
+        Update and save the instance.
+        Args:
+            instance: The existing object instance.
+            validated_data: The validated data to update the instance.
+        Returns:
+            instance: The updated instance.
+        """
+        # Check if 'phone_number' field is present in validated data
+        if 'phone_number' in validated_data:
+            # If phone number is provided, update it
+            instance.phone_number = validated_data.pop('phone_number')
+        else:
+            # If phone number is not provided, remove it from the instance
+            instance.phone_number = None
+        # Update and save the instance with other validated data
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
         
         
     
