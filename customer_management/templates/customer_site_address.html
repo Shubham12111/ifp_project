@@ -32,9 +32,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Address</th>
-                        <th>Town</th>
-                        <th>County</th>
-                        <th>Country/Post Code</th>
+                        
                         <th class="custom-last-column">Actions</th>
                     </tr>
                 </thead>
@@ -42,14 +40,14 @@
                     {% for site_address in site_address_list %}
                     <tr>
                         <td>{{ site_address.site_name|default:''|truncatechars:20 }}</td>
-                        <td>{{ site_address.address|default:''|truncatechars:20 }}</td>
-                        
-                        <td>{{ site_address.town.name|default:'' }}</td>
-                        <td>{{ site_address.county.name|default:'' }}</td>
-                        <td>{{ site_address.country|default:'' }}<br>{{ site_address.post_code|default:'' }}
-                           
-                            
-                        </td>
+                        <td >
+                          {{ site_address.address|default:''|truncatechars:20 }}<br>
+                          {% if site_address.town %}{{ site_address.town.name }} <br>{% endif %}
+                          {% if site_address.county %}{{ site_address.county.name}}<br>{% endif %}
+                          {{ site_address.country|default:'' }}<br>
+                          {{ site_address.post_code|default:'' }}
+                      </td>
+                      
                         <td> 
                           {% if request.user|has_update_permission:"customer" %}
                             <a href="{% url 'customer_site_address_edit' customer_instance.id site_address.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
