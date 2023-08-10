@@ -21,10 +21,10 @@ CATEGORY_STATUS_CHOICES = (
 )
 
 PRODUCT_STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('inactive', 'Inactive'),
+        ('active', 'Active'),
+        ('expired', 'Expired'),
 )
+
 ITEM_TYPE_CHOICES = (
         ('item', 'Item'),
         ('sor', 'SOR'),

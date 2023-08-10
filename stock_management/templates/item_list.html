@@ -39,6 +39,7 @@
                   <th>Description</th>
                   <th>Price ( £ )</th>
                   <th>Reference Number</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -49,6 +50,13 @@
                   <td>{{item.description|safe|truncatechars:50}}</td>
                   <td>{{item.price}}</td>
                   <td>{{item.reference_number}}</td>
+                  <td>
+                    {% if item.status == 'active' %}
+                    <span class="badge bg-success">{{ item.get_status_display }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ item.get_status_display|title }}</span>
+                    {% endif %}
+                  </td>
                   <td></td>
                 </tr>
                 {% endfor %}

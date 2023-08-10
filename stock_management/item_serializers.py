@@ -1,7 +1,8 @@
 import re
+import uuid
 from .models import *
 from rest_framework import serializers
-import uuid
+from infinity_fire_solutions.aws_helper import *
 from django.conf import settings
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -129,3 +130,23 @@ class ItemSerializer(serializers.ModelSerializer):
         model = Item
         fields = ['item_name','category_id','price', 'description', 'units', 'quantity_per_box','reference_number','status','file_list']
 
+    def create(self, validated_data):
+        # Pop the 'file_list' field from validated_data
+        file_list = validated_data.pop('file_list', None)
+        # Create a new instance of Requirement with other fields from validated_data
+        instance = Item.objects.create(**validated_data)
+
+        if file_list and len(file_list) > 0:
+
+            for file in file_list:
+                # Generate a unique filename for each file
+                unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                upload_file_to_s3(unique_filename, file, f'stock/item/{instance.id}')
+                file_path = f'stock/item/{instance.id}/{unique_filename}'
+                # save the Product images
+                document = ItemImage.objects.create(
+                item_id = instance,
+                image_path=file_path,
+                )
+        instance.save()
+        return instance

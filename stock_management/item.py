@@ -53,7 +53,7 @@ class ItemListView(CustomAuthenticationMixin,generics.ListAPIView):
         }
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('created_at')
         if request.accepted_renderer.format == 'html':
             context = {'item_list':queryset}
             return render_html_response(context,self.template_name)
@@ -118,6 +118,15 @@ class ItemAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a item.
         """
         message = "Congratulations! item has been added successfully."
+        
+        data = request.data.copy()
+        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+        file_list = data.get('file_list', None)
+
+        if file_list is not None and not any(file_list):
+            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+            
+            
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
