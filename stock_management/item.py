@@ -53,7 +53,7 @@ class ItemListView(CustomAuthenticationMixin,generics.ListAPIView):
         }
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('created_at')
+        queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
         queryset = queryset.filter(item_type = 'item')
 
         if request.accepted_renderer.format == 'html':
@@ -370,3 +370,30 @@ class ItemDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             messages.error(request, "Item not found")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Item not found", )
+
+class ItemRemoveImageView(generics.DestroyAPIView):
+    """
+    View to remove a document associated with item.
+    """
+    swagger_schema = None
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to remove the document associated with a item.
+        """
+        item_id = kwargs.get('item_id')
+        if item_id:
+            image_instance = ItemImage.objects.filter(item_id=item_id, pk=kwargs.get('pk') ).get()
+            if image_instance and image_instance.image_path: 
+                
+                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = image_instance.image_path)
+                image_instance.delete()
+            return Response(
+                {"message": "Your item image has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "Requirement Defect not found or you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )

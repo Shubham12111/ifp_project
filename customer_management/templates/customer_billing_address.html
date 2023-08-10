@@ -33,7 +33,6 @@
                         <th>VAT</th>
                         <th>NION</th>
                         <th>Tax</th>
-                        <th>Place To Supply</th>
                         <th>Address</th>
                         <th class="custom-last-column">Actions</th>
                     </tr>
@@ -44,7 +43,7 @@
                       <td>{{ billing_address.vat_number|default:'' }}</td>
                       <td>{{ billing_address.pan_number|default:'' }}</td>
                       <td>{{ billing_address.get_tax_preference_display|default:'' }}</td>
-                      <td>{{ billing_address.place_to_supply|default:''|truncatechars:20 }}</td>
+                     
                       <td >
                         {{ billing_address.address|default:''|truncatechars:20 }}<br>
                         {% if billing_address.town %}{{ billing_address.town.name }} <br>{% endif %}

@@ -30,12 +30,11 @@
             <table class="table table-flush text-dark" id="site-address-list">
                 <thead class="thead-light">
                     <tr>
-                        <th>Site Name</th>
+                        <th>Name</th>
                         <th>Address</th>
                         <th>Town</th>
                         <th>County</th>
-                        <th>Country</th>
-                        <th>Post Code</th>
+                        <th>Country/Post Code</th>
                         <th class="custom-last-column">Actions</th>
                     </tr>
                 </thead>
@@ -44,10 +43,10 @@
                     <tr>
                         <td>{{ site_address.site_name|default:''|truncatechars:20 }}</td>
                         <td>{{ site_address.address|default:''|truncatechars:20 }}</td>
+                        
                         <td>{{ site_address.town.name|default:'' }}</td>
                         <td>{{ site_address.county.name|default:'' }}</td>
-                        <td>{{ site_address.country|default:'' }}<br>
-                        <td> {{ site_address.post_code|default:'' }}<br>
+                        <td>{{ site_address.country|default:'' }}<br>{{ site_address.post_code|default:'' }}
                            
                             
                         </td>

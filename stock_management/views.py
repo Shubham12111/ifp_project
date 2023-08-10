@@ -23,10 +23,6 @@ from .serializers import *
 
 from .serializers import VendorSerializer,BillingDetailSerializer
 
-
-
-
-
 # Create your views here.
 
 class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):

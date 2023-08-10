@@ -174,9 +174,26 @@ class ItemSerializer(serializers.ModelSerializer):
                     file_path = f'stock/item/{instance.id}/{unique_filename}'
                 
                     ItemImage.objects.create(
-                        requirement_id=instance.requirement_id,
-                        defect_id=instance,
-                        document_path=file_path,
+                        item_id=instance,
+                        image_path=file_path,
                 )
         
         return instance
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        document_paths = []
+        if hasattr(instance, 'itemimage_set'):  # Using 'itemimage_set' for images
+
+            for document in ItemImage.objects.filter(item_id=instance):
+                document_paths.append({
+                    'presigned_url': generate_presigned_url(document.image_path),
+                    'filename': document.image_path.split('/')[-1],
+                    'id': document.id  #  document ID
+                })
+
+        print(document_paths)
+        representation['document_paths'] = document_paths
+
+        return representation

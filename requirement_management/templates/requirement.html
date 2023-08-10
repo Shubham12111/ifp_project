@@ -23,6 +23,8 @@
                   {% if serializer.data.presigned_url %}
                   <div class="col-lg-6">
                     <div style="position: relative;">
+                    <img src="{{ serializer.data.presigned_url }}" alt="{{ serializer.data.filename }}" class="img-thumbnail" width="200">
+                    </br>
                       <a href="{{ serializer.data.presigned_url }}" download>
                         <span class="text-sm me-2">{{ serializer.data.filename }}</span>
                       </a>
