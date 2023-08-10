@@ -1,6 +1,7 @@
 import re
 import uuid
 from .models import *
+from django.db import transaction
 from rest_framework import serializers
 from infinity_fire_solutions.aws_helper import *
 from django.conf import settings
@@ -99,10 +100,10 @@ class ItemSerializer(serializers.ModelSerializer):
             'base_template': 'custom_multiple_file.html',
             'help_text': True,
             'multiple': True,
-            'accept': ','.join(settings.IMAG_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
+            'accept': ','.join(settings.IMAGE_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
             'allow_null': True,  # Allow None values
         },
-        help_text=('Supported file extensions: ' + ', '.join(settings.IMAG_SUPPORTED_EXTENSIONS))
+        help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_SUPPORTED_EXTENSIONS))
         )
     def validate_item_name(self, value):
         # Check for minimum length of 3 characters
@@ -149,4 +150,29 @@ class ItemSerializer(serializers.ModelSerializer):
                 image_path=file_path,
                 )
         instance.save()
+        return instance
+    
+    def update(self, instance, validated_data):
+        file_list = validated_data.pop('file_list', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        with transaction.atomic():
+            instance.save()
+
+            # Update associated documents if file_list is provided
+            if file_list and len(file_list) > 0:
+                
+                for file in file_list:
+                    unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                    upload_file_to_s3(unique_filename, file, f'stock/item/{instance.id}')
+                    file_path = f'stock/item/{instance.id}/{unique_filename}'
+                
+                    ItemImage.objects.create(
+                        requirement_id=instance.requirement_id,
+                        defect_id=instance,
+                        document_path=file_path,
+                )
+        
         return instance
