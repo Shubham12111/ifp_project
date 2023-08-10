@@ -45,7 +45,6 @@ urlpatterns = [
     path('todo/',include('todo.urls')),
     path('',include('common_app.urls')),
     path('customer/',include('customer_management.urls')),
-    path('requirement/',include('requirement_management.urls')),
     path('stock/',include('stock_management.urls')),
     path('fire_risk_assessment/',include('requirement_management.urls')),
 
