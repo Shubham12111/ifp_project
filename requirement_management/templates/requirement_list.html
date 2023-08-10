@@ -37,9 +37,8 @@
               <thead class="thead-light">
                 <tr>
                   <th >Customer</th>
-                  <th>Quality Surveyor</th>
-                  <th>UPRN</th>
-                  <th>Date/Time</th>
+                  <th>Quantity Surveyor</th>
+                   <th>Date/Time</th>
                   <th>Status</th>
                   <th class="custom-last-column">Actions</th>
                 </tr>
@@ -53,7 +52,6 @@
                    <td >{{requirement.quantity_surveyor.first_name|default:''|truncatechars:20}} {{requirement.quantity_surveyor.last_name|default:''|truncatechars:20}}<br>
                     <span class="text-sm text-muted">{{requirement.quantity_surveyor.email}} </span>
                    </td>
-                  <td >{{requirement.UPRN}}</td>
                   <td >{{requirement.requirement_date_time}}</td>
                  
                   <td >{{requirement.status|title}}</td>
