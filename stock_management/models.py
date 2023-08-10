@@ -21,9 +21,16 @@ CATEGORY_STATUS_CHOICES = (
 )
 
 PRODUCT_STATUS_CHOICES = (
+
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('inactive', 'Inactive'),
+)
+
         ('active', 'Active'),
         ('expired', 'Expired'),
 )
+
 
 ITEM_TYPE_CHOICES = (
         ('item', 'Item'),
@@ -34,6 +41,9 @@ SALUTATION_CHOICES = [
         ('Mrs.', 'Mrs.'),
         ('Miss', 'Miss'),
     ]
+
+
+
 UNIT_CHOICES = (
     ('single', 'Single Unit'),
     ('box', 'Box'),
@@ -80,6 +90,11 @@ class VendorContactPerson(models.Model):
     phone_number = models.CharField(max_length=127)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+    def __str__(self):
+        return self.email
+
     
 
 class Category(models.Model):
@@ -107,7 +122,6 @@ class Item(models.Model):
     status = models.CharField(max_length=50, choices=PRODUCT_STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
     def __str__(self):
         return self.item_name
 

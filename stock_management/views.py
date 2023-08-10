@@ -18,7 +18,11 @@ from infinity_fire_solutions.response_schemas import create_api_response, conver
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
+
+from .serializers import *
+
 from .serializers import VendorSerializer,BillingDetailSerializer
+
 
 
 
@@ -27,7 +31,9 @@ from .serializers import VendorSerializer,BillingDetailSerializer
 
 class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
-    View to get the listing of all contacts.
+
+    View to get the listing of all vendors.
+
     Supports both HTML and JSON response formats.
     """
     serializer_class = VendorSerializer
@@ -333,7 +339,9 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 message = "Vendor has been updated successfully!"
 
                 if request.accepted_renderer.format == 'html':
-                    # For HTML requests, display a success message and redirect to vendor_list.
+
+                    # For HTML requests, display a success message and redirect to vendor.
+
                     messages.success(request, message)
                     return redirect(reverse('vendor_billing_detail', kwargs={'vendor_id': kwargs['vendor_id']}))
                 else:
@@ -350,9 +358,12 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         else:
             error_message = "You are not authorized to perform this action"
             if request.accepted_renderer.format == 'html':
-                # For HTML requests with no instance, display an error message and redirect to vendor_list.
+
+                # For HTML requests with no instance, display an error message and redirect to vendor.
+
                 messages.error(request, error_message)
-                return redirect('vendor_list')
+                return redirect('vendor/vendor_list')
+
             else:
                 # For API requests with no instance, return an error response with an error message.
                 return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
@@ -387,6 +398,10 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         """
         Handle DELETE request to delete a vendor.
         """
+
+        # Get the vendor ID from the URL kwargs
+        vendor_id = kwargs.get('pk')
+
         # Get the vendor instance from the database
         # Call the handle_unauthenticated method to handle unauthenticated access
 
@@ -406,8 +421,10 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # or use an empty Q() object if the value is not in the mapping
 
         queryset = Vendor.objects.filter(filter_mapping.get(data_access_value, Q()))
-        
-        vendor = queryset.first()
+
+        vendor = queryset.filter(id=vendor_id).first()
+
+
         
         if vendor:
             # Proceed with the deletion
@@ -521,27 +538,165 @@ class VendorBillingDetailView(CustomAuthenticationMixin, generics.CreateAPIView)
             # Update existing vendor's billing details
             message = "Vendor billing details have been updated successfully!"
             serializer = self.serializer_class(instance=vendor_instance, data=data, context={'request': request})
-    
-            if serializer.is_valid():
-                # If the serializer data is valid, save the billing address instance.
-                serializer.save(vendor=vendor_instance)
 
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests, display a success message and redirect to the Vendor's billing address list.
-                    messages.success(request, message)
-                    return redirect(reverse('vendor_list'))
-                else:
-                    # For API requests, return a success response with serialized data.
-                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            # Add a new vendor's billing details
+            message = "Vendor has been added successfully!"
+            serializer = self.serializer_class(data=data, context={'request': request})
+    
+        if serializer.is_valid():
+            # If the serializer data is valid, save the billing address instance.
+            serializer.save(vendor=vendor_instance)
+
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests, display a success message and redirect to the Vendor's billing address list.
+                messages.success(request, message)
+                return redirect(reverse('vendor_contact_person', kwargs={'vendor_id': kwargs['vendor_id']}))
             else:
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer,
+                # For API requests, return a success response with serialized data.
+                return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests with invalid data, render the template with error messages.
+                context = {'serializer': serializer,
                        'vendor_instance': vendor_instance,
                        'billing_detail_list': self.get_billing_detail()}
-                    return render(request, self.template_name, context)
-                else:
+                return render(request, self.template_name, context)
+            else:
                     # For API requests with invalid data, return an error response with serializer errors.
-                    return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
+
+
+class VendorRemarkView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding or updating a vendor remarks.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = VendorRemarkSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'vendor_remarks.html'
+
+    def get_remarks(self):
+        vendor_id = self.kwargs.get('vendor_id')
+        remarks_list = Vendor.objects.filter(id=vendor_id)
+        return remarks_list
+
+   
+    def get_queryset(self):
+        """
+        Get the queryset for listing vendor remarks items.
+
+        Returns:
+            QuerySet: A queryset of vendor remarks items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "stock_management", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = Vendor.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = queryset.filter(pk=self.kwargs.get('vendor_id')).first()
+        return queryset
+
+   
+    @swagger_auto_schema(auto_schema=None)    
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for updating a Vendor.
+        If the Vendor exists, retrieve the serialized data and render the HTML template.
+        If the Vendor does not exist, render the HTML template with an empty serializer.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"stock_management", HasCreateDataPermission, 'change'
+        )
+        if request.accepted_renderer.format == 'html':
+            vendor_instance = self.get_queryset()  # Corrected to retrieve the vendor_instance
+            if vendor_instance:
+                serializer = self.serializer_class(instance=vendor_instance)  # Prefill the form
+        
+            remarks_list = self.get_remarks()  # Retrieve billing details
+        
+            context = {
+                'serializer': serializer,
+                'vendor_instance': vendor_instance,
+                'remarks_list': remarks_list,
+            }
+        
+            if vendor_instance:
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "Vendor not found.")
+                return redirect(reverse('vendor_list'))
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Alloweded")
+
+
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Vendor Remarks have been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "We apologize for the inconvenience, but please review the below information.",
+                ),
+
+    }  
+
+    @swagger_auto_schema(operation_id='Add Remarks', responses={**common_post_response})        
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        vendor_instance = self.get_queryset()
+        serializer = self.serializer_class(data=data, context={'request': request})
+    
+        if vendor_instance:
+            # Update existing vendor's remarks
+            message = "Vendor Remarks have been updated successfully!"
+            serializer = self.serializer_class(instance=vendor_instance, data=data, context={'request': request})
+        else:
+            message = "Vendor Remarks have been added successfully!"
+            serializer = self.serializer_class(data=data, context={'request': request})
+
+        if serializer.is_valid():
+            # If the serializer data is valid, save the remarks instance.
+            serializer.save(vendor=vendor_instance)
+
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests, display a success message and redirect to the Vendor's remarks.
+                messages.success(request, message)  # Add this line to display the success message
+                return redirect(reverse('vendor_list'))
+            else:
+                # For API requests, return a success response with serialized data.
+                return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests with invalid data, render the template with error messages.
+                context = {'serializer': serializer,
+                       'vendor_instance': vendor_instance,
+                       'remarks_list': self.get_remarks()}
+                return render(request, self.template_name, context)
+            else:
+                # For API requests with invalid data, return an error response with serializer errors.
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                       message="We apologize for the inconvenience, but please review the below information.",
+                                       data=convert_serializer_errors(serializer.errors))
+
+
+            

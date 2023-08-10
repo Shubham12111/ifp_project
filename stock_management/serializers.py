@@ -237,3 +237,124 @@ class BillingDetailSerializer(serializers.ModelSerializer):
         return representation
 
     
+
+class VendorContactPersonSerializer(serializers.ModelSerializer):
+
+    salutation = serializers.ChoiceField(
+        label=('Salutation '),
+        required=True,
+        choices= SALUTATION_CHOICES,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class': 'col-6'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Salutation is required.",
+        },
+
+    )
+
+    first_name = serializers.CharField(
+        label=('First Name '),
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "First Name is required.",
+            "invalid": "First Name can only contain characters.",
+
+        },
+        validators=[validate_first_name] 
+    )
+    
+    last_name = serializers.CharField(
+        label=('Last Name '),
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Last Name is required.",
+            "invalid": "Last Name can only contain characters.",
+        },
+        validators=[validate_last_name] 
+    )
+    
+    email = serializers.EmailField(
+        label=('Email '),
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "email",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Email is required.",
+        },
+    )
+    phone_number = serializers.CharField(
+        label=('Phone'),
+        max_length=14,
+        min_length=10,
+        required= True,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            "base_template": 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Phone number field is required.",
+            "max_length": "Invalid Phone number and max limit should be 14.",
+            "min_length": "Invalid Phone number and min limit should be 10."
+        },
+        validators=[validate_phone_number]
+    )
+
+    class Meta:
+        model = VendorContactPerson
+        fields = ['salutation','first_name' ,'last_name','email', 'phone_number']
+
+
+
+class VendorRemarkSerializer(serializers.ModelSerializer):
+
+    remarks = serializers.CharField(
+        label=('Remarks '),
+        required=True,
+        max_length=255,
+        style={
+           'base_template': 'rich_textarea.html',
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Remarks is required.",
+        },
+         validators=[validate_remarks]
+    )
+    class Meta:
+        model = Vendor
+        fields = ['remarks',]
+
+
+

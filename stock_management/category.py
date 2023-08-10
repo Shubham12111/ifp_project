@@ -64,6 +64,7 @@ class CategoryListView(CustomAuthenticationMixin,generics.ListAPIView):
                                             message="Data retrieved",
                                             data=serializer.data)
             
+
 class CategoryAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
     View for adding or updating a category.
@@ -343,4 +344,6 @@ class CategoryDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         else:
             messages.error(request, "Category not found")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+
                                         message="Category not found", )
+
