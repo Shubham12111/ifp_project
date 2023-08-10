@@ -50,8 +50,8 @@
                         {% else %}
                         {% for inventory in inventory_location_list %}
                             <tr>
-                            <td>{{ inventory.name|title }}</td>
-                            <td class="text-center">
+                              <td class="text-center">{{ inventory.name|title }}</td>
+                            <td >
                                 <input type="number"
                                     name="total_inventory_{{ inventory.id }}"
                                     class="form-control"
