@@ -142,7 +142,10 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         instance.description = validated_data.get('description', instance.description)
         instance.site_address = validated_data.get('site_address', instance.site_address)
         instance.quantity_surveyor = validated_data.get('quantity_surveyor', instance.quantity_surveyor)
+        instance.requirement_date_time = validated_data.get('requirement_date_time', instance.site_address)
         
+        instance.UPRN = validated_data.get('UPRN', instance.UPRN)
+
         
 
         # Pop the 'file' field from validated_data
