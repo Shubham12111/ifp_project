@@ -9,7 +9,6 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from rest_framework import generics, status, filters
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 
 from infinity_fire_solutions.aws_helper import *
@@ -351,6 +350,7 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             error_message = "You are not authorized to perform this action"
             if request.accepted_renderer.format == 'html':
                 # For HTML requests with no instance, display an error message and redirect to vendor.
+
                 messages.error(request, error_message)
                 return redirect('vendor/vendor_list')
             else:
