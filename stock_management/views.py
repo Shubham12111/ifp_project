@@ -27,7 +27,7 @@ from .serializers import VendorSerializer,BillingDetailSerializer
 
 class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
-    View to get the listing of all contacts.
+    View to get the listing of all vendors.
     Supports both HTML and JSON response formats.
     """
     serializer_class = VendorSerializer
@@ -333,7 +333,7 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 message = "Vendor has been updated successfully!"
 
                 if request.accepted_renderer.format == 'html':
-                    # For HTML requests, display a success message and redirect to vendor_list.
+                    # For HTML requests, display a success message and redirect to vendor.
                     messages.success(request, message)
                     return redirect(reverse('vendor_billing_detail', kwargs={'vendor_id': kwargs['vendor_id']}))
                 else:
@@ -350,9 +350,9 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         else:
             error_message = "You are not authorized to perform this action"
             if request.accepted_renderer.format == 'html':
-                # For HTML requests with no instance, display an error message and redirect to vendor_list.
+                # For HTML requests with no instance, display an error message and redirect to vendor.
                 messages.error(request, error_message)
-                return redirect('vendor_list')
+                return redirect('vendor/vendor_list')
             else:
                 # For API requests with no instance, return an error response with an error message.
                 return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
@@ -387,6 +387,8 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         """
         Handle DELETE request to delete a vendor.
         """
+        # Get the vendor ID from the URL kwargs
+        vendor_id = kwargs.get('pk')
         # Get the vendor instance from the database
         # Call the handle_unauthenticated method to handle unauthenticated access
 
@@ -407,7 +409,7 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         queryset = Vendor.objects.filter(filter_mapping.get(data_access_value, Q()))
         
-        vendor = queryset.first()
+        vendor = queryset.filter(id=vendor_id).first()
         
         if vendor:
             # Proceed with the deletion
