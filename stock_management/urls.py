@@ -3,6 +3,7 @@ from django.urls import path
 from .views import *
 from .category import *
 from .item import *
+from .item_sor import *
 
 urlpatterns = [
    path('vendor/list/', VendorListView.as_view(), name='vendor_list'),
@@ -18,5 +19,14 @@ urlpatterns = [
    
    path('item/list/', ItemListView.as_view(), name='item_list'),
    path('item/add/', ItemAddView.as_view(), name='item_add'),
+   
+   path('item/edit/<int:item_id>/', ItemUpdateView.as_view(), name='item_edit'),
+   path('item/delete/<int:item_id>/', ItemDeleteView.as_view(), name='item_delete'),
+   
+   path('item_sor/list/', ItemSorListView.as_view(), name='item_list_sor'),
+   path('item_sor/add/', ItemSorAddView.as_view(), name='item_add_sor'),
+   
+   path('item_sor/edit/<int:item_id>/', ItemSorUpdateView.as_view(), name='item_edit_sor'),
+   path('item_sor/delete/<int:item_id>/', ItemSorDeleteView.as_view(), name='item_delete_sor'),
 
 ]
