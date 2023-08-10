@@ -28,6 +28,33 @@
                     <span class="text-sm">Billing Address</span>
                 </a>
             </li>
+
+            <li class="nav-item {% if '/stock/vendor/contact_person/' in request.path %}active{% endif %} mt-2">
+                {% if vendor_instance %}
+                    <a class="nav-link text-body" data-scroll="" href="{% url 'vendor_contact_person' vendor_instance.id  %}">
+                {% else %}
+                    <a class="nav-link text-body" data-scroll="">
+                {% endif %}
+                <div class="icon me-2">
+                    <i class="fas fa-users me-sm-1 text-dark mb-1" aria-hidden="true"></i>
+                </div>
+                <span class="text-sm">Contact Persons</span>
+            </a>
+        </li>
+
+        <li class="nav-item {% if '/stock/vendor/remarks/' in request.path %}active{% endif %} mt-2">
+            {% if vendor_instance %}
+                <a class="nav-link text-body" data-scroll="" href="{% url 'vendor_remarks' vendor_instance.id  %}">
+            {% else %}
+                <a class="nav-link text-body" data-scroll="">
+            {% endif %}
+            <div class="icon me-2">
+                <i class="fas fa-users me-sm-1 text-dark mb-1" aria-hidden="true"></i>
+            </div>
+            <span class="text-sm">Remarks</span>
+        </a>
+    </li> 
+
         </ul>
     </div>
 </div>

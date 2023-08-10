@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path
 from .views import *
 from .category import *
+from .contact_person import *
 
 
 urlpatterns = [
@@ -15,5 +16,12 @@ urlpatterns = [
    path('category/add/', CategoryAddView.as_view(), name='category_add'),
    path('category/edit/<int:category_id>/', CategoryUpdateView.as_view(), name='category_edit'),
    path('category/delete/<int:category_id>/',CategoryDeleteView.as_view(),name='category_delete'),
+
+   path('vendor/contact_person/<int:vendor_id>/', VendorContactPersonView.as_view(), name='vendor_contact_person'),
+   path('vendor/contact_person/edit/<int:vendor_id>/<int:contact_id>/', VendorContactPersonView.as_view(), name='vendor_contact_person_edit'),
+   path('vendor/contact_person/delete/<int:vendor_id>/<int:contact_id>/', VendorRemoveContactPersonView.as_view(), name='vendor_contact_person_delete'),
+
+   path('vendor/remarks/<int:vendor_id>/',VendorRemarkView.as_view(), name='vendor_remarks'),
+   
 
 ]
