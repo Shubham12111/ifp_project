@@ -66,7 +66,8 @@ def generate_menu(request, menu_items):
                 'icon': item.icon
             }
             menu_data.append(menu_item)
-        elif has_view_permission(request.user, re.sub(pattern, "", item.name)):
+        
+        elif has_view_permission(request.user, re.sub(pattern, "", item.name)) and not has_view_permission(request.user, re.sub(pattern, "", item.name)) == 'none':
             # Add other menu items with view permission
             menu_item = {
                 'url': item.url,

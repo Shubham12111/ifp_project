@@ -1,14 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %}Requirement Defects {{ block.super }}{% endblock %}
+{% block title %}Fire Risk Assessment Defects {{ block.super }}{% endblock %}
 {% block content %}
 <div class="container-fluid my-3 py-3">
     <div class="row mt-4">
         {% include 'requirement_management/requirement_actions.html' %}
         <div class="col-lg-9 mt-lg-0">
             {% include 'components/alert.html' %}
-            {% include 'customer_management/customer_info.html' %}
             <!-- Card Basic Info -->
             <div class="card" id="basic-info">
                 <div class="card-header">

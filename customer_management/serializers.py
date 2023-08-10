@@ -85,11 +85,9 @@ class ContactCustomerSerializer(serializers.ModelSerializer):
         required=False,
         
     )
-  
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'email','company_name','phone_number')
-  
   
 class CustomerSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
@@ -154,6 +152,8 @@ class CustomerSerializer(serializers.ModelSerializer):
         max_length=14,
         min_length=10,
         required=False,
+        allow_null = True,
+        allow_blank=True,
         style={
             'base_template': 'custom_input.html'
         },
@@ -191,31 +191,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = User
         fields = ('first_name', 'last_name', 'email','company_name','phone_number','customer_type')
 
-
-    def update(self, instance, validated_data):
-        """
-        Update and save the instance.
-        Args:
-            instance: The existing object instance.
-            validated_data: The validated data to update the instance.
-        Returns:
-            instance: The updated instance.
-        """
-        # Check if 'phone_number' field is present in validated data
-        if 'phone_number' in validated_data:
-            # If phone number is provided, update it
-            instance.phone_number = validated_data.pop('phone_number')
-        else:
-            # If phone number is not provided, remove it from the instance
-            instance.phone_number = None
-        # Update and save the instance with other validated data
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
         
-        
-    
 class BillingAddressSerializer(serializers.ModelSerializer):
     vat_number = serializers.CharField(
         label='Vat Number',

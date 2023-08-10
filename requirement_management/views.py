@@ -41,7 +41,7 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"requirement", HasListDataPermission, 'list'
+            self,"fire_risk_assessment", HasListDataPermission, 'list'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -82,7 +82,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"requirement", HasCreateDataPermission, 'add'
+           self,"fire_risk_assessment", HasCreateDataPermission, 'add'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -117,7 +117,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"requirement", HasCreateDataPermission, 'add'
+           self,"fire_risk_assessment", HasCreateDataPermission, 'add'
         )
         
         message = "Congratulations! your requirement has been added successfully."
@@ -175,7 +175,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         """
         # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "requirement", HasUpdateDataPermission, 'change'
+            self, "fire_risk_assessment", HasUpdateDataPermission, 'change'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -312,7 +312,7 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # Get the requirement instance from the database.
          # Call the handle_unauthenticated method to handle unauthenticated access.
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"requirement", HasDeleteDataPermission, 'delete'
+            self,"fire_risk_assessment", HasDeleteDataPermission, 'delete'
         )
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
@@ -352,7 +352,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         Get the filtered queryset for requirements based on the authenticated user.
         """
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"Requirement", HasCreateDataPermission, 'detail'
+           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
         )
         
         # Define a mapping of data access values to corresponding filters.
@@ -403,7 +403,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
         
-        data=request.data.copy()
+        data = request.data.copy()
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
@@ -473,7 +473,7 @@ class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
         # Call the handle_unauthenticated method to handle unauthenticated access
 
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"customer", HasDeleteDataPermission, 'delete'
+            self,"fire_risk_assessment", HasDeleteDataPermission, 'delete'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect

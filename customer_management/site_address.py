@@ -53,7 +53,21 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
         return queryset
 
     def get_site_address_instance(self):
-        site_address = SiteAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        
+        site_address = SiteAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
+        
+        site_address = site_address.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
         return site_address
         
@@ -67,6 +81,7 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"customer", HasCreateDataPermission, 'change'
         )
+        
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
@@ -135,6 +150,8 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
             # If the company instance does not exist, return an error response.
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customer_list'))
+
+
 class CustomerRemoveSiteAddressView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View to remove a SiteAddress associated with a Customer.
@@ -153,7 +170,14 @@ class CustomerRemoveSiteAddressView(CustomAuthenticationMixin, generics.DestroyA
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        site_address = SiteAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        
+        site_address = SiteAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
+        site_address = site_address.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
         return site_address
     

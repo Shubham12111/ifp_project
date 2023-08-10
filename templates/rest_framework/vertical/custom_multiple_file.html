@@ -18,8 +18,9 @@
       {% if style.multiple %}multiple{% endif %}
       accept="{{ field.style.accept }}"
     >
-  
+   
     {% if field.help_text %}
+    </br>
       <span class="text-sm text-muted mt-1" style="font-size: 0.775rem !important;">
         Note: {{ field.help_text|safe }}
       </span>
