@@ -53,7 +53,22 @@ class CustomerContactPersonView(CustomAuthenticationMixin, generics.CreateAPIVie
         return queryset
 
     def get_contact_person_instance(self):
-        contact_person = ContactPerson.objects.filter(user_id__id=self.kwargs.get('customer_id'),
+        
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'change'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        
+        contact_person = ContactPerson.objects.filter(filter_mapping.get(data_access_value, Q()))
+        contact_person = contact_person.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
         return contact_person
         
@@ -65,7 +80,7 @@ class CustomerContactPersonView(CustomAuthenticationMixin, generics.CreateAPIVie
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"customer", HasCreateDataPermission, 'change'
+           self,"customer", HasUpdateDataPermission, 'change'
         )
         if request.accepted_renderer.format == 'html':
             address_instance = self.get_contact_person_instance()
@@ -154,10 +169,17 @@ class CustomerRemoveContactPersonView(CustomAuthenticationMixin, generics.Destro
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-
-        contact_person = ContactPerson.objects.filter(user_id__id=self.kwargs.get('customer_id'),
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        
+        contact_person = ContactPerson.objects.filter(filter_mapping.get(data_access_value, Q()))
+        
+        contact_person = contact_person.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
-        print(contact_person)
+        
         return contact_person
     
     def destroy(self, request, *args, **kwargs):

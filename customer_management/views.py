@@ -382,7 +382,21 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         return queryset
 
     def get_billing_address_instance(self):
-        billing_address = BillingAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
+        
+        
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        
+        billing_address = BillingAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
+        billing_address = billing_address.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
         return billing_address
 
@@ -392,10 +406,6 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         If the customer exists, retrieve the serialized data and render the HTML template.
         If the customer does not exist, render the HTML template with an empty serializer.
         """
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"customer", HasCreateDataPermission, 'change'
-        )
         if request.accepted_renderer.format == 'html':
             address_instance = self.get_billing_address_instance()
             if address_instance:
@@ -410,7 +420,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
                        'billing_address_list':self.get_billing_address()}
                 return render_html_response(context,self.template_name)
             else:
-                messages.error(request, "Customer not found.")
+                messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_list'))
 
         else:
@@ -482,8 +492,15 @@ class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.Destr
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-
-        billing_address = BillingAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'),
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        
+        
+        billing_address = BillingAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
+        billing_address = billing_address.filter(user_id__id=self.kwargs.get('customer_id'),
                                                        pk=self.kwargs.get('address_id')).first()
         return billing_address
     
@@ -497,9 +514,9 @@ class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.Destr
             billing_address.delete()
             success_message = "Customer biling address has been deleted successfully!"
             messages.success(request,success_message)
-            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,message=success_message )
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND, message=success_message )
         else:
-            error_message= "Customer biling address not found"
+            error_message= "Customer biling address not found OR You are not authorized to perform this action"
             messages.error(request,error_message)
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message=error_message, )
