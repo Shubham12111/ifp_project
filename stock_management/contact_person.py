@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from django.conf import settings
 from django.contrib import messages
-from drf_yasg.utils import swagger_auto_schema
 
 from rest_framework import generics, status, filters
 from rest_framework.response import Response
@@ -11,7 +10,6 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.response_schemas import create_api_response, render_html_response
-from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
 from .serializers import *
@@ -152,7 +150,9 @@ class VendorRemoveContactPersonView(CustomAuthenticationMixin, generics.DestroyA
     """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = VendorRemarkSerializer
+    template_name = 'vendor_contact_person.html'
     swagger_schema = None
+    
     def get_queryset(self):
         """
         Get the queryset of contacts filtered by the current user.
@@ -160,13 +160,22 @@ class VendorRemoveContactPersonView(CustomAuthenticationMixin, generics.DestroyA
          # Get the model class using the provided module_name string
     
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "stock_mangement", HasDeleteDataPermission, 'delete'
+            self,"stock_management", HasDeleteDataPermission, 'delete'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(created_by=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data 
+        }
 
-        contact_person = VendorContactPerson.objects.filter(vendor_id=self.kwargs.get('vendor_id'),
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+
+        queryset = VendorContactPerson.objects.filter(filter_mapping.get(data_access_value, Q()))
+        contact_person = queryset.filter(vendor_id=self.kwargs.get('vendor_id'),
                                                        pk=self.kwargs.get('contact_id')).first()
     
         return contact_person
