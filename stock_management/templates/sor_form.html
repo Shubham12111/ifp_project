@@ -1,17 +1,16 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %} {% if item_instance %}Edit {% else %} Add {% endif %} Item {{ block.super }}{% endblock %}
+{% block title %} {% if item_instance %}Edit {% else %} Add {% endif %} SOR {{ block.super }}{% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
-<div class="container-fluid my-3 py-3">
-  <div class="row mt-4">
-    {% include 'item_actions.html' %}
-      <div class="col-lg-9 mt-lg-0">
+<div class="container-fluid py-4">
+    <div class="row">
+         <div class="col-12 col-lg-8 m-auto">
          <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8" enctype="multipart/form-data">
              <!--single form panel-->
              <div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
-               <h4 class="font-weight-bolder mb-2">{% if item_instance %} Edit {% else %} Add {% endif %} Item</h4>
+               <h4 class="font-weight-bolder mb-2">{% if item_instance %} Edit {% else %} Add {% endif %} SOR</h4>
                <div class="multisteps-form__content mt-2 row">
                  {% csrf_token %}
                   {% render_form serializer %}
@@ -37,7 +36,7 @@
                  <div class="row mt-4">
                  <div class="col-6 col-lg-6 m-auto text-end"></div>
                  <div class="col-md-6 m-auto text-center text-md-end">
-                   <a class="btn bg-gradient-secondary mb-0 js-btn-prev"  href="{% if '/stock/item/add/' in request.path  or '/stock/item/edit/' in request.path %} {% url 'item_list' %} {% else %} {% url 'item_list_sor' %} {% endif %}" title="Back">Back</a>
+                   <a class="btn bg-gradient-secondary mb-0 js-btn-prev"  href=" {% url 'list_sor' %}" title="Back">Back</a>
                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Submit</button>
                  </div>
                </div>
@@ -55,37 +54,14 @@
 <script src="{% static 'assets/js/custom_country.js' %}"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-      const unitsSelect = document.querySelector('[name="units"]');
+      const unitsSelect = document.querySelector('.form-group.col-6.units');
       const quantityPerBoxDiv = document.querySelector('.form-group.col-6.quantity_per_box');
-      const quantityPerBoxInput = quantityPerBoxDiv.querySelector('input[name="quantity_per_box"]');
-      const quantityPerBoxLabel = quantityPerBoxDiv.querySelector('label');
+   
+      quantityPerBoxDiv.style.display = 'none';
+      unitsSelect.style.display = 'none';
       
-      // Show the entire div by default
-      
-      if (unitsSelect.value === 'box') {
-          quantityPerBoxDiv.style.display = 'block';
-      }
-      else
-      {
-        quantityPerBoxDiv.style.display = 'none';
-      }
-      
-      // Add the red asterisk to the label
-      quantityPerBoxLabel.innerHTML += '<span class="text-danger">*</span>';
-      
-      // Make the input field required
-      quantityPerBoxInput.required = true;
+     
   
-      // Show/hide the div based on selection
-      unitsSelect.addEventListener('change', function() {
-          if (unitsSelect.value === 'box') {
-              quantityPerBoxDiv.style.display = 'block';
-              quantityPerBoxInput.required = true;
-          } else {
-              quantityPerBoxDiv.style.display = 'none';
-              quantityPerBoxInput.required = false;
-          }
-      });
   });
 </script>
 

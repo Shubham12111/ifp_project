@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from . models import Vendor,VendorContactPerson,Item,ItemImage
+from . models import Vendor,VendorContactPerson,Item,ItemImage,InventoryLocation,Inventory
  
 
 
@@ -18,7 +18,8 @@ class VendorContactPersonAdmin(admin.ModelAdmin):
 
 admin.site.register(Vendor, VendorAdmin)
 admin.site.register(VendorContactPerson, VendorContactPersonAdmin)
-
 admin.site.register(Item)
 admin.site.register(ItemImage)
+admin.site.register(InventoryLocation)
+admin.site.register(Inventory)
 
