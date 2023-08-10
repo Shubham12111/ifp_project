@@ -33,6 +33,8 @@ urlpatterns = [
    path('item/edit/<int:item_id>/', ItemUpdateView.as_view(), name='item_edit'),
    path('item/delete/<int:item_id>/', ItemDeleteView.as_view(), name='item_delete'),
    path('inventory/<int:item_id>/', InventoryView.as_view(), name='inventory_view'),
+   path('item/remoev/image/<int:item_id>/<int:pk>/', ItemRemoveImageView.as_view(), name='item_image_remove'),
+
    
    path('inventory_location/list/', InventoryLocationListView.as_view(), name='inventory_location_list'),
    path('inventory_location/add/', InventoryLocationAddView.as_view(), name='inventory_location_add'),
