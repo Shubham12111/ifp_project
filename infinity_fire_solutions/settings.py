@@ -37,17 +37,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cities_light',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'ckeditor',
-    'drf_yasg',
     'authentication',
     'contact',
     'common_app',
     'todo',
+    'cities_light',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'ckeditor',
     'customer_management',
-    'requirement_management'
+    'requirement_management',
+    'stock_management'
     
 ]
 

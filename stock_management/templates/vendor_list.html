@@ -1,7 +1,7 @@
  <!-- add_customer.html -->
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Add Vendor{{ block.super }}{% endblock %}
+{% block title %} Vendor{{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
@@ -47,8 +47,8 @@
               <tbody class="ml-4"> 
                 {% for vendor in vendors %}
                 <tr>
-                  <td >{{vendor.first_name}}</td>
-                  <td >{{vendor.last_name}}</td>
+                  <td >{{vendor.first_name|default:''|truncatechars:20}}</td>
+                  <td >{{vendor.last_name|default:''|truncatechars:20}}</td>
                   <td >{{vendor.email}}</td>
                   <td >{{vendor.phone_number}}</td>
                   <td>
