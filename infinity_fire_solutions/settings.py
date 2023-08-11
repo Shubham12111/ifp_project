@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'common_app',
     'todo',
     'cities_light',
+    'drf_yasg',
     'rest_framework',
     'rest_framework.authtoken',
     'ckeditor',
