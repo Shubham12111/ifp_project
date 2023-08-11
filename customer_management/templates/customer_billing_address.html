@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_tags %}
 {% load rest_framework %}
 {% block title %} Customer Billing Address {{ block.super }}{% endblock %}
 {% block content %}
@@ -32,7 +33,6 @@
                         <th>VAT</th>
                         <th>NION</th>
                         <th>Tax</th>
-                        <th>Place To Supply</th>
                         <th>Address</th>
                         <th class="custom-last-column">Actions</th>
                     </tr>
@@ -43,7 +43,7 @@
                       <td>{{ billing_address.vat_number|default:'' }}</td>
                       <td>{{ billing_address.pan_number|default:'' }}</td>
                       <td>{{ billing_address.get_tax_preference_display|default:'' }}</td>
-                      <td>{{ billing_address.place_to_supply|default:''|truncatechars:20 }}</td>
+                     
                       <td >
                         {{ billing_address.address|default:''|truncatechars:20 }}<br>
                         {% if billing_address.town %}{{ billing_address.town.name }} <br>{% endif %}
@@ -52,14 +52,18 @@
                         {{ billing_address.post_code|default:'' }}
                     </td>
                         <td> 
+                          {% if request.user|has_update_permission:"customer" %}
                             <a href="{% url 'customer_billing_address_edit' customer_instance.id billing_address.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
                                 <i class="fas fa-edit text-secondary"></i>
                             </a>
+                          {% endif %}
+                          {% if request.user|has_delete_permission:"customer" %}
                             <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" 
                             onclick="CustomconfirmDelete({{customer_instance.id}}{{billing_address.id}}, 'Are you sure you want to delete this billing address??','The billing address has been deleted successfully.','{% url 'customer_billing_address_delete' customer_instance.id billing_address.id %}')">
                                 <i class="fas fa-trash text-secondary"></i>
 
                             </a>
+                            {% endif %}
                         </td>
                     </tr>
                     

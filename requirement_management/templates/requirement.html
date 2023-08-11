@@ -3,15 +3,16 @@
 {% load rest_framework %}
 {% block title %} Requirement {{ block.super }}{% endblock %}
 {% block content %}
+{% include 'components/alert.html' %}
 <div class="container-fluid my-3 py-3">
   <div class="row mt-4">
     {% include 'requirement_management/requirement_actions.html' %}
     <div class="col-lg-9 mt-lg-0">
-      {% include 'components/alert.html' %}
+
         <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
-              <h5>Requirement Information</h5>
+              <h5> Fire Risk Assessment Information</h5>
             </div>
             <div class="card-body pt-0">
               <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data">
@@ -22,6 +23,8 @@
                   {% if serializer.data.presigned_url %}
                   <div class="col-lg-6">
                     <div style="position: relative;">
+                    <img src="{{ serializer.data.presigned_url }}" alt="{{ serializer.data.filename }}" class="img-thumbnail" width="200">
+                    </br>
                       <a href="{{ serializer.data.presigned_url }}" download>
                         <span class="text-sm me-2">{{ serializer.data.filename }}</span>
                       </a>

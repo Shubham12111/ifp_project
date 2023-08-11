@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} Inventory{{ block.super }}{% endblock %}
+{% block content %}
+
+{% include 'components/alert.html' %}
+<div class="container-fluid my-3 py-3">
+  <div class="row mt-4">
+    {% include 'item_actions.html' %}
+      <div class="col-lg-9 mt-lg-0">
+         <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8" enctype="multipart/form-data">
+             <!--single form panel-->
+             <div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
+               <h4 class="font-weight-bolder mb-2">Inventory</h4>
+               <div class="multisteps-form__content mt-2 row">
+                 {% csrf_token %}
+                 <div class="table-responsive">
+                    <table class="table align-items-center">
+                      <thead class="thead-light">
+                      <tr>
+                        <th>Inventory Location</th>
+                        <th>Total Inventory</th>
+                        <th>Assigned Inventory</th>
+                      </tr>
+                    </thead>
+                    <tbody class="">
+                        {% if inventory_data  %}
+                            {% for inventory in inventory_data %}
+                            <tr>
+                            <td class="text-center">{{ inventory.inventory_location.name|title }}</td>
+                            <td>
+                                <input type="number"
+                                    name="total_inventory_{{ inventory.inventory_location.id }}"
+                                    value="{{ inventory.total_inventory }}"
+                                    class="form-control"
+                                    required
+                                    step="0.01"
+                                    >
+                            </td>
+                            <td>
+                                <input type="number"
+                                    name="assigned_inventory_{{ inventory.inventory_location.id }}"
+                                    value="{{ inventory.assigned_inventory }}"
+                                    class="form-control"
+                                    >
+                            </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                        {% for inventory in inventory_location_list %}
+                            <tr>
+                              <td class="text-center">{{ inventory.name|title }}</td>
+                            <td >
+                                <input type="number"
+                                    name="total_inventory_{{ inventory.id }}"
+                                    class="form-control"
+                                    step="0.01"
+                                    required>
+                            </td>
+                            <td>
+                                <input type="number"
+                                    name="assigned_inventory_{{ inventory.id }}"
+                                    class="form-control"
+                                    >
+                            </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+
+                    </tbody>
+                  </table>
+                  </div>
+                  
+
+                 </div>
+                 <div class="row mt-4">
+                 <div class="col-6 col-lg-6 m-auto text-end"></div>
+                 <div class="col-md-6 m-auto text-center text-md-end">
+                   <a class="btn bg-gradient-secondary mb-0 js-btn-prev"  href="{% url 'item_list' %}" title="Back">Back</a>
+                   <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Submit</button>
+                 </div>
+               </div>
+                
+               </div>
+             </div>
+           
+           </form>
+       </div>
+   </div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_country.js' %}"></script>
+
+
+    
+{% endblock %}

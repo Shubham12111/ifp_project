@@ -37,17 +37,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cities_light',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'ckeditor',
-    'drf_yasg',
     'authentication',
     'contact',
     'common_app',
     'todo',
+    'cities_light',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'ckeditor',
     'customer_management',
-    'requirement_management'
+    'requirement_management',
+    'stock_management'
     
 ]
 
@@ -187,6 +187,7 @@ AWS_BUCKET_NAME = 'ifp-assets-beta'
 #supported file
 SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
 IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov']
+IMAGE_SUPPORTED_EXTENSIONS = ["png", "jpg", "jpeg"]
 
 # Include data for English language translations
 CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']

@@ -43,7 +43,7 @@ def has_view_permission(user, module_name):
     Returns:
         bool: True if the user has the 'add' permission for the specified module, False otherwise.
     """
-    user_permissions = get_user_module_permissions(user, module_name)
+    user_permissions = get_user_module_permissions(user, module_name.lower())
     # Check both "can list data" and "can create data" permissions
     for permission in user_permissions.values():
         return permission.get('can_create_data') or permission.get('can_list_data') != 'none'
@@ -57,7 +57,7 @@ def generate_menu(request, menu_items):
 
     for item in menu_items:
         pattern = r"s$"
-        if not item.permission_required:
+        if not item.permission_required or item.parent:
             # Add the dashboard menu item, visible to all users
             menu_item = {
                 'url': item.url,
@@ -66,7 +66,8 @@ def generate_menu(request, menu_items):
                 'icon': item.icon
             }
             menu_data.append(menu_item)
-        elif has_view_permission(request.user, re.sub(pattern, "", item.name)):
+        
+        elif has_view_permission(request.user, re.sub(pattern, "", item.name.replace(" ", "_"))) and not has_view_permission(request.user, re.sub(pattern, "", item.name.replace(" ", "_"))) == 'none':
             # Add other menu items with view permission
             menu_item = {
                 'url': item.url,
@@ -77,8 +78,7 @@ def generate_menu(request, menu_items):
             
              # Check for submenus of the current item
             submenu_items = MenuItem.objects.filter(parent=item)
-        
-            if submenu_items.exists():
+            if submenu_items:
              #Generate submenus recursively
                 menu_item['submenu'] = generate_menu(request, submenu_items)
 
@@ -98,5 +98,5 @@ def custom_menu(request):
             
             # Generate the final menu data structure using the generate_menu function
             menu_data = generate_menu(request, allowed_menu_items)
-            
+    print(menu_data) 
     return {'menu_items': menu_data}

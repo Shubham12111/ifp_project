@@ -85,11 +85,9 @@ class ContactCustomerSerializer(serializers.ModelSerializer):
         required=False,
         
     )
-  
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'email','company_name','phone_number')
-  
   
 class CustomerSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(
@@ -154,6 +152,8 @@ class CustomerSerializer(serializers.ModelSerializer):
         max_length=14,
         min_length=10,
         required=False,
+        allow_null = True,
+        allow_blank=True,
         style={
             'base_template': 'custom_input.html'
         },
@@ -190,9 +190,8 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'email','company_name','phone_number','customer_type')
+
         
-        
-    
 class BillingAddressSerializer(serializers.ModelSerializer):
     vat_number = serializers.CharField(
         label='Vat Number',

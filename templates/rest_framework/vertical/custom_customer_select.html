@@ -52,13 +52,19 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                  const customerDetails = `
                     <ul class="list-group col-12">
-                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
-                          <div class="d-flex flex-column">
-                          <span class="mb-2 text-md">Customer Name: <span class="text-dark font-weight-bold ms-2">${data.data.first_name} ${data.data.last_name}</span></span>
-                          <span class="mb-2 text-md">Company Name: <span class="text-dark font-weight-bold ms-2">${data.data.company_name}</span></span>
-                          <span class="mb-2 text-md">Email Address: <span class="text-dark ms-2 font-weight-bold">${data.data.email}</span></span>
-                          </div>
-                        </li>
+                      <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                        <div class="d-flex flex-column">
+                          ${data.data.first_name
+                            ? `<span class="mb-2 text-md">Customer Name: <span class="text-dark font-weight-bold ms-2">${data.data.first_name} ${data.data.last_name}</span></span>`
+                            : ''}
+                          ${data.data.company_name
+                            ? `<span class="mb-2 text-md">Company Name: <span class="text-dark font-weight-bold ms-2">${data.data.company_name}</span></span>`
+                            : ''}
+                          ${data.data.email
+                            ? `<span class="mb-2 text-md">Email Address: <span class="text-dark ms-2 font-weight-bold">${data.data.email}</span></span>`
+                            : ''}
+                        </div>
+                      </li>
                       </ul>`;
                 const siteDropdown = data.data.site_address.map(site => `<option value="${site.id}">${site.site_name}</option>`).join('');
                 customerDetailsCard.querySelector('.customer-body').innerHTML = customerDetails;

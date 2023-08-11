@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %}Add Vendor {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container-fluid my-3 py-3">
+  <div class="row mt-4">
+    {% include 'stock_management/stock_actions.html' %}
+    <div class="col-lg-9 mt-lg-0">
+      {% include 'components/alert.html' %}
+        <!-- Card Basic Info -->
+        <div class="card" id="basic-info">
+            <div class="card-header">
+              <h5>General Information</h5>
+            </div>
+            <div class="card-body pt-0">
+                <form role="form"  method="POST" autocomplete="off" >
+                    <div class='row'>
+                        {% csrf_token %}
+                        {% render_form serializer %}
+                    </div>
+                    
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0 mx-2">Save</button>
+                    <a class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0" href="{% url 'vendor_list' %}">Back</a>
+                    
+
+                </form>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_country.js' %}"></script>
+{% endblock %}

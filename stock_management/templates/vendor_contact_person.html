@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} Vendor Contact Person {{ block.super }}{% endblock %}
+{% block content %}
+<div class="container-fluid my-3 py-3">
+  <div class="row mt-4">
+    {% include 'stock_management/stock_actions.html' %}
+    <div class="col-lg-9 mt-lg-0">
+      {% include 'components/alert.html' %}
+        <!-- Card Basic Info -->
+        <div class="card" id="basic-info">
+            <div class="card-header">
+              <h5> Contact Person </h5>
+            </div>
+            <div class="card-body pt-0">
+                <form role="form"  method="POST" autocomplete="off" >
+                    <div class='row'>
+                        {% csrf_token %}
+                        {% render_form serializer %}
+                    </div>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0 mx-2">Save</button>
+                    <a class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0" href="{% url 'vendor_billing_detail' vendor_instance.id %}">Back</a>
+
+                </form>
+            </div>
+        </div>
+        <div class="card mt-4" id="basic-info">
+            <table class="table table-flush text-dark" id="contact-person-list">
+                <thead class="thead-light">
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th class="custom-last-column">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="ml-4">
+                    {% for contact_person in contact_person_list %}
+                    <tr>
+                        <td>{{ contact_person.first_name|default:''|truncatechars:20  }}</td>
+                        <td>{{ contact_person.last_name|default:''|truncatechars:20  }}</td>
+                        <td>{{ contact_person.email }}</td>
+                        <td>{{ contact_person.phone_number }}</td>
+                    
+                        <td> 
+                            <a href="{% url 'vendor_contact_person_edit' vendor_instance.id contact_person.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
+                                <i class="fas fa-edit text-secondary"></i>
+                            </a>
+                            <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" 
+                            onclick="CustomconfirmDelete({{vendor_instance.id}}{{contact_person.id}}, 'Are you sure you want to delete this contact person??','The contact person has been deleted successfully.','{% url 'vendor_contact_person_delete' vendor_instance.id contact_person.id %}')">
+                                <i class="fas fa-trash text-secondary"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+       
+
+        
+    
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_country.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+  if (document.getElementById('contact-person-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#contact-person-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 10
+    });
+
+  };
+</script>
+{% endblock %}
