@@ -1,0 +1,417 @@
+<!-- add_customer.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+{% block title %} Purchase Order Add{{ block.super }}{% endblock %}
+{% block content %}
+<style>
+    /* Add borders to the table */
+    .custom-table th,
+    .custom-table td {
+      border: 1px solid #dee2e6;
+      padding: 8px;
+    }
+    .btn.btn-outline-dotted {
+    border: 1px dotted #000; /* Replace #000 with the desired color for the border */
+    background-color: transparent;
+    color: #000; /* Replace #000 with the desired text color */
+}
+  </style>
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-12 col-12 mt-3">
+            <div class="card">
+              <div class="card-body px-4 pb-0">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="invoice_id" class="form-label">Vendor</label>
+                                <select class="form-control" id="vendor-choices">
+                                    <option> Select Vendor</option>
+                                    {% for vendor in vendor_list %}
+                                        <option value="{{vendor.id}}">{{vendor.email}}</option>
+                                    {% endfor %}
+                                </select>
+                                <div id ="vendor-card">
+                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0"  style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inventory_location" class="form-label">Inventory Location</label>
+                                <select class="form-control" id="inventory_location-choices">
+                                    <option> Select Inventory Location</option>
+                                    {% for inventory_location in inventory_location_list %}
+                                        <option value="{{inventory_location.id}}">{{inventory_location.name}}</option>
+                                    {% endfor %}
+                                </select>
+                                <div id ="inventorylocation-card">
+                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0"  style="display: none;">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row mb-4">
+                           <div class="col-md-12">
+                                <label for="invoice_id" class="form-label">PO Number</label>
+                                <input type="number" class="form-control" id="invoice_id" value="8795646525451" disabled>
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                           <div class="col-md-6">
+                                <label for="invoice_id" class="form-label">Date</label>
+                                <input type="text"  class="form-control po_date" id="date" value="01/05/2022" placeholder="DD/MM/YYYY">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="invoice_id" class="form-label">Due Date</label>
+                                <input type="text" class="form-control po_due_date" id="due_date" value="02/06/2022" placeholder="DD/MM/YYYY">
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+
+                <div class="row mt-5">
+                    <div class="col-md-12">
+                        <table class="table-responsive custom-table mb-3 " style="width:100%">
+                                <thead>
+                                    <tr class="px-0">
+                                        <th class="text-start col-6">Item Name</th>
+                                        <th class="text-center col-2">Price</th>
+                                        <th class="text-center col-2">Quantity </th>
+                                        <th class="text-center col-2">Total</th>
+                                        <th class="text-center col-2">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemTableBody">
+                                    <tr>
+                                        <td>
+                                            <select id="itemSelect" class="form-control item-dropdown" onchange="updatePrice(this)">
+                                                {% for item in item_list %}
+                                                <option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </td>
+                                        <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
+                                        <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
+                                        <td class="text-center total">$00.00</td>
+                                        <td></td>
+                                        
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn btn-outline-dotted" id="addItemBtn" title="Submit">Add Item</button>
+                        </div>
+                    </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6 ">
+                        <label>Notes</label>
+                        <textarea class="form-control" rows="6"></textarea>
+                        <div class="form-group mt-4 ">
+  
+                            <label>Attach File</label>
+                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="">
+                    </div>
+                    </div>
+                    <div class="col-md-1 "></div>
+                    <div class="col-md-5">
+                        <div class="row mb-2">
+                            <div class="col-6 text-end mb-1">
+                                <p class="subtotal-label">Sub Total:</p>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <p class="mb-2 text-end subtotal-value">$00.00</p>
+                            </div>
+                            <div class="col-6 mb-1 text-end">
+                                <p class="discount-label">Discount:</p>
+                            </div>
+                            <div class="col-2 text-end mb-2"></div>
+                            <div class="col-4 text-end mb-2">
+                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" value="00.00" onchange="calculateTotal()">
+                            </div>
+                
+                            <div class="col-6 mb-1 text-end">
+                                <p class="tax-label">Tax:</p>
+                            </div>
+                            <div class="col-2 text-end mb-2"></div>
+                            <div class="col-4 mb-1 ">
+                                <input type="number" class="form-control tax-input" id="tax" name="tax" min="0" value="00.00" onchange="calculateTotal()">
+                            </div>
+                            <div class="col-6 mb-1 text-end">
+                                <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <p class="font-weight-bolder mb-0 text-end grand-total-value">$00.00</p>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                <div class="row mt-5 mb-5">
+                <div class="col-6 col-lg-6 m-auto text-end"></div>
+                <div class="col-md-6 m-auto text-center text-md-end">
+                    <button class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-0" id="submitBtn" title="Submit">Cancel</button>
+                    <button class="btn bg-gradient-info mb-0 js-btn-prev  ms-2 mb-0" id="submitBtn" title="Submit">Save As Drfat</button>
+                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Send For Approval</button>
+                </div>
+                </div>
+                
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+
+    <script>
+        const addItemBtn = document.getElementById('addItemBtn');
+        const itemTableBody = document.getElementById('itemTableBody');
+        const subtotalValue = document.querySelector('.subtotal-value');
+        const discountInput = document.querySelector('.discount-input');
+        const taxInput = document.querySelector('.tax-input');
+        const grandTotalValue = document.querySelector('.grand-total-value');
+
+        addItemBtn.addEventListener('click', () => {
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                    <td>
+                    <select id="itemSelect" class="form-control item-dropdown" onchange="updatePrice(this)">
+                        {% for item in item_list %}
+                        <option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
+                <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
+                <td class="text-center total">$00.00</td>
+                <td class="text-center">
+                    <a class=" remove-row-btn" onclick="removeRow(this)">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </td>
+            `;
+            itemTableBody.appendChild(newRow);
+            setInitialPrice(newRow); // Set initial price for the new row
+        });
+
+        function setInitialPrice(row) {
+            const dropdown = row.querySelector('.item-dropdown');
+            const selectedOption = dropdown.options[dropdown.selectedIndex];
+            const priceInput = row.querySelector('.item-price');
+            priceInput.value = selectedOption.dataset.price;
+            recalculateTotal(row);
+        }
+
+        function updatePrice(selectElement) {
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        const row = selectElement.closest('tr');
+        const priceInput = row.querySelector('.item-price');
+        priceInput.value = selectedOption.dataset.price;
+        recalculateTotal(row);
+         // Remove the selected option from all other dropdowns
+         const allDropdowns = document.querySelectorAll('.item-dropdown');
+        allDropdowns.forEach(dropdown => {
+            if (dropdown !== selectElement) {
+                const optionToRemove = dropdown.querySelector(`[value="${selectedOption.value}"]`);
+                if (optionToRemove) {
+                    console.log(optionToRemove)
+                    dropdown.removeChild(optionToRemove);
+                }
+            }
+        });
+            
+        }
+       
+
+
+        itemTableBody.addEventListener('change', (event) => {
+            if (event.target.classList.contains('item-price') || event.target.classList.contains('quantity-input')) {
+                recalculateTotal(event.target.closest('tr'));
+            }
+        });
+
+        function removeRow(buttonElement) {
+            const row = buttonElement.closest('tr');
+            row.remove();
+            calculateTotal();
+        }
+
+        function recalculateTotal(row) {
+            const price = parseFloat(row.querySelector('.item-price').value);
+            const quantity = parseFloat(row.querySelector('.quantity-input').value);
+            const totalCell = row.querySelector('.total');
+            const total = (price * quantity).toFixed(2);
+            totalCell.textContent = `$${total}`;
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            let subtotal = 0;
+            const rows = itemTableBody.querySelectorAll('tr');
+            rows.forEach(row => {
+                const total = parseFloat(row.querySelector('.total').textContent.slice(1));
+                subtotal += total;
+            });
+
+            const discount = parseFloat(discountInput.value);
+            const tax = parseFloat(taxInput.value);
+
+            const discountedAmount = (subtotal * discount);
+            const taxedAmount = (subtotal * tax);
+            const grandTotal = (subtotal - discountedAmount + taxedAmount);
+
+            subtotalValue.textContent = `$${subtotal.toFixed(2)}`;
+            grandTotalValue.textContent = `$${grandTotal.toFixed(2)}`;
+        }
+ 
+
+         // Trigger the function on page load
+    window.addEventListener('load', function() {
+        const selectElement = document.getElementById('itemSelect');
+        updatePrice(selectElement);
+    });
+
+
+
+
+
+  // Check if the datetimepicker element exists
+  if (document.querySelector('.po_date')) {
+    // Get the default value for the datetime picker
+    const defaultDateValue = 'po_date';
+
+    // Convert the default value to a Date object (if available)
+    const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
+
+    // Create the flatpickr date-time picker and set the default date to the default value or current date
+    flatpickr('.po_date', {
+      allowInput: false,
+      defaultDate: defaultDate
+    });
+  }
+
+  if (document.querySelector('.po_due_date')) {
+    // Get the default value for the datetime picker
+    const defaultDateValue = 'po_due_date';
+
+    // Convert the default value to a Date object (if available)
+    const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
+
+    // Create the flatpickr date-time picker and set the default date to the default value or current date
+    flatpickr('.po_due_date', {
+      allowInput: false,
+      defaultDate: defaultDate
+    });
+  }
+
+
+// Initialize Choices.js
+if (document.getElementById('vendor-choices')) {
+  var element = document.getElementById('vendor-choices');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    maxItemCount: 1,
+    addItems: true,
+    addItemFilter: null,
+    removeItems: true,
+    removeItemButton: false,
+    editItems: false,
+    allowHTML: true,
+    duplicateItemsAllowed: true,
+    delimiter: ',',
+    paste: true,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 4,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Vendor", 
+  });
+        // Listen for change event on the dropdown
+    element.addEventListener('change', async function(event) {
+        const selectedVendorId = event.detail.value;
+
+        // Fetch selected vendor's data using AJAX or other method
+        try {
+            const response = await fetch(`/purchase_order/get_vendor_data/?id=${selectedVendorId}`);
+            const selectedVendorData = await response.json();
+            // Populate vendor data in the card
+            const cardBody = document.querySelector('#vendor-card .card-body');
+            cardBody.style.display = 'block';  // Show the card body
+            cardBody.innerHTML = `
+            <h6 class="card-subtitle mb-1">${selectedVendorData.data.first_name} ${selectedVendorData.data.last_name}</h6>
+            <p class="card-subtitle mb-1">+${selectedVendorData.data.phone_number}</p>
+            <p class="card-subtitle mb-1">${selectedVendorData.data.email}</p>
+              
+            `;
+        } catch (error) {
+            console.error('Error fetching vendor data:', error);
+        }
+    });
+
+}
+
+if (document.getElementById('inventory_location-choices')) {
+  var element = document.getElementById('inventory_location-choices');
+  const inventory_location = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    maxItemCount: 1,
+    addItems: true,
+    addItemFilter: null,
+    removeItems: true,
+    removeItemButton: false,
+    editItems: false,
+    allowHTML: true,
+    duplicateItemsAllowed: true,
+    delimiter: ',',
+    paste: true,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 4,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Inventory Location",
+  });
+
+  element.addEventListener('change', async function(event) {
+        const selectedInventoryLocationId = event.detail.value;
+
+        // Fetch selected InventoryLocation's data using AJAX or other method
+        try {
+            const response = await fetch(`/purchase_order/inventory_location/?id=${selectedInventoryLocationId}`);
+            const selectedInventoryLocationdata = await response.json();
+            // Populate selected InventoryLocation  data in the card
+            const cardBody = document.querySelector('#inventorylocation-card .card-body');
+            cardBody.style.display = 'block';  // Show the card body
+            cardBody.innerHTML = `
+           <h6 class="card-subtitle mb-1">${selectedInventoryLocationdata.data.name}</h6>
+            <p class="card-subtitle mb-1">${selectedInventoryLocationdata.data.full_address}</p>
+              
+            `;
+        } catch (error) {
+            console.error('Error fetching InventoryLocation data:', error);
+        }
+    });
+
+}
+
+
+
+</script>
+{% endblock %}

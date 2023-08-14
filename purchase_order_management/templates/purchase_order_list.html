@@ -1,0 +1,108 @@
+ <!-- add_customer.html -->
+ {% extends 'base.html' %}
+ {% load static %}
+ {% load custom_tags %}
+ {% block title %} Purchase Order{{ block.super }}{% endblock %}
+ {% block content %}
+ {% include 'components/alert.html' %}
+ <div class="container-fluid py-4">
+   <div class="row">
+     <div class="row mt-4">
+       <div class="col-lg-8 col-8 mb-3">
+           <!-- Add your content here -->
+       </div>
+       <div class="col-lg-4 col-4 mb-3 text-right">
+         {% if request.user|has_add_permission:"stock_management" %}
+           <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
+           <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Purchase Order</a>
+         {% else %}
+           <!-- The user doesn't have the permission, so don't show the "Add" button -->
+         {% endif %}
+          
+       </div>
+       <div class="col-12">
+         <div class="card">
+           <!-- Card header -->
+           <div class="card-header pb-0">
+             <div class="d-lg-flex justify-content-between">
+               <div>
+                 <h4 class="mb-0">Purchase Orders</h4>
+               </div>
+ 
+               </div>
+             </div>
+         <div class="card-body px-0 pb-0">
+          <div class="table-responsive">
+             <table class="table table-flush text-dark" id="purchase-order-list">
+               <thead class="thead-light">
+                    <tr>
+                    <th>Purchase Order ID</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Row Total</th>
+                  </tr>
+               </thead>
+               <tbody class="ml-4"> 
+                 {% for vendor in vendors %}
+                 <tr>
+                   <td >{{vendor.first_name|default:''|truncatechars:20}}</td>
+                   <td >{{vendor.last_name|default:''|truncatechars:20}}</td>
+                   <td >{{vendor.email}}</td>
+                   <td >{{vendor.phone_number}}</td>
+                  
+                 </tr>
+               
+                 {% endfor %}
+               </tbody>
+               
+             </table>
+           </div>
+        </div>
+       </div>
+     </div>
+   </div>
+ </div>
+
+ {% endblock %} 
+ {% block extra_js %}
+ <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+ <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+ <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+ <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+ <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+ <script>
+    if (document.getElementById('purchase-order-list')) {
+    const dataTable = new simpleDatatables.DataTable("#purchase-order-list", {
+        searchable: true,
+        fixedHeight: false,
+        perPage: 25,
+        serverSide: true,
+        columns: [
+        { select: 0 }, // Assuming "Purchase Order ID" is in the first column
+        { select: 1 }, // "Item Name"
+        { select: 2 }, // "Quantity"
+        { select: 3 }, // "Unit Price"
+        { select: 4 }, // "Row Total"
+        ],
+        ajax: {
+        url: "{% url 'purchase_order_list' %}", // Replace with your URL
+        method: "GET",
+        dataType: "json",
+        data: function (params) {
+            console.log("djfsgdf")
+            // Add additional parameters here if needed
+            return params;
+        },
+        beforeSend: function (xhr) {
+            console.log("TESTE")
+            // Add any headers here if needed
+        },
+        },
+    });
+    console.log(dataTable)
+    }
+
+ </script>
+ {% endblock %}     
+ 
