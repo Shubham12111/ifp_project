@@ -36,22 +36,44 @@
              <table class="table table-flush text-dark" id="purchase-order-list">
                <thead class="thead-light">
                     <tr>
-                    <th>Purchase Order ID</th>
-                    <th>Item Name</th>
-                    <th>Quantity</th>
-                    <th>Unit Price</th>
-                    <th>Row Total</th>
+                    <th>Purchase Order</th>
+                    <th>Vendor</th>
+                    <th>Location</th>
+                    <th>Sub Total</th>
+                    <th>Tax</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
                   </tr>
                </thead>
                <tbody class="ml-4"> 
-                 {% for vendor in vendors %}
+                 {% for purchase_order in purchase_orders %}
                  <tr>
-                   <td >{{vendor.first_name|default:''|truncatechars:20}}</td>
-                   <td >{{vendor.last_name|default:''|truncatechars:20}}</td>
-                   <td >{{vendor.email}}</td>
-                   <td >{{vendor.phone_number}}</td>
-                  
+                   <td >{{purchase_order.po_number}}</td>
+                   <td >{{purchase_order.vendor_id}}</td>
+                   <td >{{purchase_order.inventory_location_id}}</td>
+                   <td >{{purchase_order.sub_total}}</td>
+                   <td >{{purchase_order.tax}}</td>
+                   <td >{{purchase_order.total_amount}}</td>
+                   <td >{{purchase_order.order_date}}</td>
+                   <td >{% if  purchase_order.status == 'sent_for_approval' %}
+                        <span class="text-success">{{ purchase_order.get_status_display|title }}</span>
+                    {% else %}
+                        <span class="status-dark">{{ purchase_order.get_status_display|title }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'purchase_order_view' purchase_order.id %}" data-bs-toggle="tooltip" data-bs-original-title="Preview product">
+                    <i class="fas fa-eye text-secondary" aria-hidden="true"></i>
+                    </a>
+                    <a href="javascript:;" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Edit product">
+                    <i class="fas fa-edit text-secondary" aria-hidden="true"></i>
+                    </a>
+                   
+                    </td>
                  </tr>
+                 
                
                  {% endfor %}
                </tbody>
@@ -78,30 +100,29 @@
         fixedHeight: false,
         perPage: 25,
         serverSide: true,
+        processing: true,
         columns: [
-        { select: 0 }, // Assuming "Purchase Order ID" is in the first column
-        { select: 1 }, // "Item Name"
-        { select: 2 }, // "Quantity"
-        { select: 3 }, // "Unit Price"
-        { select: 4 }, // "Row Total"
+            { select: 0 }, // "Purchase Order ID"
+            { select: 1 }, // "Item Name"
+            { select: 2 }, // "Quantity"
+            { select: 3 }, // "Unit Price"
+            { select: 4 }, // "Row Total"
         ],
         ajax: {
-        url: "{% url 'purchase_order_list' %}", // Replace with your URL
-        method: "GET",
-        dataType: "json",
-        data: function (params) {
-            console.log("djfsgdf")
-            // Add additional parameters here if needed
-            return params;
-        },
-        beforeSend: function (xhr) {
-            console.log("TESTE")
-            // Add any headers here if needed
-        },
+            url: "/your-purchase-order-endpoint", // Replace with the actual endpoint URL
+            method: "GET",
+            dataType: "json",
+            data: function (params) {
+                // You can add additional parameters here if needed
+                return params;
+            },
+            beforeSend: function (xhr) {
+                // You can add any headers here if needed
+            },
         },
     });
-    console.log(dataTable)
-    }
+    console.log(dataTable);
+}
 
  </script>
  {% endblock %}     

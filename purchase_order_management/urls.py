@@ -7,4 +7,5 @@ urlpatterns = [
    path('add/', PurchaseOrderAddView.as_view(), name='purchase_order_add'),
    path('get_vendor_data/', get_vendor_data, name='get_vendor_data'),
    path('inventory_location/', get_inventory_location_data, name='get_inventory_location_data'),
+   path('view/<int:purchase_order_id>', PurchaseOrderView.as_view(), name='purchase_order_view'),
 ]

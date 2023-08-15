@@ -21,6 +21,8 @@
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-lg-12 col-12 mt-3">
+            <form method="post" action="{% url 'purchase_order_add' %}">
+                {% csrf_token %}
             <div class="card">
               <div class="card-body px-4 pb-0">
                 <div class="row">
@@ -28,7 +30,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="invoice_id" class="form-label">Vendor</label>
-                                <select class="form-control" id="vendor-choices">
+                                <select class="form-control" id="vendor-choices" name="vendor_id">
                                     <option> Select Vendor</option>
                                     {% for vendor in vendor_list %}
                                         <option value="{{vendor.id}}">{{vendor.email}}</option>
@@ -41,7 +43,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="inventory_location" class="form-label">Inventory Location</label>
-                                <select class="form-control" id="inventory_location-choices">
+                                <select class="form-control" id="inventory_location-choices" name="inventory_location_id">
                                     <option> Select Inventory Location</option>
                                     {% for inventory_location in inventory_location_list %}
                                         <option value="{{inventory_location.id}}">{{inventory_location.name}}</option>
@@ -59,17 +61,17 @@
                         <div class="row mb-4">
                            <div class="col-md-12">
                                 <label for="invoice_id" class="form-label">PO Number</label>
-                                <input type="number" class="form-control" id="invoice_id" value="8795646525451" disabled>
+                                <input type="number" class="form-control" id="invoice_id" value="8795646525451" name="po_number" >
                             </div>
                         </div>
                         <div class="row mb-4">
                            <div class="col-md-6">
                                 <label for="invoice_id" class="form-label">Date</label>
-                                <input type="text"  class="form-control po_date" id="date" value="01/05/2022" placeholder="DD/MM/YYYY">
+                                <input type="text"  class="form-control po_date" id="date" name="order_date" placeholder="DD/MM/YYYY">
                             </div>
                             <div class="col-md-6">
                                 <label for="invoice_id" class="form-label">Due Date</label>
-                                <input type="text" class="form-control po_due_date" id="due_date" value="02/06/2022" placeholder="DD/MM/YYYY">
+                                <input type="text" class="form-control po_due_date" id="due_date" name="due_date" placeholder="DD/MM/YYYY">
                             </div>
                         </div> 
                     </div>
@@ -104,14 +106,14 @@
                                     </tr>
                                 </tbody>
                             </table>
-                            <button class="btn btn-outline-dotted" id="addItemBtn" title="Submit">Add Item</button>
+                            <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
                         </div>
                     </div>
                 
                 <div class="row mt-4">
                     <div class="col-md-6 ">
                         <label>Notes</label>
-                        <textarea class="form-control" rows="6"></textarea>
+                        <textarea class="form-control" rows="6" name="notes"></textarea>
                         <div class="form-group mt-4 ">
   
                             <label>Attach File</label>
@@ -120,6 +122,8 @@
                     </div>
                     <div class="col-md-1 "></div>
                     <div class="col-md-5">
+                        <input type="hidden" id="subtotalInput" name="sub_total" value="0">
+                        <input type="hidden" id="grandTotalInput" name="total_amount" value="0">
                         <div class="row mb-2">
                             <div class="col-6 text-end mb-1">
                                 <p class="subtotal-label">Sub Total:</p>
@@ -155,11 +159,45 @@
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 m-auto text-center text-md-end">
                     <button class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-0" id="submitBtn" title="Submit">Cancel</button>
-                    <button class="btn bg-gradient-info mb-0 js-btn-prev  ms-2 mb-0" id="submitBtn" title="Submit">Save As Drfat</button>
-                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Send For Approval</button>
+                    <button class="btn bg-gradient-info mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Drfat</button>
+                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
                 </div>
                 </div>
                 
+        </div>
+            </div>
+        </form>
+</div>
+<div class="modal fade" id="noItemsModal" tabindex="-1" aria-labelledby="noItemsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="noItemsModalLabel">No More Items Available</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                All items have been selected. No more items left to add.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Bootstrap Modal for Negative Value Error -->
+<div class="modal fade" id="negativeValueModal" tabindex="-1" aria-labelledby="negativeValueModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="negativeValueModalLabel">Invalid Input</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Negative values are not allowed. Please enter a valid positive value.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
         </div>
     </div>
 </div>
@@ -168,38 +206,67 @@
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
-
-    <script>
+<script>
         const addItemBtn = document.getElementById('addItemBtn');
         const itemTableBody = document.getElementById('itemTableBody');
         const subtotalValue = document.querySelector('.subtotal-value');
         const discountInput = document.querySelector('.discount-input');
         const taxInput = document.querySelector('.tax-input');
         const grandTotalValue = document.querySelector('.grand-total-value');
+        const noItemsModal = new bootstrap.Modal(document.getElementById('noItemsModal'));
+        const negativeValueModal = new bootstrap.Modal(document.getElementById('negativeValueModal'));
+
+
 
         addItemBtn.addEventListener('click', () => {
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                    <td>
-                    <select id="itemSelect" class="form-control item-dropdown" onchange="updatePrice(this)">
-                        {% for item in item_list %}
-                        <option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
-                <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
-                <td class="text-center total">$00.00</td>
-                <td class="text-center">
-                    <a class=" remove-row-btn" onclick="removeRow(this)">
-                        <i class="fas fa-times"></i>
-                    </a>
-                </td>
-            `;
-            itemTableBody.appendChild(newRow);
-            setInitialPrice(newRow); // Set initial price for the new row
+            const unselectedOptionsHtml = getUnselectedOptions();
+                if (unselectedOptionsHtml === '') {
+                    noItemsModal.show(); // Show the modal
+                    return; // Exit the function to prevent adding new rows
+                }
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>
+                <select id="itemSelect" class="form-control item-dropdown" onchange="updatePrice(this)">
+                    ${getUnselectedOptions()}
+                </select>
+            </td>
+            <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
+            <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
+            <td class="text-center total">$00.00</td>
+            <td class="text-center">
+                <a class="remove-row-btn" onclick="removeRow(this)">
+                    <i class="fas fa-times"></i>
+                </a>
+            </td>
+        `;
+
+        itemTableBody.appendChild(newRow);
+        setInitialPrice(newRow);
         });
 
+        function getUnselectedOptions() {
+            const selectedOptions = new Set();
+            const allDropdowns = document.querySelectorAll('.item-dropdown');
+            
+            allDropdowns.forEach(dropdown => {
+                const selectedOption = dropdown.options[dropdown.selectedIndex];
+                selectedOptions.add(selectedOption.value);
+            });
+
+            let unselectedOptionsHtml = '';
+
+            {% for item in item_list %}
+                if (!selectedOptions.has('{{ item.id }}')) {
+                    unselectedOptionsHtml += `<option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>`;
+                }
+            {% endfor %}
+
+            return unselectedOptionsHtml;
+        }
+
+
+            
         function setInitialPrice(row) {
             const dropdown = row.querySelector('.item-dropdown');
             const selectedOption = dropdown.options[dropdown.selectedIndex];
@@ -214,17 +281,6 @@
         const priceInput = row.querySelector('.item-price');
         priceInput.value = selectedOption.dataset.price;
         recalculateTotal(row);
-         // Remove the selected option from all other dropdowns
-         const allDropdowns = document.querySelectorAll('.item-dropdown');
-        allDropdowns.forEach(dropdown => {
-            if (dropdown !== selectElement) {
-                const optionToRemove = dropdown.querySelector(`[value="${selectedOption.value}"]`);
-                if (optionToRemove) {
-                    console.log(optionToRemove)
-                    dropdown.removeChild(optionToRemove);
-                }
-            }
-        });
             
         }
        
@@ -243,13 +299,26 @@
         }
 
         function recalculateTotal(row) {
-            const price = parseFloat(row.querySelector('.item-price').value);
-            const quantity = parseFloat(row.querySelector('.quantity-input').value);
+        const priceInput = row.querySelector('.item-price');
+        const quantityInput = row.querySelector('.quantity-input');
+
+        const price = parseFloat(priceInput.value);
+        const quantity = parseFloat(quantityInput.value);
+
+        if (price >= 0 && quantity >= 0) {
             const totalCell = row.querySelector('.total');
             const total = (price * quantity).toFixed(2);
             totalCell.textContent = `$${total}`;
             calculateTotal();
+        } else {
+            // Show the negative value error modal
+            negativeValueModal.show();
+            
+            // Reset the input fields to a valid state
+            priceInput.value = '0';
+            quantityInput.value = '1';
         }
+    }
 
         function calculateTotal() {
             let subtotal = 0;
@@ -268,6 +337,11 @@
 
             subtotalValue.textContent = `$${subtotal.toFixed(2)}`;
             grandTotalValue.textContent = `$${grandTotal.toFixed(2)}`;
+            // Update hidden input values
+            const subtotalInput = document.getElementById('subtotalInput');
+            const grandTotalInput = document.getElementById('grandTotalInput');
+            subtotalInput.value = subtotal.toFixed(2);
+            grandTotalInput.value = grandTotal.toFixed(2);
         }
  
 
@@ -411,6 +485,109 @@ if (document.getElementById('inventory_location-choices')) {
 
 }
 
+
+// Inside your JavaScript
+// Event listeners for the buttons
+const submitSaveAsDraftBtn = document.getElementById('submitSaveAsDraftBtn');
+const submitBtnApproval = document.getElementById('submitBtnApproval');
+
+submitSaveAsDraftBtn.addEventListener('click', function() {
+    submitForm('pending'); // Call the common function with the status
+});
+
+submitBtnApproval.addEventListener('click', function() {
+    submitForm('sent_for_approval'); // Call the common function with the status
+});
+
+function submitForm(status) {
+    event.preventDefault(); // Prevent default button behavior
+
+    const form = document.querySelector('form');
+    
+    const formData = new FormData(form);
+    formData.append('status', status);
+    
+    // Get the subtotal, discount, and tax values
+    const subtotal = parseFloat(subtotalValue.textContent.slice(1));
+    const discount = parseFloat(discountInput.value);
+    const tax = parseFloat(taxInput.value);
+    
+    // Add the calculated values to the form data
+    formData.append('subtotal', subtotal.toFixed(2));
+    formData.append('discount', discount.toFixed(2));
+    formData.append('tax', tax.toFixed(2));
+
+    // Collect item row data
+    const rows = itemTableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        const selectedOption = row.querySelector('.item-dropdown option:checked');
+        const itemId = selectedOption.value;
+        const itemPrice = parseFloat(row.querySelector('.item-price').value);
+        const quantity = parseFloat(row.querySelector('.quantity-input').value);
+        const rowTotal = parseFloat(row.querySelector('.total').textContent.slice(1)); // Get the row total
+        
+        // Add item data to form data
+        formData.append(`items[${itemId}][price]`, itemPrice.toFixed(2));
+        formData.append(`items[${itemId}][quantity]`, quantity);
+        formData.append(`items[${itemId}][rowTotal]`, rowTotal.toFixed(2)); // Append row total
+    });
+
+    // Make an AJAX POST request to your Django view
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+    }).then(response => {
+        response.json().then(data => {
+            if (data.errors) {
+                // Remove existing error messages
+                const existingErrorMessages = document.querySelectorAll('.help-block');
+                existingErrorMessages.forEach(errorMessage => errorMessage.remove());
+
+                // Display validation errors under respective fields
+                for (const fieldName in data.errors) {
+                    const field = document.querySelector(`[name="${fieldName}"]`);
+                    if (field) {
+                        const tagName = field.nodeName.toLowerCase(); // Get the lowercase tag name
+                        if (tagName === 'select') {
+                            // For select elements, display error message near the select element
+                            const selectContainer = field.closest('.choices'); // Adjust this selector based on your HTML structure
+                            console.log(selectContainer)
+                            if (selectContainer) {
+                                const errorElement = document.createElement('div');
+                                errorElement.classList.add('help-block');
+                                errorElement.textContent = data.errors[fieldName].join(', ');
+                                selectContainer.appendChild(errorElement);
+                            }
+                        } else {
+                            // For other input elements, display error message under the field
+                            const errorElement = document.createElement('div');
+                            errorElement.classList.add('help-block');
+                            errorElement.textContent = data.errors[fieldName].join(', ');
+                            field.parentElement.appendChild(errorElement);
+                        }
+                    }
+                }
+            }
+        else if  (response.ok)
+        {
+            // Successful response
+            window.location.href = '/purchase_order/list/';
+        }
+        else {
+            // Other error handling
+            alert('An error occurred while saving items.');
+        }
+
+
+
+        });
+        
+        
+
+    }).catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 
 </script>

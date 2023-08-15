@@ -22,3 +22,29 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
         full_address = ', '.join(filter(None, address_components))  # Join non-empty components with ', '
 
         return full_address
+
+class PurchaseOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrder
+        fields = ['po_number', 'vendor_id', 'inventory_location_id', 'order_date', 'due_date', 'sub_total', 'discount', 'tax','total_amount','notes','status']
+        
+
+    def validate_sub_total(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Sub Total must be a positive value.")
+        return value
+
+    def validate_discount(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Discount must be a positive value.")
+        return value
+
+    def validate_tax(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Tax must be a positive value.")
+        return value
+
+    def validate_total_amount(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Total Amount must be a positive value.")
+        return value
