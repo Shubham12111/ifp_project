@@ -6,6 +6,7 @@ from .views import *
 urlpatterns = [
     path('list/', RequirementListView.as_view(), name='requirement_list'),
     path('add/', RequirementAddView.as_view(), name='requirement_add'),
+    path('view/<int:pk>/', RequirementDetailView.as_view(), name='requirement_view'),
     path('edit/<int:pk>/', RequirementUpdateView.as_view(), name='requirement_edit'),
     path('delete/<int:pk>/',RequirementDeleteView.as_view(),name='requirement_delete'),
     path('delete/document/<int:requirement_id>', login_required(RequirementRemoveDocumentView.as_view()), name='remove_requirement_document'),

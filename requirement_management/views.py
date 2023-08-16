@@ -148,7 +148,73 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
-            
+
+class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'requirement_detail.html'
+    serializer_class = RequirementAddSerializer
+    
+    def get_queryset(self):
+        """
+        Get the queryset for listing Requirement items.
+
+        Returns:
+            QuerySet: A queryset of Requirements items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+    
+        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        # This method handles GET requests for updating an existing Requirement object.
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            if instance:
+                requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
+                requirement_document = RequirementDocument.objects.filter(requirement_id=instance.id)
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                
+                survey_permissions = UserRolePermission.objects.filter(module='survey')
+                
+                # Extract unique roles from the survey_permissions queryset
+                survey_roles = survey_permissions.values_list('role', flat=True).distinct()
+
+                # Retrieve users associated with these roles
+                users_with_survey_permission = User.objects.filter(
+                    roles__in=survey_roles,
+                )
+
+                surveyers = User.objects.filter()
+                context = {
+                    'serializer': serializer, 
+                    'requirement_instance': instance, 
+                    'requirement_defect': requirement_defect, 
+                    'requirement_document': requirement_document,
+                    'surveyers': users_with_survey_permission
+                    }
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('requirement_list'))
+          
 class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
     API view for updating a requirement.
