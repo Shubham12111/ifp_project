@@ -49,4 +49,4 @@ class PurchaseOrderItem(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.item_name} - {self.purchase_order.po_number}"
+        return f"{self.item_name} - {self.purchase_order_id.po_number}"

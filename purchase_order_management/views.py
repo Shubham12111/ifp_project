@@ -10,11 +10,26 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 from stock_management.models import Vendor, InventoryLocation, Item
 from stock_management.serializers import VendorSerializer
 from .serializers import InventoryLocationSerializer, PurchaseOrderSerializer
-from .models import PurchaseOrder
+from .models import PurchaseOrder, PurchaseOrderItem
 from django.http import JsonResponse
 from django.core import serializers
 from django.views import View
 from django.core.paginator import Paginator
+from django.db import transaction
+
+
+def get_order_items(data):
+    # Access item values using dictionary indexing and looping
+    items = []
+    for key, value in data.items():
+        if key.startswith('items[') and key.endswith('][price]'):
+            item_id = key.split('[')[1].split(']')[0]
+            price = value[0]
+            quantity = data[f'items[{item_id}][quantity]'][0]
+            row_total = data[f'items[{item_id}][rowTotal]'][0]
+            items.append({'item_id': item_id, 'price': price, 'quantity': quantity, 'row_total': row_total})
+    
+    return items 
 
 class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -180,32 +195,44 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
            self,"fire_risk_assessment", HasCreateDataPermission, 'add'
         )
         
-        message = "Congratulations! your requirement has been added successfully."
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.validated_data['created_by'] = request.user  # Assign the current user instance.
-            serializer.save()
+        data = request.data
+        with transaction.atomic():
+            serializer = self.serializer_class(data=request.data)
+            if serializer.is_valid():
+                serializer.validated_data['created_by'] = request.user  # Assign the current user instance.
+                purchase_order = serializer.save()
 
-            # Process item rows
-            item_ids = request.POST.getlist('items[]')
-            item_prices = request.POST.getlist('items[][price]')
-            item_quantities = request.POST.getlist('items[][quantity]')
-            item_total = request.POST.getlist('items[][rowTotal]')
-            for item_id, price, quantity in zip(item_ids, item_prices, item_quantities, item_total):
-                # Save item row data to your database model
-                # Replace this with your actual model and fields
-                item_row = PurchaseOrderItem(item_id=item_id, price=price, quantity=quantity, row_total=item_total)
-                item_row.save()
+                # Access item values using dictionary indexing and looping
+                items = []
+                for key, value in data.items():
+                    if key.startswith('items[') and key.endswith('][price]'):
+                        item_id = key.split('[')[1].split(']')[0]
+                        price = value[0]
+                        quantity = data[f'items[{item_id}][quantity]'][0]
+                        row_total = data[f'items[{item_id}][rowTotal]'][0]
+                        items.append({'item_id': item_id, 'price': price, 'quantity': quantity, 'row_total': row_total})
+                # and 'items' is a list containing extracted item data
 
-            message = "Your Purchase Order has been added successfully!"
+                for item in items:
+                    item_id = item['item_id']
+                    price = item['price']
+                    quantity = item['quantity']
+                    row_total = item['row_total']
+                    
+                    # Create an instance of PurchaseOrderItem and save it
+                    item_row = PurchaseOrderItem(item_id=item_id, unit_price=price, 
+                                                 quantity=quantity, row_total=row_total, 
+                                                 purchase_order_id=purchase_order)
+                    item_row.save()
+                
+                message = "Your Purchase Order has been added successfully!"
 
-            messages.success(request, message)
-            return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
-        else:
-            print(serializer.errors)
-            return JsonResponse({'success': False, 'errors': serializer.errors,  
-            'status':status.HTTP_400_BAD_REQUEST}) 
-    
+                messages.success(request, message)
+                return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
+            else:
+                return JsonResponse({'success': False, 'errors': serializer.errors,  
+                'status':status.HTTP_400_BAD_REQUEST}) 
+        
 
 class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     """
@@ -245,3 +272,132 @@ class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
             context = {'purchase_order':purchase_order}
             return render_html_response(context, self.template_name)
         
+        
+        
+class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
+    """
+    View for adding or updating a Purchase Order.
+    Supports both HTML and JSON response formats.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'purchase_order_form.html'
+    serializer_class = PurchaseOrderSerializer
+
+    def get_purchase_order(self, *args, **kwargs):
+        
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"stock_management", HasCreateDataPermission, 'add'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(created_by=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        base_queryset = PurchaseOrder.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        return base_queryset
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for updating a Purchase Order.
+        If the Purchase Order exists, retrieve the serialized data and render the HTML template.
+        If the Purchase Order does not exist, render the HTML template with an empty serializer.
+        """
+        purchase_order = self.get_purchase_order().filter(pk = kwargs.get('purchase_order_id'))
+        purchase_order_data = purchase_order.first()
+        vendor_list = Vendor.objects.all()
+        inventory_location_list = InventoryLocation.objects.all()
+        item_list = Item.objects.filter(item_type='item')
+        
+        if request.accepted_renderer.format == 'html':
+            # Extract the first purchase order object from the queryset
+            if purchase_order_data:
+                existingPurchaseOrderData = {} 
+                
+                purchase_order_items_data = PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order_data)  # Assuming a related name of "items" for the items on the PurchaseOrder model
+                # Prepare items data
+                items_data = [
+                    {
+                        'item_id': item.id,
+                        'price': item.unit_price,
+                        'quantity': item.quantity,
+                        'row_total': item.row_total,
+                    }
+                    for item in purchase_order_items_data
+                ]
+                
+                existingPurchaseOrderData = {
+                    'vendor_id': purchase_order_data.vendor_id.id,
+                    'inventory_location_id': purchase_order_data.inventory_location_id.id,
+                    'po_number': purchase_order_data.po_number,
+                    'order_date': purchase_order_data.order_date.strftime('%Y-%m-%d'),  # Convert date to string
+                    'due_date': purchase_order_data.due_date.strftime('%Y-%m-%d'),  # Convert date to string
+                    'tax': purchase_order_data.tax,
+                    'sub_total': purchase_order_data.sub_total,
+                    'discount': purchase_order_data.discount,
+                    'notes': purchase_order_data.notes,
+                    'grand_total': purchase_order_data.total_amount,
+                    'items': items_data,
+                    # ... other fields
+                }
+        
+
+            context = {'vendor_list':vendor_list, 
+                       'inventory_location_list':inventory_location_list,
+                       'item_list':item_list,
+                       'purchase_order':purchase_order_data,
+                       'existingPurchaseOrderData':existingPurchaseOrderData}
+            return render_html_response(context,self.template_name)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                message="GET Method Not Alloweded",)
+            
+        
+    def post(self, request, *args, **kwargs):
+        
+        purchase_order = self.get_purchase_order().filter(pk = kwargs.get('purchase_order_id'))
+        purchase_order_data = purchase_order.first()
+
+        serializer = self.serializer_class(instance = purchase_order_data, data=request.data)
+        if serializer.is_valid():
+            # You can add any additional processing or validation here
+            purchase_order = serializer.save()
+
+            # Process item data
+            
+            items_data = get_order_items(request.data)
+            existing_item_ids = [item['item_id'] for item in items_data]
+
+            # Delete PurchaseOrderItem instances that are not present in existing_item_ids
+            PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order).exclude(item_id__in=existing_item_ids).delete()
+
+            for item_data in items_data:
+                item_id = item_data.get('item_id')
+                price = item_data.get('price')
+                quantity = item_data.get('quantity')
+                row_total = item_data.get('row_total')
+                
+                # Update or create the PurchaseOrderItem
+                purchase_order_item, created = PurchaseOrderItem.objects.update_or_create(
+                    purchase_order_id=purchase_order,
+                    item_id=item_id,
+                    defaults={
+                        'price': price,
+                        'quantity': quantity,
+                        'row_total': row_total,
+                    }
+                )
+
+            message = "Your Purchase Order has been updated successfully!"
+
+            messages.success(request, message)
+            return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
+        else:
+            return JsonResponse({'success': False, 'errors': serializer.errors,  
+            'status':status.HTTP_400_BAD_REQUEST}) 

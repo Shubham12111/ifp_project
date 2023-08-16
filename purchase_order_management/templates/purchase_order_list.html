@@ -36,7 +36,7 @@
              <table class="table table-flush text-dark" id="purchase-order-list">
                <thead class="thead-light">
                     <tr>
-                    <th>Purchase Order</th>
+                    <th>PO No.</th>
                     <th>Vendor</th>
                     <th>Location</th>
                     <th>Sub Total</th>
@@ -45,6 +45,7 @@
                     <th>Date</th>
                     <th>Due Date</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                </thead>
                <tbody class="ml-4"> 
@@ -57,6 +58,7 @@
                    <td >{{purchase_order.tax}}</td>
                    <td >{{purchase_order.total_amount}}</td>
                    <td >{{purchase_order.order_date}}</td>
+                   <td >{{purchase_order.due_date}}</td>
                    <td >{% if  purchase_order.status == 'sent_for_approval' %}
                         <span class="text-success">{{ purchase_order.get_status_display|title }}</span>
                     {% else %}
@@ -64,11 +66,14 @@
                     {% endif %}
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'purchase_order_view' purchase_order.id %}" data-bs-toggle="tooltip" data-bs-original-title="Preview product">
+                    
+                    <a href="{% url 'purchase_order_view' purchase_order.id %}" data-bs-toggle="tooltip" data-bs-original-title="Preview Purchase Order">
                     <i class="fas fa-eye text-secondary" aria-hidden="true"></i>
                     </a>
-                    <a href="javascript:;" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Edit product">
-                    <i class="fas fa-edit text-secondary" aria-hidden="true"></i>
+                    {% if  purchase_order.status != 'sent_for_approval' %}
+                      <a href="{% url 'purchase_order_edit' purchase_order.id %}" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Edit Purchase Order">
+                      <i class="fas fa-edit text-secondary" aria-hidden="true"></i>
+                    {% endif %}
                     </a>
                    
                     </td>

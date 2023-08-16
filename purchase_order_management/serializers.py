@@ -24,6 +24,24 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
         return full_address
 
 class PurchaseOrderSerializer(serializers.ModelSerializer):
+    inventory_location_id = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=InventoryLocation.objects.all(),
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Inventory Location is required.",
+            "incorrect_type":"Inventory Location is required."
+        },
+    )
+    vendor_id = serializers.PrimaryKeyRelatedField(
+        required=True,
+        queryset=Vendor.objects.all(),
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Vendor is required.",
+            "incorrect_type":"Vendor is required."
+        },
+    )
     class Meta:
         model = PurchaseOrder
         fields = ['po_number', 'vendor_id', 'inventory_location_id', 'order_date', 'due_date', 'sub_total', 'discount', 'tax','total_amount','notes','status']
