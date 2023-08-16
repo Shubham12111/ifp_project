@@ -7,6 +7,24 @@ from .models import *
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(
+        label=('Name '),
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_fullwidth_input.html',
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Name is required.",
+            "invalid": "Name can only contain characters.",
+        },
+    )
+
     file = serializers.FileField(
     label = ('Image'),
     required=False,
