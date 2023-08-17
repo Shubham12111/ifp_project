@@ -5,7 +5,7 @@ from infinity_fire_solutions.response_schemas import create_api_response, conver
 from rest_framework import generics, status
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from .serializers import RequirementSerializer, RequirementAddSerializer, RequirementDefectAddSerializer, RequirementDetailSerializer, RequirementDefectSerializer
-from .models import Requirement, RequirementDefect,RequirementDocument
+from .models import Requirement, RequirementDefect,RequirementDocument, RequirementAsset
 from django.contrib import messages
 from rest_framework.response import Response
 from rest_framework import filters
@@ -120,6 +120,13 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
            self,"fire_risk_assessment", HasCreateDataPermission, 'add'
         )
         
+        data = request.data.copy()
+        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+        file_list = data.get('file_list', None)
+
+        if file_list is not None and not any(file_list):
+            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+
         message = "Congratulations! your requirement has been added successfully."
         serializer = self.serializer_class(data=request.data)
         
@@ -192,7 +199,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
             instance = self.get_queryset()
             if instance:
                 requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
-                requirement_document = RequirementDocument.objects.filter(requirement_id=instance.id)
+                requirement_documents = RequirementAsset.objects.filter(requirement_id=instance.id)
                 serializer = self.serializer_class(instance=instance, context={'request': request})
 
                 survey_roles = UserRole.objects.filter(name='surveyor')
@@ -209,7 +216,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                         'serializer': serializer, 
                         'requirement_instance': instance, 
                         'requirement_defect': requirement_defect, 
-                        'requirement_document': requirement_document,
+                        'requirement_documents': requirement_documents,
                         'surveyers': users_with_survey_permission,
                         'is_permitted': is_permitted
                         }
@@ -255,7 +262,6 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                         message=message
                     )
         except Exception as e:
-            breakpoint()
             message = "Something went wrong"
             if request.accepted_renderer.format == 'html':
                 messages.warning(request, message)
@@ -265,10 +271,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                         status_code=status.HTTP_400_BAD_REQUEST,
                         message=message
                     )
-            
-        
-        
-          
+
 class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
     API view for updating a requirement.
@@ -364,7 +367,14 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If successful, the requirement is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
-        data = request.data
+
+        data = request.data.copy()
+        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+        file_list = data.get('file_list', None)
+
+        if file_list is not None and not any(file_list):
+            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+            
         instance = self.get_queryset()
         if instance:
             # If the requirement instance exists, initialize the serializer with instance and provided data.

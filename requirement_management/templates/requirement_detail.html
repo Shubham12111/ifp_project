@@ -12,7 +12,7 @@
             <div class="card h-100">
                 <div class="card-body">
                     <div class="card-img-top rounded-top d-flex align-items-center">
-                        <img class = "border-radius-lg shadow-lg mx-auto img-fluid" src="https://picsum.photos/850/500?random=1" alt="Document">
+                        <img class = "border-radius-lg shadow-lg mx-auto img-fluid" src="requirement_instance.document_path" alt="">
                     </div>
                 </div>
             </div>
@@ -109,21 +109,14 @@
     {% if is_permitted %}
         <div class="row mt-lg-4">
             <div class="col-lg-6 mt-lg-4">
-                <div class="card">
+                <div class="card h-100">
                     <div class="card-body">
-                        <h5 class="font-weight-bolder mt-4">Surveyers</h5>
-                        {% if requirement_instance.quantity_surveyor %}
-                            <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                                <label class="font-weight-bold">Assigned Surveyor:</label>
-                                <p>{{ requirement_instance.surveyor }}</p>
-                            </div>
-                        {% endif %}
                         <form method="post">
                             {% csrf_token %}
                             <div class="form-group">
                                 <select name="surveyer" class="form-control col-lg-4">
                                     {% for surveyer in surveyers %}
-                                    <option value="{{ surveyer.id }}">{{ surveyer }}</option>
+                                    <option value="{{ surveyer.id }}" {% if requirement_instance.surveyor.id == surveyer.id %} selected {% endif %}>{{ surveyer }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -135,7 +128,27 @@
                     </div>
                 </div>
             </div>
+        
+        <div class="col-lg-6 mt-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="font-weight-bolder mt-4">Surveyers</h5>
+                    {% if requirement_instance.surveyor %}
+                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
+                            <label class="font-weight-bold">Assigned Surveyor:</label>
+                            <p>{{ requirement_instance.surveyor }}</p>
+                        </div>
+                    {% else %}
+                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
+                            <p>No surveyer assigned.</p>
+                        </div>
+                    {% endif %}
+
+                </div>
+            </div>
         </div>
+    </div>
+
     {% endif %}
 </div>
 

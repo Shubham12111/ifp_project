@@ -1,7 +1,7 @@
 import uuid
 from django.conf import settings
 from rest_framework import serializers
-from .models import Requirement, RequirementDefect, RequirementDocument,REQUIREMENT_DEFECT_CHOICES
+from .models import Requirement, RequirementDefect, RequirementDocument, RequirementAsset , REQUIREMENT_DEFECT_CHOICES
 from django.utils.html import strip_tags
 from authentication.models import User
 from bs4 import BeautifulSoup
@@ -100,40 +100,52 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             'custom_class':'col-6'
         },
     )
-    file = serializers.FileField(
-        label =  ('Document'),
-        required=False,
-        style={
-            "input_type": "file",
-            "class": "form-control",
-            "autofocus": False,
-            "autocomplete": "off",
-            'base_template': 'custom_file.html',
-            'help_text': True,
-            'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
-        },
-        validators=[file_extension_validator, validate_file_size],
-        help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
-    )
     
+    file_list = serializers.ListField(
+    child=serializers.FileField(allow_empty_file=False,use_url=False ),
+    label=('Documents'),  # Adjust the label as needed
+    required=False,
+    initial=[],
+    style={
+        "input_type": "file",
+        "class": "form-control",
+        "autofocus": False,
+        "autocomplete": "off",
+        'base_template': 'custom_multiple_file.html',
+        'help_text': True,
+        'multiple': True,
+        'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
+        'allow_null': True,  # Allow None values
+    },
+    help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
+    )
 
     class Meta:
         model = Requirement
-        fields = ('customer_id','description','site_address', 'quantity_surveyor', 'requirement_date_time','file')
+        fields = ('customer_id','description','site_address', 'quantity_surveyor', 'requirement_date_time','file_list')
     
     def create(self, validated_data):
-        # Pop the 'file' field from validated_data
-        file = validated_data.pop('file', None)
+        
+        # Pop the 'file_list' field from validated_data
+        file_list = validated_data.pop('file_list', None)
+        # Create a new instance of Requirement with other fields from validated_data
+        instance = RequirementDefect.objects.create(**validated_data)
 
-        # Create a new instance of Conversation with 'title' and 'message'
-        instance = Requirement.objects.create(**validated_data)
-        if file:
-            # Generate a unique filename
-            unique_filename = f"{str(uuid.uuid4())}_{file.name}"
-            upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
-            instance.document_path = f'requirement/{instance.id}/{unique_filename}'
-            instance.save()
+        if file_list and len(file_list) > 0:
 
+            for file in file_list:
+                # Generate a unique filename for each file
+                unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
+                file_path = f'requirement/{instance.id}/{unique_filename}'
+                
+                RequirementAsset.objects.create(
+                requirement_id=instance.requirement_id,
+                document_path=file_path,
+                )
+            
+
+        instance.save()
         return instance
     
     def update(self, instance, validated_data):
@@ -145,22 +157,26 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         instance.requirement_date_time = validated_data.get('requirement_date_time', instance.site_address)
     
 
-        # Pop the 'file' field from validated_data
-        file = validated_data.pop('file', None)
+        file_list = validated_data.pop('file_list', None)
 
-        if file:
-            # If there was an existing document_path, delete the old file from S3
-            if instance.document_path:
-                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=instance.document_path)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        with transaction.atomic():
+            instance.save()
 
-            # Generate a unique filename
-            unique_filename = f"{str(uuid.uuid4())}_{file.name}"
-            upload_file_to_s3(unique_filename, file, 'contacts')
-
-            # Update the document_path with the new file path
-            instance.document_path = f'contacts/{unique_filename}'
-
-        instance.save()
+            # Update associated documents if file_list is provided
+            if file_list and len(file_list) > 0:
+                
+                for file in file_list:
+                    unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                    upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
+                    file_path = f'requirement/{instance.id}/{unique_filename}'
+                
+                    RequirementAsset.objects.create(
+                        requirement_id=instance.requirement_id,
+                        document_path=file_path,
+                    )
         
         return instance
     
@@ -174,16 +190,23 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         Returns:
             dict: The serialized representation of the Conversation.
         """
+        
         representation = super().to_representation(instance)
 
-        if instance.document_path:
-            presigned_url = generate_presigned_url(instance.document_path)
-            representation['presigned_url'] = presigned_url
-            representation['filename'] = instance.document_path.split('/')[-1]
+        document_paths = []
+        if hasattr(instance, 'requirementasset_set'):
+            for document in RequirementAsset.objects.filter(defect_id=instance, requirement_id=instance.requirement_id):
+                document_paths.append({
+                    'presigned_url': generate_presigned_url(document.document_path),
+                    'filename': document.document_path.split('/')[-1],
+                    'id': document.id  #  document ID
+                })
 
-        if instance.id:
-            representation['id'] = instance.id
+        representation['document_paths'] = document_paths
+
         return representation
+    
+
 
 
 class RequirementDefectAddSerializer(serializers.ModelSerializer):
