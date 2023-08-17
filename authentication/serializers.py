@@ -403,7 +403,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return value
     
     def validate_post_code(self, value):
-        breakpoint()
         # Check if post code contains only spaces.
         if self.initial_data['post_code'].isspace():
             raise serializers.ValidationError("Invalid Post code. Post code can not contain only spaces.")
