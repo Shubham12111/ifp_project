@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %}Fire Risk Assessment Defects {{ block.super }}{% endblock %}
+{% block content %}
+
+<div class="container-fluid my-3 py-3">
+
+    <div class="row">
+        <div class="col-xl-5 col-lg-6 text-center">
+            {% for document in documents %}
+                {% if forloop.first %}
+                    <div class="row" style="height: 65vh;">
+                        <div class="col-12" style="height: 65vh;">
+                            <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ document.document_path }}" alt="chair" style="height: inherit;">
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
+                {% else %}
+                        <figure itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+                        <a href="{{ document.document_path }}" itemprop="contentUrl" data-size="500x600">
+                            <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ document.document_path }}" alt="Image description" />
+                        </a>
+                        </figure>
+                {%endif%}
+            {%endfor%}
+            </div>
+            
+          <!-- Root element of PhotoSwipe. Must have class pswp. -->
+          <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+            <!-- Background of PhotoSwipe.  It's a separate element, as animating opacity is faster than rgba(). -->
+            <div class="pswp__bg"></div>
+            <!-- Slides wrapper with overflow:hidden. -->
+            <div class="pswp__scroll-wrap">
+              <!-- Container that holds slides. PhotoSwipe keeps only 3 slides in DOM to save memory. -->
+              <!-- don't modify these 3 pswp__item elements, data is added later on. -->
+              <div class="pswp__container">
+                <div class="pswp__item"></div>
+                <div class="pswp__item"></div>
+                <div class="pswp__item"></div>
+              </div>
+              <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+              <div class="pswp__ui pswp__ui--hidden">
+                <div class="pswp__top-bar">
+                  <!--  Controls are self-explanatory. Order can be changed. -->
+                  <div class="pswp__counter"></div>
+                  <button class="btn btn-white btn-sm pswp__button pswp__button--close">Close (Esc)</button>
+                  <button class="btn btn-white btn-sm pswp__button pswp__button--fs">Fullscreen</button>
+                  <button class="btn btn-white btn-sm pswp__button pswp__button--arrow--left">Prev
+                  </button>
+                  <button class="btn btn-white btn-sm pswp__button pswp__button--arrow--right">Next
+                  </button>
+                  <!-- Preloader demo https://codepen.io/dimsemenov/pen/yyBWoR -->
+                  <!-- element will get class pswp__preloader--active when preloader is running -->
+                  <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                  <div class="pswp__share-tooltip"></div>
+                </div>
+                <div class="pswp__caption">
+                  <div class="pswp__caption__center"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-6 mx-auto">
+            <!-- Card Basic Info -->
+            <div class="card h-100" id="basic-info">
+
+                <div class="card-header">
+                    <h5>Defect details</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="mb-3">
+                        <label class="form-label">Action</label>
+                        <p>{{ defect_instance.action }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <p>{{ defect_instance.description | safe}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">UPRN</label>
+                        <p>{{ defect_instance.UPRN }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Defect Period Date</label>
+                        <p>{{ defect_instance.defect_period }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <p>{{ defect_instance.status }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Date</label>
+                        <p>{{ defect_instance.due_date }}</p>
+                    </div>
+
+                    <!-- Add more fields as needed -->
+                </div>
+            </div>
+        </div>
+      </div>
+
+    {% comment %} <div class="row">
+        {% include 'components/alert.html' %}
+        <!-- Card Images-->
+         <div class="col-xl-5 col-lg-6 text-center">
+            <!-- Image Gallery -->
+            <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ defect_instance.image_path }}" alt="defect-image">
+            <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
+                {% for document in defect_instance.documents %}
+                <figure itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+                    <a href="{{ document.document_path }}" itemprop="contentUrl" data-size="500x600">
+                        <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ document.document_path }}" alt="Document Image" />
+                    </a>
+                </figure>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-xl-5 col-lg-6 text-center">
+            <!-- Image Gallery -->    
+                {% for document in documents %}
+                    {% if forloop.first %}
+                        <img class="border-radius-lg shadow-lg mx-auto" src="{{ document.document_path }}" alt="defect-image">
+                        <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
+                    {% else %}
+                        <figure itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
+                            <a href="{{ document.document_path }}" itemprop="contentUrl" data-size="500x600">
+                                <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ document.document_path }}" alt="Document Image" />
+                            </a>
+                        </figure>
+                    {% endif %}    
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Card Basic Info -->
+        <div class="col-lg-7">
+            <!-- Card Basic Info -->
+            <div class="card h-100" id="basic-info">
+
+                <div class="card-header">
+                    <h5>Defect details</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="mb-3">
+                        <label class="form-label">Action</label>
+                        <p>{{ defect_instance.action }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <p>{{ defect_instance.description | safe}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">UPRN</label>
+                        <p>{{ defect_instance.UPRN }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Defect Period Date</label>
+                        <p>{{ defect_instance.defect_period }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <p>{{ defect_instance.status }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Due Date</label>
+                        <p>{{ defect_instance.due_date }}</p>
+                    </div>
+
+                    <!-- Add more fields as needed -->
+                </div>
+            </div>
+        </div>
+    </div> {% endcomment %}
+</div>
+
+
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_country.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+    if (document.getElementById('defect-requirement-list')) {
+        const dataTableSearch = new simpleDatatables.DataTable("#defect-requirement-list", {
+            searchable: true,
+            fixedHeight: false,
+            perPage: 10
+        });
+
+    }
+</script>
+{% endblock %}

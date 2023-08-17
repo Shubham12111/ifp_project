@@ -26,6 +26,7 @@ class Requirement(models.Model):
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
     requirement_date_time = models.DateTimeField()
     quantity_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor_requirement')
+    surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor', null=True, blank=False)
     document_path = models.CharField(max_length=256, null=True, blank=True)
     status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -61,9 +62,6 @@ class RequirementDocument(models.Model):
     document_path = models.CharField(max_length=256)
     create_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.requirement_id.id
     
     class Meta:
         verbose_name = _('Fire Risk Assessment Defect Document')

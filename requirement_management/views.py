@@ -177,13 +177,16 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
         queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-    
+
         queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
-        
+
         return queryset
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        is_permitted = False
+        
+        
         # This method handles GET requests for updating an existing Requirement object.
         if request.accepted_renderer.format == 'html':
             instance = self.get_queryset()
@@ -191,29 +194,80 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
                 requirement_document = RequirementDocument.objects.filter(requirement_id=instance.id)
                 serializer = self.serializer_class(instance=instance, context={'request': request})
-                
-                survey_permissions = UserRolePermission.objects.filter(module='survey')
-                
-                # Extract unique roles from the survey_permissions queryset
-                survey_roles = survey_permissions.values_list('role', flat=True).distinct()
 
-                # Retrieve users associated with these roles
-                users_with_survey_permission = User.objects.filter(
-                    roles__in=survey_roles,
-                )
+                survey_roles = UserRole.objects.filter(name='surveyor')
+                if survey_roles:
+                    if request.user.roles== survey_roles.first():
+                        is_permitted = True
+                        
+                    # Retrieve users associated with these roles
+                    users_with_survey_permission = User.objects.filter(
+                        roles__in=survey_roles,
+                    )
+                    
+                    context = {
+                        'serializer': serializer, 
+                        'requirement_instance': instance, 
+                        'requirement_defect': requirement_defect, 
+                        'requirement_document': requirement_document,
+                        'surveyers': users_with_survey_permission,
+                        'is_permitted': is_permitted
+                        }
+                else:
+                    messages.error(request, "Please add a serveyor role.")
+                    return redirect(reverse('requirement_list'))
 
-                surveyers = User.objects.filter()
-                context = {
-                    'serializer': serializer, 
-                    'requirement_instance': instance, 
-                    'requirement_defect': requirement_defect, 
-                    'requirement_document': requirement_document,
-                    'surveyers': users_with_survey_permission
-                    }
                 return render_html_response(context, self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('requirement_list'))
+            
+    def post(self, request, *args, **kwargs):
+        surveyer_selected = request.POST.get('surveyer')
+        requirement_id = request.POST.get('requirement_id')
+        
+        req = Requirement.objects.filter(pk=requirement_id).first()
+        surveyer = User.objects.filter(pk=surveyer_selected).first()
+
+        if not req or not surveyer:
+            error_message = "Failed to assign surveyor."
+            
+            if request.accepted_renderer.format == 'html':
+                messages.error(request, error_message)
+                return redirect(reverse('requirement_view', args=[requirement_id]))
+            else:
+                return create_api_response(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message=error_message   
+                )
+        try:
+            req.surveyor = surveyer
+            req.save()
+            
+            message = "Surveyor was assigned."
+            
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('requirement_view', args=[requirement_id]))
+            else:
+                return create_api_response(
+                        status_code=status.HTTP_200_OK,
+                        message=message
+                    )
+        except Exception as e:
+            breakpoint()
+            message = "Something went wrong"
+            if request.accepted_renderer.format == 'html':
+                messages.warning(request, message)
+                return redirect(reverse('requirement_view'))
+            else:
+                return create_api_response(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        message=message
+                    )
+            
+        
+        
           
 class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
@@ -520,6 +574,45 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
    
+class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
+    
+    serializer_class = RequirementDefectAddSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'defect_detail.html'
+    swagger_schema = None
+    
+    def get_queryset(self):
+        """
+        Get the filtered queryset for requirements based on the authenticated user.
+        """
+        queryset = RequirementDefect.objects.filter(pk=self.kwargs.get('pk')).order_by('-created_at')
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        # This method handles GET requests for updating an existing Requirement object.
+
+        defect_instance = self.get_queryset().first()
+        
+        if defect_instance:
+            serializer =  self.serializer_class(instance=defect_instance)
+        else:
+            serializer =  self.serializer_class()
+            defect_instance = {}
+        
+        defect_documents = RequirementDocument.objects.filter(defect_id=defect_instance)
+        
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'serializer': serializer,
+                'defect_instance':defect_instance,
+                'documents': defect_documents
+                }
+            return render_html_response(context, self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('requirement_list'))
+
 class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View for deleting a requirement.

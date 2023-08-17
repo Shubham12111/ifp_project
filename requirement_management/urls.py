@@ -13,6 +13,7 @@ urlpatterns = [
     
     path('defects/<int:requirement_id>/', RequirementDefectView.as_view(), name='requirement_defects'),
     path('defects/edit/<int:requirement_id>/<int:pk>/', RequirementDefectView.as_view(), name='requirement_defect_update'),
+    path('defect/detail/<int:pk>/', RequirementDefectDetailView.as_view(), name='requirement_defect_detail'),
     
     
     path('defects/delete/<int:pk>/', RequirementDefectDeleteView.as_view(), name='requirement_defect_delete'),
