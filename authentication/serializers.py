@@ -374,8 +374,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = ['first_name', 'last_name', 'email', 'phone_number', 'address' , 'town', 'county', 'country', 'post_code']
 
-    
-   
     def validate_first_name(self, value):
         if not re.match(r'^[a-zA-Z\s]+$', value):
             raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
@@ -393,7 +391,24 @@ class UserProfileSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Last Name should be at least 2 characters long.")
 
         return value
+    
+    def validate_address(self, value):
+        # Check if address contains only spaces.
+        if self.initial_data['address'].isspace():
+            raise serializers.ValidationError("Invalid Address. Address can not contain only spaces.")
+        
+        # Remove morethan one spaces between words in complete addresss like 'phase  one    chandigarh' to 'phase one chandigarh'
+        value = re.sub(r'\s+', ' ', value)
 
+        return value
+    
+    def validate_post_code(self, value):
+        breakpoint()
+        # Check if post code contains only spaces.
+        if self.initial_data['post_code'].isspace():
+            raise serializers.ValidationError("Invalid Post code. Post code can not contain only spaces.")
+        
+        return value
 
     
 class ChangePasswordSerializer(serializers.ModelSerializer):
