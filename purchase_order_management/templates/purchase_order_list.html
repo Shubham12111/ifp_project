@@ -209,10 +209,25 @@ function getStatusCellContent(status) {
 // Function to generate link action HTML
 function generateLinkAction(item, columnConfig) {
     var url = columnConfig.urlField;
-    return '<a href="' + url+item['pk'] + '" data-bs-toggle="tooltip" class="ms-2 data-bs-original-title="' + columnConfig.tooltip + '"' + '>' +
-           '<i class="' + columnConfig.iconClass + '" aria-hidden="true"></i>' +
-           '</a>';
+
+    if (item.fields['status'] === "pending" || item.fields['status'] === "send_for_approval") {
+        return '<a href="' + url + item['pk'] + '" data-bs-toggle="tooltip" class="ms-2 data-bs-original-title="' + columnConfig.tooltip + '"' + '>' +
+               '<i class="' + columnConfig.iconClass + '" aria-hidden="true"></i>' +
+               '</a>';
+    } else {
+        return '<div class="d-flex align-items-center">' +
+               '<a class="cursor-pointer show" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
+               '<i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i></a>' +
+               '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">' +
+               '<a class="dropdown-item" href="#">Dummy Item 1</a>' +
+               '<a class="dropdown-item" href="#">Dummy Item 2</a>' +
+               '<div class="dropdown-divider"></div>' +
+               '<a class="dropdown-item" href="#">Dummy Item 3</a>' +
+               '</div>' +
+               '</div>';
+    }
 }
+
 // Function to generate action buttons HTML
 function generateActionButtons(item, columnConfig) {
     var actionsHTML = columnConfig.linkActions.map(function(action) {

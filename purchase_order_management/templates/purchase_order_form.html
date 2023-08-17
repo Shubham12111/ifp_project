@@ -29,7 +29,7 @@
                     {{ existingPurchaseOrderData|json_script }}
                 </div>
             {% endif %}
-            <form method="post" {% if purchase_order %}action="{% url 'purchase_order_edit' purchase_order.id %}" {% else %}action="{% url 'purchase_order_add' %}"{% endif %} >
+            <form method="post" {% if purchase_order %} action="{% url 'purchase_order_edit' purchase_order.id %}" {% else %}action="{% url 'purchase_order_add' %}"{% endif %} >
             
             {% csrf_token %}
             <div class="card">
@@ -100,20 +100,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="itemTableBody">
-                                    <!-- <tr>
-                                        <td>
-                                            <select id="itemSelect" class="form-control item-dropdown" onchange="updatePrice(this)">
-                                                {% for item in item_list %}
-                                                <option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </td>
-                                        <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
-                                        <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
-                                        <td class="text-center total">$00.00</td>
-                                        <td></td>
-                                        
-                                    </tr> -->
+                                    
                                 </tbody>
                             </table>
                             <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
@@ -122,13 +109,24 @@
                 
                 <div class="row mt-4">
                     <div class="col-md-6 ">
+                        {% if purchase_order.status == "pending" %}
+                        <p class="notes text-sm">{{ existingPurchaseOrderData.notes }}</p>
+                        <label>Approval Notes</label>
+                        <textarea class="form-control notes" rows="6" name="approval_notes" ></textarea>
+
+                        {% elif purchase_order.status == "approved"  %}
+                        <p class="notes text-sm">{{ existingPurchaseOrderData.notes }}</p>
+                        Approval Notes
+                        <p class="approval_notes text-sm">{{ existingPurchaseOrderData.approval_notes }}</p>
+
                         <label>Notes</label>
                         <textarea class="form-control notes" rows="6" name="notes" ></textarea>
                         <div class="form-group mt-4 ">
-  
                             <label>Attach File</label>
-                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="">
-                    </div>
+                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept=".jpg, .jpeg, .png">
+                            <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png).</small>  
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-1 "></div>
                     <div class="col-md-5">
@@ -173,8 +171,13 @@
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 m-auto text-center text-md-end">
                     <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-0" href="{% url 'purchase_order_list' %}">Cancel</a>
+                    {% if  purchase_order.status == "pending" %}
                     <button class="btn bg-gradient-info mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Drfat</button>
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
+                    {% elif purchase_order.status == "sent_for_approval"  %}
+                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproved" title="Submit">Approved</button>
+                    {% endif %}
+                    
                 </div>
                 </div>
                 
@@ -279,7 +282,16 @@ if (document.getElementById('existingPurchaseOrderData')) {
         document.querySelector('.tax-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'tax')).toFixed(2);
         document.querySelector('.subtotal-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
         document.querySelector('.discount-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'discount')).toFixed(2);
-        document.querySelector('.notes').value = safeGetProperty(existingPurchaseOrderData, 'notes');
+        if ("{{ purchase_order.status }}" === "sent_for_approval") {
+                const notesValue = "{{ existingPurchaseOrderData.notes }}";
+                document.querySelector('.notes').textContent = notesValue;
+        }
+        else
+        {
+            document.querySelector('.notes').value = safeGetProperty(existingPurchaseOrderData, 'notes');
+
+        }
+
         document.querySelector('.grand-total-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
         // Populate item rows with existing item data
 
@@ -452,7 +464,6 @@ function calculateTotal() {
         const total = parseFloat(row.querySelector('.total').textContent.slice(1));
         subtotal += total;
     });
-
     const discount = parseFloat(discountInput.value);
     const tax = parseFloat(taxInput.value);
 
@@ -460,7 +471,6 @@ function calculateTotal() {
     document.getElementById('discountError').textContent = '';
     document.getElementById('grandTotalError').textContent = '';
 
-    // Ensure discount is not greater than subtotal
     if (discount > subtotal) {
         document.getElementById('discountError').textContent = "Discount cannot be greater than subtotal.";
         return; // Stop further processing
@@ -470,20 +480,17 @@ function calculateTotal() {
     const taxedAmount = (subtotal * tax);
     const grandTotal = (subtotal - discountedAmount + taxedAmount);
 
-    // Prevent grand total from being negative
-    if (grandTotal < 0) {
-        document.getElementById('grandTotalError').textContent = "Grand total cannot be negative.";
-        grandTotalValue.textContent = `£0.00`; // Set grand total to 0
-    } else {
-        grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
-    }
+   
 
+    grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
     subtotalValue.textContent = `£${subtotal.toFixed(2)}`;
+
     // Update hidden input values
     const subtotalInput = document.getElementById('subtotalInput');
     const grandTotalInput = document.getElementById('grandTotalInput');
     subtotalInput.value = subtotal.toFixed(2);
     grandTotalInput.value = grandTotal.toFixed(2);
+
 }
 
 
@@ -619,13 +626,27 @@ element.addEventListener('change', async function(event) {
 // Event listeners for the buttons
 const submitSaveAsDraftBtn = document.getElementById('submitSaveAsDraftBtn');
 const submitBtnApproval = document.getElementById('submitBtnApproval');
+const submitBtnApproved = document.getElementById('submitBtnApproved');
 
-submitSaveAsDraftBtn.addEventListener('click', function() {
+
+if (submitSaveAsDraftBtn)
+{
+    submitSaveAsDraftBtn.addEventListener('click', function() {
     submitForm('pending'); // Call the common function with the status
+
 });
 
 submitBtnApproval.addEventListener('click', function() {
     submitForm('sent_for_approval'); // Call the common function with the status
+
+});
+
+}
+
+
+
+submitBtnApproved.addEventListener('click', function() {
+    submitForm('approved'); // Call the common function with the status
 });
 
 function submitForm(status) {
@@ -677,12 +698,9 @@ function submitForm(status) {
         emptyRowModal.show();
     } 
 
-
-
-
-
-
-    // Make an AJAX POST request to your Django view
+    
+    if (hasNonEmptyRow) {
+        // Make an AJAX POST request to your Django view
     fetch(form.action, {
         method: 'POST',
         body: formData,
@@ -704,14 +722,14 @@ function submitForm(status) {
                             console.log(selectContainer)
                             if (selectContainer) {
                                 const errorElement = document.createElement('div');
-                                errorElement.classList.add('help-block');
+                                errorElement.classList.add('help-block', 'mt-2');
                                 errorElement.textContent = data.errors[fieldName].join(', ');
                                 selectContainer.appendChild(errorElement);
                             }
                         } else {
                             // For other input elements, display error message under the field
                             const errorElement = document.createElement('div');
-                            errorElement.classList.add('help-block');
+                            errorElement.classList.add('help-block', 'mt-2');
                             errorElement.textContent = data.errors[fieldName].join(', ');
                             field.parentElement.appendChild(errorElement);
                         }
@@ -737,6 +755,9 @@ function submitForm(status) {
     }).catch(error => {
         console.error('Error:', error);
     });
+    }
+
+    
 }
 
 

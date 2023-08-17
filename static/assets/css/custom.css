@@ -63,7 +63,8 @@ th.custom-last-column a.dataTable-sorter::before,
 th.custom-last-column a.dataTable-sorter::after {
 content: none;
 }
-.choices[data-type*='select-one'] .choices__input
+
+/* .choices[data-type*='select-one'] .choices__input
 {
 margin-bottom: 9px;
 border-radius: 0.5rem;
@@ -71,5 +72,5 @@ border-top-right-radius: 0.5rem !important;
 border-bottom-right-radius: 0.5rem !important;
 border-left-width: 1px;
 border: 1px solid color(srgb 0 0 0) !important;
-}
+} */
 

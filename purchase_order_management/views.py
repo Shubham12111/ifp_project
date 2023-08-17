@@ -311,7 +311,9 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         }
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        base_queryset = PurchaseOrder.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        base_queryset = PurchaseOrder.objects.filter(
+            (Q(status="pending") | Q(status="send_for_approval")) & filter_mapping.get(data_access_value, Q())
+        ).distinct().order_by('-created_at')        
         return base_queryset
     
     def get(self, request, *args, **kwargs):
@@ -357,14 +359,15 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                     'items': items_data,
                     # ... other fields
                 }
-        
-
-            context = {'vendor_list':vendor_list, 
-                       'inventory_location_list':inventory_location_list,
-                       'item_list':item_list,
-                       'purchase_order':purchase_order_data,
-                       'existingPurchaseOrderData':existingPurchaseOrderData}
-            return render_html_response(context,self.template_name)
+                context = {'vendor_list':vendor_list, 
+                        'inventory_location_list':inventory_location_list,
+                        'item_list':item_list,
+                        'purchase_order':purchase_order_data,
+                        'existingPurchaseOrderData':existingPurchaseOrderData}
+                return render_html_response(context,self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action.")
+                return redirect(reverse('purchase_order_list'))
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
                                 message="GET Method Not Alloweded",)
