@@ -39,8 +39,6 @@
                     <th>PO No.</th>
                     <th>Vendor</th>
                     <th>Location</th>
-                    <th>Sub Total</th>
-                    <th>Tax</th>
                     <th>Total</th>
                     <th>Date</th>
                     <th>Due Date</th>
@@ -49,7 +47,7 @@
                   </tr>
                </thead>
                <tbody class="ml-4"> 
-                 {% for purchase_order in purchase_orders %}
+                 <!-- {% for purchase_order in purchase_orders %}
                  <tr>
                    <td >{{purchase_order.po_number}}</td>
                    <td >{{purchase_order.vendor_id}}</td>
@@ -80,7 +78,7 @@
                  </tr>
                  
                
-                 {% endfor %}
+                 {% endfor %} -->
                </tbody>
                
              </table>
@@ -99,36 +97,135 @@
  <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
  <script src="{% static 'assets/js/custom_delete.js' %}"></script>
  <script>
-    if (document.getElementById('purchase-order-list')) {
-    const dataTable = new simpleDatatables.DataTable("#purchase-order-list", {
-        searchable: true,
-        fixedHeight: false,
-        perPage: 25,
-        serverSide: true,
-        processing: true,
-        columns: [
-            { select: 0 }, // "Purchase Order ID"
-            { select: 1 }, // "Item Name"
-            { select: 2 }, // "Quantity"
-            { select: 3 }, // "Unit Price"
-            { select: 4 }, // "Row Total"
-        ],
-        ajax: {
-            url: "/your-purchase-order-endpoint", // Replace with the actual endpoint URL
-            method: "GET",
-            dataType: "json",
-            data: function (params) {
-                // You can add additional parameters here if needed
-                return params;
-            },
-            beforeSend: function (xhr) {
-                // You can add any headers here if needed
-            },
-        },
-    });
-    console.log(dataTable);
+
+// Config for the first table
+var columnsConfig1 = [
+    // Define column configurations for your DataTable
+    // Each object in this array corresponds to a column
+    { fieldName: 'po_number' },
+    { fieldName: 'vendor_id' },
+    { fieldName: 'inventory_location_id' },
+    { fieldName: 'total_amount' },
+    { fieldName: 'order_date' },
+    { fieldName: 'due_date' },
+    {
+      fieldName: 'status',
+      type: 'status',
+    },
+    {
+      fieldName: 'actions',
+      type: 'actions',
+      linkActions: [
+          { tooltip: 'View PO', iconClass: 'fas fa-eye text-secondary', urlField: '/purchase_order/view/' },
+          { tooltip: 'Edit PO', iconClass: 'fas fa-edit text-secondary', urlField: '/purchase_order/edit/' },
+      ]
+  }, 
+];
+// Call the function to initialize the DataTable
+initializeDataTable("purchase-order-list", "/purchase_order/list/", columnsConfig1);
+
+
+function initializeDataTable(tableId, dataUrl, columnsConfig) {
+    if (document.getElementById(tableId)) {
+
+     
+        // Fetch data from the provided URL
+        fetch(dataUrl, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }).then(function (response) {
+                // Check if the network response is successful
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            }).then(function (data) {
+                // Parse the received data
+                console.log(data)
+                const responseData = JSON.parse(data.data);
+
+                // Format the data for DataTable consumption
+                var formattedData = {
+                    "draw": 1, // Set the appropriate draw value
+                    "recordsTotal": responseData.length,
+                    "recordsFiltered": responseData.length,
+                    "data": responseData.map(function(item) {
+                        // Generate cell content based on column type
+                        var row = [];
+                        for (var columnConfig of columnsConfig) {
+                            var cellContent = item.fields[columnConfig.fieldName];
+
+                            if (columnConfig.type === 'status') {
+                                cellContent = getStatusCellContent(item.fields.status);
+                            }  else if (columnConfig.type === 'actions') {
+                                cellContent = generateActionButtons(item, columnConfig);
+                            }
+                            
+                            row.push(cellContent);
+                        }
+                        return row;
+                    })
+                };
+              // Initialize the DataTable using the simpleDatatables library
+              const dataTable = new  simpleDatatables.DataTable("#" + tableId, {
+                searchable: true,
+                fixedHeight: false,
+                perPage: 25,
+                serverSide: true,
+                processing: true,
+                data: formattedData // Pass the formatted data
+            });
+          
+
+        }).catch(function (error) {
+            console.error("Fetch error for table " + tableId, error);
+        });
+    }
 }
 
- </script>
+// Function to convert string to title case and replace underscores with spaces
+function formatStatus(status) {
+    console.log(status)
+    return status.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
+
+// Condition function to handle status color and icon
+function getStatusCellContent(status) {
+    var cellContent = '';
+     if (status === 'sent_for_approval') {
+        cellContent = '<span class="text-success">' + formatStatus(status) + '</span>';
+    } else {
+        cellContent = '<span class="status-dark">' + formatStatus(status) + '</span>';
+    }
+
+    return cellContent;
+}
+
+// Function to generate link action HTML
+function generateLinkAction(item, columnConfig) {
+    var url = columnConfig.urlField;
+    return '<a href="' + url+item['pk'] + '" data-bs-toggle="tooltip" class="ms-2 data-bs-original-title="' + columnConfig.tooltip + '"' + '>' +
+           '<i class="' + columnConfig.iconClass + '" aria-hidden="true"></i>' +
+           '</a>';
+}
+// Function to generate action buttons HTML
+function generateActionButtons(item, columnConfig) {
+    var actionsHTML = columnConfig.linkActions.map(function(action) {
+        return generateLinkAction(item, action);
+    }).join(' ');
+
+    return actionsHTML;
+}
+
+
+</script>
+
+
+
  {% endblock %}     
  

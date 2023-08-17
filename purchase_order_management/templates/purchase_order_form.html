@@ -16,6 +16,9 @@
     background-color: transparent;
     color: #000; /* Replace #000 with the desired text color */
 }
+.choices__item--disabled{
+  display: none !important;
+}
   </style>
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
@@ -35,9 +38,10 @@
                     <div class="col-md-6">
                         <div class="row">
                             <div class="col-md-6">
-                                <label for="invoice_id" class="form-label">Vendor</label>
+                                <label for="po_number" class="form-label">Vendor</label>
                                 <select class="form-control" id="vendor-choices" name="vendor_id">
-                                    <option> Select Vendor</option>
+                                    <option disabled selected value> Select an Vendor </option>
+
                                     {% for vendor in vendor_list %}
                                         <option value="{{vendor.id}}">{{vendor.email}}</option>
                                     {% endfor %}
@@ -50,7 +54,7 @@
                             <div class="col-md-6">
                                 <label for="inventory_location" class="form-label">Inventory Location</label>
                                 <select class="form-control" id="inventory_location-choices" name="inventory_location_id">
-                                    <option> Select Inventory Location</option>
+                                    <option disabled selected value>Select Inventory Location</option>
                                     {% for inventory_location in inventory_location_list %}
                                         <option value="{{inventory_location.id}}">{{inventory_location.name}}</option>
                                     {% endfor %}
@@ -66,17 +70,17 @@
                     <div class="col-md-6">
                         <div class="row mb-4">
                            <div class="col-md-12">
-                                <label for="invoice_id" class="form-label">PO Number</label>
-                                <input type="number" class="form-control" id="invoice_id" value="8795646525451" name="po_number" >
+                                <label for="po_number" class="form-label">PO Number</label>
+                                <input type="number" class="form-control" id="po_number" value="8795646525451" name="po_number" >
                             </div>
                         </div>
                         <div class="row mb-4">
                            <div class="col-md-6">
-                                <label for="invoice_id" class="form-label">Date</label>
+                                <label for="order_date" class="form-label">Date</label>
                                 <input type="text"  class="form-control po_date" id="date" name="order_date" placeholder="DD/MM/YYYY">
                             </div>
                             <div class="col-md-6">
-                                <label for="invoice_id" class="form-label">Due Date</label>
+                                <label for="due_date" class="form-label">Due Date</label>
                                 <input type="text" class="form-control po_due_date" id="due_date" name="due_date" placeholder="DD/MM/YYYY">
                             </div>
                         </div> 
@@ -96,7 +100,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="itemTableBody">
-                                    <tr>
+                                    <!-- <tr>
                                         <td>
                                             <select id="itemSelect" class="form-control item-dropdown" onchange="updatePrice(this)">
                                                 {% for item in item_list %}
@@ -109,7 +113,7 @@
                                         <td class="text-center total">$00.00</td>
                                         <td></td>
                                         
-                                    </tr>
+                                    </tr> -->
                                 </tbody>
                             </table>
                             <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
@@ -135,7 +139,7 @@
                                 <p class="subtotal-label">Sub Total:</p>
                             </div>
                             <div class="col-6 mb-1">
-                                <p class="mb-2 text-end subtotal-value">$00.00</p>
+                                <p class="mb-2 text-end subtotal-value"> £ 00.00</p>
                             </div>
                             <div class="col-6 mb-1 text-end">
                                 <p class="discount-label">Discount:</p>
@@ -143,7 +147,9 @@
                             <div class="col-2 text-end mb-2"></div>
                             <div class="col-4 text-end mb-2">
                                 <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" value="00.00" onchange="calculateTotal()">
+                                <div class="error-message text-danger text-sm" id="discountError"></div>
                             </div>
+                           
                 
                             <div class="col-6 mb-1 text-end">
                                 <p class="tax-label">Tax:</p>
@@ -156,7 +162,9 @@
                                 <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
                             </div>
                             <div class="col-6 mb-1">
-                                <p class="font-weight-bolder mb-0 text-end grand-total-value">$00.00</p>
+                                <p class="font-weight-bolder mb-0 text-end grand-total-value">£ 00.00</p>
+                                <div class="error-message text-danger text-sm" id="grandTotalError"></div>
+
                             </div>
                         </div>
                     </div>
@@ -209,11 +217,35 @@
     </div>
 </div>
 
+
+<div class="modal fade" id="emptyRowModal" tabindex="-1" aria-labelledby="emptyRowModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+           
+            <div class="modal-body">
+                You must add at least one item before submitting the form.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
 <script>
+
+// Get a reference to the input element
+var invoiceInput = document.getElementById('po_number');
+
+// Generate a unique number using the current timestamp
+var uniqueNumber = Date.now();
+
+// Set the generated unique number as the value of the input
+invoiceInput.value = uniqueNumber;
 
 
 const addItemBtn = document.getElementById('addItemBtn');
@@ -224,6 +256,7 @@ const taxInput = document.querySelector('.tax-input');
 const grandTotalValue = document.querySelector('.grand-total-value');
 const noItemsModal = new bootstrap.Modal(document.getElementById('noItemsModal'));
 const negativeValueModal = new bootstrap.Modal(document.getElementById('negativeValueModal'));
+const emptyRowModal = new bootstrap.Modal(document.getElementById('emptyRowModal'));
 const itemTableBody = document.getElementById('itemTableBody');
 
 
@@ -240,14 +273,14 @@ if (document.getElementById('existingPurchaseOrderData')) {
     // Populate the form fields with existing data
         document.getElementById('vendor-choices').value = safeGetProperty(existingPurchaseOrderData, 'vendor_id');
         document.getElementById('inventory_location-choices').value = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
-        document.getElementById('invoice_id').value = safeGetProperty(existingPurchaseOrderData, 'po_number');
+        document.getElementById('po_number').value = safeGetProperty(existingPurchaseOrderData, 'po_number');
         document.querySelector('.po_date').value = safeGetProperty(existingPurchaseOrderData, 'order_date');
         document.querySelector('.po_due_date').value = safeGetProperty(existingPurchaseOrderData, 'due_date');
         document.querySelector('.tax-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'tax')).toFixed(2);
-        document.querySelector('.subtotal-value').textContent = `$${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
+        document.querySelector('.subtotal-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
         document.querySelector('.discount-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'discount')).toFixed(2);
         document.querySelector('.notes').value = safeGetProperty(existingPurchaseOrderData, 'notes');
-        document.querySelector('.grand-total-value').textContent = `$${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
+        document.querySelector('.grand-total-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
         // Populate item rows with existing item data
 
     
@@ -280,7 +313,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
         </td>
         <td class="text-center"><input type="number" class="form-control item-price" value="${item.price}" min="0"></td>
         <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0"></td>
-        <td class="text-center total">$${item.row_total}</td>
+        <td class="text-center total">£${item.row_total}</td>
         <td class="text-center">
             <a class="remove-row-btn" onclick="removeRow(this)">
             <i class="fas fa-times"></i>
@@ -326,7 +359,7 @@ newRow.innerHTML = `
     </td>
     <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
     <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
-    <td class="text-center total">$00.00</td>
+    <td class="text-center total">£00.00</td>
     <td class="text-center">
         <a class="remove-row-btn" onclick="removeRow(this)">
             <i class="fas fa-times"></i>
@@ -401,7 +434,7 @@ const quantity = parseFloat(quantityInput.value);
 if (price >= 0 && quantity >= 0) {
     const totalCell = row.querySelector('.total');
     const total = (price * quantity).toFixed(2);
-    totalCell.textContent = `$${total}`;
+    totalCell.textContent = `£${total}`;
     calculateTotal();
 } else {
     // Show the negative value error modal
@@ -412,7 +445,6 @@ if (price >= 0 && quantity >= 0) {
     quantityInput.value = '1';
 }
 }
-
 function calculateTotal() {
     let subtotal = 0;
     const rows = itemTableBody.querySelectorAll('tr');
@@ -424,12 +456,29 @@ function calculateTotal() {
     const discount = parseFloat(discountInput.value);
     const tax = parseFloat(taxInput.value);
 
+    // Clear previous error messages
+    document.getElementById('discountError').textContent = '';
+    document.getElementById('grandTotalError').textContent = '';
+
+    // Ensure discount is not greater than subtotal
+    if (discount > subtotal) {
+        document.getElementById('discountError').textContent = "Discount cannot be greater than subtotal.";
+        return; // Stop further processing
+    }
+
     const discountedAmount = (subtotal * discount);
     const taxedAmount = (subtotal * tax);
     const grandTotal = (subtotal - discountedAmount + taxedAmount);
 
-    subtotalValue.textContent = `$${subtotal.toFixed(2)}`;
-    grandTotalValue.textContent = `$${grandTotal.toFixed(2)}`;
+    // Prevent grand total from being negative
+    if (grandTotal < 0) {
+        document.getElementById('grandTotalError').textContent = "Grand total cannot be negative.";
+        grandTotalValue.textContent = `£0.00`; // Set grand total to 0
+    } else {
+        grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
+    }
+
+    subtotalValue.textContent = `£${subtotal.toFixed(2)}`;
     // Update hidden input values
     const subtotalInput = document.getElementById('subtotalInput');
     const grandTotalInput = document.getElementById('grandTotalInput');
@@ -438,16 +487,12 @@ function calculateTotal() {
 }
 
 
+
     // Trigger the function on page load
 window.addEventListener('load', function() {
 const selectElement = document.getElementById('itemSelect');
 updatePrice(selectElement);
 });
-
-
-
-
-
   // Check if the datetimepicker element exists
   if (document.querySelector('.po_date')) {
     // Get the default value for the datetime picker
@@ -486,17 +531,19 @@ if (document.getElementById('vendor-choices')) {
     items: [],
     choices: [],
     renderChoiceLimit: 1,
-    maxItemCount: 1,
     searchEnabled: true,
     searchChoices: true,
     searchFloor: 1,
-    searchResultLimit: 4,
+    searchResultLimit: 10,
     resetScrollPosition: true,
     shouldSort: true,
     shouldSortItems: false,
     searchPlaceholderValue: "Search Vendor", 
   });
+
+  
  }
+ 
 
 // Function to populate vendor data in the card
 async function populateVendorData(selectedVendorId) {
@@ -601,6 +648,8 @@ function submitForm(status) {
 
     // Collect item row data
     const rows = itemTableBody.querySelectorAll('tr');
+    let hasNonEmptyRow = false; // Flag to track non-empty rows
+
     rows.forEach(row => {
         const selectedOption = row.querySelector('.item-dropdown option:checked');
         const itemId = selectedOption.value;
@@ -608,12 +657,30 @@ function submitForm(status) {
         const quantity = parseFloat(row.querySelector('.quantity-input').value);
         const rowTotal = parseFloat(row.querySelector('.total').textContent.slice(1)); // Get the row total
         
+        // Check if any of the required fields are empty
+        if (!itemId || isNaN(itemPrice) || isNaN(quantity) || isNaN(rowTotal)) {
+            // Display the emptyRowModal
+            emptyRowModal.show();
+            return; // Stop further processing
+        }
+        
         // Add item data to form data
         formData.append(`items[${itemId}][price]`, itemPrice.toFixed(2));
         formData.append(`items[${itemId}][quantity]`, quantity);
         formData.append(`items[${itemId}][rowTotal]`, rowTotal.toFixed(2)); // Append row total
+        
+        hasNonEmptyRow = true; // Mark at least one non-empty row
     });
-    console.log(formData)
+
+    if (!hasNonEmptyRow) {
+        // Display the emptyRowModal
+        emptyRowModal.show();
+    } 
+
+
+
+
+
 
     // Make an AJAX POST request to your Django view
     fetch(form.action, {

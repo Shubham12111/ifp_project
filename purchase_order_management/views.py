@@ -18,6 +18,32 @@ from django.core.paginator import Paginator
 from django.db import transaction
 
 
+
+def get_paginated_data(request, queryset, serializer_class, search_field=None):
+    search_value = request.GET.get('search[value]', '')
+    print(request.GET.get('length'))
+    data_queryset = queryset
+
+    if search_value and search_field:
+        data_queryset = data_queryset.filter(**{f'{search_field}__icontains': search_value})
+
+    paginator = Paginator(data_queryset, 25)
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 25))
+    page_number = (start // length) + 1
+    page_obj = paginator.get_page(page_number)
+
+    serialized_data = serializers.serialize("json", page_obj, use_natural_primary_keys=True)
+
+    response_data = {
+            "draw": int(request.GET.get('draw', 1)),
+            "recordsTotal": data_queryset.count(),
+            "recordsFiltered": paginator.count,
+            "data": serialized_data,
+        }
+    return response_data
+    
+    
 def get_order_items(data):
     # Access item values using dictionary indexing and looping
     items = []
@@ -40,7 +66,8 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['first_name', 'last_name','email']
+    serializer_class = PurchaseOrderSerializer
+    search_fields = ['po_number', 'vendor_id__email','inventory_location_id__name','status']
     template_name = 'purchase_order_list.html'
     ordering_fields = ['created_at'] 
     
@@ -74,44 +101,28 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
         return base_queryset
     
     def get(self, request, *args, **kwargs):
-        # Get the filtered queryset using get_queryset method
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "stock_management", HasListDataPermission, 'list'
-        )
-        # Check if authenticated_user is a redirect response
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+       # Get the filtered queryset using get_queryset method
+        try:
+            queryset = self.get_queryset()  # Replace with your queryset retrieval logic
+            serializer_class = self.serializer_class()  # Replace with your serializer class
+            search_field = 'item_name'  # Replace with the field name you want to search on
+            
+            page_length = int(request.GET.get('length', 25))  # Get the requested page size
+            
+            
+            if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
+                return JsonResponse(get_paginated_data(request, queryset, serializer_class, search_field))
+            
+            if request.accepted_renderer.format == 'html':
+                context = {}
+                return render_html_response(context, self.template_name)
+            
+           
+           
+        except Exception as e:
+            print(e)
+            return JsonResponse({"error": str(e)})
 
-
-        search_value = request.GET.get('search[value]', '')
-        
-        # Fetch the data from the database
-        purchase_orders =  self.get_queryset()
-        
-        # Filter data based on search value
-        if search_value:
-            purchase_orders = purchase_orders.filter(item_name__icontains=search_value)
-        
-        # Set up pagination
-        paginator = Paginator(purchase_orders, 25)
-        page_number = request.GET.get('start', 0) // 25 + 1
-        page_obj = paginator.get_page(page_number)
-        
-        # Convert the data to JSON format
-        data = serializers.serialize("json", page_obj)
-        
-        if request.accepted_renderer.format == 'html':
-            context = {'purchase_orders':purchase_orders}
-            return render_html_response(context, self.template_name)
-        else:
-            print(purchase_orders, "purchase_orders")
-        
-            return JsonResponse({
-                "draw": int(request.GET.get('draw', 1)),
-                "recordsTotal": purchase_orders.count(),
-                "recordsFiltered": paginator.count,
-                "data": data,
-            })
             
 def get_vendor_data(request):
     if request.method == "GET":
