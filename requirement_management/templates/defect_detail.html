@@ -5,161 +5,110 @@
 {% block content %}
 {% include 'components/alert.html' %}
 
-<div class="container-fluid my-3 py-3">
-  <div class="row">
-      <div class="col-xl-5 col-lg-6 text-center">
-          {% for document in documents %}
-              {% if forloop.first %}
-                  <div class="row" style="height: 65vh;">
-                      <div class="col-12" style="height: 65vh;">
-                          <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ document.document_path }}" alt="chair" style="height: inherit;">
-                      </div>
-                  </div>
-                  
-                  <div class="col-12 my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
-              {% else %}
-                      <figure itemprop="associatedMedia" itemscope itemtype="http://schema.org/ImageObject">
-                      <a href="{{ document.document_path }}" itemprop="contentUrl" data-size="500x600">
-                          <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ document.document_path }}" alt="Image description" />
-                      </a>
+<div class="container-fluid py-4">
+  <div class="card h-100">
+      <div class="card-body">
+          <div class="row">
+              <!-- Image -->
+              <div class="col-xl-6 col-lg-6 text-center">
+                  {% with first_item=document_paths.0 %}
+                      <!-- First image outside of the loop -->
+                      <figure itemprop="associatedMedia" itemscope itemtype="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                          <a href="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                              {% if first_item.is_video %}
+                                  <video controls class="w-100 border-radius-lg shadow-lg mx-auto">
+                                      <source src="{{ first_item.presigned_url }}" type="video/mp4">
+                                  </video>
+                              {% else %}
+                                  <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ first_item.presigned_url }}" alt="{{ first_item.filename }}" />
+                              {% endif %}
+                          </a>
                       </figure>
-              {%endif%}
-          {%endfor%}
-          </div>
-          
-        <!-- Root element of PhotoSwipe. Must have class pswp. -->
-        <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
-          <!-- Background of PhotoSwipe.  It's a separate element, as animating opacity is faster than rgba(). -->
-          <div class="pswp__bg"></div>
-          <!-- Slides wrapper with overflow:hidden. -->
-          <div class="pswp__scroll-wrap">
-            <!-- Container that holds slides. PhotoSwipe keeps only 3 slides in DOM to save memory. -->
-            <!-- don't modify these 3 pswp__item elements, data is added later on. -->
-            <div class="pswp__container">
-              <div class="pswp__item"></div>
-              <div class="pswp__item"></div>
-              <div class="pswp__item"></div>
-            </div>
-            <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
-            <div class="pswp__ui pswp__ui--hidden">
-              <div class="pswp__top-bar">
-                <!--  Controls are self-explanatory. Order can be changed. -->
-                <div class="pswp__counter"></div>
-                <button class="btn btn-white btn-sm pswp__button pswp__button--close">Close (Esc)</button>
-                <button class="btn btn-white btn-sm pswp__button pswp__button--fs">Fullscreen</button>
-                <button class="btn btn-white btn-sm pswp__button pswp__button--arrow--left">Prev
-                </button>
-                <button class="btn btn-white btn-sm pswp__button pswp__button--arrow--right">Next
-                </button>
-                <!-- Preloader demo https://codepen.io/dimsemenov/pen/yyBWoR -->
-                <!-- element will get class pswp__preloader--active when preloader is running -->
-                <div class="pswp__preloader">
-                  <div class="pswp__preloader__icn">
-                    <div class="pswp__preloader__cut">
-                      <div class="pswp__preloader__donut"></div>
-                    </div>
+                  {% endwith %}
+                      <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
+                      <!-- Loop through the rest of the items -->
+                      {% for item in document_paths %}
+                              <figure itemprop="associatedMedia" itemscope itemtype="{{ item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                                  <a href="#" itemprop="contentUrl" data-size="500x600" class="modal-link" data-url="{{ item.presigned_url }}">
+                                      {% if item.is_video %}
+                                          <video controls class="d-block mx-auto w-75 min-height-100 max-height-100 border-radius-lg shadow" onclick="openModal('{{ item.presigned_url }}', 'video')">
+                                              <source src="{{ item.presigned_url }}" type="video/mp4">
+                                          </video>
+                                      {% else %}
+                                          <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" onclick="openModal('{{ item.presigned_url }}', 'image')">
+                                      {% endif %}
+                                  </a>
+                              </figure>
+                          {% endfor %}
                   </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="card-body p-0">
+                    <h5>{{ defect_instance.action }}</h5>
+                    <p class="text-sm">
+                      {{ defect_instance.description | safe}}</p>
+                    <hr class="horizontal gray-light my-4">
+                    <ul class="list-group">
+                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Defect Period Date:</strong> &nbsp;{{ defect_instance.defect_period }}</li>
+                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Due Date:</strong> &nbsp; {{ defect_instance.due_date }}</li>
+                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">UPRN:</strong> &nbsp; {{ defect_instance.UPRN|default:''  }}</li>
+                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Status:</strong> &nbsp;{{ defect_instance.status|title }}</li>
+                    </ul>
                 </div>
               </div>
-              <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
-                <div class="pswp__share-tooltip"></div>
-              </div>
-              <div class="pswp__caption">
-                <div class="pswp__caption__center"></div>
-              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="col-lg-6 mx-auto">
-          <!-- Card Basic Info -->
-          <div class="card h-100" id="basic-info">
-
-              <div class="card-header">
-                  <h5>Defect details</h5>
-              </div>
-              <div class="card-body pt-0">
-                  <div class="mb-3">
-                      <label class="form-label">Action</label>
-                      <p>{{ defect_instance.action }}</p>
+            
+      <div class="row">
+        <div class="col-12">
+          <div class="card mt-4" id="basic-info">
+            <div class="card-header  pb-0">
+              <h5> Surveyor Response</h5>
+            </div>
+            <div class="card-body">
+              <form role="form" method="POST" autocomplete="off" enctype="multipart/form-data">
+                  <div class='row'>
+                      <input type="hidden" name="defect_id" value="{{ defect_instance.id }}">
+                      {% csrf_token %}
+                      {% render_form defect_response_serializer %}
                   </div>
-                  <div class="mb-3">
-                      <label class="form-label">Description</label>
-                      <p>{{ defect_instance.description | safe}}</p>
-                  </div>
-                  <div class="mb-3">
-                      <label class="form-label">UPRN</label>
-                      <p>{{ defect_instance.UPRN }}</p>
-                  </div>
-                  <div class="mb-3">
-                      <label class="form-label">Defect Period Date</label>
-                      <p>{{ defect_instance.defect_period }}</p>
-                  </div>
-                  <div class="mb-3">
-                      <label class="form-label">Status</label>
-                      <p>{{ defect_instance.status }}</p>
-                  </div>
-                  <div class="mb-3">
-                      <label class="form-label">Due Date</label>
-                      <p>{{ defect_instance.due_date }}</p>
-                  </div>
-
-                  <!-- Add more fields as needed -->
-              </div>
+                  <button type="submit"  class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0">Save As Draft</button>
+              </form>
+            </div>
           </div>
-      </div>
-      
-      <div class="card h-100 mt-4">
-        <div class="card-body pt-0">
-          <form role="form" method="POST" autocomplete="off" enctype="multipart/form-data">
-              <div class='row'>
-                  <input type="hidden" name="defect_id" value="{{ defect_instance.id }}">
-                  {% csrf_token %}
-                  {% render_form defect_response_serializer %}
-              </div>
-              <button type="submit" class="btn btn-primary">Submit</button>
-          </form>
+            <div class="card mt-4">
+            <div class="card-body pt-0">
+              <table class="table align-items-center mb-0">
+                <thead>
+                  <tr>
+                    <th>Rectification Description</th>
+                    <th>Remedial Work</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for defect_response in defect_responses %}
+                  <tr data-defect-response-id="{{ defect_response.id }}">
+                    <td style="white-space: normal;">{{ defect_response.rectification_description|safe }}</td>
+                    <td style="white-space: normal;" >{{ defect_response.remedial_work|safe }}</td>
+                    <td>{{ defect_response.status }}</td>
+                    <td>{{ defect_response.created_at }}</td>
+                    <td>
+                      <a href="#" class="edit-link" data-bs-toggle="tooltip" data-bs-original-title="Edit Response">
+                        <i class="fas fa-user-edit text-secondary"></i>
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>  
         </div>
-      </div>
-
-      <div class="card h-100 mt-4">
-        <h5 class="font-weight-bolder mr-4 mt-4 mb-4">Surveyor Response</h5>
-        <div class="card-body pt-0">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Rectification Description</th>
-                <th>Remedial Work</th>
-                <th>Status</th>
-                <th>Created At</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for defect_response in defect_responses %}
-              <tr data-defect-response-id="{{ defect_response.id }}">
-                <td style="white-space: normal;">{{ defect_response.rectification_description|safe }}</td>
-                <td style="white-space: normal;" >{{ defect_response.remedial_work|safe }}</td>
-                <td>{{ defect_response.status }}</td>
-                <td>{{ defect_response.created_at }}</td>
-                <td>
-                  <a href="#" class="edit-link" data-bs-toggle="tooltip" data-bs-original-title="Edit Response">
-                    <i class="fas fa-user-edit text-secondary"></i>
-                  </a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>  
-
-  </div>
-      
-      
     </div>
-
 </div>
 
 

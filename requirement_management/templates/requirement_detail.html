@@ -4,153 +4,197 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
 
 <div class="container-fluid py-4">
-    <div class="row">
-        <!-- Image -->
-        <div class="col-lg-6 mt-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="card-img-top rounded-top d-flex align-items-center">
-                        <img class = "border-radius-lg shadow-lg mx-auto img-fluid" src="requirement_instance.document_path" alt="">
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Requirement and Customer Details -->
-        <div class="col-lg-6 mt-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <div class="row">
-                        <!-- Requirement Details -->
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Description</label>
-                            <p>{{ requirement_instance.description|safe}}</p>
-                        </div>
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Site Address</label>
-                            <p>{{ requirement_instance.site_address|safe}}</p>
-                        </div>
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Quantity Surveyor</label>
-                            <p>{{ requirement_instance.quantity_surveyor }}</p>
-                        </div>
-                    </div>
-                    <br>
-                    <div class="row">
-                        <!-- Customer Details -->
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Company Name</label>
-                            <p>{{ requirement_instance.customer_id.company_name }}</p>
-                        </div>
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Customer Email</label>
-                            <p>{{ requirement_instance.customer_id.email }}</p>
-                        </div>
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Customer Name</label>
-                            <p>{{ requirement_instance.customer_id.first_name }}</p>
-                        </div>
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Site Address</label>
-                            <p>{{ requirement_instance.site_address.address }}</p>
-                        </div>
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Date and Time</label>
-                            <p>{{ requirement_instance.requirement_date_time }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Defect Details -->
-    <div class="row mt-lg-4">
-        <div class="col-lg-12">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="font-weight-bolder mt-4">Defect Tab</h5>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>Description</th>
-                                <th>Due Date</th>
-                                <th>UPRN</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for defect in requirement_defect %}
-                            <tr>
-                                <td style="white-space: normal;">{{ defect.action }}</td>
-                                <td style="white-space: normal;">{{ defect.description | safe | truncatechars:50 }}</td>
-                                <td>{{ defect.due_date }}</td>
-                                <td>{{ defect.UPRN }}</td>
-                                <td>{{ defect.status }}</td>
-                                <td>
-                                    <a href="{% url 'requirement_defect_detail' defect.id %}">
-                                        <i class="fas fa-eye text-secondary mx-4"></i>
+    <div class="card h-100">
+        <div class="card-body">
+            <div class="row">
+                <!-- Image -->
+                <div class="col-xl-6 col-lg-6 text-center">
+                    {% with first_item=document_paths.0 %}
+                        <!-- First image outside of the loop -->
+                        <figure itemprop="associatedMedia" itemscope itemtype="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                            <a href="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                                {% if first_item.is_video %}
+                                    <video controls class="w-100 border-radius-lg shadow-lg mx-auto">
+                                        <source src="{{ first_item.presigned_url }}" type="video/mp4">
+                                    </video>
+                                {% else %}
+                                    <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ first_item.presigned_url }}" alt="{{ first_item.filename }}" />
+                                {% endif %}
+                            </a>
+                        </figure>
+                    {% endwith %}
+                        <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
+                        <!-- Loop through the rest of the items -->
+                        {% for item in document_paths %}
+                                <figure itemprop="associatedMedia" itemscope itemtype="{{ item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                                    <a href="#" itemprop="contentUrl" data-size="500x600" class="modal-link" data-url="{{ item.presigned_url }}">
+                                        {% if item.is_video %}
+                                            <video controls class="d-block mx-auto w-75 min-height-100 max-height-100 border-radius-lg shadow" onclick="openModal('{{ item.presigned_url }}', 'video')">
+                                                <source src="{{ item.presigned_url }}" type="video/mp4">
+                                            </video>
+                                        {% else %}
+                                            <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" onclick="openModal('{{ item.presigned_url }}', 'image')">
+                                        {% endif %}
                                     </a>
-                                </td>
-                            </tr>
+                                </figure>
                             {% endfor %}
-                        </tbody>
-                    </table>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Surveyor Condition -->
-    {% if is_permitted %}
-        <div class="row mt-lg-4">
-            <div class="col-lg-6 mt-lg-4">
-                <div class="card h-100">
-                    <div class="card-body">
+                <!-- Requirement and Customer Details -->
+                <div class="col-lg-6">
+                    <div class="card-body p-0">
+                        <p class="text-sm">
+                            {{ requirement_instance.description|safe}}</p>
+                        <hr class="horizontal gray-light my-4">
+                        <ul class="list-group">
+                            <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Customer Name:</strong> &nbsp;{{ requirement_instance.customer_id.first_name|title }}</li>
+                            <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Email:</strong> &nbsp; {{ requirement_instance.customer_id.email }}</li>
+                            <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Site Address:</strong> &nbsp; {{ requirement_instance.site_address|title}}</li>
+                            <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Date/Time:</strong> &nbsp; {{ requirement_instance.requirement_date_time }}</li>
+                        </ul>
+                    </div>
+                    {% if request.user.roles.name == "Quantity Surveyor" %}
+                        <hr class="horizontal gray-light my-4">
                         <form method="post">
                             {% csrf_token %}
                             <div class="form-group">
-                                <select name="surveyer" class="form-control col-lg-4">
+                                <label class="text-dark font-weight-bolder mb-0">Assgin Surveyor</label>
+                                <select name="surveyer" class="form-control col-lg-4" id="surveyor-choices">
+                                    <option disabled selected value> Select an Surveyor </option>
                                     {% for surveyer in surveyers %}
-                                    <option value="{{ surveyer.id }}" {% if requirement_instance.surveyor.id == surveyer.id %} selected {% endif %}>{{ surveyer }}</option>
+                                    <option value="{{ surveyer.id }}" {% if requirement_instance.surveyor.id == surveyer.id %} selected {% endif %}>
+                                        {{ surveyer }}
+                                    </option>
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="form-group mb-3">
-                                <input type="hidden" name="requirement_id" value="{{ requirement_instance.id }}">
-                                <button type="submit" class="btn btn-primary">Submit</button>
+                            <div class="text-end"> <!-- Add this div with the "text-end" class to align the button to the right -->
+                                <button type="submit" class="btn bg-gradient-primary">Submit</button>
                             </div>
+                        
                         </form>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
-        
-        <div class="col-lg-6 mt-lg-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="font-weight-bolder mt-4">Surveyers</h5>
-                    {% if requirement_instance.surveyor %}
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <label class="font-weight-bold">Assigned Surveyor:</label>
-                            <p>{{ requirement_instance.surveyor }}</p>
-                        </div>
-                    {% else %}
-                        <div class="col-12 col-sm-6 mt-3 mt-sm-0">
-                            <p>No surveyer assigned.</p>
-                        </div>
-                    {% endif %}
-
+            <div class="row mt-5">
+                <div class="col-lg-12">
+                    <h5 class="ms-3">Defects</h5>
+                       <table class="table align-items-center mb-0">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Due Date</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">UPRN</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for defect in requirement_defect %}
+                                    <tr>
+                                        <td style="white-space: normal;">{{ defect.action }}</td>
+                                        <td style="white-space: normal;">{{ defect.description | safe | truncatechars:50 }}</td>
+                                        <td>{{ defect.due_date }}</td>
+                                        <td>{{ defect.UPRN|default:'' }}</td>
+                                        <td>{{ defect.status|title }}</td>
+                                        <td>
+                                            <a href="{% url 'requirement_defect_detail' defect.id %}">
+                                                <i class="fas fa-eye text-secondary mx-4"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                    </div>
+                        
                 </div>
             </div>
         </div>
     </div>
 
-    {% endif %}
 </div>
+<!-- Modal -->
+<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close btn bg-gradient-secondary text-center btn-sm mb-2" data-dismiss="modal" aria-label="Close">
+                    Close
+                </button>
+                <div class="text-center">
+                    <div id="modal-content-inner"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script>
+    function openModal(url, type) {
+        var modal = document.getElementById('myModal');
+        var modalContentInner = document.getElementById('modal-content-inner');
+
+        if (type === 'video') {
+            modalContentInner.innerHTML = '<video controls><source src="' + url + '" type="video/mp4"></video>';
+        } else {
+            modalContentInner.innerHTML = '<img src="' + url + '" alt="Image">';
+        }
+
+        modal.style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var modal = document.getElementById('myModal');
+        var modalContentInner = document.getElementById('modal-content-inner');
+        var modalClose = modal.querySelector('.close');
+
+        modalClose.addEventListener('click', function() {
+            modal.style.display = 'none';
+            modalContentInner.innerHTML = '';
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                modalContentInner.innerHTML = '';
+            }
+        });
+    });
+
+
+// Initialize Choices.js
+if (document.getElementById('surveyor-choices')) {
+  var element = document.getElementById('surveyor-choices');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Surveyor", 
+  });
+
+  
+ }
+
+</script>
 
 
 {% endblock %}
