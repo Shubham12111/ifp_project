@@ -1,6 +1,7 @@
 from django.db import models
 from stock_management.models import Vendor, InventoryLocation,Item
 from authentication.models import User
+from django.db.models import Sum
 
 # Define choices for the status field
 STATUS_CHOICES = [
@@ -50,3 +51,28 @@ class PurchaseOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.item_name} - {self.purchase_order_id.po_number}"
+
+class PurchaseOrderInvoice(models.Model):
+    purchase_order_id = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE)
+    invoice_number = models.CharField(max_length=50)
+    invoice_date = models.DateField()
+    invoice_pdf_path = models.CharField(max_length=200, null=True, blank=True)
+    comments = models.TextField(max_length=200, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.invoice_id  # Display the invoice_id as the string representation
+
+class PurchaseOrderReceivedInventory(models.Model):
+    purchase_order_invoice_id = models.ForeignKey(PurchaseOrderInvoice, on_delete=models.CASCADE)
+    purchase_order_item_id = models.ForeignKey(PurchaseOrderItem, on_delete=models.CASCADE)
+    received_inventory = models.PositiveIntegerField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Received Inventory for {self.purchase_order_item_id}"
+
+    def get_cumulative_received_quantity(self):
+        return PurchaseOrderReceivedInventory.objects.filter(purchase_order_item_id=self.purchase_order_item_id).exclude(id=self.id).aggregate(Sum('received_inventory'))['received_inventory__sum'] or 0

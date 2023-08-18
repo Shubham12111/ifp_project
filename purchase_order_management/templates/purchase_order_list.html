@@ -33,9 +33,9 @@
                 <label>Status
                     <select id="status-filter" name="status" class="form-control">
                         <option value="">All</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
+                        {% for status in  status_list %}
+                          <option value="{{status.0}}">{{status.1}}</option>
+                        {% endfor %}
                     </select>
                 </label>
                 <label>Due Date <input type="date" name="due_date"  class="form-control due-date-filter" id="due-date-filter"></label>
@@ -201,35 +201,41 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
             }).then(function (data) {
                 // Parse the received data
                 const responseData = data.data;
+                if (responseData.length > 0) {
                 // Format the data for DataTable consumption
-                var formattedData = {
-                    "draw": 1, // Set the appropriate draw value
-                    "recordsTotal": responseData.length,
-                    "recordsFiltered": responseData.length,
-                    "data": responseData.map(function(item) {
-                      console.log(item)
-                        // Generate cell content based on column type
-                        var row = [];
-                        for (var columnConfig of columnsConfig) {
-                            var cellContent = item[columnConfig.fieldName];
+                  var formattedData = {
+                      "draw": 1, // Set the appropriate draw value
+                      "recordsTotal": responseData.length,
+                      "recordsFiltered": responseData.length,
+                      "data": responseData.map(function(item) {
+                        console.log(item)
+                          // Generate cell content based on column type
+                          var row = [];
+                          for (var columnConfig of columnsConfig) {
+                              var cellContent = item[columnConfig.fieldName];
 
-                            if (columnConfig.type === 'status') {
-                                cellContent = getStatusCellContent(item.status);
-                            }  
-                            else if (columnConfig.type === 'actions') 
-                            {
-                                cellContent = generateActionButtons(item, columnConfig);
-                            }
-                            else if (columnConfig.fieldName === 'due_date' || columnConfig.fieldName === 'order_date') {
-                                // Convert date fields from "DD/MM/YYYY" to "dd.mm.yyyy" format
-                                cellContent = formatDate(cellContent);
-                            }
-                                                                  
-                            row.push(cellContent);
-                        }
-                        return row;
-                    })
-                };
+                              if (columnConfig.type === 'status') {
+                                  cellContent = getStatusCellContent(item.status);
+                              }  
+                              else if (columnConfig.type === 'actions') 
+                              {
+                                  cellContent = generateActionButtons(item, columnConfig);
+                              }
+                              else if (columnConfig.fieldName === 'due_date' || columnConfig.fieldName === 'order_date') {
+                                  // Convert date fields from "DD/MM/YYYY" to "dd.mm.yyyy" format
+                                  cellContent = formatDate(cellContent);
+                              }
+                                                                    
+                              row.push(cellContent);
+                          }
+                          return row;
+                      })
+                  };
+                }
+                else
+                {
+                  var formattedData;
+                }
                 // Destroy the existing DataTable (if any)
                 if (dataTable) {
                     dataTable.destroy();
@@ -301,7 +307,7 @@ function generateActionButtons(item, columnConfig) {
     } 
     
     else if (status === "approved") {
-        conditionalActionsHTML = '<li><a class="dropdown-item" href="">Convert To Invoice</a></li> <li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>';
+        conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/'+ item['id'] + '/">Convert To Invoice</a></li> <li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>';
     }
 
     var dropdownHTML = '<div class="dropstart ms-auto pe-0">' +

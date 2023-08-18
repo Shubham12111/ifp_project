@@ -9,14 +9,15 @@ from infinity_fire_solutions.response_schemas import create_api_response, render
 from infinity_fire_solutions.utils import docs_schema_response_new
 from stock_management.models import Vendor, InventoryLocation, Item
 from stock_management.serializers import VendorSerializer
-from .serializers import InventoryLocationSerializer, PurchaseOrderSerializer, PurchaseOrderListSerializer
-from .models import PurchaseOrder, PurchaseOrderItem
+from .serializers import *
+from .models import *
 from django.http import JsonResponse
 from django.core import serializers
 from django.views import View
 from django.core.paginator import Paginator
 from django.db import transaction
 from datetime import datetime
+import json
 
 def get_paginated_data(request, queryset, serializer_class, search_field=None):
     search_value = request.GET.get('search[value]', '')
@@ -41,7 +42,7 @@ def get_paginated_data(request, queryset, serializer_class, search_field=None):
 
     # Apply filters to the queryset based on filter parameters
     if location:
-        data_queryset = data_queryset.filter(location__icontains=location)
+        data_queryset = data_queryset.filter(inventory_location_id__name__icontains=location)
     if status:
         data_queryset = data_queryset.filter(status=status)
     if due_date:
@@ -138,7 +139,7 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
                 return JsonResponse(get_paginated_data(request, queryset, serializer_class, search_field))
             
             if request.accepted_renderer.format == 'html':
-                context = {}
+                context = {'status_list':STATUS_CHOICES}
                 return render_html_response(context, self.template_name)
         except Exception as e:
             print(e)
@@ -310,8 +311,7 @@ class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
                       'purchase_order_items':purchase_order_items }
             return render_html_response(context, self.template_name)
         
-        
-        
+      
 class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
     View for adding or updating a Purchase Order.
@@ -444,3 +444,97 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         else:
             return JsonResponse({'success': False, 'errors': serializer.errors,  
             'status':status.HTTP_400_BAD_REQUEST}) 
+
+class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListAPIView):
+    """
+
+    View to get the listing of all Purchase Orders.
+
+    Supports both HTML and JSON response formats.
+    """
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    template_name = 'purchase_order_invoice.html'
+    ordering_fields = ['created_at'] 
+    
+    def get_purchase_order(self, *args, **kwargs):
+        
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"stock_management", HasCreateDataPermission, 'add'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(created_by=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        base_queryset = PurchaseOrder.objects.filter(
+            (Q(status="approved") ) & filter_mapping.get(data_access_value, Q())
+        )
+        return base_queryset
+    
+    def get(self, request, *args, **kwargs):
+        purchase_order = self.get_purchase_order().filter(pk=kwargs.get('purchase_order_id')).first() 
+        purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order)
+        
+        if request.accepted_renderer.format == 'html':
+            context = {'purchase_order':purchase_order,
+                      'purchase_order_items':purchase_order_items }
+            return render_html_response(context, self.template_name)
+    
+    def post(self, request, *args, **kwargs):
+        purchase_order = self.get_purchase_order().filter(pk=kwargs.get('purchase_order_id')).first() 
+        invoice_serializer = PurchaseOrderInvoiceSerializer(data=request.data)
+        purchase_order_items = json.loads(request.POST.get('purchase_order_items'))
+      
+        received_inventory_serializers = [
+            PurchaseOrderReceivedInventorySerializer(data=item)
+            for item in purchase_order_items
+        ]
+        
+        all_serializers = [invoice_serializer] + received_inventory_serializers
+        all_valid = all(serializer.is_valid() for serializer in all_serializers)
+        if all_valid:
+            invoice_serializer.validated_data['purchase_order_id'] = purchase_order
+            from rest_framework import serializers
+            invoice = invoice_serializer.save()
+            for serializer in received_inventory_serializers:
+                purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
+                received_inventory = PurchaseOrderReceivedInventory.objects.filter(
+                    purchase_order_item_id=purchase_order_item_id,
+                    purchase_order_item_id__purchase_order_id=purchase_order
+                ).first()
+
+                cumulative_received_quantity = serializer.validated_data['received_inventory']
+                
+                if received_inventory:
+                    cumulative_received_quantity += received_inventory.get_cumulative_received_quantity()
+
+                if cumulative_received_quantity > serializer.validated_data['purchase_order_item_id'].quantity:
+                    serializer._errors['received_inventory'] = serializers.ValidationError(
+                        f"Received quantity exceeds available quantity."
+                    )
+                    error_message = str(serializer.errors['received_inventory'])  # Convert to string
+                    error_data = {
+                        'purchase_order_item_id': str(serializer.validated_data['purchase_order_item_id'].id),
+                        'error_message': error_message
+                    }
+
+                    return JsonResponse({'success': False, 'errors': [error_data], 'status': status.HTTP_400_BAD_REQUEST})
+
+                received_inventory = serializer.save(purchase_order_invoice_id=invoice)
+
+        else:
+            errors = {}
+            for serializer in all_serializers:
+                if not serializer.is_valid():
+                    errors.update(serializer.errors)
+            
+            return JsonResponse({'success': False, 'errors': errors,  
+            'status':status.HTTP_400_BAD_REQUEST})
+

@@ -283,8 +283,6 @@ if (document.getElementById('existingPurchaseOrderData')) {
         document.querySelector('.tax-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'tax')).toFixed(2);
         document.querySelector('.subtotal-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
         document.querySelector('.discount-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'discount')).toFixed(2);
-        
-
         if ("{{ purchase_order.status }}" === "sent_for_approval") {
                 const notesValue = "{{ existingPurchaseOrderData.notes }}";
                 if (notesValue)
@@ -299,7 +297,6 @@ if (document.getElementById('existingPurchaseOrderData')) {
             document.querySelector('.notes').value = safeGetProperty(existingPurchaseOrderData, 'notes');
 
         }
-
         document.querySelector('.grand-total-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
         // Populate item rows with existing item data
 

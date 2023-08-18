@@ -107,3 +107,33 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Total Amount must be a positive value.")
         return value
+
+
+class PurchaseOrderReceivedInventorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PurchaseOrderReceivedInventory
+        fields = ['purchase_order_item_id','received_inventory']
+
+    
+class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
+    invoice_date = serializers.DateField(
+        required=True,
+        error_messages={
+            "required": "Invoice date is required.",
+            "blank": "Invoice date is required.",
+            "invalid": "Invalid due date format. Use one of these formats instead: DD-MM-YYYY",
+            # You can add more error messages as needed
+        }
+    )
+    invoice_number = serializers.CharField(
+        required=True, 
+        error_messages={
+            "required": "Invoice Number field is required.",
+            "blank": "Invoice Number is required.",
+        },
+    )
+    class Meta:
+        model = PurchaseOrderInvoice
+        fields = ['invoice_number', 'invoice_date', 'comments']
+    
+    

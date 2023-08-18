@@ -9,4 +9,5 @@ urlpatterns = [
    path('inventory_location/', get_inventory_location_data, name='get_inventory_location_data'),
    path('edit/<int:purchase_order_id>/', PurchaseOrderUpdateView.as_view(), name='purchase_order_edit'),
    path('view/<int:purchase_order_id>/', PurchaseOrderView.as_view(), name='purchase_order_view'),
+   path('invoice/<int:purchase_order_id>/', PurchaseOrderConvertToInvoiceView.as_view(), name='purchase_order_convert_to_invoice'),
 ]
