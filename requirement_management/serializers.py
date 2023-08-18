@@ -1,10 +1,9 @@
 import uuid
 from django.conf import settings
 from rest_framework import serializers
-from .models import Requirement, RequirementDefect, RequirementDocument, RequirementAsset , REQUIREMENT_DEFECT_CHOICES
+from .models import *
 from django.utils.html import strip_tags
 from authentication.models import User
-from bs4 import BeautifulSoup
 from customer_management.models import SiteAddress
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
@@ -393,18 +392,8 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         return representation
 
 class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
-    action = serializers.CharField(
-        max_length=500, 
-        required=True, 
-        style={'base_template': 'custom_fullwidth_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Action is required.",
-        },
-        validators=[no_spaces_or_tabs_validator],
-    )
     
-    description = serializers.CharField(
+    rectification_description = serializers.CharField(
         max_length=1000, 
         required=True, 
         style={'base_template': 'rich_textarea.html'},
@@ -414,23 +403,16 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
         },
         validators=[validate_description],
     )
-
-    defect_period = serializers.DateTimeField(
-        label='Defect Period',
-        required=True,
-        style={
-            'base_template': 'custom_date_time.html',
-            'custom_class': 'col-6'
+    
+    remedial_work = serializers.CharField(
+        max_length=1000, 
+        required=True, 
+        style={'base_template': 'rich_textarea.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Remedial work is required.",
         },
-    )
-
-    due_date = serializers.DateTimeField(
-        label='Due Date',
-        required=True,
-        style={
-            'base_template': 'custom_date_time.html',
-            'custom_class': 'col-6'
-        },
+        validators=[validate_description],
     )
     
     file_list = serializers.ListField(
@@ -452,81 +434,30 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
     help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
     
-    UPRN = serializers.CharField(
-    max_length=12, 
-    label=('UPRN'),
-    required=False,  # Make it optional
-    style={
-        "autocomplete": "off",
-        "required": False,  # Adjust as needed
-        'base_template': 'custom_input.html',
-        'custom_class': 'col-6'
-    },
-    error_messages={
-            "blank": "UPRN Name is required.",
-            "invalid": "It must contain a 12-digit number.",
-        },
-    )
-    
-    status = serializers.ChoiceField(
-        label='Status',
-        choices=REQUIREMENT_DEFECT_CHOICES,
-        required=True,
-        style={
-            'base_template': 'custom_select.html',
-            'custom_class': 'col-6'
-        },
-    )
-    
-    def validate_UPRN(self, value):
-        cleaned_value = str(value).replace(" ", "")  # Remove spaces
-
-        if not cleaned_value.isdigit() or len(cleaned_value) != 12:
-            raise serializers.ValidationError("UPRN must be a 12-digit number.")
-
-        if self.instance:
-            queryset = RequirementDefect.objects.all().exclude(id=self.instance.id)
-        else:
-            queryset = RequirementDefect.objects.filter(UPRN=value)
-        if queryset.filter(UPRN=cleaned_value).exists():
-            raise serializers.ValidationError("A record with UPRN '{}' already exists.".format(cleaned_value))
-
-        
-        return value
-    
-    def validate(self, data):
-        """
-        Check that due_date is greater than defect_period.
-        """
-        defect_period = data.get('defect_period')
-        due_date = data.get('due_date')
-
-        if defect_period and due_date and defect_period >= due_date:
-            raise serializers.ValidationError({"due_date": "Due date must be greater than defect period."})
-
-        return data
-        
     class Meta:
-        model = RequirementDefect
-        fields = ('action',  'description', 'defect_period', 'due_date', 'UPRN', 'status','file_list')
-    
+        model = RequirementDefectResponse
+        fields = ('rectification_description', 'remedial_work', 'status', 'file_list')
+        
+        
     def create(self, validated_data):
+    
         # Pop the 'file_list' field from validated_data
         file_list = validated_data.pop('file_list', None)
         # Create a new instance of Requirement with other fields from validated_data
-        instance = RequirementDefect.objects.create(**validated_data)
-
+        validated_data['surveyor'] = validated_data.pop('user_id')
+        validated_data['defect_id'] = RequirementDefect.objects.filter(id=self.initial_data['defect_id']).first()
+        
+        instance = RequirementDefectResponse.objects.create(**validated_data)
         if file_list and len(file_list) > 0:
 
             for file in file_list:
                 # Generate a unique filename for each file
                 unique_filename = f"{str(uuid.uuid4())}_{file.name}"
-                upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}/defects')
-                file_path = f'requirement/{instance.id}/defects/{unique_filename}'
+                upload_file_to_s3(unique_filename, file, f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses')
+                file_path = f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses'
                 
-                document = RequirementDocument.objects.create(
-                requirement_id=instance.requirement_id,
-                defect_id = instance,
+                RequirementDefectResponseImage.objects.create(
+                defect_response = instance,
                 document_path=file_path,
                 )
             
@@ -548,12 +479,11 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
                 
                 for file in file_list:
                     unique_filename = f"{str(uuid.uuid4())}_{file.name}"
-                    upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}/defects')
-                    file_path = f'requirement/{instance.id}/defects/{unique_filename}'
+                    upload_file_to_s3(unique_filename, file, f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses')
+                    file_path = f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses'
                 
-                    RequirementDocument.objects.create(
-                        requirement_id=instance.requirement_id,
-                        defect_id=instance,
+                    RequirementDefectResponseImage.objects.create(
+                        defect_response = instance,
                         document_path=file_path,
                     )
         
@@ -564,7 +494,7 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
 
         document_paths = []
         if hasattr(instance, 'requirementdocument_set'):
-            for document in RequirementDocument.objects.filter(defect_id=instance, requirement_id=instance.requirement_id):
+            for document in RequirementDefectResponseImage.objects.filter(defect_response=instance):
                 document_paths.append({
                     'presigned_url': generate_presigned_url(document.document_path),
                     'filename': document.document_path.split('/')[-1],

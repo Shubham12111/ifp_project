@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Requirement, RequirementDefect, RequirementDocument
+from .models import Requirement, RequirementDefect, RequirementDocument, RequirementDefectResponse, RequirementDefectResponseImage
 
 # Register your models here.
 
@@ -18,6 +18,8 @@ class RequirementDocumentAdmin(admin.ModelAdmin):
 admin.site.register(Requirement, RequirementAdmin)
 admin.site.register(RequirementDefect, RequirementDefectAdmin)
 admin.site.register(RequirementDocument, RequirementDocumentAdmin)
+admin.site.register(RequirementDefectResponse)
+admin.site.register(RequirementDefectResponseImage)
  
 
 

@@ -4,7 +4,7 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
 from rest_framework import generics, status
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
-from .serializers import RequirementSerializer, RequirementAddSerializer, RequirementDefectAddSerializer, RequirementDetailSerializer, RequirementDefectSerializer
+from .serializers import *
 from .models import Requirement, RequirementDefect,RequirementDocument, RequirementAsset
 from django.contrib import messages
 from rest_framework.response import Response
@@ -586,7 +586,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
    
 class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
     
-    serializer_class = RequirementDefectAddSerializer
+    serializer_class = RequirementDefectResponseAddSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'defect_detail.html'
     swagger_schema = None
@@ -600,28 +600,77 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
-        # This method handles GET requests for updating an existing Requirement object.
-
         defect_instance = self.get_queryset().first()
-        
+
         if defect_instance:
-            serializer =  self.serializer_class(instance=defect_instance)
+            defect_documents = RequirementDocument.objects.filter(defect_id=defect_instance)
         else:
-            serializer =  self.serializer_class()
-            defect_instance = {}
-        
-        defect_documents = RequirementDocument.objects.filter(defect_id=defect_instance)
-        
-        if request.accepted_renderer.format == 'html':
-            context = {
-                'serializer': serializer,
-                'defect_instance':defect_instance,
-                'documents': defect_documents
-                }
-            return render_html_response(context, self.template_name)
-        else:
-            messages.error(request, "You are not authorized to perform this action")
+            messages.warning(request, "You are not authorized to perform this action")
             return redirect(reverse('requirement_list'))
+
+        defect_responses = RequirementDefectResponse.objects.filter(defect_id=defect_instance)
+            
+        # Defect response doesn't exist, prepare context for displaying form
+        context = {
+            'defect_instance': defect_instance,
+            'documents': defect_documents,
+            'defect_response_serializer': self.serializer_class(),
+            'defect_responses': defect_responses
+        }
+
+        return render_html_response(context, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add a requirement.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access.
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'add'
+        )
+
+        data = request.data.copy()
+        file_list = data.get('file_list', [])
+        
+        if not any(file_list):
+            del data['file_list']
+
+        serializer = self.serializer_class(data=data)  # Use the modified data
+        
+        if serializer.is_valid():
+            serializer.validated_data['user_id'] = authenticated_user
+            instance = serializer.save()
+            
+            message = "Congratulations! Your response has been added successfully."
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+
+                return redirect(reverse('requirement_defect_detail', kwargs={'pk': request.data.get('defect_id')}))  # Redirect after successful POST
+                
+            else:
+                # Return JSON response with success message and serialized data.
+                return create_api_response(
+                    status_code=status.HTTP_201_CREATED,
+                    message=message,
+                    data=self.serializer_class(instance).data
+                )
+        else:
+            # Invalid serializer data.
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data.
+                context = {'serializer': serializer}
+                return render_html_response(context, self.template_name)
+            else:
+                # Return JSON response with error message.
+                return create_api_response(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message="We apologize for the inconvenience, but please review the below information.",
+                    data=convert_serializer_errors(serializer.errors)
+                )
+
+
+
+
 
 class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
