@@ -19,7 +19,7 @@
 .choices__item--disabled{
   display: none !important;
 }
-  </style>
+</style>
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
     <div class="row">
@@ -109,7 +109,7 @@
                 
                 <div class="row mt-4">
                     <div class="col-md-6 ">
-                        {% if purchase_order.status == "pending" %}
+                        {% if purchase_order.status == "sent_for_approval" %}
                         <p class="notes text-sm">{{ existingPurchaseOrderData.notes }}</p>
                         <label>Approval Notes</label>
                         <textarea class="form-control notes" rows="6" name="approval_notes" ></textarea>
@@ -118,7 +118,7 @@
                         <p class="notes text-sm">{{ existingPurchaseOrderData.notes }}</p>
                         Approval Notes
                         <p class="approval_notes text-sm">{{ existingPurchaseOrderData.approval_notes }}</p>
-
+                        {% else %} 
                         <label>Notes</label>
                         <textarea class="form-control notes" rows="6" name="notes" ></textarea>
                         <div class="form-group mt-4 ">
@@ -171,7 +171,7 @@
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 m-auto text-center text-md-end">
                     <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-0" href="{% url 'purchase_order_list' %}">Cancel</a>
-                    {% if  purchase_order.status == "pending" %}
+                    {% if purchase_order.status == "pending" or not purchase_order   %}
                     <button class="btn bg-gradient-info mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Drfat</button>
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
                     {% elif purchase_order.status == "sent_for_approval"  %}
@@ -268,6 +268,7 @@ const itemTableBody = document.getElementById('itemTableBody');
 if (document.getElementById('existingPurchaseOrderData')) {
     const existingPurchaseOrderData = JSON.parse(document.getElementById('existingPurchaseOrderData').textContent);
 
+    
     if (existingPurchaseOrderData) {
     // Function to safely access nested properties
     function safeGetProperty(obj, prop) {
@@ -282,9 +283,16 @@ if (document.getElementById('existingPurchaseOrderData')) {
         document.querySelector('.tax-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'tax')).toFixed(2);
         document.querySelector('.subtotal-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
         document.querySelector('.discount-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'discount')).toFixed(2);
+        
+
         if ("{{ purchase_order.status }}" === "sent_for_approval") {
                 const notesValue = "{{ existingPurchaseOrderData.notes }}";
-                document.querySelector('.notes').textContent = notesValue;
+                if (notesValue)
+                {
+                    document.querySelector('.notes').textContent = notesValue;
+                }   
+                
+                
         }
         else
         {
@@ -642,8 +650,6 @@ submitBtnApproval.addEventListener('click', function() {
 });
 
 }
-
-
 
 submitBtnApproved.addEventListener('click', function() {
     submitForm('approved'); // Call the common function with the status

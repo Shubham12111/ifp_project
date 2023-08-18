@@ -9,37 +9,65 @@ from infinity_fire_solutions.response_schemas import create_api_response, render
 from infinity_fire_solutions.utils import docs_schema_response_new
 from stock_management.models import Vendor, InventoryLocation, Item
 from stock_management.serializers import VendorSerializer
-from .serializers import InventoryLocationSerializer, PurchaseOrderSerializer
+from .serializers import InventoryLocationSerializer, PurchaseOrderSerializer, PurchaseOrderListSerializer
 from .models import PurchaseOrder, PurchaseOrderItem
 from django.http import JsonResponse
 from django.core import serializers
 from django.views import View
 from django.core.paginator import Paginator
 from django.db import transaction
-
-
+from datetime import datetime
 
 def get_paginated_data(request, queryset, serializer_class, search_field=None):
     search_value = request.GET.get('search[value]', '')
-    print(request.GET.get('length'))
+    vendor_query = Q()  # Initialize an empty Q object for vendor filtering
     data_queryset = queryset
 
     if search_value and search_field:
         data_queryset = data_queryset.filter(**{f'{search_field}__icontains': search_value})
 
+    # Handle filter parameters sent through the AJAX request
+    vendor_search = request.GET.get('vendor')
+    if vendor_search:
+        # Filter vendors based on first_name, last_name, and email
+        vendor_query |= Q(vendor_id__first_name__icontains=vendor_search)
+        vendor_query |= Q(vendor_id__last_name__icontains=vendor_search)
+        vendor_query |= Q(vendor_id__email__icontains=vendor_search)
+
+    location = request.GET.get('location')
+    status = request.GET.get('status')
+    due_date = request.GET.get('due_date')
+    order_date = request.GET.get('order_date')
+
+    # Apply filters to the queryset based on filter parameters
+    if location:
+        data_queryset = data_queryset.filter(location__icontains=location)
+    if status:
+        data_queryset = data_queryset.filter(status=status)
+    if due_date:
+        due_date = datetime.strptime(due_date, "%d/%m/%Y").strftime("%Y-%m-%d")
+        data_queryset = data_queryset.filter(due_date=due_date)  
+    if order_date:
+        order_date = datetime.strptime(order_date, "%d/%m/%Y").strftime("%Y-%m-%d")
+
+        data_queryset = data_queryset.filter(order_date=order_date) 
+
+    if  vendor_query:
+        data_queryset = data_queryset.filter(vendor_query)
+            
     paginator = Paginator(data_queryset, 25)
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 25))
     page_number = (start // length) + 1
     page_obj = paginator.get_page(page_number)
 
-    serialized_data = serializers.serialize("json", page_obj, use_natural_primary_keys=True)
+    serializer = PurchaseOrderListSerializer(page_obj, many=True)
 
     response_data = {
             "draw": int(request.GET.get('draw', 1)),
             "recordsTotal": data_queryset.count(),
             "recordsFiltered": paginator.count,
-            "data": serialized_data,
+            "data": serializer.data,
         }
     return response_data
     
@@ -50,9 +78,9 @@ def get_order_items(data):
     for key, value in data.items():
         if key.startswith('items[') and key.endswith('][price]'):
             item_id = key.split('[')[1].split(']')[0]
-            price = value[0]
-            quantity = data[f'items[{item_id}][quantity]'][0]
-            row_total = data[f'items[{item_id}][rowTotal]'][0]
+            price = value
+            quantity = data[f'items[{item_id}][quantity]']
+            row_total = data[f'items[{item_id}][rowTotal]']
             items.append({'item_id': item_id, 'price': price, 'quantity': quantity, 'row_total': row_total})
     
     return items 
@@ -106,19 +134,12 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
             queryset = self.get_queryset()  # Replace with your queryset retrieval logic
             serializer_class = self.serializer_class()  # Replace with your serializer class
             search_field = 'item_name'  # Replace with the field name you want to search on
-            
-            page_length = int(request.GET.get('length', 25))  # Get the requested page size
-            
-            
             if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
                 return JsonResponse(get_paginated_data(request, queryset, serializer_class, search_field))
             
             if request.accepted_renderer.format == 'html':
                 context = {}
                 return render_html_response(context, self.template_name)
-            
-           
-           
         except Exception as e:
             print(e)
             return JsonResponse({"error": str(e)})
@@ -190,7 +211,8 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             
             context = {'vendor_list':vendor_list, 
                        'inventory_location_list':inventory_location_list,
-                       'item_list':item_list}
+                       'item_list':item_list
+                       }
             return render_html_response(context,self.template_name)
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
@@ -218,9 +240,9 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 for key, value in data.items():
                     if key.startswith('items[') and key.endswith('][price]'):
                         item_id = key.split('[')[1].split(']')[0]
-                        price = value[0]
-                        quantity = data[f'items[{item_id}][quantity]'][0]
-                        row_total = data[f'items[{item_id}][rowTotal]'][0]
+                        price = value
+                        quantity = data[f'items[{item_id}][quantity]']
+                        row_total = data[f'items[{item_id}][rowTotal]']
                         items.append({'item_id': item_id, 'price': price, 'quantity': quantity, 'row_total': row_total})
                 # and 'items' is a list containing extracted item data
 
@@ -229,11 +251,13 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                     price = item['price']
                     quantity = item['quantity']
                     row_total = item['row_total']
+                    item = Item.objects.filter(pk=item_id).first()
+                    item_name = item.item_name
                     
                     # Create an instance of PurchaseOrderItem and save it
                     item_row = PurchaseOrderItem(item_id=item_id, unit_price=price, 
                                                  quantity=quantity, row_total=row_total, 
-                                                 purchase_order_id=purchase_order)
+                                                 purchase_order_id=purchase_order,item_name=item_name)
                     item_row.save()
                 
                 message = "Your Purchase Order has been added successfully!"
@@ -277,10 +301,13 @@ class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
         base_queryset = PurchaseOrder.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-        purchase_order = base_queryset.filter(pk=kwargs.get('purchase_order_id')) 
+        purchase_order = base_queryset.filter(pk=kwargs.get('purchase_order_id')).first()
+        
+        purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order)
         
         if request.accepted_renderer.format == 'html':
-            context = {'purchase_order':purchase_order}
+            context = {'purchase_order':purchase_order,
+                      'purchase_order_items':purchase_order_items }
             return render_html_response(context, self.template_name)
         
         
@@ -312,7 +339,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
         base_queryset = PurchaseOrder.objects.filter(
-            (Q(status="pending") | Q(status="send_for_approval")) & filter_mapping.get(data_access_value, Q())
+            (Q(status="pending") | Q(status="sent_for_approval")) & filter_mapping.get(data_access_value, Q())
         ).distinct().order_by('-created_at')        
         return base_queryset
     
@@ -359,6 +386,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                     'items': items_data,
                     # ... other fields
                 }
+                
                 context = {'vendor_list':vendor_list, 
                         'inventory_location_list':inventory_location_list,
                         'item_list':item_list,
@@ -377,36 +405,37 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         
         purchase_order = self.get_purchase_order().filter(pk = kwargs.get('purchase_order_id'))
         purchase_order_data = purchase_order.first()
-
         serializer = self.serializer_class(instance = purchase_order_data, data=request.data)
         if serializer.is_valid():
             # You can add any additional processing or validation here
-            purchase_order = serializer.save()
-
-            # Process item data
-            
-            items_data = get_order_items(request.data)
-            existing_item_ids = [item['item_id'] for item in items_data]
-
-            # Delete PurchaseOrderItem instances that are not present in existing_item_ids
-            PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order).exclude(item_id__in=existing_item_ids).delete()
-
-            for item_data in items_data:
-                item_id = item_data.get('item_id')
-                price = item_data.get('price')
-                quantity = item_data.get('quantity')
-                row_total = item_data.get('row_total')
+            with transaction.atomic():
+                purchase_order = serializer.save()
+                # Process item data
+                items_data = get_order_items(request.data)
+                existing_item_ids = [item['item_id'] for item in items_data]
                 
-                # Update or create the PurchaseOrderItem
-                purchase_order_item, created = PurchaseOrderItem.objects.update_or_create(
-                    purchase_order_id=purchase_order,
-                    item_id=item_id,
-                    defaults={
-                        'price': price,
-                        'quantity': quantity,
-                        'row_total': row_total,
-                    }
-                )
+                # Delete PurchaseOrderItem instances that are not present in existing_item_ids
+                PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order).exclude(item_id__in=existing_item_ids).delete()
+
+                for item_data in items_data:
+                    item_id = item_data.get('item_id')
+                    item = Item.objects.filter(pk=item_id).first()
+                    item_name = item.item_name
+                    price = item_data.get('price')
+                    quantity = item_data.get('quantity')
+                    row_total = item_data.get('row_total')
+                    
+                    # Update or create the PurchaseOrderItem
+                    purchase_order_item, created = PurchaseOrderItem.objects.update_or_create(
+                        purchase_order_id=purchase_order,
+                        item_id=item_id,
+                        defaults={
+                            'unit_price': price,
+                            'quantity': quantity,
+                            'row_total': row_total,
+                            'item_name':item_name
+                        }
+                    )
 
             message = "Your Purchase Order has been updated successfully!"
 

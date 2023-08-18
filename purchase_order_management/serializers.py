@@ -23,6 +23,25 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
 
         return full_address
 
+class PurchaseOrderListSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = PurchaseOrder
+        fields = ['id','po_number', 'vendor_id', 'inventory_location_id', 'order_date', 'due_date', 'sub_total', 'discount', 'tax','total_amount','status']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        if instance.vendor_id:
+            vendor = instance.vendor_id
+            vendor_name = f"{vendor.first_name} {vendor.last_name}"
+            vendor_email = vendor.email 
+            representation['vendor_id'] = f"{vendor_name}"
+
+        representation['inventory_location_id'] = f'{instance.inventory_location_id.name}'
+
+        return representation
+    
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     inventory_location_id = serializers.PrimaryKeyRelatedField(
         required=True,
