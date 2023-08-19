@@ -174,7 +174,7 @@
                     {% if purchase_order.status == "pending" or not purchase_order   %}
                     <button class="btn bg-gradient-info mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Drfat</button>
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
-                    {% elif purchase_order.status == "sent_for_approval"  %}
+                    {% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "Projects Admin (IT)"  %}
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproved" title="Submit">Approved</button>
                     {% endif %}
                     

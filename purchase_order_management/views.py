@@ -24,7 +24,6 @@ import json
 
 def update_or_create_inventory(purchase_order, item, quantity):
     # Try to retrieve the existing inventory entry or create a new one
-    print(item)
     inventory, created = Inventory.objects.get_or_create(
         item_id=item.item,
         inventory_location = purchase_order.inventory_location_id,
@@ -162,7 +161,7 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "stock_management", HasListDataPermission, 'list'
+            self, "purchase_order", HasListDataPermission, 'list'
         )
         # Check if authenticated_user is a redirect response
         if isinstance(authenticated_user, HttpResponseRedirect):
@@ -220,7 +219,7 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"stock_management", HasCreateDataPermission, 'add'
+           self,"purchase_order", HasCreateDataPermission, 'add'
         )
         
         if isinstance(authenticated_user, HttpResponseRedirect):
@@ -305,7 +304,7 @@ class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         # Get the filtered queryset using get_queryset method
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "stock_management", HasListDataPermission, 'list'
+            self, "purchase_order", HasListDataPermission, 'list'
         )
         # Check if authenticated_user is a redirect response
         if isinstance(authenticated_user, HttpResponseRedirect):
@@ -351,7 +350,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"stock_management", HasCreateDataPermission, 'add'
+           self,"purchase_order", HasCreateDataPermission, 'add'
         )
         
         if isinstance(authenticated_user, HttpResponseRedirect):
@@ -491,7 +490,7 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
         
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"stock_management", HasCreateDataPermission, 'add'
+           self,"purchase_order", HasCreateDataPermission, 'add'
         )
         
         if isinstance(authenticated_user, HttpResponseRedirect):

@@ -18,7 +18,7 @@
                </div>
                <div class="ms-auto my-auto mt-lg-0 mt-4">
                   <div class="ms-auto my-auto">
-                    {% if request.user|has_add_permission:"stock_management" %}
+                    {% if request.user|has_add_permission:"purchase_order" %}
                     <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
                       <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Purchase Order</a>
                     {% else %}
@@ -131,7 +131,6 @@ var columnsConfig1 = [
       fieldName: 'actions',
       type: 'actions',
       linkActions: [
-          { label: 'View', iconClass: 'fas fa-eye text-secondary', urlField: '/purchase_order/view/' },
           { label: 'Edit', iconClass: 'fas fa-edit text-secondary', urlField: '/purchase_order/edit/' },
       ]
   }, 
@@ -293,30 +292,48 @@ function generateLinkAction(item, action) {
 function generateActionButtons(item, columnConfig) {
     var status = item['status'];
     var conditionalActionsHTML = '';
-
-    if ((status === "pending" || status === "sent_for_approval")) {
+    {% if request.user|has_update_permission:'purchase_order'%}
+    
+    if ((status === "pending")) {
         var actionsHTML = columnConfig.linkActions.map(function(action) {
             return generateLinkAction(item, action);
         }).join('');
         
+        
         if (actionsHTML !== "") {
-            conditionalActionsHTML = actionsHTML;
-        }
+                conditionalActionsHTML = actionsHTML;
+            }
+        
     } 
+
+
+    else if ((status === "sent_for_approval")) {
+        var actionsHTML = columnConfig.linkActions.map(function(action) {
+            return generateLinkAction(item, action);
+        }).join('');
+        
+        {% if request.user.roles.name == "Projects Admin (IT)" %}
+        
+        if (actionsHTML !== "") {
+                conditionalActionsHTML = actionsHTML;
+            }
+        {% endif %}
+        
+    } 
+
     
+    {% endif %}
+
     else if (status === "approved" || status == "partially_completed") {
-        conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/'+ item['id'] + '/">Invoice</a></li> <li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>';
-    }
-    else
-    {
-      conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>';
+        conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/'+ item['id'] + '/">Invoice</a></li>';
     }
 
+  
     var dropdownHTML = '<div class="dropstart ms-auto pe-0">' +
         '<a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">' +
         '<i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i></a>' +
         '<ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">' +
-        conditionalActionsHTML +
+        conditionalActionsHTML + '<li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>'
         '</ul>' +
         '</div>';
 
