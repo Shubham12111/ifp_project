@@ -17,7 +17,28 @@ from django.views import View
 from django.core.paginator import Paginator
 from django.db import transaction
 from datetime import datetime
+from django.db.models import Sum
+from django.db.models import F
+from stock_management.models import Inventory
 import json
+
+def update_or_create_inventory(purchase_order, item, quantity):
+    # Try to retrieve the existing inventory entry or create a new one
+    print(item)
+    inventory, created = Inventory.objects.get_or_create(
+        item_id=item.item,
+        inventory_location = purchase_order.inventory_location_id,
+        defaults={
+            'total_inventory': quantity
+        }
+    )
+    
+    if not created:
+        # If the inventory entry already exists, update the total_inventory
+        inventory.total_inventory = F('total_inventory') + quantity
+        inventory.save()
+
+    return inventory
 
 def get_paginated_data(request, queryset, serializer_class, search_field=None):
     search_value = request.GET.get('search[value]', '')
@@ -86,6 +107,41 @@ def get_order_items(data):
     
     return items 
 
+            
+def get_vendor_data(request):
+    if request.method == "GET":
+        vendor_id = request.GET.get("id")
+
+        try:
+            # Retrieve vendor data using the vendor_id
+            vendor_data = Vendor.objects.filter(id=vendor_id).first()
+            serializer = VendorSerializer(vendor_data)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                message="Vendor data",
+                                 data=serializer.data)
+            
+        except Vendor.DoesNotExist:
+            return JsonResponse({"error": "Vendor not found"}, status=404)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+def get_inventory_location_data(request):
+    if request.method == "GET":
+        inventory_location_id = request.GET.get("id")
+
+        try:
+            # Retrieve InventoryLocation data using the vendor_id
+            inventory_location_data = InventoryLocation.objects.filter(id=inventory_location_id).first()
+            serializer = InventoryLocationSerializer(inventory_location_data)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                message="Vendor data",
+                                 data=serializer.data)
+            
+        except Vendor.DoesNotExist:
+            return JsonResponse({"error": "Vendor not found"}, status=404)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
 class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
 
@@ -145,40 +201,6 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
             print(e)
             return JsonResponse({"error": str(e)})
 
-            
-def get_vendor_data(request):
-    if request.method == "GET":
-        vendor_id = request.GET.get("id")
-
-        try:
-            # Retrieve vendor data using the vendor_id
-            vendor_data = Vendor.objects.filter(id=vendor_id).first()
-            serializer = VendorSerializer(vendor_data)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                message="Vendor data",
-                                 data=serializer.data)
-            
-        except Vendor.DoesNotExist:
-            return JsonResponse({"error": "Vendor not found"}, status=404)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
-
-def get_inventory_location_data(request):
-    if request.method == "GET":
-        inventory_location_id = request.GET.get("id")
-
-        try:
-            # Retrieve InventoryLocation data using the vendor_id
-            inventory_location_data = InventoryLocation.objects.filter(id=inventory_location_id).first()
-            serializer = InventoryLocationSerializer(inventory_location_data)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                message="Vendor data",
-                                 data=serializer.data)
-            
-        except Vendor.DoesNotExist:
-            return JsonResponse({"error": "Vendor not found"}, status=404)
-
-    return JsonResponse({"error": "Invalid request"}, status=400)
 
 class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -306,9 +328,13 @@ class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         
         purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order)
         
+        invoice_item_list = PurchaseOrderInvoice.objects.filter(purchase_order_id=purchase_order,
+                                                                purchase_order_id__inventory_location_id=purchase_order.inventory_location_id).order_by('-created_at')
+        
         if request.accepted_renderer.format == 'html':
             context = {'purchase_order':purchase_order,
-                      'purchase_order_items':purchase_order_items }
+                      'purchase_order_items':purchase_order_items,
+                      'invoice_item_list':invoice_item_list}
             return render_html_response(context, self.template_name)
         
       
@@ -436,7 +462,11 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                             'item_name':item_name
                         }
                     )
-
+                
+                if purchase_order.status == "approved":
+                    purchase_order.approved_by = request.user
+                    purchase_order.save()
+                    
             message = "Your Purchase Order has been updated successfully!"
 
             messages.success(request, message)
@@ -444,6 +474,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         else:
             return JsonResponse({'success': False, 'errors': serializer.errors,  
             'status':status.HTTP_400_BAD_REQUEST}) 
+
 
 class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -474,7 +505,7 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
         base_queryset = PurchaseOrder.objects.filter(
-            (Q(status="approved") ) & filter_mapping.get(data_access_value, Q())
+            (Q(status="approved") | Q(status="partially_completed")) & filter_mapping.get(data_access_value, Q())
         )
         return base_queryset
     
@@ -499,36 +530,85 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
         
         all_serializers = [invoice_serializer] + received_inventory_serializers
         all_valid = all(serializer.is_valid() for serializer in all_serializers)
+        
         if all_valid:
             invoice_serializer.validated_data['purchase_order_id'] = purchase_order
+            
             from rest_framework import serializers
             invoice = invoice_serializer.save()
+            
+            error_messages = []
+
             for serializer in received_inventory_serializers:
                 purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
                 received_inventory = PurchaseOrderReceivedInventory.objects.filter(
                     purchase_order_item_id=purchase_order_item_id,
-                    purchase_order_item_id__purchase_order_id=purchase_order
+                    purchase_order_item_id__purchase_order_id=purchase_order,
+                    purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
                 ).first()
 
                 cumulative_received_quantity = serializer.validated_data['received_inventory']
-                
+
                 if received_inventory:
-                    cumulative_received_quantity += received_inventory.get_cumulative_received_quantity()
+                    cumulative_received_quantity += received_inventory.received_inventory
 
                 if cumulative_received_quantity > serializer.validated_data['purchase_order_item_id'].quantity:
-                    serializer._errors['received_inventory'] = serializers.ValidationError(
-                        f"Received quantity exceeds available quantity."
-                    )
-                    error_message = str(serializer.errors['received_inventory'])  # Convert to string
+                    error_message = f"Received quantity exceeds available quantity."
                     error_data = {
                         'purchase_order_item_id': str(serializer.validated_data['purchase_order_item_id'].id),
                         'error_message': error_message
                     }
+                    error_messages.append(error_data)
+                else:
+                    serializer.is_valid()
 
-                    return JsonResponse({'success': False, 'errors': [error_data], 'status': status.HTTP_400_BAD_REQUEST})
+            # Check if any errors were encountered
+            if error_messages:
+                return JsonResponse({'success': False, 'errors': error_messages, 'status': status.HTTP_400_BAD_REQUEST})
+
+            # No errors, proceed with saving
+            for serializer in received_inventory_serializers:
+                purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
+                received_inventory = PurchaseOrderReceivedInventory.objects.filter(
+                    purchase_order_item_id=purchase_order_item_id,
+                    purchase_order_item_id__purchase_order_id=purchase_order,
+                    purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
+                ).first()
+
+                cumulative_received_quantity = serializer.validated_data['received_inventory']
+
+                if received_inventory:
+                    cumulative_received_quantity += received_inventory.received_inventory
 
                 received_inventory = serializer.save(purchase_order_invoice_id=invoice)
 
+                update_or_create_inventory(purchase_order, serializer.validated_data['purchase_order_item_id'], cumulative_received_quantity)
+
+            
+            
+            # Calculate the total received inventory
+            total_received_inventory = PurchaseOrderReceivedInventory.objects.filter(
+                purchase_order_item_id__purchase_order_id = purchase_order.id,
+                purchase_order_item_id__purchase_order_id__inventory_location_id =   purchase_order.inventory_location_id  
+            ).aggregate(total_received_inventory=Sum('received_inventory'))['total_received_inventory']
+            
+            # Calculate the total quantity
+            total_quantity = PurchaseOrderItem.objects.filter(
+                purchase_order_id=purchase_order.id,
+                purchase_order_id__inventory_location_id =   purchase_order.inventory_location_id  
+            ).aggregate(total_quantity=Sum('quantity'))['total_quantity']
+            
+            # Check if the total received inventory is equal to the total quantity
+            if total_received_inventory is not None and total_quantity is not None and total_received_inventory == total_quantity:
+                purchase_order.status = 'completed'  # Update the status
+                purchase_order.save()  # Save the updated status               
+            else:
+                purchase_order.status = 'partially_completed' 
+            
+            purchase_order.save()
+            messages.success(request, "Invoice aaded successfully")
+            return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})
+        
         else:
             errors = {}
             for serializer in all_serializers:

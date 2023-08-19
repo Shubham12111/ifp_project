@@ -8,8 +8,8 @@ STATUS_CHOICES = [
     ('pending', 'Pending'),
     ('sent_for_approval', 'Sent for Approval'),
     ('approved', 'Approved'),
-    ('rejected', 'Rejected'),
-    # Add more status choices as needed
+    ('partially_completed', 'Partially completed'),
+    ('completed', 'Completed'),
 ]
 
 
@@ -62,8 +62,15 @@ class PurchaseOrderInvoice(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.invoice_id  # Display the invoice_id as the string representation
+        return self.invoice_number  # Display the invoice_id as the string representation
 
+    def calculate_received_inventory(self):
+        received_inventory = PurchaseOrderReceivedInventory.objects.filter(
+            purchase_order_invoice_id=self
+        ).aggregate(total_received_inventory=Sum('received_inventory'))['total_received_inventory']
+
+        return received_inventory or 0
+    
 class PurchaseOrderReceivedInventory(models.Model):
     purchase_order_invoice_id = models.ForeignKey(PurchaseOrderInvoice, on_delete=models.CASCADE)
     purchase_order_item_id = models.ForeignKey(PurchaseOrderItem, on_delete=models.CASCADE)
@@ -73,6 +80,3 @@ class PurchaseOrderReceivedInventory(models.Model):
 
     def __str__(self):
         return f"Received Inventory for {self.purchase_order_item_id}"
-
-    def get_cumulative_received_quantity(self):
-        return PurchaseOrderReceivedInventory.objects.filter(purchase_order_item_id=self.purchase_order_item_id).exclude(id=self.id).aggregate(Sum('received_inventory'))['received_inventory__sum'] or 0

@@ -193,7 +193,6 @@ class ItemSerializer(serializers.ModelSerializer):
                     'id': document.id  #  document ID
                 })
 
-        print(document_paths)
+        
         representation['document_paths'] = document_paths
-
         return representation

@@ -108,7 +108,7 @@
                                         <td class="text-sm text-center">£ {{item.unit_price}} </td>
                                         <td class="text-sm text-center">{{item.quantity}} </td>
                                         <td class="text-sm">
-                                            <input type="number" class="form-control quantity-input" value="0" data-max="{{item.quantity}}" data-item-id="{{item.id}}">
+                                            <input type="number" class="form-control quantity-input" value="0" data-max="{{item.quantity}}" data-item-id="{{item.id}}" id="">
                                             <p class="error-message text-sm text-danger" style=" display: none;">Exceeds available quantity</p>
                                         </td>
 
@@ -226,16 +226,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         }).then(response => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                throw new Error('Request failed');
-            }
-        }).then(data => {
+        response.json().then(data => {
+            console.log(data, "dsjasja")
             if (data.errors) {
                 const existingErrorMessages = document.querySelectorAll('.help-block');
                 existingErrorMessages.forEach(errorMessage => errorMessage.remove());
                 
+                const quantityInputs = document.querySelectorAll('.quantity-input');
 
                 for (const fieldName in data.errors) {
                     const field = document.querySelector(`[name="${fieldName}"]`);
@@ -261,9 +258,35 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 }
-            } else {
-                // Handle success
-            }
+                
+                for (const input of quantityInputs) {
+                    const fieldName = 'received_inventory'; // Change this to match the actual field name
+                    const parentRow = input.closest('tr'); // Find the parent row
+                    
+                    if (data.errors[0]['purchase_order_item_id'] == input.getAttribute('data-item-id')) {
+                        
+                        const errorElement = parentRow.querySelector('.error-message');
+                        errorElement.style.display = 'block';
+                    } else {
+                        const errorElement = parentRow.querySelector('.error-message');
+                        errorElement.style.display = 'none';
+                    }
+                }
+            } 
+        else if(response.ok)
+        {
+            window.location.href = '/purchase_order/list/';
+        }
+        else {
+            // Other error handling
+            alert('An error occurred while saving items.');
+        }
+
+
+
+        });
+          
+         
         }).catch(error => {
             // Handle error
         });

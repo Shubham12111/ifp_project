@@ -138,7 +138,6 @@ var columnsConfig1 = [
 ];
 
 // Call the function to initialize the DataTable
-console.log(searchUrl)
 initializeDataTable("purchase-order-list", searchUrl, columnsConfig1);
 
 // Function to check if any filter has a value
@@ -208,7 +207,7 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
                       "recordsTotal": responseData.length,
                       "recordsFiltered": responseData.length,
                       "data": responseData.map(function(item) {
-                        console.log(item)
+                        
                           // Generate cell content based on column type
                           var row = [];
                           for (var columnConfig of columnsConfig) {
@@ -271,7 +270,6 @@ function formatDate(dateString) {
 
 // Function to convert string to title case and replace underscores with spaces
 function formatStatus(status) {
-    console.log(status)
     return status.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
         return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
@@ -306,8 +304,12 @@ function generateActionButtons(item, columnConfig) {
         }
     } 
     
-    else if (status === "approved") {
-        conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/'+ item['id'] + '/">Convert To Invoice</a></li> <li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>';
+    else if (status === "approved" || status == "partially_completed") {
+        conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/'+ item['id'] + '/">Invoice</a></li> <li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>';
+    }
+    else
+    {
+      conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>';
     }
 
     var dropdownHTML = '<div class="dropstart ms-auto pe-0">' +

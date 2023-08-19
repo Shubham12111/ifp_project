@@ -176,9 +176,6 @@ class ItemUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     serializer_class = ItemSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'item_form.html'
-
-
-    
     def get_queryset(self):
         """
         Get the queryset for listing Item items.

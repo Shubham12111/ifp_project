@@ -76,10 +76,10 @@
                     <table class="table-responsive custom-table mb-3 " style="width:100%">
                             <thead>
                                 <tr class="px-0">
-                                    <th class="text-start col-6">Item Name</th>
-                                    <th class="text-center col-2">Price</th>
-                                    <th class="text-center col-2">Quantity </th>
-                                    <th class="text-center col-2">Total</th>
+                                    <th class="text-start col-6 text-sm">Item Name</th>
+                                    <th class="text-center col-2 text-sm">Price</th>
+                                    <th class="text-center col-2 text-sm">Quantity </th>
+                                    <th class="text-center col-2 text-sm">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -126,6 +126,35 @@
                     </div>
                 </div>
             </div>
+            <div class="row mt-5">
+                <div class="col-md-12">
+                    <h6>Invoices</h6>
+                    <table class="table-responsive custom-table mb-3 " style="width:100%">
+                            <thead>
+                                <tr class="px-0">
+                                    <th class="text-start col-3 text-sm">Invoice Number</th>
+                                    <th class="text-start col-2 text-sm">Invoice Date</th>
+                                    <th class=" col-2 text-sm">Received Inventory </th>
+                                    <th class="col-2 text-sm">Created At</th>
+                                    <th class="text-center col-2 text-sm">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice_item in invoice_item_list %}
+                                <tr class="">
+                                    <td class="text-sm">{{invoice_item.invoice_number}} </td>
+                                    <td class="text-sm">{{invoice_item.invoice_date}} </td>
+                                    <td class="text-sm">{{invoice_item.calculate_received_inventory}} </td>
+                                    <td class="text-sm">{{invoice_item.created_at}} </td>
+                                    <td class="text-center text-sm">
+                                        <a> <i class="fas fa-eye" aria-hidden="true"></i>
+                                        </a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
         </div>
     </div>
 </div>
