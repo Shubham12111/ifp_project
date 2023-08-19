@@ -467,7 +467,7 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
                 for file in file_list:
                     unique_filename = f"{str(uuid.uuid4())}_{file.name}"
                     upload_file_to_s3(unique_filename, file, f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses')
-                    file_path = f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses'
+                    file_path = f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses/{unique_filename}'
                 
                     RequirementDefectResponseImage.objects.create(
                         defect_response = instance,
@@ -480,7 +480,7 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         document_paths = []
-        if hasattr(instance, 'requirementdocument_set'):
+        if hasattr(instance, 'requirementdefectresponseimage_set'):
             for document in RequirementDefectResponseImage.objects.filter(defect_response=instance):
                 document_paths.append({
                     'presigned_url': generate_presigned_url(document.document_path),

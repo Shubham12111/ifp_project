@@ -98,12 +98,12 @@
                                 <tbody>
                                     {% for defect in requirement_defect %}
                                     <tr>
-                                        <td style="white-space: normal;">{{ defect.action }}</td>
-                                        <td style="white-space: normal;">{{ defect.description | safe | truncatechars:50 }}</td>
-                                        <td>{{ defect.due_date }}</td>
-                                        <td>{{ defect.UPRN|default:'' }}</td>
-                                        <td>{{ defect.status|title }}</td>
-                                        <td>
+                                        <td class="text-sm">{{ defect.action }}</td>
+                                        <td class="text-sm">{{ defect.description|safe|truncatechars:50 }}</td>
+                                        <td class="text-sm">{{ defect.due_date }}</td>
+                                        <td class="text-sm">{{ defect.UPRN|default:'' }}</td>
+                                        <td class="text-sm" >{{ defect.status|title }}</td>
+                                        <td class="text-sm">
                                             <a href="{% url 'requirement_defect_detail' defect.id %}">
                                                 <i class="fas fa-eye text-secondary mx-4"></i>
                                             </a>

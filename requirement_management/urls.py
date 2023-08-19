@@ -13,7 +13,9 @@ urlpatterns = [
     
     path('defects/<int:requirement_id>/', RequirementDefectView.as_view(), name='requirement_defects'),
     path('defects/edit/<int:requirement_id>/<int:pk>/', RequirementDefectView.as_view(), name='requirement_defect_update'),
-    path('defect/detail/<int:pk>/', RequirementDefectDetailView.as_view(), name='requirement_defect_detail'),
+    path('defect/detail/<int:defect_id>/', RequirementDefectDetailView.as_view(), name='requirement_defect_detail'),
+    path('defect/detail/edit/response/<int:defect_id>/<int:pk>/', RequirementDefectDetailView.as_view(), name='requirement_defect_edit_response'),
+     path('defect/detail/delete/response/<int:defect_id>/<int:pk>/', RequirementDefectResponseDeleteView.as_view(), name='requirement_defect_delete_response'),
     
     
     path('defects/delete/<int:pk>/', RequirementDefectDeleteView.as_view(), name='requirement_defect_delete'),

@@ -574,14 +574,32 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         """
         Get the filtered queryset for requirements based on the authenticated user.
         """
-        queryset = RequirementDefect.objects.filter(pk=self.kwargs.get('pk')).order_by('-created_at')
+        queryset = RequirementDefect.objects.filter(pk=self.kwargs.get('defect_id')).order_by('-created_at')
+        return queryset
+    
+    def get_queryset_response(self):
+        """
+        Get the filtered queryset for requirements based on the authenticated user.
+        """
+        defect_instance = self.get_queryset().first()
+        queryset =  RequirementDefectResponse.objects.filter(pk= self.kwargs.get('pk'),
+                                                             status="draft").first()
         return queryset
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         defect_instance = self.get_queryset().first()
+        
         document_paths = []
+        defect_response_instance = {}
         if defect_instance:
+            if kwargs.get('pk'):
+                defect_response_instance = self.get_queryset_response()
+                defect_response_serializer =  self.serializer_class(instance=defect_response_instance)
+                
+            else:
+                defect_response_serializer =  self.serializer_class()
+                
             for document in RequirementDocument.objects.filter(defect_id=defect_instance):
                 extension = document.document_path.split('.')[-1].lower()
 
@@ -606,9 +624,10 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         context = {
             'defect_instance': defect_instance,
             'documents': defect_documents,
-            'defect_response_serializer': self.serializer_class(),
+            'defect_response_serializer': defect_response_serializer,
             'defect_responses': defect_responses,
-            'document_paths':document_paths
+            'document_paths':document_paths,
+            'defect_response_instance':defect_response_instance
         }
 
         return render_html_response(context, self.template_name)
@@ -617,51 +636,85 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         """
         Handle POST request to add a requirement.
         """
-        
         data = request.data.copy()
         
         file_list = data.get('file_list', [])
         
-        if not any(file_list):
-            del data['file_list']
-            serializer = self.serializer_class(data=data)  # Use the modified data
-        else:
-            serializer = self.serializer_class(data= request.data)
-        
         defect_instance = self.get_queryset().first()
         
+        defect_response_instance = self.get_queryset_response()
+        
+        if not any(file_list):
+            del data['file_list']
+        
+        serializer_data = request.data if any(file_list) else data
+        
+        
+        if defect_response_instance:
+            serializer = self.serializer_class(data=serializer_data, instance=defect_response_instance)  
+            message = "Congratulations! Your response has been updated successfully."
+        else:
+            serializer = self.serializer_class(data= serializer_data)
+            message = "Congratulations! Your response has been added successfully."
+        
         if serializer.is_valid():
-            serializer.validated_data['defect_id'] = defect_instance
-            serializer.validated_data['surveyor'] = defect_instance.requirement_id.surveyor
+            if not defect_response_instance:
+                serializer.validated_data['defect_id'] = defect_instance
+                serializer.validated_data['surveyor'] = defect_instance.requirement_id.surveyor
+            
+            submit_type = request.POST.get('submit_type')
+            serializer.validated_data['status'] = submit_type
             instance = serializer.save()
             
-            message = "Congratulations! Your response has been added successfully."
+            
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
-
-                return redirect(reverse('requirement_defect_detail', kwargs={'pk': request.data.get('defect_id')}))  # Redirect after successful POST
-                
-            else:
-                # Return JSON response with success message and serialized data.
-                return create_api_response(
-                    status_code=status.HTTP_201_CREATED,
-                    message=message,
-                    data=self.serializer_class(instance).data
-                )
+                # Redirect after successful POST
+                return redirect(reverse('requirement_defect_detail', kwargs={'defect_id': request.data.get('defect_id')}))  
         else:
             # Invalid serializer data.
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template with invalid serializer data.
                 context = {'serializer': serializer}
                 return render_html_response(context, self.template_name)
-            else:
-                # Return JSON response with error message.
-                return create_api_response(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message="We apologize for the inconvenience, but please review the below information.",
-                    data=convert_serializer_errors(serializer.errors)
-                )
 
+class RequirementDefectResponseDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+    """
+    View for deleting a requirement.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = RequirementDefectSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+    
+    def delete(self, request, *args, **kwargs):
+        """
+        Handle DELETE request to delete a customer.
+        """
+        # Get the customer instance from the database
+        # Call the handle_unauthenticated method to handle unauthenticated access
+
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"fire_risk_assessment", HasDeleteDataPermission, 'delete'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        queryset = RequirementDefectResponse.objects.filter(pk= self.kwargs.get('pk'),status="draft")
+        
+        requirement_defect_response = queryset.first()
+        
+        if requirement_defect_response:
+            # Proceed with the deletion
+            requirement_defect_response.delete()
+            messages.success(request, "Defect resposne has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Your requirement resposne has been deleted successfully!", )
+        else:
+            messages.error(request, "Resposne defect not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Resposne defect not found", )
+                  
 
 class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
