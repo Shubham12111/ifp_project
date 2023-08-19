@@ -365,13 +365,13 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated requirement instance.
-                serializer.save()
+                serializer.update(instance, validated_data=serializer.validated_data)
                 message = "Your requirement has been updated successfully!"
 
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests, display a success message and redirect to requirement_list.
                     messages.success(request, message)
-                    return redirect('requirement_list')
+                    return redirect(reverse('requirement_edit', kwargs={'pk': instance.id}))
                 else:
                     # For API requests, return a success response with serialized data.
                     return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
@@ -422,6 +422,10 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         """
         Handle DELETE request to delete a requirement.
         """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasUpdateDataPermission, 'delete'
+        )
+
         # Get the requirement instance from the database.
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {

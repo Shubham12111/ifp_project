@@ -124,7 +124,6 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         fields = ('customer_id','description','site_address', 'quantity_surveyor', 'requirement_date_time','file_list')
     
     def create(self, validated_data):
-        
         # Pop the 'file_list' field from validated_data
         file_list = validated_data.pop('file_list', None)
         # Create a new instance of Requirement with other fields from validated_data
