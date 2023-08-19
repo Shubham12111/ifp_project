@@ -1,0 +1,350 @@
+ <!-- add_customer.html -->
+ {% extends 'base.html' %}
+ {% load static %}
+ {% load custom_tags %}
+ {% block title %} Purchase Order{{ block.super }}{% endblock %}
+ {% block content %}
+ {% include 'components/alert.html' %}
+ <div class="container-fluid py-4">
+   <div class="row">
+     <div class="row mt-0">
+       <div class="col-12">
+         <div class="card">
+           <!-- Card header -->
+           <div class="card-header pb-0 ps-3 pt-3">
+             <div class="d-lg-flex justify-content-between">
+               <div>
+                 <h4 class="mb-0">Purchase Orders</h4>
+               </div>
+               <div class="ms-auto my-auto mt-lg-0 mt-4">
+                  <div class="ms-auto my-auto">
+                    {% if request.user|has_add_permission:"purchase_order" %}
+                    <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
+                      <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Purchase Order</a>
+                    {% else %}
+                      <!-- The user doesn't have the permission, so don't show the "Add" button -->
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="filters  mt-4">
+                <label>Search Vendor <input type="text" class="form-control" name="vendor" id="vendor-filter"></label>
+                <label>Search Location <input type="text"  class="form-control" name="location"  id="location-filter"></label>
+                <label>Status
+                    <select id="status-filter" name="status" class="form-control">
+                        <option value="">All</option>
+                        {% for status in  status_list %}
+                          <option value="{{status.0}}">{{status.1}}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>Due Date <input type="date" name="due_date"  class="form-control due-date-filter" id="due-date-filter"></label>
+                <label>Order Date <input type="date" name="order_date"  class="form-control order-date-filter" id="order-date-filter"></label>
+                <button id="search-button" class="btn bg-gradient-primary mt-2 mx-2">Search</button>
+                <button id="clear-button" class="btn btn-secondary" style="display: none;">Clear Filters</button>
+            </div>
+             </div>
+              <div class="card-body px-0 pb-0 pt-0">
+                <div class="table-responsive">
+                  <table class="table table-flush text-dark " id="purchase-order-list">
+                    <thead class="thead-light">
+                          <tr>
+                          <th>PO No.</th>
+                          <th>Vendor</th>
+                          <th>Location</th>
+                          <th>Total</th>
+                          <th>Date</th>
+                          <th>Due Date</th>
+                          <th>Status</th>
+                          <th class="custom-last-column">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="ml-4"> 
+                    </tbody>
+                    
+                  </table>
+                </div>
+            </div>
+       </div>
+     </div>
+   </div>
+ </div>
+
+ {% endblock %} 
+ {% block extra_js %}
+<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script>
+
+ // Check if the datetimepicker element exists
+ if (document.querySelector('.due-date-filter')) {
+  // Get the default value for the datetime picker
+  const defaultDateValue = document.getElementById("due-date-filter").value;
+
+  // Convert the default value to a Date object (if available)
+  const defaultDate = defaultDateValue ? new Date(defaultDateValue) : '';
+  // Create the flatpickr date-time picker and set the default date to the default value or current date
+  flatpickr('.due-date-filter', {
+    allowInput: false,
+    defaultDate: defaultDate,
+    dateFormat: "d/m/Y" 
+  });
+ }
+
+  // Check if the datetimepicker element exists
+  if (document.querySelector('.order-date-filter')) {
+  // Get the default value for the datetime picker
+  const defaultDateValue = document.getElementById("order-date-filter").value;
+
+  // Convert the default value to a Date object (if available)
+  const defaultDate = defaultDateValue ? new Date(defaultDateValue) : '';
+
+  // Create the flatpickr date-time picker and set the default date to the default value or current date
+  flatpickr('.order-date-filter', {
+    allowInput: false,
+    defaultDate: defaultDate,
+    dateFormat: "d/m/Y" 
+  });
+ }
+
+var searchUrl = '/purchase_order/list/';
+var dataTable;
+// Config for the first table
+var columnsConfig1 = [
+    // Define column configurations for your DataTable
+    // Each object in this array corresponds to a column
+    { fieldName: 'po_number' },
+    { fieldName: 'vendor_id' },
+    { fieldName: 'inventory_location_id' },
+    { fieldName: 'total_amount' },
+    { fieldName: 'order_date' },
+    { fieldName: 'due_date' },
+    {
+      fieldName: 'status',
+      type: 'status',
+    },
+    {
+      fieldName: 'actions',
+      type: 'actions',
+      linkActions: [
+          { label: 'Edit', iconClass: 'fas fa-edit text-secondary', urlField: '/purchase_order/edit/' },
+      ]
+  }, 
+];
+
+// Call the function to initialize the DataTable
+initializeDataTable("purchase-order-list", searchUrl, columnsConfig1);
+
+// Function to check if any filter has a value
+function hasFilters() {
+    var vendor = document.getElementById("vendor-filter").value;
+    var location = document.getElementById("location-filter").value;
+    var status = document.getElementById("status-filter").value;
+    var dueDate = document.getElementById("due-date-filter").value;
+    var orderDate = document.getElementById("order-date-filter").value;
+    
+    return (vendor || location || status || dueDate || orderDate);
+}
+
+// Show or hide the "Clear Filters" button based on filters
+function updateClearButton() {
+    var clearButton = document.getElementById("clear-button");
+    
+    if (hasFilters()) {
+        clearButton.style.display = "inline-block";
+    } else {
+        clearButton.style.display = "none";
+    }
+}
+
+
+// Initial check when the page loads
+updateClearButton();
+
+document.getElementById("search-button").addEventListener("click", function() {
+  searchUrl  ='/purchase_order/list/?vendor=' + document.getElementById('vendor-filter').value +
+              '&location=' + document.getElementById('location-filter').value +
+              '&status=' + document.getElementById('status-filter').value +
+              '&due_date=' + document.getElementById('due-date-filter').value +
+              '&order_date=' + document.getElementById('order-date-filter').value;
+    initializeDataTable("purchase-order-list", searchUrl, columnsConfig1);
+    updateClearButton(); // Update the "Clear Filters" button visibility
+});
+
+document.getElementById("clear-button").addEventListener("click", function() {
+  window.location.reload();
+});
+
+
+function initializeDataTable(tableId, dataUrl, columnsConfig) {
+    if (document.getElementById(tableId)) {
+
+        // Fetch data from the provided URL
+        fetch(dataUrl, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }).then(function (response) {
+                // Check if the network response is successful
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            }).then(function (data) {
+                // Parse the received data
+                const responseData = data.data;
+                if (responseData.length > 0) {
+                // Format the data for DataTable consumption
+                  var formattedData = {
+                      "draw": 1, // Set the appropriate draw value
+                      "recordsTotal": responseData.length,
+                      "recordsFiltered": responseData.length,
+                      "data": responseData.map(function(item) {
+                        
+                          // Generate cell content based on column type
+                          var row = [];
+                          for (var columnConfig of columnsConfig) {
+                              var cellContent = item[columnConfig.fieldName];
+
+                              if (columnConfig.type === 'status') {
+                                  cellContent = getStatusCellContent(item.status);
+                              }  
+                              else if (columnConfig.type === 'actions') 
+                              {
+                                  cellContent = generateActionButtons(item, columnConfig);
+                              }
+                              else if (columnConfig.fieldName === 'due_date' || columnConfig.fieldName === 'order_date') {
+                                  // Convert date fields from "DD/MM/YYYY" to "dd.mm.yyyy" format
+                                  cellContent = formatDate(cellContent);
+                              }
+                                                                    
+                              row.push(cellContent);
+                          }
+                          return row;
+                      })
+                  };
+                }
+                else
+                {
+                  var formattedData;
+                }
+                // Destroy the existing DataTable (if any)
+                if (dataTable) {
+                    dataTable.destroy();
+                }
+
+                // Initialize the DataTable using the simpleDatatables library
+                dataTable = new simpleDatatables.DataTable("#" + tableId, {
+                    searchable: true,
+                    fixedHeight: false,
+                    perPage: 25,
+                    serverSide: true,
+                    processing: true,
+                    data: formattedData // Pass the formatted data
+                });
+                // Get all table cells and add the 'text-sm' class to each cell
+                const tableCells = document.querySelectorAll("#" + tableId + " td");
+                tableCells.forEach((cell) => {
+                    cell.classList.add("text-sm");
+                });
+          
+
+        }).catch(function (error) {
+            console.error("Fetch error for table " + tableId, error);
+        });
+    }
+}
+// Function to format date from "YYYY-MM-DD" to "Aug 23, 2023" format
+function formatDate(dateString) {
+    var options = { year: 'numeric', month: 'short', day: 'numeric' };
+    var formattedDate = new Date(dateString).toLocaleDateString('en-US', options);
+    return formattedDate;
+}
+
+// Function to convert string to title case and replace underscores with spaces
+function formatStatus(status) {
+    return status.replace(/_/g, ' ').replace(/\w\S*/g, function(txt) {
+        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+    });
+}
+
+// Condition function to handle status color and icon
+function getStatusCellContent(status) {
+    var cellContent = '';
+    cellContent = '<span class="status-dark">' + formatStatus(status) + '</span>';
+
+    return cellContent;
+}
+
+// Function to generate link action HTML
+function generateLinkAction(item, action) {
+    var url = action.urlField;
+    return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">' + action.label + '</a></li>';
+}
+
+// Function to generate a dropdown menu of actions
+function generateActionButtons(item, columnConfig) {
+    var status = item['status'];
+    var conditionalActionsHTML = '';
+    {% if request.user|has_update_permission:'purchase_order'%}
+    
+    if ((status === "pending")) {
+        var actionsHTML = columnConfig.linkActions.map(function(action) {
+            return generateLinkAction(item, action);
+        }).join('');
+        
+        
+        if (actionsHTML !== "") {
+                conditionalActionsHTML = actionsHTML;
+            }
+        
+    } 
+
+
+    else if ((status === "sent_for_approval")) {
+        var actionsHTML = columnConfig.linkActions.map(function(action) {
+            return generateLinkAction(item, action);
+        }).join('');
+        
+        {% if request.user.roles.name == "Projects Admin (IT)" %}
+        
+        if (actionsHTML !== "") {
+                conditionalActionsHTML = actionsHTML;
+            }
+        {% endif %}
+        
+    } 
+
+    
+    {% endif %}
+
+    else if (status === "approved" || status == "partially_completed") {
+        conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/'+ item['id'] + '/">Invoice</a></li>';
+    }
+
+  
+    var dropdownHTML = '<div class="dropstart ms-auto pe-0">' +
+        '<a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">' +
+        '<i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i></a>' +
+        '<ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">' +
+        conditionalActionsHTML + '<li><a class="dropdown-item" href="/purchase_order/view/'+ item['id'] + '/">View</a></li>'
+        '</ul>' +
+        '</div>';
+
+    return dropdownHTML;
+}
+
+
+
+</script>
+
+
+
+ {% endblock %}     
+ 

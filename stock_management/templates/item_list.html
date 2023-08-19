@@ -3,6 +3,7 @@
 {% block title %} Items {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
+{% load inventory_tags %}
 {% include 'components/alert.html' %}
 
 <div class="container-fluid py-4">
@@ -41,6 +42,7 @@
                   <th>Price ( £ )</th>
                   <th>Reference Number</th>
                   <th>Status</th>
+                  <th>Inventory In Hand </th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -51,13 +53,8 @@
                   <td>{{item.description|safe|truncatechars:50}}</td>
                   <td>{{item.price}}</td>
                   <td>{{item.reference_number}}</td>
-                  <td>
-                    {% if item.status == 'active' %}
-                    <span class="badge bg-success">{{ item.get_status_display }}</span>
-                    {% else %}
-                    <span class="badge bg-secondary">{{ item.get_status_display|title }}</span>
-                    {% endif %}
-                  </td>
+                  <td>{{ item.get_status_display|title }} </td>
+                  <td> {{item|calculate_total_received_inventory}} </td>
                   <td>
                     {% if request.user|has_update_permission:"stock_management" %}
                     <a href="{% url 'item_edit' item.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Item">
