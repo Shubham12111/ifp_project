@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Fire Risk Assessment {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+
+<div class="container-fluid py-4">
+    <div class="card h-100">
+        <div class="card-body">
+            <div class="row">
+                <!-- Image -->
+                <div class="col-xl-6 col-lg-6 text-center">
+                    {% with first_item=document_paths.0 %}
+                    <!-- First image outside of the loop -->
+                    <figure itemprop="associatedMedia" itemscope itemtype="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                        <a href="#" onclick="openModal('{{ first_item.presigned_url }}', {% if first_item.is_video %}video{% else %}image{%endif%})">
+                            {% if first_item.is_video %}
+                                <video poster="{% static 'assets/img/shapes/play_preview.png' %}" class="w-100 border-radius-lg shadow-lg mx-auto">
+                                    <source src="{{ first_item.presigned_url }}" type="video">
+                                </video>
+                            {% else %}
+                                <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ first_item.presigned_url }}" alt="{{ first_item.filename }}" />
+                            {% endif %}
+                        </a>
+                    </figure>
+                    {% endwith %}
+                    
+                    <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
+                        <!-- Loop through the rest of the items -->
+                        {% for item in document_paths %}
+                        <figure itemprop="associatedMedia" itemscope itemtype="{{ item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                            <a href="#" onclick="openModal('{{ item.presigned_url }}', {% if item.is_video %}'video'{% else %} 'image' {%endif%})" class="modal-link" data-url="{{ item.presigned_url }}">
+                                {% if item.is_video %}
+                                    <video poster="{% static 'assets/img/shapes/play_preview.png' %} " class="border-radius-lg shadow d-block mx-auto w-75 min-height-100 max-height-100">
+                                        <source src="{{ item.presigned_url }}" type="video">
+                                    </video>
+                                    </div>
+                                {% else %}
+                                    <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" />
+                                {% endif %}
+                            </a>
+                        </figure>
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Requirement and Customer Details -->
+                <div class="col-lg-6">
+                    <div class="card-body p-0">
+                        <p class="text-sm">
+                            {{ requirement_instance.description|safe}}</p>
+                        <hr class="horizontal gray-light my-4">
+                        <ul class="list-group">
+                            <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Customer Name:</strong> &nbsp;{{ requirement_instance.customer_id.first_name|title }}</li>
+                            <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Email:</strong> &nbsp; {{ requirement_instance.customer_id.email }}</li>
+                            <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Site Address:</strong> &nbsp; {{ requirement_instance.site_address|title}}</li>
+                            <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Date/Time:</strong> &nbsp; {{ requirement_instance.requirement_date_time }}</li>
+                        </ul>
+                    </div>
+                    {% if request.user.roles.name == "Quantity Surveyor" %}
+                        <hr class="horizontal gray-light my-4">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label class="text-dark font-weight-bolder mb-0">Assgin Surveyor</label>
+                                <select name="surveyer" class="form-control col-lg-4" id="surveyor-choices">
+                                    <option disabled selected value> Select an Surveyor </option>
+                                    {% for surveyer in surveyers %}
+                                    <option value="{{ surveyer.id }}" {% if requirement_instance.surveyor.id == surveyer.id %} selected {% endif %}>
+                                        {{ surveyer }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="text-end"> <!-- Add this div with the "text-end" class to align the button to the right -->
+                                <button type="submit" class="btn bg-gradient-primary">Submit</button>
+                            </div>
+                        
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-lg-12">
+                    <h5 class="ms-3">Defects</h5>
+                       <table class="table align-items-center mb-0">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Due Date</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">UPRN</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for defect in requirement_defect %}
+                                    <tr>
+                                        <td class="text-sm">{{ defect.action }}</td>
+                                        <td class="text-sm">{{ defect.description|safe|truncatechars:50 }}</td>
+                                        <td class="text-sm">{{ defect.due_date }}</td>
+                                        <td class="text-sm">{{ defect.UPRN|default:'' }}</td>
+                                        <td class="text-sm" >{{ defect.status|title }}</td>
+                                        <td class="text-sm">
+                                            <a href="{% url 'requirement_defect_detail' defect.id %}">
+                                                <i class="fas fa-eye text-secondary mx-4"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                    </div>
+                        
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- Modal -->
+<div class="modal" id="fra-image-view-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-end">
+                <div class="text-center">
+                    <div id="modal-content-inner"></div>
+                </div>
+                <button type="button" onclick="closeModal()" class="close btn bg-gradient-secondary text-center btn-sm mt-2" data-dismiss="modal" aria-label="Close">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script>
+// Initialize Choices.js
+if (document.getElementById('surveyor-choices')) {
+  var element = document.getElementById('surveyor-choices');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Surveyor", 
+  });
+
+  
+ }
+
+</script>
+<script src="{% static 'assets/js/zoom_image.js' %}"></script>
+
+
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %}Fire Risk Assessment Defects {{ block.super }}{% endblock %}
+{% block content %}
+{% include 'components/alert.html' %}
+
+<div class="container-fluid py-4">
+  <div class="card h-100">
+      <div class="card-body">
+          <div class="row">
+              <!-- Image -->
+              
+              <div class="col-xl-6 col-lg-6 text-center">
+                {% with first_item=document_paths.0 %}
+                <!-- First image outside of the loop -->
+                <figure itemprop="associatedMedia" itemscope itemtype="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                    <a href="#" onclick="openModal('{{ first_item.presigned_url }}')">
+                        {% if first_item.is_video %}
+                            <video poster="{% static 'assets/img/shapes/play_preview.png' %}" class="w-100 border-radius-lg shadow-lg mx-auto">
+                                <source src="{{ first_item.presigned_url }}" type="video/mp4">
+                            </video>
+                        {% else %}
+                            <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ first_item.presigned_url }}" alt="{{ first_item.filename }}" />
+                        {% endif %}
+                    </a>
+                </figure>
+                {% endwith %}
+                
+                <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
+                    <!-- Loop through the rest of the items -->
+                    {% for item in document_paths %}
+                    <figure itemprop="associatedMedia" itemscope itemtype="{{ item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                        <a href="#" onclick="openModal('{{ item.presigned_url }}')" class="modal-link" data-url="{{ item.presigned_url }}">
+                            {% if item.is_video %}
+                                <video poster="{% static 'assets/img/shapes/play_preview.png' %}" class="d-block mx-auto w-75 min-height-100 max-height-100 border-radius-lg shadow">
+                                    <source src="{{ item.presigned_url }}" type="video/mp4">
+                                </video>
+                            {% else %}
+                                <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" />
+                            {% endif %}
+                        </a>
+                    </figure>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- The modal -->
+            <div class="modal" id="fra-image-view-modal" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+                    <div class="modal-content">
+                        <div class="modal-body text-end">
+                            <div class="text-center">
+                                <div id="modal-content-inner"></div>
+                            </div>
+                            <button type="button" onclick="closeModal()" class="close btn bg-gradient-secondary text-center btn-sm mt-2" data-dismiss="modal" aria-label="Close">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+              <div class="col-lg-6">
+                <div class="card-body p-0">
+                    <h5>{{ defect_instance.action }}</h5>
+                    <p class="text-sm">
+                      {{ defect_instance.description | safe}}</p>
+                    <hr class="horizontal gray-light my-4">
+                    <ul class="list-group">
+                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Defect Period Date:</strong> &nbsp;{{ defect_instance.defect_period }}</li>
+                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Due Date:</strong> &nbsp; {{ defect_instance.due_date }}</li>
+                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">UPRN:</strong> &nbsp; {{ defect_instance.UPRN|default:''  }}</li>
+                        <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Status:</strong> &nbsp;{{ defect_instance.status|title }}</li>
+                    </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+            
+      <div class="row">
+        <div class="col-12">
+          <div class="card mt-4" id="basic-info">
+            <div class="card-header  pb-0">
+              <h5> Surveyor Response</h5>
+            </div>
+            <div class="card-body">
+              <form role="form" method="POST" autocomplete="off" enctype="multipart/form-data">
+                  <div class='row'>
+                      <input type="hidden" name="defect_id" value="{{ defect_instance.id }}">
+                      {% csrf_token %}
+                      {% render_form defect_response_serializer %}
+                  </div>
+                 
+                  {% if defect_response_serializer.data.document_paths and  defect_response_instance %}
+                      {% for document in defect_response_serializer.data.document_paths %}
+                          <div class="col-lg-12">
+                              <div style="position: relative;">
+                              <a href="{{ document.presigned_url }}" download>
+                                  <span class="text-sm me-2">{{ document.filename }}</span>
+                              </a>
+                              
+                              </div>
+                          </div>
+                      {% endfor %}
+                  {% endif %}
+                  <button type="submit" name="submit_type" value="submit" class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0 mx-4">Submit</button>
+
+                  <button type="submit" name="submit_type" value="draft" class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0">Save As Draft</button>
+                  
+              </form>
+            </div>
+          </div>
+            <div class="card mt-4">
+            <div class="card-body pt-0">
+              <table class="table align-items-center mb-0">
+                <thead>
+                  <tr>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-start">Rectification Description</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Remedial Work</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for defect_response in defect_responses %}
+                  <tr data-defect-response-id="{{ defect_response.id }}">
+                    <td class="text-sm ">{{ defect_response.rectification_description|safe|truncatechars:10 }}</td>
+                    <td class="text-sm">{{ defect_response.remedial_work|safe|truncatechars:10 }}</td>
+                    <td class="text-sm">{{ defect_response.status|title }}</td>
+                    <td class="text-sm">
+                      {% if  defect_response.status == "draft" %}
+                        <a href="{% url 'requirement_defect_edit_response' defect_instance.id defect_response.id %}" class="edit-link" data-bs-toggle="tooltip" data-bs-original-title="Edit Response">
+                        <i class="fas fa-user-edit text-secondary"></i>
+                        <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Requirement" 
+
+                        onclick="CustomconfirmDelete({{defect_instance.id}}{{defect_response.id}}, 'Are you sure you want to delete this response?','The response has been deleted successfully.','{% url 'requirement_defect_delete_response' defect_instance.id defect_response.id %}')">
+                        <i class="fas fa-trash text-secondary"></i>
+
+                      </a>
+                      {% else %}
+                       Submitted
+                      {% endif %}
+                      
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>  
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_country.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+    if (document.getElementById('defect-requirement-list')) {
+        const dataTableSearch = new simpleDatatables.DataTable("#defect-requirement-list", {
+            searchable: true,
+            fixedHeight: false,
+            perPage: 10
+        });
+
+    }
+
+</script>
+<script src="{% static 'assets/js/zoom_image.js' %}"></script>
+
+
+
+  
+{% endblock %}

@@ -19,8 +19,7 @@
                             {% csrf_token %}
                             {% render_form serializer %}
                         </div>
-                       
-                        {% if serializer.data.document_paths and  defect_instance %}
+                         {% if serializer.data.document_paths and  defect_instance %}
                             {% for document in serializer.data.document_paths %}
                                 <div class="col-lg-12">
                                     <div style="position: relative;">

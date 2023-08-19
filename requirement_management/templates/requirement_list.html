@@ -56,6 +56,10 @@
                  
                   <td >{{requirement.status|title}}</td>
                   <td>
+                    <a href="{% url 'requirement_view' requirement.pk %}" data-bs-toggle="tooltip" data-bs-original-title="View Requirement">
+                      <i class="fas fa-eye text-secondary mx-3"></i>
+                    </a>
+
                     {% if request.user|has_update_permission:"fire_risk_assessment" %}
                     <a href="{% url 'requirement_edit' requirement.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Requirement">
                       <i class="fas fa-user-edit text-secondary"></i>
