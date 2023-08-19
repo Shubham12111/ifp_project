@@ -4,8 +4,6 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
 
 <div class="container-fluid py-4">
     <div class="card h-100">
@@ -14,34 +12,36 @@
                 <!-- Image -->
                 <div class="col-xl-6 col-lg-6 text-center">
                     {% with first_item=document_paths.0 %}
-                        <!-- First image outside of the loop -->
-                        <figure itemprop="associatedMedia" itemscope itemtype="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
-                            <a href="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
-                                {% if first_item.is_video %}
-                                    <video controls class="w-100 border-radius-lg shadow-lg mx-auto">
-                                        <source src="{{ first_item.presigned_url }}" type="video/mp4">
+                    <!-- First image outside of the loop -->
+                    <figure itemprop="associatedMedia" itemscope itemtype="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                        <a href="#" onclick="openModal('{{ first_item.presigned_url }}', {% if first_item.is_video %}video{% else %}image{%endif%})">
+                            {% if first_item.is_video %}
+                                <video poster="{% static 'assets/img/shapes/play_preview.png' %}" class="w-100 border-radius-lg shadow-lg mx-auto">
+                                    <source src="{{ first_item.presigned_url }}" type="video">
+                                </video>
+                            {% else %}
+                                <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ first_item.presigned_url }}" alt="{{ first_item.filename }}" />
+                            {% endif %}
+                        </a>
+                    </figure>
+                    {% endwith %}
+                    
+                    <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
+                        <!-- Loop through the rest of the items -->
+                        {% for item in document_paths %}
+                        <figure itemprop="associatedMedia" itemscope itemtype="{{ item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
+                            <a href="#" onclick="openModal('{{ item.presigned_url }}', {% if item.is_video %}'video'{% else %} 'image' {%endif%})" class="modal-link" data-url="{{ item.presigned_url }}">
+                                {% if item.is_video %}
+                                    <video poster="{% static 'assets/img/shapes/play_preview.png' %} " class="border-radius-lg shadow d-block mx-auto w-75 min-height-100 max-height-100">
+                                        <source src="{{ item.presigned_url }}" type="video">
                                     </video>
+                                    </div>
                                 {% else %}
-                                    <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ first_item.presigned_url }}" alt="{{ first_item.filename }}" />
+                                    <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" />
                                 {% endif %}
                             </a>
                         </figure>
-                    {% endwith %}
-                        <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
-                        <!-- Loop through the rest of the items -->
-                        {% for item in document_paths %}
-                                <figure itemprop="associatedMedia" itemscope itemtype="{{ item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
-                                    <a href="#" itemprop="contentUrl" data-size="500x600" class="modal-link" data-url="{{ item.presigned_url }}">
-                                        {% if item.is_video %}
-                                            <video controls class="d-block mx-auto w-75 min-height-100 max-height-100 border-radius-lg shadow" onclick="openModal('{{ item.presigned_url }}', 'video')">
-                                                <source src="{{ item.presigned_url }}" type="video/mp4">
-                                            </video>
-                                        {% else %}
-                                            <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" onclick="openModal('{{ item.presigned_url }}', 'image')">
-                                        {% endif %}
-                                    </a>
-                                </figure>
-                            {% endfor %}
+                        {% endfor %}
                     </div>
                 </div>
                 <!-- Requirement and Customer Details -->
@@ -121,16 +121,16 @@
 
 </div>
 <!-- Modal -->
-<div class="modal" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal" id="fra-image-view-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
         <div class="modal-content">
-            <div class="modal-body">
-                <button type="button" class="close btn bg-gradient-secondary text-center btn-sm mb-2" data-dismiss="modal" aria-label="Close">
-                    Close
-                </button>
+            <div class="modal-body text-end">
                 <div class="text-center">
                     <div id="modal-content-inner"></div>
                 </div>
+                <button type="button" onclick="closeModal()" class="close btn bg-gradient-secondary text-center btn-sm mt-2" data-dismiss="modal" aria-label="Close">
+                    Close
+                </button>
             </div>
         </div>
     </div>
@@ -141,38 +141,6 @@
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script>
-    function openModal(url, type) {
-        var modal = document.getElementById('myModal');
-        var modalContentInner = document.getElementById('modal-content-inner');
-
-        if (type === 'video') {
-            modalContentInner.innerHTML = '<video controls><source src="' + url + '" type="video/mp4"></video>';
-        } else {
-            modalContentInner.innerHTML = '<img src="' + url + '" alt="Image">';
-        }
-
-        modal.style.display = 'block';
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var modal = document.getElementById('myModal');
-        var modalContentInner = document.getElementById('modal-content-inner');
-        var modalClose = modal.querySelector('.close');
-
-        modalClose.addEventListener('click', function() {
-            modal.style.display = 'none';
-            modalContentInner.innerHTML = '';
-        });
-
-        window.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                modal.style.display = 'none';
-                modalContentInner.innerHTML = '';
-            }
-        });
-    });
-
-
 // Initialize Choices.js
 if (document.getElementById('surveyor-choices')) {
   var element = document.getElementById('surveyor-choices');
@@ -195,6 +163,7 @@ if (document.getElementById('surveyor-choices')) {
  }
 
 </script>
+<script src="{% static 'assets/js/zoom_image.js' %}"></script>
 
 
 {% endblock %}
