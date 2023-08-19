@@ -2,6 +2,30 @@
 {% load static %}
 {% block title %} Fire Risk Assessment {{ block.super }}{% endblock %}
 {% block content %}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css">
+  <style>
+    /* Add your custom styles here */
+    .product-images {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .main-image {
+      flex: 1;
+      max-width: 400px;
+      margin: 0 10px;
+    }
+    .thumbnail-image {
+      width: 100px;
+      height: 100px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+
 {% load custom_tags %}
 {% include 'components/alert.html' %}
 
@@ -10,39 +34,46 @@
         <div class="card-body">
             <div class="row">
                 <!-- Image -->
-                <div class="col-xl-6 col-lg-6 text-center">
-                    {% with first_item=document_paths.0 %}
-                    <!-- First image outside of the loop -->
-                    <figure itemprop="associatedMedia" itemscope itemtype="{{ first_item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
-                        <a href="#" onclick="openModal('{{ first_item.presigned_url }}', {% if first_item.is_video %}video{% else %}image{%endif%})">
-                            {% if first_item.is_video %}
-                                <video poster="{% static 'assets/img/shapes/play_preview.png' %}" class="w-100 border-radius-lg shadow-lg mx-auto">
-                                    <source src="{{ first_item.presigned_url }}" type="video">
-                                </video>
-                            {% else %}
-                                <img class="w-100 border-radius-lg shadow-lg mx-auto" src="{{ first_item.presigned_url }}" alt="{{ first_item.filename }}" />
-                            {% endif %}
-                        </a>
-                    </figure>
-                    {% endwith %}
-                    
-                    <div class="my-gallery d-flex mt-4 pt-2" itemscope itemtype="http://schema.org/ImageGallery">
-                        <!-- Loop through the rest of the items -->
-                        {% for item in document_paths %}
-                        <figure itemprop="associatedMedia" itemscope itemtype="{{ item.presigned_url }}" itemprop="contentUrl" data-size="500x600">
-                            <a href="#" onclick="openModal('{{ item.presigned_url }}', {% if item.is_video %}'video'{% else %} 'image' {%endif%})" class="modal-link" data-url="{{ item.presigned_url }}">
-                                {% if item.is_video %}
-                                    <video poster="{% static 'assets/img/shapes/play_preview.png' %} " class="border-radius-lg shadow d-block mx-auto w-75 min-height-100 max-height-100">
+                 <div class="col-xl-6 col-lg-6 text-center">
+                        <div class="product-images">
+                            <div class="main-image">
+                                <div class="slider">
+                                <!-- Loop through your document_paths here -->
+                                {% for item in document_paths %}
+                                <div class="slider-item">
+                                    {% if item.is_video %}
+                                    <video controls poster="{% static 'assets/img/shapes/play_preview.png' %}" class="border-radius-lg shadow d-block mx-auto w-75 min-height-100 max-height-100">
                                         <source src="{{ item.presigned_url }}" type="video">
                                     </video>
-                                {% else %}
+                                    {% else %}
                                     <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" />
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                                </div>
+                            </div>
+                            <div class="thumbnails">
+                                <!-- Loop through your document_paths again for thumbnails -->
+                                {% for item in document_paths %}
+                                <div class="thumbnail-image" onclick="changeSlide({{ forloop.index0 }})">
+                                {% if item.is_video %}
+                                <video controls poster="{% static 'assets/img/shapes/play_preview.png' %}" class="border-radius-lg shadow d-block mx-auto w-75 min-height-100 max-height-100">
+                                    <source src="{{ item.presigned_url }}" type="video">
+                                </video>
+                                {% else %}
+                                <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" />
+
                                 {% endif %}
-                            </a>
-                        </figure>
-                        {% endfor %}
-                    </div>
-                </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            </div>
+                        </div>
+
+
+
+
+
                 <!-- Requirement and Customer Details -->
                 <div class="col-lg-6">
                     <div class="card-body p-0">
@@ -139,6 +170,27 @@
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Include Slick Slider JS -->
+<script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+<script>
+    $(document).ready(function(){
+        $('.slider').slick({
+            arrows: true,
+            dots: true,
+            infinite: true,
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            autoplay: true,
+            autoplaySpeed: 5000,
+            adaptiveHeight: true
+            // You can add more settings here
+        });
+    });
+</script>
 <script>
 // Initialize Choices.js
 if (document.getElementById('surveyor-choices')) {
@@ -162,7 +214,5 @@ if (document.getElementById('surveyor-choices')) {
  }
 
 </script>
-<script src="{% static 'assets/js/zoom_image.js' %}"></script>
-
 
 {% endblock %}

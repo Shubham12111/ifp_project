@@ -1,31 +1,26 @@
-
-<div class="col-lg-3">
-    <div class="card position-sticky top-1">
-        <ul class="nav flex-column bg-white border-radius-lg p-3">
-            <li class="mb-2 nav-item {% if '/requirement/edit/' in request.path or request.path == '/requirement/add/' %}active{% endif %}">
+<div class="container-fluid mt-2">
+    <div class="row align-items-center">
+      <div class="col-lg-12 col-sm-8">
+        <div class="nav-wrapper position-relative end-0">
+          <ul class="nav nav-tabs" >
+            <li class="nav-item">
                 {% if requirement_instance %}
-                    <a class="nav-link text-body" data-scroll="" href="{% url 'requirement_edit' requirement_instance.id  %}">
-                    {% else %}
-                    <a class="nav-link text-body" data-scroll="">
+                    <a class="nav-link {% if '/fire_risk_assessment/edit/' in request.path or request.path == '/fire_risk_assessment/add/' %}active{% endif %} " href="{% url 'requirement_edit' requirement_instance.id  %}">
+                        FRA Actions
+                        </a>
+                {% else %}
+                    <a class="nav-link active"> FRA Actions</a>
                 {% endif %}
-                    <div class="icon me-2">
-                        <i class="fas fa-clipboard-list me-sm-1 text-dark mb-1" aria-hidden="true"></i>
-                    </div>
-                    <span class="text-sm">Fire Risk Assessment</span>
-                </a>
             </li>
-            <li class="nav-item {% if '/requirement/defects/' in request.path %}active{% endif %}">
-                    {% if requirement_instance %}
-                        <a class="nav-link text-body" data-scroll="" href="{% url 'requirement_defects' requirement_instance.id  %}">
-                        {% else %}
-                        <a class="nav-link text-body" data-scroll="">
-                    {% endif %}
-                    <div class="icon me-2">
-                        <i class="fas fas fa-tasks me-sm-1 text-dark mb-1" aria-hidden="true"></i>
-                    </div>
-                    <span class="text-sm">  Fire Risk Assessment Defects</span>
-                </a>
+            {% if requirement_instance %}
+            <li class="nav-item">
+                 <a class="nav-link {% if '/fire_risk_assessment/defects/' in request.path %}active{% endif %}"  href="{% url 'requirement_defects' requirement_instance.id  %}" >
+                Defects
+              </a>
             </li>
-        </ul>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
     </div>
-</div>
+  </div>
