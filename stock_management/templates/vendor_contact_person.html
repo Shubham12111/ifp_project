@@ -3,11 +3,12 @@
 {% load rest_framework %}
 {% block title %} Vendor Contact Person {{ block.super }}{% endblock %}
 {% block content %}
+{% include 'components/alert.html' %}
+{% include 'stock_management/stock_actions.html' %}
 <div class="container-fluid my-3 py-3">
-  <div class="row mt-4">
-    {% include 'stock_management/stock_actions.html' %}
-    <div class="col-lg-9 mt-lg-0">
-      {% include 'components/alert.html' %}
+  <div class="row">
+    <div class="col-lg-12">
+      
         <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
@@ -19,8 +20,8 @@
                         {% csrf_token %}
                         {% render_form serializer %}
                     </div>
-                    <button class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0 mx-2">Save</button>
-                    <a class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0" href="{% url 'vendor_billing_detail' vendor_instance.id %}">Back</a>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
+                    <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'vendor_billing_detail' vendor_instance.id %}">Back</a>
 
                 </form>
             </div>
@@ -38,9 +39,9 @@
                 </thead>
                 <tbody class="ml-4">
                     {% for contact_person in contact_person_list %}
-                    <tr>
-                        <td>{{ contact_person.first_name|default:''|truncatechars:20  }}</td>
-                        <td>{{ contact_person.last_name|default:''|truncatechars:20  }}</td>
+                    <tr class="text-sm">
+                        <td>{{ contact_person.first_name|default:''|truncatechars:20|title  }}</td>
+                        <td>{{ contact_person.last_name|default:''|truncatechars:20|title  }}</td>
                         <td>{{ contact_person.email }}</td>
                         <td>{{ contact_person.phone_number }}</td>
                     

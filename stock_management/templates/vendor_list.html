@@ -7,19 +7,6 @@
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
   <div class="row">
-    <div class="row mt-4">
-      <div class="col-lg-8 col-8 mb-3">
-          <!-- Add your content here -->
-      </div>
-      <div class="col-lg-4 col-4 mb-3 text-right">
-        {% if request.user|has_add_permission:"stock_management" %}
-          <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
-          <a href="{% url 'vendor_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Vendor</a>
-        {% else %}
-          <!-- The user doesn't have the permission, so don't show the "Add" button -->
-        {% endif %}
-         
-      </div>
       <div class="col-12">
         <div class="card">
           <!-- Card header -->
@@ -28,9 +15,16 @@
               <div>
                 <h4 class="mb-0">Vendors</h4>
               </div>
-
+              <div class="ms-auto my-auto mt-lg-0 mt-4">
+                {% if request.user|has_add_permission:"stock_management" %}
+                <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
+                <a href="{% url 'vendor_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Vendor</a>
+              {% else %}
+                <!-- The user doesn't have the permission, so don't show the "Add" button -->
+              {% endif %}
               </div>
             </div>
+        </div>
         <div class="card-body px-0 pb-0">
          <div class="table-responsive">
             <table class="table table-flush text-dark" id="vendor-list">
@@ -46,9 +40,9 @@
               </thead>
               <tbody class="ml-4"> 
                 {% for vendor in vendors %}
-                <tr>
-                  <td >{{vendor.first_name|default:''|truncatechars:20}}</td>
-                  <td >{{vendor.last_name|default:''|truncatechars:20}}</td>
+                <tr class="text-sm">
+                  <td >{{vendor.first_name|default:''|truncatechars:20|title}}</td>
+                  <td >{{vendor.last_name|default:''|truncatechars:20|title}}</td>
                   <td >{{vendor.email}}</td>
                   <td >{{vendor.phone_number}}</td>
                   <td>
@@ -72,22 +66,12 @@
               
                 {% endfor %}
               </tbody>
-              
             </table>
           </div>
-
-
-
-        
-
-
-          
-
         </div>
       </div>
     </div>
   </div>
-</div>
 
 
 {% endblock %} 

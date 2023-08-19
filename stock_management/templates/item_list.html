@@ -5,30 +5,24 @@
 {% load custom_tags %}
 {% load inventory_tags %}
 {% include 'components/alert.html' %}
-
 <div class="container-fluid py-4">
   <div class="row">
-    <div class="row mt-4">
-      <div class="col-lg-8 col-8 mb-3">
-        <!-- Add your content here -->
-      </div>
-      <div class="col-lg-4 col-4 mb-3 text-right">
-
-        {% if request.user|has_add_permission:"stock_management" %}
-        <a href="{% if '/stock/item/list/' in request.path %} {% url 'item_add' %} {% else %} {% url 'item_add_sor' %} {% endif %} " class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
-          +&nbsp; Add Item
-        </a>
-        {% else %}
-        <!-- The user doesn't have the permission, so don't show the "Add" button -->
-        {% endif %}
-      </div>
-    </div>
     <div class="col-12">
       <div class="card">
         <div class="card-header pb-0">
           <div class="d-lg-flex justify-content-between">
             <div>
               <h4 class="mb-0">Items</h4>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+
+              {% if request.user|has_add_permission:"stock_management" %}
+              <a href="{% if '/stock/item/list/' in request.path %} {% url 'item_add' %} {% else %} {% url 'item_add_sor' %} {% endif %} " class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
+                +&nbsp; Add Item
+              </a>
+              {% else %}
+              <!-- The user doesn't have the permission, so don't show the "Add" button -->
+              {% endif %}
             </div>
           </div>
         </div>
@@ -48,7 +42,7 @@
               </thead>
               <tbody class="ml-4">
                 {% for item in item_list %}
-                <tr>
+                <tr class="text-sm">
                   <td>{{item.item_name|title|default:''|truncatechars:20}}</td>
                   <td>{{item.description|safe|truncatechars:50}}</td>
                   <td>{{item.price}}</td>
@@ -77,8 +71,9 @@
         </div>
       </div>
     </div>
+    </div>
   </div>
-</div>
+  
 
 {% endblock %}
 

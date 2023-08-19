@@ -1,32 +1,30 @@
-<div class="col-lg-3">
-    <div class="card position-sticky top-1">
-        <ul class="nav flex-column bg-white border-radius-lg p-3">
-            <li class="nav-item {% if '/stock/item/' in request.path or request.path == '/stock/item/add/' %}active{% endif %}">
+<div class="container-fluid mt-4">
+    <div class="row align-items-center">
+      <div class="col-lg-12 col-sm-8">
+        <div class="nav-wrapper position-relative end-0">
+          <ul class="nav nav-tabs" >
+                <li class="nav-item ">
+                    <li class="nav-item ">
                 {% if item_instance %}
-                    <a class="nav-link text-body" data-scroll="" href="{% url 'item_edit' item_instance.id  %}">
+                    <a class="nav-link {% if '/stock/item/edit/' in request.path %}active{% endif %}" href="{% url 'item_edit' item_instance.id  %}">
+                        Item Information
+                    </a>
                     {% else %}
-                    <a class="nav-link text-body" data-scroll="">
+                    <a class="nav-link active">Item Information</a>
                 {% endif %}
-
-                
-                    <div class="icon me-2">
-                        <i class="fa fa-box-open me-sm-1 text-dark mb-1" aria-hidden="true"></i>
-                    </div>
-                    <span class="text-sm">Item Information</span>
-                </a>
             </li>
-            <li class="nav-item {% if '/stock/inventory/' in request.path %}active{% endif %} mt-2">
+            <li class="nav-item">
                     {% if item_instance %}
-                        <a class="nav-link text-body" data-scroll="" href="{% url 'inventory_view' item_instance.id  %}">
+                        <a class="nav-link {% if '/stock/inventory/' in request.path %}active{% endif %} " href="{% url 'inventory_view' item_instance.id  %}">
+                            Inventory
+                        </a>
                         {% else %}
-                        <a class="nav-link text-body" data-scroll="">
+                        <a class="nav-link ">Inventory </a>
                     {% endif %}
-                    <div class="icon me-2">
-                        <i class="fas fa-warehouse me-sm-1 text-dark mb-1" aria-hidden="true"></i>
-                    </div>
-                    <span class="text-sm">Inventory</span>
-                </a>
-            </li>
+                </li>
             </ul>
         </div>
     </div>
+</div>
+</div>
+

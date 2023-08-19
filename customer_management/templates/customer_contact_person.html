@@ -4,13 +4,12 @@
 {% load rest_framework %}
 {% block title %} Customer Contact Person {{ block.super }}{% endblock %}
 {% block content %}
+{% include 'components/alert.html' %}
+{% include 'customer_management/customer_actions.html' %}
 <div class="container-fluid my-3 py-3">
-  <div class="row mt-4">
-    {% include 'customer_management/customer_actions.html' %}
-    <div class="col-lg-9 mt-lg-0">
-      {% include 'components/alert.html' %}
-      {% include 'customer_management/customer_info.html' %}
-        <!-- Card Basic Info -->
+  <div class="row">
+    <div class="col-lg-12">
+      <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
               <h5> Contact Person  </h5>
@@ -21,7 +20,7 @@
                         {% csrf_token %}
                         {% render_form serializer %}
                     </div>
-                    <button class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0">Save</button>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0">Save</button>
 
                 </form>
             </div>
@@ -39,12 +38,11 @@
                 </thead>
                 <tbody class="ml-4">
                     {% for contact_person in contact_person_list %}
-                    <tr>
-                        <td>{{ contact_person.first_name|default:''|truncatechars:20  }}</td>
-                        <td>{{ contact_person.last_name|default:''|truncatechars:20  }}</td>
+                    <tr class="text-sm">
+                        <td>{{ contact_person.first_name|default:''|truncatechars:20|title }}</td>
+                        <td>{{ contact_person.last_name|default:''|truncatechars:20|title  }}</td>
                         <td>{{ contact_person.email }}</td>
                         <td>{{ contact_person.phone_number }}</td>
-                    
                         <td> 
                           {% if request.user|has_update_permission:"customer" %}
                             <a href="{% url 'customer_contact_person_edit' customer_instance.id contact_person.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">

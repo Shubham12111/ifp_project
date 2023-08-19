@@ -114,18 +114,26 @@ border: 1px solid color(srgb 0 0 0) !important;
     background-color: #d73632 !important;
    
 }
-
+.nav-tabs .nav-link{
+border: none !important;
+color: #344767;
+}
 /* theme  */
 
 .navbar-vertical .navbar-nav>.nav-item .nav-link.active .icon
 {
     background-color: #d73632 !important;
     background-image: none !important;
+    color: #fff !important;
 }
 .bg-gradient-primary
 {
     background-color: #d73632 !important;
     background-image: none !important;
 }
-
+.bg-gradient-dark
+{
+    background-color: #d73632 !important;
+    background-image: none !important;  
+}
 

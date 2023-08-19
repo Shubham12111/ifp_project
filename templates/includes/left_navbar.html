@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_tags %}
 <aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 " id="sidenav-main">
     <div class="sidenav-header">
       <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
@@ -14,7 +15,8 @@
         {% for item in menu_items %}
             <li class="nav-item">
                 {% if item.submenu %}
-                    <a data-bs-toggle="collapse" href="#submenu{{ forloop.counter }}" class="nav-link  {% if item.url == request.path %}active{% endif %}" aria-controls="submenu{{ forloop.counter }}" role="button" aria-expanded="false">
+                    <a data-bs-toggle="collapse" href="#submenu{{ forloop.counter }}" class="nav-link {% if item.url %}{% if request.path|get_active_menu in item.url %} active
+                    {% endif %}{% endif %}" aria-controls="submenu{{ forloop.counter }}" role="button" aria-expanded="false">
                         <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center d-flex align-items-center justify-content-center me-2">
                             <i class="{{item.icon}}"></i>
                         </div>
@@ -33,7 +35,8 @@
                         </ul>
                     </div>
                 {% else %}
-                    <a class="nav-link {% if item.url == request.path %}active{% endif %}" href="{{item.url}}" target="">
+                    <a class="nav-link {% if item.url %}{% if request.path|get_active_menu in item.url %} active
+                    {% endif %}{% endif %}" href="{{item.url}}" target="">
                     <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center  me-2 d-flex align-items-center justify-content-center">
                         <i class="{{item.icon}}"></i>
                     </div>

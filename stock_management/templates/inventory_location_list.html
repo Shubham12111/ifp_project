@@ -4,30 +4,24 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
-
 <div class="container-fluid py-4">
   <div class="row">
-    <div class="row mt-4">
-      <div class="col-lg-8 col-8 mb-3">
-        <!-- Add your content here -->
-      </div>
-      <div class="col-lg-4 col-4 mb-3 text-right">
-
-        {% if request.user|has_add_permission:"stock_management" %}
-        <a href="{% url 'inventory_location_add' %}" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
-          +&nbsp; Add Inventory Location
-        </a>
-        {% else %}
-        <!-- The user doesn't have the permission, so don't show the "Add" button -->
-        {% endif %}
-      </div>
-    </div>
+    
     <div class="col-12">
       <div class="card">
         <div class="card-header pb-0">
           <div class="d-lg-flex justify-content-between">
             <div>
               <h4 class="mb-0">Inventory Locations</h4>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              {% if request.user|has_add_permission:"stock_management" %}
+              <a href="{% url 'inventory_location_add' %}" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
+                +&nbsp; Add Inventory Location
+              </a>
+              {% else %}
+              <!-- The user doesn't have the permission, so don't show the "Add" button -->
+              {% endif %}
             </div>
           </div>
         </div>
@@ -47,7 +41,7 @@
               </thead>
               <tbody class="ml-4">
                 {% for inventory_location in inventory_location_list %}
-                <tr>
+                <tr  class="text-sm">
                     <td>{{ inventory_location.name|default:''|truncatechars:20 }}</td>
                     <td>{{ inventory_location.address|default:''|truncatechars:50 }}</td>
                     <td>{{ inventory_location.town|default:'' }}</td>
@@ -78,6 +72,7 @@
     </div>
   </div>
 </div>
+
 
 {% endblock %}
 

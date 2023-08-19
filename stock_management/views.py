@@ -339,7 +339,7 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                     # For HTML requests, display a success message and redirect to vendor.
 
                     messages.success(request, message)
-                    return redirect(reverse('vendor_billing_detail', kwargs={'vendor_id': kwargs['vendor_id']}))
+                    return redirect(reverse('vendor_edit', kwargs={'vendor_id': kwargs['vendor_id']}))
                 else:
                     # For API requests, return a success response with serialized data.
                     return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
@@ -547,7 +547,7 @@ class VendorBillingDetailView(CustomAuthenticationMixin, generics.CreateAPIView)
             if request.accepted_renderer.format == 'html':
                 # For HTML requests, display a success message and redirect to the Vendor's billing address list.
                 messages.success(request, message)
-                return redirect(reverse('vendor_contact_person', kwargs={'vendor_id': kwargs['vendor_id']}))
+                return redirect(reverse('vendor_billing_detail', kwargs={'vendor_id': kwargs['vendor_id']}))
             else:
                 # For API requests, return a success response with serialized data.
                 return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
@@ -677,7 +677,7 @@ class VendorRemarkView(CustomAuthenticationMixin, generics.CreateAPIView):
             if request.accepted_renderer.format == 'html':
                 # For HTML requests, display a success message and redirect to the Vendor's remarks.
                 messages.success(request, message)  # Add this line to display the success message
-                return redirect(reverse('vendor_list'))
+                return redirect(reverse('vendor_remarks', kwargs={'vendor_id': kwargs['vendor_id']}))
             else:
                 # For API requests, return a success response with serialized data.
                 return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)

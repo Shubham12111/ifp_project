@@ -4,26 +4,24 @@
 {% block title %} Customer Site Address {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
+{% include 'components/alert.html' %}
+{% include 'customer_management/customer_actions.html' %}
 <div class="container-fluid my-3 py-3">
-  <div class="row mt-4">
-    {% include 'customer_management/customer_actions.html' %}
-    <div class="col-lg-9 mt-lg-0">
-      {% include 'components/alert.html' %}
-      {% include 'customer_management/customer_info.html' %}
-        <!-- Card Basic Info -->
+  <div class="row">
+     <div class="col-lg-12">
+    <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
               <h5>Site Address </h5>
             </div>
             <div class="card-body pt-0">
-                <form role="form"  method="POST" autocomplete="off" >
-                    <div class='row'>
-                        {% csrf_token %}
-                        {% render_form serializer %}
-                    </div>
-                    <button class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0">Save</button>
-
-                </form>
+              <form role="form"  method="POST" autocomplete="off" >
+                  <div class='row'>
+                      {% csrf_token %}
+                      {% render_form serializer %}
+                  </div>
+                  <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0">Save</button>
+              </form>
             </div>
         </div>
         <div class="card mt-4" id="basic-info">
@@ -32,22 +30,22 @@
                     <tr>
                         <th>Name</th>
                         <th>Address</th>
-                        
+                        <th>Town</th>
+                        <th>County</th>
+                        <th>Country</th>
+                        <th>Post Code</th>
                         <th class="custom-last-column">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="ml-4">
                     {% for site_address in site_address_list %}
-                    <tr>
+                    <tr class="text-sm">
                         <td>{{ site_address.site_name|default:''|truncatechars:20 }}</td>
-                        <td >
-                          {{ site_address.address|default:''|truncatechars:20 }}<br>
-                          {% if site_address.town %}{{ site_address.town.name }} <br>{% endif %}
-                          {% if site_address.county %}{{ site_address.county.name}}<br>{% endif %}
-                          {{ site_address.country|default:'' }}<br>
-                          {{ site_address.post_code|default:'' }}
-                      </td>
-                      
+                        <td >{{ site_address.address|default:''|truncatechars:20|title }}</td>
+                        <td>{% if site_address.town %}{{ site_address.town.name|title }}{% endif %}</td>
+                        <td>{% if site_address.county %}{{ site_address.county.name|title}}{% endif %}</td>
+                        <td>{{ site_address.country|default:''|title }}</td>
+                        <td>{{ site_address.post_code|default:'' }}</td>
                         <td> 
                           {% if request.user|has_update_permission:"customer" %}
                             <a href="{% url 'customer_site_address_edit' customer_instance.id site_address.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">

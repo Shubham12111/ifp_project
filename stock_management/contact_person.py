@@ -15,8 +15,6 @@ from .models import *
 from .serializers import *
 from .contact_person import *
 
-
-
 class VendorContactPersonView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
     View for adding or updating a contact person.

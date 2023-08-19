@@ -26,6 +26,23 @@ CUSTOMER_TYPES = (
     ('individual', 'Individual'),
 )
 
+ROLE_CHOICES = (
+    ('Customer', 'Customer'),
+    ('contractor', 'Contractor'),
+    ('sale_executive', 'Sale Executive'),
+    ('quantity_surveyor', 'Quantity Surveyor'),
+    ('surveyor', 'Surveyor'),
+    ('estimator', 'Estimator'),
+    ('project_manager/contract_manager', 'Project Manager/Contract Manager'),
+    ('projects_coordinator', 'Projects Coordinator'),
+    ('projects_RLO', 'Projects RLO'),
+    ('financial_manager', 'Financial Manager'),
+    ('projects_admin_(IT)', 'Projects Admin (IT)'),
+    ('supervisor', 'Supervisor'),
+    ('snagging_supervisor', 'Snagging Supervisor'),
+    ('quality_assurance', 'Quality Assurance'),
+    ('sub-contractor', 'Sub-Contractor'),
+)
 
 class UserRole(models.Model):
     """
@@ -37,10 +54,10 @@ class UserRole(models.Model):
     """
 
     # CharField for the 'name' field
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, choices=ROLE_CHOICES, unique=True)
 
     # CharField for the 'description' field
-    description = RichTextField()
+    description = RichTextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True,null=True)
 

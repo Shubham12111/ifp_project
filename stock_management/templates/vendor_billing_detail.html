@@ -3,11 +3,11 @@
 {% load rest_framework %}
 {% block title %} Vendor Billing Address {{ block.super }}{% endblock %}
 {% block content %}
+{% include 'components/alert.html' %}
+{% include 'stock_management/stock_actions.html' %}
 <div class="container-fluid my-3 py-3">
-  <div class="row mt-4">
-    {% include 'stock_management/stock_actions.html' %}
-    <div class="col-lg-9 mt-lg-0">
-      {% include 'components/alert.html' %}
+  <div class="row">
+    <div class="col-lg-12">
         <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
@@ -19,13 +19,12 @@
                         {% csrf_token %}
                         {% render_form serializer %}
                     </div>
-                    <button class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0 mx-2">Save</button>
-                    <a class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0" href="{% url 'vendor_edit' vendor_instance.id %}">Back</a>
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
+                    <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'vendor_edit' vendor_instance.id %}">Back</a>
 
                 </form>
             </div>
         </div>  
-    
     </div>
   </div>
 </div>
