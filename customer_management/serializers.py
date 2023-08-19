@@ -207,14 +207,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
             'base_template': 'custom_input.html'
         },
     )
-    place_to_supply = serializers.CharField(
-        label='Place To Supply',
-        required=False,
-        max_length=50,
-        style={
-            'base_template': 'custom_input.html'
-        },
-    )
+    
     tax_preference = serializers.ChoiceField(
         label='Tax Preference',
         choices=TAX_PREFERENCE_CHOICES,
@@ -279,7 +272,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BillingAddress
-        fields = ['vat_number', 'pan_number', 'place_to_supply', 'tax_preference', 'address',
+        fields = ['vat_number', 'pan_number', 'tax_preference', 'address',
                   'country', 'town', 'county', 'post_code']
         
 
