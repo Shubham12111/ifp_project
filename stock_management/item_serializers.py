@@ -3,6 +3,7 @@ import uuid
 from .models import *
 from django.db import transaction
 from rest_framework import serializers
+from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 from django.conf import settings
 
@@ -45,6 +46,7 @@ class ItemSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "Item Name is required.",
+            "blank":"Name is required.",
         },
     )
     description = serializers.CharField(
@@ -53,7 +55,9 @@ class ItemSerializer(serializers.ModelSerializer):
         style={'base_template': 'rich_textarea.html', 'rows': 5},
         error_messages={
             "required": "Description is required.",
+            "blank":"Description is required.",
         },
+        validators=[validate_description]
     )
     status = serializers.ChoiceField(
         choices=PRODUCT_STATUS_CHOICES,  # Assuming you've defined PRODUCT_STATUS_CHOICES
@@ -82,7 +86,8 @@ class ItemSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "Price is required.",
-             "invalid": "Price is invalid.",  
+            "invalid": "Price is invalid.",  
+            "blank":"Price is required.", 
         },
     )
     
@@ -94,6 +99,11 @@ class ItemSerializer(serializers.ModelSerializer):
             'base_template': 'custom_input.html',
             'custom_class':'col-6'
         },
+        error_messages={
+            "required": "Reference Number is required.",
+            "invalid": "Reference Number is invalid.",  
+            "blank":"Reference Number is required.", 
+        },
     )
     
     units = serializers.ChoiceField(
@@ -103,6 +113,11 @@ class ItemSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_select.html',
             'custom_class':'col-6 units'
+        },
+        error_messages={
+            "required": "Units is required.",
+            "invalid": "Units is invalid.",  
+            "blank":"Units is required.", 
         },
     )
     

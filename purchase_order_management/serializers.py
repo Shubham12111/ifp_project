@@ -4,6 +4,8 @@ from django.db import transaction
 from rest_framework import serializers
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
+from django.conf import settings
+
 
 def validate_file_size(value):
     """

@@ -4,8 +4,30 @@ from rest_framework import serializers
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 from .models import *
+from django.conf import settings
 
 
+def validate_file_size(value):
+    """
+    Validate the file size is within the allowed limit.
+
+    Parameters:
+        value (File): The uploaded file.
+
+    Raises:
+        ValidationError: If the file size exceeds the maximum allowed size (5 MB).
+    """
+    # Maximum file size in bytes (5 MB)
+    max_size = 5 * 1024 * 1024
+
+    if value.size > max_size:
+        raise ValidationError(_('File size must be up to 5 MB.'))
+
+# Validator for checking the supported file extensions
+file_extension_validator = FileExtensionValidator(
+    allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS,
+    message=('Unsupported file extension. Please upload a valid file.'),
+)
 class CategorySerializer(serializers.ModelSerializer):
     name = serializers.CharField(
         label=('Name '),
@@ -36,7 +58,9 @@ class CategorySerializer(serializers.ModelSerializer):
         'base_template': 'custom_file.html',
         'help_text':True,
         'custom_class': 'col-6'
-    },) 
+    },
+    validators=[file_extension_validator, validate_file_size],
+    )
     
     description = serializers.CharField(max_length=1000, 
                                     required=True, 
@@ -44,7 +68,8 @@ class CategorySerializer(serializers.ModelSerializer):
                                     error_messages={
                                             "required": "This field is required.",
                                             "blank": "Description is required.",
-                                        })
+                                        },
+                                        validators=[validate_description],)
 
     status = serializers.ChoiceField(
         label='Status',
