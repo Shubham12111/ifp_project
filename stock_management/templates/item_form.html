@@ -4,10 +4,10 @@
 {% block title %} {% if item_instance %}Edit {% else %} Add {% endif %} Item {{ block.super }}{% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
+{% include 'item_actions.html' %}
 <div class="container-fluid my-3 py-3">
-  <div class="row mt-4">
-    {% include 'item_actions.html' %}
-      <div class="col-lg-9 mt-lg-0">
+  <div class="row">
+    <div class="col-lg-12">
          <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8" enctype="multipart/form-data">
              <!--single form panel-->
              <div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
@@ -34,12 +34,11 @@
                       </div>
                   {% endfor %}
               {% endif %}
-
-                 </div>
+              </div>
                  <div class="row mt-4">
                  <div class="col-6 col-lg-6 m-auto text-end"></div>
                  <div class="col-md-6 m-auto text-center text-md-end">
-                   <a class="btn bg-gradient-secondary mb-0 js-btn-prev"  href="{% if '/stock/item/add/' in request.path  or '/stock/item/edit/' in request.path %} {% url 'item_list' %} {% else %} {% url 'item_list_sor' %} {% endif %}" title="Back">Back</a>
+                   <a class="btn bg-gradient-secondary mb-0 js-btn-prev"  href="{% url 'item_list' %}" title="Back">Back</a>
                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Submit</button>
                  </div>
                </div>

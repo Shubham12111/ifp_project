@@ -141,6 +141,22 @@ def get_inventory_location_data(request):
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+def filter_purchase_order(data_access_value, user):
+    # Define a mapping of data access values to corresponding filters.
+    filter_mapping = {
+        "self": Q(created_by=user),
+        "all": Q(),  # An empty Q() object returns all data.
+    }
+    queryset = PurchaseOrder.objects.all().distinct().order_by('-created_at')
+    
+    if user.roles.name == "projects_admin_(IT)":
+        queryset =  queryset.filter(filter_mapping.get(data_access_value, Q())
+        )
+    
+    else:
+        queryset = queryset.filter(filter_mapping.get(data_access_value, Q()))
+    return queryset 
+
 class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
 
@@ -167,15 +183,7 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(created_by=self.request.user),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        base_queryset = PurchaseOrder.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        base_queryset = filter_purchase_order(data_access_value, self.request.user)
 
         # Order the queryset based on the 'ordering_fields'
         ordering = self.request.GET.get('ordering')
@@ -330,10 +338,19 @@ class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         invoice_item_list = PurchaseOrderInvoice.objects.filter(purchase_order_id=purchase_order,
                                                                 purchase_order_id__inventory_location_id=purchase_order.inventory_location_id).order_by('-created_at')
         
+        presigned_url = ""
+        file_name = ''
+        if purchase_order.document:
+            presigned_url = generate_presigned_url(purchase_order.document),
+            file_name =  purchase_order.document.split('/')[-1]
+
+
         if request.accepted_renderer.format == 'html':
             context = {'purchase_order':purchase_order,
                       'purchase_order_items':purchase_order_items,
-                      'invoice_item_list':invoice_item_list}
+                      'invoice_item_list':invoice_item_list,
+                      'presigned_url':presigned_url,
+                        'file_name':file_name}
             return render_html_response(context, self.template_name)
         
       
@@ -411,12 +428,19 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                     'items': items_data,
                     # ... other fields
                 }
-                
+                presigned_url = ""
+                file_name = ""
+                if purchase_order_data.document:
+                    presigned_url = generate_presigned_url(purchase_order_data.document),
+                    file_name =  purchase_order_data.document.split('/')[-1]
+
                 context = {'vendor_list':vendor_list, 
                         'inventory_location_list':inventory_location_list,
                         'item_list':item_list,
                         'purchase_order':purchase_order_data,
-                        'existingPurchaseOrderData':existingPurchaseOrderData}
+                        'existingPurchaseOrderData':existingPurchaseOrderData,
+                        'presigned_url':presigned_url,
+                        'file_name':file_name}
                 return render_html_response(context,self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action.")
@@ -427,14 +451,13 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
             
         
     def post(self, request, *args, **kwargs):
-        
         purchase_order = self.get_purchase_order().filter(pk = kwargs.get('purchase_order_id'))
         purchase_order_data = purchase_order.first()
         serializer = self.serializer_class(instance = purchase_order_data, data=request.data)
         if serializer.is_valid():
             # You can add any additional processing or validation here
             with transaction.atomic():
-                purchase_order = serializer.save()
+                purchase_order = serializer.update(purchase_order_data, validated_data=serializer.validated_data)
                 # Process item data
                 items_data = get_order_items(request.data)
                 existing_item_ids = [item['item_id'] for item in items_data]
@@ -617,3 +640,53 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
             return JsonResponse({'success': False, 'errors': errors,  
             'status':status.HTTP_400_BAD_REQUEST})
 
+
+
+class PurchaseOrderInvoiceView(CustomAuthenticationMixin,generics.RetrieveAPIView):
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    template_name = 'purchase_order_invoice_view.html'
+    
+    def get(self, request, *args, **kwargs):
+        # Get the filtered queryset using get_queryset method
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "purchase_order", HasListDataPermission, 'list'
+        )
+        # Check if authenticated_user is a redirect response
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+          # Check if authenticated_user is a redirect response
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(created_by=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        base_queryset = PurchaseOrderInvoice.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        purchase_order_invoice = base_queryset.filter(pk=kwargs.get('invoice_id')).first()
+        
+        purchase_order_items = PurchaseOrderReceivedInventory.objects.filter(purchase_order_invoice_id=purchase_order_invoice)
+        
+        # invoice_item_list = PurchaseOrderInvoice.objects.filter(purchase_order_id=purchase_order,
+        #                                                         purchase_order_id__inventory_location_id=purchase_order.inventory_location_id).order_by('-created_at')
+        
+        presigned_url = ""
+        file_name = ''
+        if purchase_order_invoice.invoice_pdf_path:
+            presigned_url = generate_presigned_url(purchase_order_invoice.invoice_pdf_path),
+            file_name =  purchase_order_invoice.invoice_pdf_path.split('/')[-1]
+
+
+        if request.accepted_renderer.format == 'html':
+            context = {'purchase_order':purchase_order_invoice.purchase_order_id,
+                      'purchase_order_items':purchase_order_items,
+                     
+                      'presigned_url':presigned_url,
+                        'file_name':file_name}
+            return render_html_response(context, self.template_name)
+        

@@ -1,7 +1,31 @@
+import uuid
 from .models import *
 from django.db import transaction
 from rest_framework import serializers
+from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
+
+def validate_file_size(value):
+    """
+    Validate the file size is within the allowed limit.
+
+    Parameters:
+        value (File): The uploaded file.
+
+    Raises:
+        ValidationError: If the file size exceeds the maximum allowed size (5 MB).
+    """
+    # Maximum file size in bytes (5 MB)
+    max_size = 5 * 1024 * 1024
+
+    if value.size > max_size:
+        raise ValidationError(_('File size must be up to 5 MB.'))
+
+# Validator for checking the supported file extensions
+file_extension_validator = FileExtensionValidator(
+    allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS,
+    message=('Unsupported file extension. Please upload a valid file.'),
+)
 
 class InventoryLocationSerializer(serializers.ModelSerializer):
     full_address = serializers.SerializerMethodField()  # New field for combined address
@@ -82,10 +106,14 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             # You can add more error messages as needed
         }
     )
+    file = serializers.FileField(
+    required=False,
+    validators=[file_extension_validator, validate_file_size],
+    )  
 
     class Meta:
         model = PurchaseOrder
-        fields = ['po_number', 'vendor_id', 'inventory_location_id', 'order_date', 'due_date', 'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes"]
+        fields = ['po_number', 'vendor_id', 'inventory_location_id', 'order_date', 'due_date', 'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file']
 
 
     def validate_sub_total(self, value):
@@ -107,14 +135,69 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         if value < 0:
             raise serializers.ValidationError("Total Amount must be a positive value.")
         return value
+    
+    def create(self, validated_data):
+        # Pop the 'file' field from validated_data
+        file = validated_data.pop('file', None)
 
+        # Create a new instance of Conversation with 'title' and 'message'
+        instance = PurchaseOrder.objects.create(**validated_data)
+
+        if file:
+            # Generate a unique filename
+            unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+            upload_file_to_s3(unique_filename, file, 'purchase_order')
+            instance.document = f'purchase_order/{unique_filename}'
+            instance.save()
+
+        return instance
+    
+    def update(self, instance, validated_data):
+        file = validated_data.pop('file', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        with transaction.atomic():
+            instance.save()
+
+        if file:
+            # Generate a unique filename
+            unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+            upload_file_to_s3(unique_filename, file, 'purchase_order')
+            instance.document = f'purchase_order/{unique_filename}'
+            instance.save()
+
+        return instance
 
 class PurchaseOrderReceivedInventorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseOrderReceivedInventory
         fields = ['purchase_order_item_id','received_inventory']
 
-    
+
+def validate_invoice_file_size(value):
+    """
+    Validate the file size is within the allowed limit.
+
+    Parameters:
+        value (File): The uploaded file.
+
+    Raises:
+        ValidationError: If the file size exceeds the maximum allowed size (5 MB).
+    """
+    # Maximum file size in bytes (5 MB)
+    max_size = 5 * 1024 * 1024
+
+    if value.size > max_size:
+        raise ValidationError(_('File size must be up to 5 MB.'))
+
+# Validator for checking the supported file extensions
+invoice_file_extension_validator = FileExtensionValidator(
+    allowed_extensions=['pdf'],
+    message=('Unsupported file extension. Please upload a valid file.'),
+)
+
 class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
     invoice_date = serializers.DateField(
         required=True,
@@ -132,8 +215,45 @@ class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
             "blank": "Invoice Number is required.",
         },
     )
+     
+    file = serializers.FileField(
+    required=False,
+    validators=[invoice_file_extension_validator, validate_invoice_file_size],
+    )
     class Meta:
         model = PurchaseOrderInvoice
-        fields = ['invoice_number', 'invoice_date', 'comments']
+        fields = ['invoice_number', 'invoice_date', 'comments','file']
     
+    def create(self, validated_data):
+        # Pop the 'file' field from validated_data
+        file = validated_data.pop('file', None)
+
+        # Create a new instance of Conversation with 'title' and 'message'
+        instance = PurchaseOrderInvoice.objects.create(**validated_data)
+
+        if file:
+            # Generate a unique filename
+            unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+            upload_file_to_s3(unique_filename, file, 'purchase_order/invoice')
+            instance.invoice_pdf_path = f'purchase_order/invoice/{unique_filename}'
+            instance.save()
+
+        return instance
     
+    def update(self, instance, validated_data):
+        file = validated_data.pop('file', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        with transaction.atomic():
+            instance.save()
+
+        if file:
+            # Generate a unique filename
+            unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+            upload_file_to_s3(unique_filename, file, 'purchase_order/invoice')
+            instance.invoice_pdf_path = f'purchase_order/invoice/{unique_filename}'
+            instance.save()
+
+        return instance

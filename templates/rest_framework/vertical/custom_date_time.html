@@ -19,25 +19,32 @@
   <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
 
   <script>
-    // Get all elements with the class 'datepicker' using the Django template syntax
-    const datepickerFields_{{ field.name }} = document.querySelectorAll('.datepicker-{{ field.name }}');
+ // Get all elements with the class 'datepicker' using the Django template syntax
+  const datepickerFields_{{ field.name }} = document.querySelectorAll('.datepicker-{{ field.name }}');
 
-    datepickerFields_{{ field.name }}.forEach(datepickerField => {
-      flatpickr(datepickerField, {
-          enableTime: true,
-          dateFormat: "Y-m-d H:i",
-          enableTime: true, // Enable time selection
-          time_24hr: true   // Display time in 24-hour format
-          // You can add more options here
-      });
+  datepickerFields_{{ field.name }}.forEach(datepickerField => {
+    flatpickr(datepickerField, {
+      enableTime: true,
+      dateFormat: "Y-m-d H:i",
+      enableTime: true, // Enable time selection
+      time_24hr: true   // Display time in 24-hour format
+      // You can add more options here
+    });
 
-      if (datepickerField.value) {
-          const selectedDate = new Date(datepickerField.value);
-          if (!isNaN(selectedDate)) {
-              datepickerField._flatpickr.setDate(selectedDate);
-          }
+    const defaultValue = new Date(); // Create a default date object here
+    
+    if (datepickerField.value) {
+      const selectedDate = new Date(datepickerField.value);
+      if (!isNaN(selectedDate)) {
+        datepickerField._flatpickr.setDate(selectedDate);
+      } else {
+        datepickerField._flatpickr.setDate(defaultValue); // Set default value if selectedDate is invalid
       }
+    } else {
+      datepickerField._flatpickr.setDate(defaultValue); // Set default value if no selectedDate
+    }
   });
+
 </script>
 
     

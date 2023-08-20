@@ -312,7 +312,7 @@ function generateActionButtons(item, columnConfig) {
             return generateLinkAction(item, action);
         }).join('');
         
-        {% if request.user.roles.name == "Projects Admin (IT)" %}
+        {% if request.user.roles.name == "projects_admin_(IT)" %}
         
         if (actionsHTML !== "") {
                 conditionalActionsHTML = actionsHTML;

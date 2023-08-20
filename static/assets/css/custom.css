@@ -109,3 +109,52 @@ border: 1px solid color(srgb 0 0 0) !important;
     width: -webkit-fill-available !important;
     width: -moz-available !important;
 }
+.nav-tabs .nav-link.active {
+    color: #fff !important;
+    background-color: #d73632 !important;
+   
+}
+.nav-tabs .nav-link{
+border: none !important;
+color: #344767;
+}
+
+
+.choices__item--disabled
+{
+    display: none !important;
+}
+
+  /* Styles for the custom icon */
+  .form-control.custom-select:after {
+    content: "\f107";
+    font: normal normal normal 14px/1 FontAwesome;
+    position: absolute;
+    right: 13.5px;
+    top: 14px;
+    pointer-events: none;
+    transition: 0.3s ease;
+}
+  
+  
+
+
+/* theme  */
+
+.navbar-vertical .navbar-nav>.nav-item .nav-link.active .icon
+{
+    background-color: #d73632 !important;
+    background-image: none !important;
+    color: #fff !important;
+}
+.bg-gradient-primary
+{
+    background-color: #d73632 !important;
+    background-image: none !important;
+}
+.bg-gradient-dark
+{
+    background-color: #d73632 !important;
+    background-image: none !important;  
+}
+

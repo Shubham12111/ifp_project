@@ -64,9 +64,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
         base_queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-        # Initialize the base queryset with the initial filtering conditions
-        base_queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
-
+        
         # Get the filtering parameters from the request's query parameters
         filters = {
             'status': self.request.GET.get('status'),
@@ -406,7 +404,7 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        queryset = Todo.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk')).distinct().order_by('-created_at')
         instance = queryset.first()
         
         if instance:

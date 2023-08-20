@@ -226,6 +226,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     )
    
     address = serializers.CharField(
+        label='Address',
         max_length=255,
         min_length=5,
         required=False,
@@ -234,6 +235,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         
     )
     country = serializers.PrimaryKeyRelatedField(
+        label='Country',
         queryset=Country.objects.all(),
         default=None,
         style={
@@ -241,6 +243,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         },
     )
     town = serializers.PrimaryKeyRelatedField(
+        label='Town',
         queryset=City.objects.all(),
         default=None,
         style={
@@ -248,6 +251,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         },
     )
     county = serializers.PrimaryKeyRelatedField(
+        label='County',
         queryset=Region.objects.all(),
         default=None,
         style={
@@ -255,6 +259,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         },
     )
     post_code = serializers.CharField(
+        label='Post Code',
         max_length=7,
         required=False,
         allow_blank=True,

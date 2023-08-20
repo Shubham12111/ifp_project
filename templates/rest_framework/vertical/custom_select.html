@@ -8,7 +8,7 @@
   {% endif %}
 
     {% if field.label == 'Priority' %}
-    <select class="form-control" name="{{ field.name }}" id="choices-Priority">
+    <select class="form-control custom-select" name="{{ field.name }}" id="choices-Priority">
       {% if field.allow_null or field.allow_blank %}
         <option value="" {% if not field.value %}selected{% endif %}>--------</option>
       {% endif %}
@@ -63,33 +63,25 @@
 
 
 
-  function initializeChoices(fieldId) {
-    var element = document.getElementById(fieldId);
-    if (element) {
-      const example = new Choices(element, {});
-    }
-  }
 
-  initializeChoices('choices-{{ field.name }}');
+// Initialize Choices.js
+if (document.getElementById('choices-{{ field.name }}')) {
+  var element = document.getElementById('choices-{{ field.name }}');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 5,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search ....", 
+  });
 
-  // Move this part inside the if statement to avoid errors
-  var choicesTags = document.getElementById('choices-tags');
-  if (choicesTags) {
-    var color = choicesTags.dataset.color;
-    const example = new Choices(choicesTags, {
-      delimiter: ',',
-      editItems: true,
-      
-      maxItemCount: 5,
-      removeItemButton: true,
-      addItems: true,
-      classNames: {
-        item: 'badge rounded-pill choices-' + color + ' me-2'
-      },
-      noResultsText: 'No records found',
-      noChoicesText: 'No records found',
-      loadingText: 'Loading...',
-      
-    });
-  }
+  
+ }
 </script>
