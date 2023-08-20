@@ -659,15 +659,7 @@ class PurchaseOrderInvoiceView(CustomAuthenticationMixin,generics.RetrieveAPIVie
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(created_by=self.request.user),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        base_queryset = PurchaseOrderInvoice.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        base_queryset = PurchaseOrderInvoice.objects.all()
         purchase_order_invoice = base_queryset.filter(pk=kwargs.get('invoice_id')).first()
         
         purchase_order_items = PurchaseOrderReceivedInventory.objects.filter(purchase_order_invoice_id=purchase_order_invoice)
