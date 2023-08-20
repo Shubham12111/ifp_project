@@ -8,11 +8,37 @@ from customer_management.models import SiteAddress
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 
 class CustomerNameField(serializers.RelatedField):
     def to_representation(self, value):
         return f"{value.first_name} {value.last_name}"
-    
+
+class CustomFileValidator(FileExtensionValidator):
+    def __init__(self, allowed_extensions=settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS, *args, **kwargs):
+        super().__init__(allowed_extensions, *args, **kwargs)
+
+    def __call__(self, value):
+        extension_error = None
+        size_error = None
+
+        try:
+            super().__call__(value)
+        except ValidationError as e:
+            extension_error = e.error_list[0].messages[0]
+
+        max_size = 5 * 1024 * 1024  # 5MB in bytes
+        if value.size > max_size:
+            size_error = "File size must be no more than 5MB."
+
+        if extension_error or size_error:
+            errors = {}
+            if extension_error:
+                errors['extension'] = [extension_error]
+            if size_error:
+                errors['size'] = [size_error]
+            raise serializers.ValidationError(errors)
 
 class RequirementDefectSerializer(serializers.ModelSerializer):
     
@@ -59,6 +85,12 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             'base_template': 'custom_customer_select.html',
             'custom_class':'col-12'
         },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Customer is required.",
+            "incorrect_type":"Customer is required.",
+            "null": "Customer is required."
+        },
     )
     description = serializers.CharField(
         max_length=1024, 
@@ -66,9 +98,11 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         style={'base_template': 'rich_textarea.html'},
         error_messages={
             "required": "This field is required.",
-            "blank": "description is required.",
+            "blank": "Description is required.",
+            "null": "Description is required."
         },
         validators=[validate_description],
+        
     )
     
     requirement_date_time = serializers.DateTimeField(
@@ -78,15 +112,28 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             'base_template': 'custom_date_time.html',
             'custom_class': 'col-6'
         },
+         error_messages={
+            "required": "Date/Time is required.",
+            "blank": "Date/Time is required.",
+            "invalid": "Date/Time format. Use one of these formats instead: DD-MM-YYYY H:i",
+            # You can add more error messages as needed
+        }
+
     )
    
     quantity_surveyor = serializers.PrimaryKeyRelatedField(
         label=('Quantity Surveyor'),
         required=True,
-        queryset=User.objects.filter(roles__name = "Quantity Surveyor"),
+        queryset=User.objects.filter(roles__name = "quantity_surveyor"),
         style={
             'base_template': 'custom_select.html',
             'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Quantity Surveyor is required.",
+            "incorrect_type":"Quantity Surveyor is required.",
+            "null": "Quantity Surveyor is required."
         },
     )
     
@@ -98,26 +145,36 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             'base_template': 'custom_site_address_select.html',
             'custom_class':'col-6'
         },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Site Address is required.",
+            "incorrect_type":"Site Address is required.",
+            "null": "Site Address is required."
+        },
     )
     
     file_list = serializers.ListField(
-    child=serializers.FileField(allow_empty_file=False),
-    label=('Documents'),  # Adjust the label as needed
-    required=False,
-    initial=[],
-    style={
-        "input_type": "file",
-        "class": "form-control",
-        "autofocus": False,
-        "autocomplete": "off",
-        'base_template': 'custom_multiple_file.html',
-        'help_text': True,
-        'multiple': True,
-        'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
-        'allow_null': True,  # Allow None values
-    },
-    help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
+        child=serializers.FileField(
+            allow_empty_file=False,
+            validators=[CustomFileValidator()],
+        ),
+        label=('Documents'),  # Adjust the label as needed
+        required=False,
+        initial=[],
+        style={
+            "input_type": "file",
+            "class": "form-control",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_multiple_file.html',
+            'help_text': True,
+            'multiple': True,
+            'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),
+            'allow_null': True,
+        },
+        help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
+
 
     class Meta:
         model = Requirement
@@ -152,8 +209,6 @@ class RequirementAddSerializer(serializers.ModelSerializer):
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        
-        
         with transaction.atomic():
             instance.save()
             # Update associated documents if file_list is provided
@@ -197,8 +252,6 @@ class RequirementAddSerializer(serializers.ModelSerializer):
 
         return representation
     
-
-
 class RequirementDefectAddSerializer(serializers.ModelSerializer):
     action = serializers.CharField(
         max_length=500, 
@@ -241,7 +294,10 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     )
     
     file_list = serializers.ListField(
-    child=serializers.FileField(allow_empty_file=False,use_url=False ),
+    child=serializers.FileField(
+            allow_empty_file=False,
+            validators=[CustomFileValidator()],
+        ),
     label=('Documents'),  # Adjust the label as needed
     required=False,
     initial=[],
@@ -407,7 +463,10 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
     )
     
     file_list = serializers.ListField(
-    child=serializers.FileField(allow_empty_file=False,use_url=False ),
+    child=serializers.FileField(
+            allow_empty_file=False,
+            validators=[CustomFileValidator()],
+        ),
     label=('Documents'),  # Adjust the label as needed
     required=False,
     initial=[],

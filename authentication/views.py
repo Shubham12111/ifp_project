@@ -327,8 +327,8 @@ class ForgotPasswordView(APIView):
                     'redirect_link': reset_url,
                     'site_url': site_url,
                 }
-                # email = Email()  # Replace with your Email class instantiation
-                # email.send_mail(user.email, 'email_templates/forgot_password.html', context, 'Reset Your Password')
+                email = Email()  # Replace with your Email class instantiation
+                email.send_mail(user.email, 'email_templates/forgot_password.html', context, 'Reset Your Password')
                 messages.success(request, f"Please note that an OTP (One-Time Password) has been sent to the email address {user.email}.")
                 return redirect(reverse('login'))
 

@@ -13,6 +13,26 @@ from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 
+def filter_requirements(data_access_value, user):
+    # Define a mapping of data access values to corresponding filters.
+    filter_mapping = {
+        "self": Q(user_id=user),
+        "all": Q(),  # An empty Q() object returns all data.
+    }
+    queryset = Requirement.objects.all()
+    
+    if user.roles.name == "quantity_surveyor":
+        queryset =  queryset.filter(
+            Q(quantity_surveyor=user) | filter_mapping.get(data_access_value, Q())
+        )
+    elif user.roles.name == "surveyor":
+        queryset = queryset.filter(
+            Q(surveyor=user) | filter_mapping.get(data_access_value, Q())
+        )
+    else:
+        queryset = queryset.filter(filter_mapping.get(data_access_value, Q()))
+    return queryset 
+
 class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     View to get the listing of all requirements.
@@ -46,15 +66,8 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        # Define a mapping of data access values to corresponding filters.
-        filter_mapping = {
-            "self": Q(user_id=request.user),
-            "all": Q(),  # An empty Q() object returns all data.
-        }
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping.
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-       
+        queryset = filter_requirements(data_access_value, self.request.user)
+
         if request.accepted_renderer.format == 'html':
             context = {'requirements':queryset}
             return render_html_response(context,self.template_name)
@@ -125,6 +138,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             serializer = self.serializer_class(data = data)
         else:
             serializer = self.serializer_class(data = request.data)
+        
         message = "Congratulations! your requirement has been added successfully."
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
@@ -152,6 +166,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
 
+
 class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'requirement_detail.html'
@@ -171,17 +186,9 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(user_id=self.request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-
-        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        queryset = filter_requirements(data_access_value, self.request.user)
+        queryset =  queryset.first()
+        
 
         return queryset
 
@@ -191,11 +198,12 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         if request.accepted_renderer.format == 'html':
             instance = self.get_queryset()
             if instance:
+
                 document_paths = []
+
                 requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
-                
+            
                 serializer = self.serializer_class(instance=instance, context={'request': request})
-                
                 for document in RequirementAsset.objects.filter(requirement_id=instance):
                     extension = document.document_path.split('.')[-1].lower()
 
@@ -211,7 +219,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 
                         
                 # Retrieve users associated with these roles
-                users_with_survey_permission = User.objects.filter(roles__name= "Surveyor")
+                users_with_survey_permission = User.objects.filter(roles__name= "surveyor")
                 
                 context = {
                     'serializer': serializer, 
@@ -292,11 +300,8 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             "all": Q(),  # An empty Q() object returns all data
         }
 
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        queryset = filter_requirements(data_access_value, self.request.user)
         queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
-        
         return queryset
 
     @swagger_auto_schema(auto_schema=None)
@@ -435,12 +440,12 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = filter_requirements(data_access_value, self.request.user)
         instance = queryset.filter(pk=self.kwargs.get('pk')).first()
-        requirement = Requirement.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).first()
-        if requirement:
+
+        if instance:
             # Proceed with the deletion
-            requirement.delete()
+            instance.delete()
             messages.success(request, "Your requirement has been deleted successfully!")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your requirement has been deleted successfully!", )
@@ -468,13 +473,9 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
            self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
         )
         
-        # Define a mapping of data access values to corresponding filters.
-        filter_mapping = {
-            "self": Q(user_id=self.request.user ),
-            "all": Q(),  # An empty Q() object returns all data.
-        }
+        queryset = filter_requirements(data_access_value, self.request.user)
+        queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
         
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('requirement_id')).first()
         return queryset
     
     def get_queryset_defect(self):
@@ -517,23 +518,27 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         # Call the handle_unauthenticated method to handle unauthenticated access.
         
         data = request.data.copy()
-        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
-        file_list = data.get('file_list', None)
-
-        if file_list is not None and not any(file_list):
-            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-
-        message = "Congratulations! your requirement defect has been added successfully."
+        
+        file_list = data.get('file_list', [])
+        
         requirement_instance = self.get_queryset()
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
+        
+        if not any(file_list):
+            del data['file_list']
+        
+        serializer_data = request.data if any(file_list) else data
+        
+        message = "Congratulations! your requirement defect has been added successfully."
+        
         # Check if the site address instance exists for the customer
         if defect_instance:
             # If the site address instance exists, update it.
-            serializer = self.serializer_class(data=request.data, instance=defect_instance, context={'request': request})
+            serializer = self.serializer_class(data=serializer_data, instance=defect_instance, context={'request': request})
             message = "Your requirement defect has been updated successfully!"
         else: 
             # If the site address instance does not exist, create a new one.
-            serializer = self.serializer_class(data=request.data, context={'request': request})
+            serializer = self.serializer_class(data=serializer_data, context={'request': request})
             message = "Your requirement defect has been added successfully!"
         
         
@@ -552,6 +557,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     data=serializer.data
                                     )
         else:
+            print(serializer.errors)
             # Invalid serializer data.
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template with invalid serializer data.
@@ -590,21 +596,23 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
                                                              status="draft").first()
         return queryset
 
-    @swagger_auto_schema(auto_schema=None)
-    def get(self, request, *args, **kwargs):
+    def get_responses(self):
+        """
+        Get the filtered queryset for requirements based on the authenticated user.
+        """
         defect_instance = self.get_queryset().first()
-        
+        defect_responses = RequirementDefectResponse.objects.filter(defect_id=defect_instance)
+           
+        return defect_responses
+
+    def get_documents(self):
+        """
+        Get the filtered document_paths.
+        """
         document_paths = []
-        defect_response_instance = {}
-        if defect_instance:
-            if kwargs.get('pk'):
-                defect_response_instance = self.get_queryset_response()
-                defect_response_serializer =  self.serializer_class(instance=defect_response_instance)
-                
-            else:
-                defect_response_serializer =  self.serializer_class()
-                
-            for document in RequirementDocument.objects.filter(defect_id=defect_instance):
+        
+        defect_instance = self.get_queryset().first()
+        for document in RequirementDocument.objects.filter(defect_id=defect_instance):
                 extension = document.document_path.split('.')[-1].lower()
 
                 is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
@@ -617,20 +625,36 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
                     'is_video': is_video,
                     'is_image': is_image
                 })
-            defect_documents = RequirementDocument.objects.filter(defect_id=defect_instance)
+        return document_paths
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        defect_instance = self.get_queryset().first()
+        
+        defect_response_instance = {}
+        
+        
+        if defect_instance:
+            if kwargs.get('pk'):
+                defect_response_instance = self.get_queryset_response()
+                defect_response_serializer =  self.serializer_class(instance=defect_response_instance)
+                
+            else:
+                defect_response_serializer =  self.serializer_class()
+                
+            
+            defect_documents = self.get_responses()
         else:
             messages.warning(request, "You are not authorized to perform this action")
             return redirect(reverse('requirement_list'))
 
-        defect_responses = RequirementDefectResponse.objects.filter(defect_id=defect_instance)
-            
+         
         # Defect response doesn't exist, prepare context for displaying form
         context = {
             'defect_instance': defect_instance,
-            'documents': defect_documents,
             'defect_response_serializer': defect_response_serializer,
-            'defect_responses': defect_responses,
-            'document_paths':document_paths,
+            'defect_responses': defect_documents,
+            'document_paths':self.get_documents(),
             'defect_response_instance':defect_response_instance
         }
 
@@ -679,7 +703,13 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
             # Invalid serializer data.
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template with invalid serializer data.
-                context = {'serializer': serializer}
+                context = {
+                    'defect_instance': defect_instance,
+                    'defect_response_serializer': serializer,
+                    'defect_responses': self.get_responses(),
+                    'document_paths':self.get_documents(),
+                   
+                }
                 return render_html_response(context, self.template_name)
 
 class RequirementDefectResponseDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):

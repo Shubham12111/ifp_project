@@ -318,7 +318,8 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests, display a success message and redirect to contact_list.
                     messages.success(request, message)
-                    return redirect('customer_list')
+                    return redirect(reverse('customer_edit', kwargs={'customer_id': kwargs['customer_id']}))
+
                 else:
                     # For API requests, return a success response with serialized data.
                     return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)

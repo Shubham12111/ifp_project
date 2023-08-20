@@ -66,31 +66,46 @@
                   <td  class="text-sm">{{contact.phone_number}}</td>
                   <td  class="text-sm">{{contact.contact_type|title}}</td>
                   <td>
-                    {% if request.user|has_update_permission:"contact" %}
-                    <a href="{% url 'contact_edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
-                      <i class="fas fa-user-edit text-secondary"></i>
-                    </a>
-                    {% endif %}
+                    <div class="dropstart ms-auto pe-0">
+                      <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
+                      </a>
+                      <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">
+                        {% if request.user|has_update_permission:"contact" %}
+                        <li>
+                          <a href="{% url 'contact_edit' contact.pk %}" class="dropdown-item border-radius-md">
+                            Edit
+                          </a>
+                          
+                        {% endif %}
+                        {% if request.user|has_delete_permission:"contact" %}
+                        <li>
+                          <a href="#" type="button" class="dropdown-item border-radius-md" 
+                          onclick="CustomconfirmDelete({{contact.id}}, 'Are you sure you want to delete this contact?','The contact has been deleted successfully.','{% url 'delete_contact' contact.id %}')">
+                          Delete
+                          </a>
+                        </li>
+                      
+                        {% endif %}
+                        {% if request.user|has_view_permission:"contact" %}
+                        <li>
+                          <a href="{% url 'contact_conversation' contact.pk %}" class="dropdown-item border-radius-md" >Conversion</a>
+                        </li>
+                        {% endif %}
+                        <li>
+                          {% if request.user|has_update_permission:"contact" %}
+                          <a href="#" data-bs-toggle="tooltip" class="dropdown-item border-radius-md"   onclick="showPopupAndRedirect('{% url 'convert_to_custmoer' contact.pk %}')">
+                            Convert TO Customer
+                          
+                          </a>
+                        {% endif %}
+                      
+                      
+                        </ul>
+                      </div>
 
-                    {% if request.user|has_delete_permission:"contact" %}
-                    <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" 
 
-                      onclick="CustomconfirmDelete({{contact.id}}, 'Are you sure you want to delete this contact?','The contact has been deleted successfully.','{% url 'delete_contact' contact.id %}')">
-                      <i class="fas fa-trash text-secondary"></i>
-
-                    </a>
-                    {% endif %}
-
-                    {% if request.user|has_view_permission:"contact" %}
-                    <a href="{% url 'contact_conversation' contact.pk %}" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Conversion">
-                      <i class="fas fa-comment text-secondary"></i>
-                    </a>
-                    {% endif %}
-                    {% if request.user|has_update_permission:"contact" %}
-                    <a href="#" data-bs-toggle="tooltip"  data-bs-original-title="Convert TO Customer" class="mx-2">
-                      <i class="fas fa-exchange-alt text-secondary" onclick="showPopupAndRedirect('{% url 'convert_to_custmoer' contact.pk %}')"></i>
-                    </a>
-                    {% endif %}
+                   
                   </td>
                 </tr>
                 {% endfor %}

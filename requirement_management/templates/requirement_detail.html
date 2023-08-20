@@ -1,31 +1,12 @@
 {% extends 'base.html' %}
+
+{% block extra_css %}
+<link id="pagestyle" href="/static/assets/css/slider.css" rel="stylesheet" />
+
+{% endblock %}
 {% load static %}
 {% block title %} Fire Risk Assessment {{ block.super }}{% endblock %}
 {% block content %}
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
-<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.3/dist/css/lightbox.min.css">
-  <style>
-    /* Add your custom styles here */
-    .product-images {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .main-image {
-      flex: 1;
-      max-width: 400px;
-      margin: 0 10px;
-    }
-    .thumbnail-image {
-      width: 100px;
-      height: 100px;
-      margin: 5px;
-      cursor: pointer;
-    }
-  </style>
-
 {% load custom_tags %}
 {% include 'components/alert.html' %}
 
@@ -33,47 +14,51 @@
     <div class="card h-100">
         <div class="card-body">
             <div class="row">
-                <!-- Image -->
-                 <div class="col-xl-6 col-lg-6 text-center">
-                        <div class="product-images">
-                            <div class="main-image">
-                                <div class="slider">
-                                <!-- Loop through your document_paths here -->
-                                {% for item in document_paths %}
-                                <div class="slider-item">
+                <div class="col-md-6">
+                    <div class="sticky-md-top product-sticky">
+                      <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
+                        <div class="carousel-inner bg-light rounded">
+                            {% for item in document_paths %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <div class="zoomable-media">
+                                    {% if item.is_image %}
+                                    <img src="{{ item.presigned_url }}" class="d-block zoomable-image" alt="Product Image">
+                                    <div class="zoom-controls">
+                                        <i class="fas fa-plus zoom-in-button m-2"></i>
+                                        <i class="fas fa-minus zoom-out-button  mx-2"></i>
+                                        <i class="fas  fa-sync-alt reset-button  mx-2"></i>
+                                        
+                                    </div>
+                                    {% endif %}
                                     {% if item.is_video %}
-                                    <video controls poster="{% static 'assets/img/shapes/play_preview.png' %}" class="border-radius-lg shadow d-block mx-auto w-75 min-height-100 max-height-100">
-                                        <source src="{{ item.presigned_url }}" type="video">
+                                    <video controls class="d-block zoomable-video">
+                                        <source src="{{ item.presigned_url }}" type="video/mp4">
                                     </video>
-                                    {% else %}
-                                    <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" />
                                     {% endif %}
                                 </div>
-                                {% endfor %}
-                                </div>
                             </div>
-                            <div class="thumbnails">
-                                <!-- Loop through your document_paths again for thumbnails -->
-                                {% for item in document_paths %}
-                                <div class="thumbnail-image" onclick="changeSlide({{ forloop.index0 }})">
-                                {% if item.is_video %}
-                                <video controls poster="{% static 'assets/img/shapes/play_preview.png' %}" class="border-radius-lg shadow d-block mx-auto w-75 min-height-100 max-height-100">
-                                    <source src="{{ item.presigned_url }}" type="video">
-                                </video>
-                                {% else %}
-                                <img class="w-75 min-height-100 max-height-100 border-radius-lg shadow" src="{{ item.presigned_url }}" alt="{{ item.filename }}" />
-
-                                {% endif %}
-                                </div>
-                                {% endfor %}
-                            </div>
-                            </div>
+                            {% endfor %}
                         </div>
-
-
-
-
-
+                        <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0">
+                            {% for item in document_paths %}
+                            {% if item.is_image %}
+                            <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
+                                <img src="{{ item.presigned_url }}" class="d-block wid-50 rounded" alt="Product media">
+                            </li>
+                            {% endif %}
+                            {% if item.is_video %}
+                            <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
+                              <video  class="d-block zoomable-video" style="    width: 50px;" >
+                                <source src="{{ item.presigned_url }}" type="video/mp4">
+                            </video>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                        </ol>
+                    </div>
+                    
+                    </div>
+                  </div>
                 <!-- Requirement and Customer Details -->
                 <div class="col-lg-6">
                     <div class="card-body p-0">
@@ -87,8 +72,8 @@
                             <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Date/Time:</strong> &nbsp; {{ requirement_instance.requirement_date_time }}</li>
                         </ul>
                     </div>
-                    {% if request.user.roles.name == "Quantity Surveyor" %}
-                        <hr class="horizontal gray-light my-4">
+                    {% if request.user.roles.name == "quantity_surveyor" and requirement_instance.quantity_surveyor ==  request.user %}
+                        <hr class="horizontal gray-light">
                         <form method="post">
                             {% csrf_token %}
                             <div class="form-group">
@@ -170,28 +155,9 @@
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-<script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Include Slick Slider JS -->
-<script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+<script src="{% static 'assets/js/zoom_image.js' %}"></script>
 <script>
-    $(document).ready(function(){
-        $('.slider').slick({
-            arrows: true,
-            dots: true,
-            infinite: true,
-            slidesToShow: 1,
-            slidesToScroll: 1,
-            autoplay: true,
-            autoplaySpeed: 5000,
-            adaptiveHeight: true
-            // You can add more settings here
-        });
-    });
-</script>
-<script>
+
 // Initialize Choices.js
 if (document.getElementById('surveyor-choices')) {
   var element = document.getElementById('surveyor-choices');

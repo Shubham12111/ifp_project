@@ -20,6 +20,7 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
             "blank": "Name is required.",
             "min_length": "Name must consist of at least 3 characters."
         },
+        validators = [validate_name]
         
     )
     address = serializers.CharField(

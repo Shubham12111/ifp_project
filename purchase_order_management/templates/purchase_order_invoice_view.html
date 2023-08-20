@@ -79,15 +79,17 @@
                                     <th class="text-start col-6 text-sm">Item Name</th>
                                     <th class="text-center col-2 text-sm">Price</th>
                                     <th class="text-center col-2 text-sm">Quantity </th>
+                                    <th class="text-center col-2 text-sm">Recived Quantity </th>
                                     <th class="text-center col-2 text-sm">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in purchase_order_items %}
                                 <tr class="">
-                                    <td class="text-sm">{{item.item_name}} </td>
-                                    <td class="text-sm text-center">£ {{item.unit_price}} </td>
-                                    <td class="text-sm text-center">{{item.quantity}} </td>
+                                    <td class="text-sm">{{item.purchase_order_item_id.item_name}} </td>
+                                    <td class="text-sm text-center">£ {{item.purchase_order_item_id.unit_price}} </td>
+                                    <td class="text-sm text-center">{{item.purchase_order_item_id.quantity}} </td>
+                                    <td class="text-sm text-center">{{item.received_inventory}} </td>
                                     <td class="text-sm text-center">£ {{item.row_total}} </td>
                                 </tr>
                                 {% endfor %}
@@ -130,37 +132,7 @@
                     </div>
                 </div>
             </div>
-            {% if invoice_item_list %}
-            <div class="row mt-5">
-                <div class="col-md-12">
-                    <h6>Invoices</h6>
-                    <table class="table-responsive custom-table mb-3 " style="width:100%">
-                            <thead>
-                                <tr class="px-0">
-                                    <th class="text-start col-3 text-sm">Invoice Number</th>
-                                    <th class="text-start col-2 text-sm">Invoice Date</th>
-                                    <th class=" col-2 text-sm">Received Inventory </th>
-                                    <th class="col-2 text-sm">Created At</th>
-                                    <th class="text-center col-2 text-sm">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for invoice_item in invoice_item_list %}
-                                <tr class="">
-                                    <td class="text-sm">{{invoice_item.invoice_number}} </td>
-                                    <td class="text-sm">{{invoice_item.invoice_date}} </td>
-                                    <td class="text-sm">{{invoice_item.calculate_received_inventory}} </td>
-                                    <td class="text-sm">{{invoice_item.created_at}} </td>
-                                    <td class="text-center text-sm">
-                                        <a href="{% url 'purchase_order_invoice' purchase_order.id invoice_item.id %}"> <i class="fas fa-eye" aria-hidden="true"></i>
-                                        </a></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            {% endif %}
+            
         </div>
     </div>
 </div>

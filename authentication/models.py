@@ -19,6 +19,7 @@ MODULE_CHOICES = [
     ('survey', 'Survey (Scheduling)'),
     ('stock_management', 'Stock Management'),
     ('invoicing', 'Invoicing'),
+    ('purchase_order', 'Purchase Order'),
 ]
 
 CUSTOMER_TYPES = (

@@ -42,25 +42,34 @@
               <tbody class="ml-4">
                 {% for inventory_location in inventory_location_list %}
                 <tr  class="text-sm">
-                    <td>{{ inventory_location.name|default:''|truncatechars:20 }}</td>
-                    <td>{{ inventory_location.address|default:''|truncatechars:50 }}</td>
-                    <td>{{ inventory_location.town|default:'' }}</td>
-                    <td>{{ inventory_location.county|default:'' }}</td>
-                    <td>{{ inventory_location.country|default:'' }}</td>
+                    <td>{{ inventory_location.name|default:''|truncatechars:20|title }}</td>
+                    <td>{{ inventory_location.address|default:''|truncatechars:50|title  }}</td>
+                    <td>{{ inventory_location.town|default:''|title  }}</td>
+                    <td>{{ inventory_location.county|default:''|title  }}</td>
+                    <td>{{ inventory_location.country|default:''|title  }}</td>
                     <td>{{ inventory_location.post_code|default:'' }}</td>
                   <td>
-                    {% if request.user|has_update_permission:"stock_management" %}
-                    <a href="{% url 'inventory_location_edit' inventory_location.id %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Inventory Location">
-                      <i class="fas fa-user-edit text-secondary"></i>
+                    <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
                     </a>
-                    {% endif %}
-                    {% if request.user|has_delete_permission:"stock_management" %}
-                    <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Inventory Location"
+                    <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
+                       {% if request.user|has_update_permission:"stock_management" %}
+                       <li>
+                          <a href="{% url 'inventory_location_edit' inventory_location.id %}" class="dropdown-item border-radius-md">
+                            Edit
+                          </a>
+                        </li>
+                      {% endif %}
+                      {% if request.user|has_delete_permission:"stock_management" %}
+                      <li>
+                        <a href="#" type="button" class="dropdown-item border-radius-md"
                         onclick="CustomconfirmDelete('{{ inventory_location.id }}', 'Are you sure you want to delete this inventory location?', 'The inventory location has been deleted successfully.', '{% url 'inventory_location_delete' inventory_location.id %}')">
-                        <i class="fas fa-trash text-secondary"></i>
-                      </a>
+                          Delete
+                       </a>
+                      </li>
+                     
 
-                    {% endif %}
+                      {% endif %}
                   </td>
                 </tr>
                 {% endfor %}
