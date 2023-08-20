@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block extra_css %}
-<link id="pagestyle" href="/static/assets/css/slider.css" rel="stylesheet" />
+<link id="pagestyle" href="{% static '/assets/css/slider.css' %}" rel="stylesheet" />
 {% endblock %}
 {% load rest_framework %}
 {% block title %}Fire Risk Assessment Defects {{ block.super }}{% endblock %}

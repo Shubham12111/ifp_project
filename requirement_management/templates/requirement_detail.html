@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block extra_css %}
-<link id="pagestyle" href="/static/assets/css/slider.css" rel="stylesheet" />
+<link id="pagestyle" href="{% static '/assets/css/slider.css' %}" rel="stylesheet" />
 
 {% endblock %}
-{% load static %}
+
 {% block title %} Fire Risk Assessment {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
