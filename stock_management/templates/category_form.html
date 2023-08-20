@@ -24,11 +24,12 @@
                       <a href="{{ serializer.data.presigned_url }}" download>
                         <span class="text-sm me-2">{{ serializer.data.filename }}</span>
                       </a>
-                      <a href="#" class="delete-icon" onclick="CustomconfirmDelete({{requirement_instance.id}},
-                        'Are you sure you want to delete this requirement document?','The requirement document has been deleted successfully.',
-                        '')" class="delete-link ms-2" data-title="{{ requirement_instance.title}}">
-                        <i class="fas fa-times-circle text-danger">  </i> 
-                      </a>
+                      <a href="#" class="delete-icon" onclick="CustomconfirmDelete('{{category_instance.id}}',
+                      'Are you sure you want to delete this image?','The image  has been deleted successfully.',
+                      '{% url 'category_image_remove' category_instance.id  %}')" class="delete-link ms-2" data-title="Delete Image">
+                      <i class="fas fa-times-circle text-danger">  </i> 
+                  </a>
+                     
                     </div>
                   </div>
                  {% endif %}
@@ -53,4 +54,6 @@
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_country.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
 {% endblock %}
