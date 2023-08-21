@@ -226,6 +226,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     )
    
     address = serializers.CharField(
+        label='Address',
         max_length=255,
         min_length=5,
         required=False,
@@ -234,6 +235,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         
     )
     country = serializers.PrimaryKeyRelatedField(
+        label='Country',
         queryset=Country.objects.all(),
         default=None,
         style={
@@ -241,6 +243,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         },
     )
     town = serializers.PrimaryKeyRelatedField(
+        label='Town',
         queryset=City.objects.all(),
         default=None,
         style={
@@ -248,6 +251,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         },
     )
     county = serializers.PrimaryKeyRelatedField(
+        label='County',
         queryset=Region.objects.all(),
         default=None,
         style={
@@ -255,6 +259,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         },
     )
     post_code = serializers.CharField(
+        label='Post Code',
         max_length=7,
         required=False,
         allow_blank=True,
@@ -262,7 +267,6 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_input.html'
         },
-        validators=[validate_uk_postcode] 
     )
     
     def validate_vat_number(self, value):
@@ -275,6 +279,13 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         # Custom validation for NION format (National Insurance Number in the UK)
         if not re.match(r'^[A-Z]{2}\d{6}[A-Z]$', value):
             raise serializers.ValidationError("Invalid NION format. It should consist of two letters, six digits, and a final letter (e.g., AB123456C).")
+        return value
+    
+    def validate_post_code(self, value):
+        # check if value contains only spaces.
+        if self.initial_data["post_code"].isspace():
+            raise serializers.ValidationError("Invalid Post code. Post code can not contain only spaces.")
+        value = validate_uk_postcode(value)
         return value
     
     class Meta:

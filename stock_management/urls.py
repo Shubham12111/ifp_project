@@ -20,6 +20,7 @@ urlpatterns = [
    path('category/add/', CategoryAddView.as_view(), name='category_add'),
    path('category/edit/<int:category_id>/', CategoryUpdateView.as_view(), name='category_edit'),
    path('category/delete/<int:category_id>/',CategoryDeleteView.as_view(),name='category_delete'),
+   path('category/remove/image/<int:category_id>/',CategoryDeleteRemoveImageView.as_view(), name='category_image_remove'),
 
 
    path('vendor/contact_person/<int:vendor_id>/', VendorContactPersonView.as_view(), name='vendor_contact_person'),
@@ -33,7 +34,7 @@ urlpatterns = [
    path('item/edit/<int:item_id>/', ItemUpdateView.as_view(), name='item_edit'),
    path('item/delete/<int:item_id>/', ItemDeleteView.as_view(), name='item_delete'),
    path('inventory/<int:item_id>/', InventoryView.as_view(), name='inventory_view'),
-   path('item/remoev/image/<int:item_id>/<int:pk>/', ItemRemoveImageView.as_view(), name='item_image_remove'),
+   path('item/remove/image/<int:item_id>/<int:pk>/', ItemRemoveImageView.as_view(), name='item_image_remove'),
 
    
    path('inventory_location/list/', InventoryLocationListView.as_view(), name='inventory_location_list'),

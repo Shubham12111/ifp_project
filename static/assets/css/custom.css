@@ -41,14 +41,14 @@ table.table.table-flush thead {
 color: #000; /* Light text color for header */
 }
 
-/* Style for the table body text */
-table.table.table-flush tbody {
-color: #000; /* Light text color for body */
+
+/* table.table.table-flush tbody {
+color: #000; 
 }
-/* Style for the table body text */
+
 .dataTable-table th a {
-color: #000; /* Light text color for body */
-}
+color: #000;
+} */
 
 li.nav-item.active a.nav-link {
     background: #e9ecef !important;
@@ -63,7 +63,8 @@ th.custom-last-column a.dataTable-sorter::before,
 th.custom-last-column a.dataTable-sorter::after {
 content: none;
 }
-.choices[data-type*='select-one'] .choices__input
+
+/* .choices[data-type*='select-one'] .choices__input
 {
 margin-bottom: 9px;
 border-radius: 0.5rem;
@@ -71,5 +72,89 @@ border-top-right-radius: 0.5rem !important;
 border-bottom-right-radius: 0.5rem !important;
 border-left-width: 1px;
 border: 1px solid color(srgb 0 0 0) !important;
+} */
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 999;
+    overflow: auto;
+}
+
+.modal-content {
+    margin: auto;
+    background-color: white;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    text-align: center;
+}
+
+/* CSS for media inside the modal */
+.modal-content img,
+.modal-content video {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    margin: 0 auto;
+}
+
+#fra-image-view-modal > [for="image-for-fra-image-view-modal"],
+#fra-image-view-modal > [for="video-for-fra-video-view-modal"] {
+    width: -webkit-fill-available !important;
+    width: -moz-available !important;
+}
+.nav-tabs .nav-link.active {
+    color: #fff !important;
+    background-color: #d73632 !important;
+   
+}
+.nav-tabs .nav-link{
+border: none !important;
+color: #344767;
+}
+
+
+.choices__item--disabled
+{
+    display: none !important;
+}
+
+  /* Styles for the custom icon */
+  .form-control.custom-select:after {
+    content: "\f107";
+    font: normal normal normal 14px/1 FontAwesome;
+    position: absolute;
+    right: 13.5px;
+    top: 14px;
+    pointer-events: none;
+    transition: 0.3s ease;
+}
+  
+  
+
+
+/* theme  */
+
+.navbar-vertical .navbar-nav>.nav-item .nav-link.active .icon
+{
+    background-color: #d73632 !important;
+    background-image: none !important;
+    color: #fff !important;
+}
+.bg-gradient-primary
+{
+    background-color: #d73632 !important;
+    background-image: none !important;
+}
+.bg-gradient-dark
+{
+    background-color: #d73632 !important;
+    background-image: none !important;  
 }
 

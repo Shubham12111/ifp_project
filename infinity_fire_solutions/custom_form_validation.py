@@ -132,3 +132,17 @@ def no_spaces_or_tabs_validator(value):
         raise ValidationError("Cannot consist of only spaces and/or tabs.")
 
 
+
+def validate_name(value):
+         # Check if the name is a whole number
+         if value.isdigit():
+             raise serializers.ValidationError("Name cannot be a number.")
+
+         # Check if the name consists of only spaces and/or tabs
+         if value.strip() == "":
+             raise serializers.ValidationError("Name cannot consist of only spaces and/or tabs.")
+
+         # Check if the name consists of only special characters
+         if re.match(r'^[!@#$%^&*()_+\-=\[\]{};:\'",.<>/?]*$', value):
+             raise serializers.ValidationError("Name cannot consist of only special characters.")
+         return value

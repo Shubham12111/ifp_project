@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     'ckeditor',
     'customer_management',
     'requirement_management',
-    'stock_management'
+    'stock_management',
+    'purchase_order_management'
     
 ]
 
@@ -84,6 +85,7 @@ TEMPLATES = [
             ],
             'libraries':  {
                 'custom_tags': 'authentication.templatetags.custom_tags',
+                'inventory_tags': 'stock_management.templatetags.inventory_tags'
             }
         },
         

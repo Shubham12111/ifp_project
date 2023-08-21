@@ -68,7 +68,6 @@ class InventoryView(CustomAuthenticationMixin, generics.CreateAPIView):
         # Call the handle_unauthenticated method to handle unauthenticated access.
         item_instance = self.get_queryset()
         data = request.POST.copy()  # Create a copy of the QueryDict
-        csrf_token = data.pop('csrfmiddlewaretoken', None)  # Remove csrfmiddlewaretoken
         
         for key, value in data.items():
             if key.startswith('total_inventory_'):

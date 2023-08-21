@@ -29,7 +29,7 @@
           </div>
           <div class="card-body">
             <h4>{{ todo_data.title}}</h4>
-            <p class="mb-4">
+            <p class="mb-4 text-sm">
                 {{ todo_data.description|safe}}
             </p>
             
@@ -43,7 +43,7 @@
                         <img alt="Image placeholder" class="avatar rounded-circle" src="{% static 'assets/img/demo.png' %}">
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <h6 class="h5 mt-0">{{ comment_data.user_id.first_name|title }} {{ comment_data.user_id.last_name|title }} <span class="text-sm text-muted">{{ comment_data.created_at|timesince }} ago</span></h6>
+                        <h6 class="h5 mt-0 text-sm">{{ comment_data.user_id.first_name|title }} {{ comment_data.user_id.last_name|title }} <span class="text-sm text-muted">{{ comment_data.created_at|timesince }} ago</span></h6>
                        {{ comment_data.comment|safe }}
                         <div class="d-flex">
                           {% if request.user == comment_data.user_id and todo_data.status != 'completed'  %}

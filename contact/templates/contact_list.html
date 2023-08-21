@@ -4,39 +4,9 @@
 {% block title %} Contacts {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
-
-<style>
-   /* Style for the table header text */
-   table.table.table-flush thead {
-    color: #000; /* Light text color for header */
-  }
-
-  /* Style for the table body text */
-  table.table.table-flush tbody {
-    color: #000; /* Light text color for body */
-  }
-  /* Style for the table body text */
-  .dataTable-table th a {
-    color: #000; /* Light text color for body */
-  }
-</style>
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
   <div class="row">
-    <div class="row mt-4">
-      <div class="col-lg-8 col-8 mb-3">
-          <!-- Add your content here -->
-      </div>
-      <div class="col-lg-4 col-4 mb-3 text-right">
-
-        {% if request.user|has_add_permission:"contact" %}
-          <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
-          <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Contact</a>
-        {% else %}
-          <!-- The user doesn't have the permission, so don't show the "Add" button -->
-        {% endif %}
-         
-      </div>
     <div class="col-12">
       <div class="card">
         <!-- Card header -->
@@ -45,24 +15,35 @@
             <div>
               <h4 class="mb-0">Contacts</h4>
             </div>
-              <div class="dropdown d-inline">
-                <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle " data-bs-toggle="dropdown" id="navbarDropdownMenuLink2">
-                   {% if contact_type_filter %} {{contact_type_filter}} {% else %}Contact Type {% endif %}
-                </a>
-                <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="navbarDropdownMenuLink2" data-popper-placement="bottom-end">
-      
-                 {% for contact_type in contact_types %}
-                  <li>
-                    <a class="dropdown-item border-radius-md" href="?contact_type={{ contact_type.name }}">{{ contact_type.name }}</a>
-                  </li>
-              {% endfor %}
-              <li><hr class="horizontal dark my-2"></li>
-              <li><a class="dropdown-item border-radius-md text-danger" onclick="removeContactTypeFilter()">Remove Filter</a></li>
-          
-                </ul>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              <div class="ms-auto my-auto">
+               
+                {% if request.user|has_add_permission:"contact" %}
+                <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
+                <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Contact</a>
+              {% else %}
+                <!-- The user doesn't have the permission, so don't show the "Add" button -->
+              {% endif %}
               </div>
             </div>
           </div>
+          <div class="filters  mt-4">
+            <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle " data-bs-toggle="dropdown" id="navbarDropdownMenuLink2">
+               {% if contact_type_filter %} {{contact_type_filter}} {% else %}Contact Type {% endif %}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="navbarDropdownMenuLink2" data-popper-placement="bottom-end">
+  
+             {% for contact_type in contact_types %}
+              <li>
+                <a class="dropdown-item border-radius-md" href="?contact_type={{ contact_type.name }}">{{ contact_type.name }}</a>
+              </li>
+              {% endfor %}
+              <li><hr class="horizontal dark my-2"></li>
+              <li><a class="dropdown-item border-radius-md text-danger" onclick="removeContactTypeFilter()">Remove Filter</a></li>
+      
+            </ul>
+          </div>
+        </div>
         <div class="card-body px-0 pb-0">
          <div class="table-responsive">
             <table class="table table-flush text-dark" id="contact-list">
@@ -79,37 +60,52 @@
               <tbody class="ml-4"> 
                 {% for contact in contacts %}
                 <tr>
-                  <td >{{contact.first_name|default:''|truncatechars:20}}</td>
-                  <td >{{contact.last_name|default:''|truncatechars:20}}</td>
-                  <td >{{contact.email}}</td>
-                  <td >{{contact.phone_number}}</td>
-                  <td >{{contact.contact_type}}</td>
+                  <td  class="text-sm">{{contact.first_name|default:''|truncatechars:20|title}}</td>
+                  <td  class="text-sm">{{contact.last_name|default:''|truncatechars:20|title}}</td>
+                  <td  class="text-sm">{{contact.email}}</td>
+                  <td  class="text-sm">{{contact.phone_number}}</td>
+                  <td  class="text-sm">{{contact.contact_type|title}}</td>
                   <td>
-                    {% if request.user|has_update_permission:"contact" %}
-                    <a href="{% url 'contact_edit' contact.pk %}" data-bs-toggle="tooltip" data-bs-original-title="Edit Contact">
-                      <i class="fas fa-user-edit text-secondary"></i>
-                    </a>
-                    {% endif %}
+                    <div class="dropstart ms-auto pe-0">
+                      <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
+                      </a>
+                      <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">
+                        {% if request.user|has_update_permission:"contact" %}
+                        <li>
+                          <a href="{% url 'contact_edit' contact.pk %}" class="dropdown-item border-radius-md">
+                            Edit
+                          </a>
+                          
+                        {% endif %}
+                        {% if request.user|has_delete_permission:"contact" %}
+                        <li>
+                          <a href="#" type="button" class="dropdown-item border-radius-md" 
+                          onclick="CustomconfirmDelete({{contact.id}}, 'Are you sure you want to delete this contact?','The contact has been deleted successfully.','{% url 'delete_contact' contact.id %}')">
+                          Delete
+                          </a>
+                        </li>
+                      
+                        {% endif %}
+                        {% if request.user|has_view_permission:"contact" %}
+                        <li>
+                          <a href="{% url 'contact_conversation' contact.pk %}" class="dropdown-item border-radius-md" >Conversion</a>
+                        </li>
+                        {% endif %}
+                        <li>
+                          {% if request.user|has_update_permission:"contact" %}
+                          <a href="#" data-bs-toggle="tooltip" class="dropdown-item border-radius-md"   onclick="showPopupAndRedirect('{% url 'convert_to_custmoer' contact.pk %}')">
+                            Convert TO Customer
+                          
+                          </a>
+                        {% endif %}
+                      
+                      
+                        </ul>
+                      </div>
 
-                    {% if request.user|has_delete_permission:"contact" %}
-                    <a href="#" type="button" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Delete Contact" 
 
-                      onclick="CustomconfirmDelete({{contact.id}}, 'Are you sure you want to delete this contact?','The contact has been deleted successfully.','{% url 'delete_contact' contact.id %}')">
-                      <i class="fas fa-trash text-secondary"></i>
-
-                    </a>
-                    {% endif %}
-
-                    {% if request.user|has_view_permission:"contact" %}
-                    <a href="{% url 'contact_conversation' contact.pk %}" class="mx-3" data-bs-toggle="tooltip" data-bs-original-title="Conversion">
-                      <i class="fas fa-comment text-secondary"></i>
-                    </a>
-                    {% endif %}
-                    
-                    <a href="#" data-bs-toggle="tooltip"  data-bs-original-title="Convert TO Customer" class="mx-2">
-                      <i class="fas fa-exchange-alt text-secondary" onclick="showPopupAndRedirect('{% url 'convert_to_custmoer' contact.pk %}')"></i>
-                    </a>
-
+                   
                   </td>
                 </tr>
                 {% endfor %}

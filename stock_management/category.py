@@ -347,3 +347,30 @@ class CategoryDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
                                         message="Category not found", )
 
+class CategoryDeleteRemoveImageView(generics.DestroyAPIView):
+    """
+    View to remove a document associated with item.
+    """
+    swagger_schema = None
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to remove the document associated with a item.
+        """
+        category_id = kwargs.get('category_id')
+        if category_id:
+            image_instance = Category.objects.filter(pk=category_id).get()
+            if image_instance and image_instance.image_path: 
+                
+                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = image_instance.image_path)
+                image_instance.image_path =''
+                image_instance.save()
+            return Response(
+                {"message": "Your item image has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "Requirement Defect not found or you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )
