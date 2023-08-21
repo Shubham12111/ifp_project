@@ -501,7 +501,7 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
                 # Generate a unique filename for each file
                 unique_filename = f"{str(uuid.uuid4())}_{file.name}"
                 upload_file_to_s3(unique_filename, file, f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses')
-                file_path = f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses'
+                file_path = f'requirement/{instance.defect_id.requirement_id.id}/defects/{instance.defect_id.id}/responses/{unique_filename}'
                 
                 RequirementDefectResponseImage.objects.create(
                 defect_response = instance,
