@@ -187,7 +187,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = filter_requirements(data_access_value, self.request.user)
-        queryset =  queryset.first()
+        queryset =  queryset.filter(pk=self.kwargs.get('pk')).first()
         
 
         return queryset
@@ -198,12 +198,11 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         if request.accepted_renderer.format == 'html':
             instance = self.get_queryset()
             if instance:
-
                 document_paths = []
-
                 requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
-            
                 serializer = self.serializer_class(instance=instance, context={'request': request})
+                
+                
                 for document in RequirementAsset.objects.filter(requirement_id=instance):
                     extension = document.document_path.split('.')[-1].lower()
 
@@ -592,18 +591,8 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         Get the filtered queryset for requirements based on the authenticated user.
         """
         defect_instance = self.get_queryset().first()
-        queryset =  RequirementDefectResponse.objects.filter(pk= self.kwargs.get('pk'),
-                                                             status="draft").first()
+        queryset =  RequirementDefectResponse.objects.filter(defect_id = defect_instance).first()
         return queryset
-
-    def get_responses(self):
-        """
-        Get the filtered queryset for requirements based on the authenticated user.
-        """
-        defect_instance = self.get_queryset().first()
-        defect_responses = RequirementDefectResponse.objects.filter(defect_id=defect_instance)
-           
-        return defect_responses
 
     def get_documents(self):
         """
@@ -626,24 +615,47 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
                     'is_image': is_image
                 })
         return document_paths
+    
+    def get_response_documents(self):
+        """
+        Get the filtered document_paths.
+        """
+        response_document_paths = []
+        
+        defect_instance = self.get_queryset().first()
+        defect_response_instance = self.get_queryset_response()
+        for document in RequirementDefectResponseImage.objects.filter(defect_response__defect_id=defect_instance,
+                                                                      defect_response = defect_response_instance):
+                extension = document.document_path.split('.')[-1].lower()
+
+                is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+                is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
+                
+                response_document_paths.append({
+                    'presigned_url': generate_presigned_url(document.document_path),
+                    'filename': document.document_path,
+                    'id': document.id,
+                    'is_video': is_video,
+                    'is_image': is_image
+                })
+        return response_document_paths
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         defect_instance = self.get_queryset().first()
         
         defect_response_instance = {}
-        
+        response_document_paths= []
         
         if defect_instance:
-            if kwargs.get('pk'):
-                defect_response_instance = self.get_queryset_response()
+            defect_response_instance = self.get_queryset_response()
+            if defect_response_instance:
                 defect_response_serializer =  self.serializer_class(instance=defect_response_instance)
+                response_document_paths =  self.get_response_documents()
                 
             else:
                 defect_response_serializer =  self.serializer_class()
                 
-            
-            defect_documents = self.get_responses()
         else:
             messages.warning(request, "You are not authorized to perform this action")
             return redirect(reverse('requirement_list'))
@@ -653,9 +665,9 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         context = {
             'defect_instance': defect_instance,
             'defect_response_serializer': defect_response_serializer,
-            'defect_responses': defect_documents,
             'document_paths':self.get_documents(),
-            'defect_response_instance':defect_response_instance
+            'defect_response_instance':defect_response_instance,
+            'response_document_paths':response_document_paths
         }
 
         return render_html_response(context, self.template_name)
@@ -706,7 +718,6 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
                 context = {
                     'defect_instance': defect_instance,
                     'defect_response_serializer': serializer,
-                    'defect_responses': self.get_responses(),
                     'document_paths':self.get_documents(),
                    
                 }

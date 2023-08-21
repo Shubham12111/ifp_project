@@ -307,7 +307,7 @@
 .ecomm-prod-slider .carousel-inner img,
 .ecomm-prod-slider .carousel-inner video,
 .ecomm-prod-slider .product-carousel-indicators {
-  height: 350px;
+  height: 100% !important;
 }
 @media (max-width: 575.98px) {
   .ecomm-prod-slider .carousel-inner,
@@ -318,7 +318,8 @@
   }
 }
 .ecomm-prod-slider .carousel-inner img {
-  width: auto;
+  width: -webkit-fill-available;
+  width: -moz-available;
   margin: 0 auto;
 }
 .ecomm-prod-slider .product-carousel-indicators {

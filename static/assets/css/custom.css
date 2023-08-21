@@ -141,6 +141,11 @@ color: #344767;
 
 /* theme  */
 
+@media (min-width: 992px) {
+    .timeline-one-side .timeline-content {
+      max-width: none !important;
+    }
+  }
 .navbar-vertical .navbar-nav>.nav-item .nav-link.active .icon
 {
     background-color: #d73632 !important;
@@ -157,4 +162,13 @@ color: #344767;
     background-color: #d73632 !important;
     background-image: none !important;  
 }
+.text-gradient.text-primary{
+    background-color: #d73632 !important;
+    background-image: none !important;  
+}
+
+.carousel-inner  {
+    margin-right: 20px !important;  
+}
+
 
