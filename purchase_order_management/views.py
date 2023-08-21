@@ -21,6 +21,7 @@ from django.db.models import Sum
 from django.db.models import F
 from stock_management.models import Inventory
 import json
+from rest_framework.response import Response
 
 def update_or_create_inventory(purchase_order, item, quantity):
     # Try to retrieve the existing inventory entry or create a new one
@@ -312,16 +313,13 @@ class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         # Get the filtered queryset using get_queryset method
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "purchase_order", HasListDataPermission, 'list'
+            self, "purchase_order", HasViewDataPermission, 'view'
         )
         # Check if authenticated_user is a redirect response
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-          # Check if authenticated_user is a redirect response
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
+        
         
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
@@ -367,7 +365,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"purchase_order", HasCreateDataPermission, 'add'
+           self,"purchase_order", HasUpdateDataPermission, 'change'
         )
         
         if isinstance(authenticated_user, HttpResponseRedirect):
@@ -649,7 +647,7 @@ class PurchaseOrderInvoiceView(CustomAuthenticationMixin,generics.RetrieveAPIVie
     def get(self, request, *args, **kwargs):
         # Get the filtered queryset using get_queryset method
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "purchase_order", HasListDataPermission, 'list'
+            self, "purchase_order", HasViewDataPermission, 'view'
         )
         # Check if authenticated_user is a redirect response
         if isinstance(authenticated_user, HttpResponseRedirect):
@@ -682,3 +680,36 @@ class PurchaseOrderInvoiceView(CustomAuthenticationMixin,generics.RetrieveAPIVie
                         'file_name':file_name}
             return render_html_response(context, self.template_name)
         
+        
+
+class PurchaseDeleteView(CustomAuthenticationMixin,generics.DestroyAPIView):
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    template_name = 'purchase_order_view.html'
+    
+    def delete(self, request, *args, **kwargs):
+        # Get the filtered queryset using get_queryset method
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "purchase_order", HasDeleteDataPermission, 'delete'
+        )
+        # Check if authenticated_user is a redirect response
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(created_by=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+       
+        base_queryset = PurchaseOrder.objects.filter(pk=kwargs.get('purchase_order_id')).first()
+
+        if base_queryset:
+            base_queryset.delete()
+            return Response(
+                    {"message": "Your Purchase Order has been deleted successfully."},
+                    status=status.HTTP_204_NO_CONTENT
+                )
+        else:
+            return Response(
+                {"message": "Purchase Order not found or you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )
