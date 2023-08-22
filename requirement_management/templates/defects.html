@@ -58,7 +58,7 @@
                         <tbody class="ml-4">
                             {% for defect in defects_list %}
                             <tr>
-                                <td>{{ defect.action|truncatechars:10 }}</td>
+                                <td>{{ defect.action|truncatechars:20}}</td>
                                 <td class="text-truncate" style="max-width: 150px;">{{ defect.description|safe|truncatechars:50 }}</td>
                                 <td>{{ defect.defect_period }}</td>
                                 <td>{{ defect.due_date }}</td>
