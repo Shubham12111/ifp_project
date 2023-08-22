@@ -68,18 +68,11 @@ def validate_description(value):
 
 # validate the remarks field in stock/ vendor
 def validate_remarks(value):
-    # Custom validation for the message field to treat <p><br></p> as blank
-    soup = BeautifulSoup(value, 'html.parser')
-    cleaned_comment = soup.get_text().strip()
-
-    # Check if the cleaned comment consists only of whitespace characters
-    if not cleaned_comment:
-        raise serializers.ValidationError("Remarks is required.")
-
-    if all(char.isspace() for char in cleaned_comment):
+   soup = BeautifulSoup(value, 'html.parser')
+   cleaned_comment = soup.get_text().strip()
+   if all(char.isspace() for char in cleaned_comment):
         raise serializers.ValidationError("Remarks cannot consist of only spaces and tabs.")
 
-    return value
 
 # Custom validation function for validating file size
 def validate_file_size(value):
