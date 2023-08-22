@@ -69,11 +69,11 @@
                     <div class="row text-sm">
                       <div class="row mb-2">
                           <div class="col-3"><strong class="text-dark">Defect Period Date:</strong></div>
-                          <div class="col-9">{{ defect_instance.defect_period }}</div>
+                          <div class="col-9">{{ defect_instance.defect_period|date:"M d, Y  H:i" }}</div>
                       </div>
                       <div class="row mb-2">
                           <div class="col-3"><strong class="text-dark">Due Date:</strong></div>
-                          <div class="col-9">{{ defect_instance.due_date }}</div>
+                          <div class="col-9">{{ defect_instance.due_date|date:"M d, Y  H:i" }}</div>
                       </div>
                       <div class="row mb-2">
                           <div class="col-3"><strong class="text-dark">UPRN:</strong></div>
@@ -102,7 +102,7 @@
                     <h5> Surveyor Response</h5>
                   </div>
                   <div class="card-body">
-                    <form role="form" method="POST" autocomplete="off" enctype="multipart/form-data">
+                   <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()">
                         <div class='row'>
                             <input type="hidden" name="defect_id" value="{{ defect_instance.id }}">
                             {% csrf_token %}
@@ -125,7 +125,8 @@
 
                         <button type="submit" name="submit_type" value="draft" class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0">Save As Draft</button>
                         
-                    </form>
+                      </form>
+ {% include 'components/loader.html' %}
                     
                   </div>
                 </div>

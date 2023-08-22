@@ -22,6 +22,7 @@
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-lg-12 col-12 mt-3">
+            
             {% if purchase_order %}
                 <div id="existingPurchaseOrderData" style="display: none;">
                     {{ existingPurchaseOrderData|json_script }}
@@ -145,8 +146,8 @@
                                 <p class="discount-label">Discount:</p>
                             </div>
                             <div class="col-2 text-end mb-2"></div>
-                            <div class="col-2 text-end mb-2"></div>
-                            <div class="col-2 text-end mb-2">
+                            <div class="col-1 text-end mb-2"></div>
+                            <div class="col-3 text-end mb-2">
                                 <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()">
                             </div>
                             <div class="error-message text-danger text-sm text-end mb-2" id="discountError"></div>
@@ -156,8 +157,8 @@
                                 <p class="tax-label">Tax:</p>
                             </div>
                             <div class="col-2 text-end mb-2"></div>
-                            <div class="col-2 text-end mb-2"></div>
-                            <div class="col-2 mb-1 ">
+                            <div class="col-1 text-end mb-2"></div>
+                            <div class="col-3 mb-1 ">
                                 <input type="number" class="form-control tax-input" id="tax" name="tax" min="0" placeholder="00.00" onchange="calculateTotal()">
                             </div>
                             <div class="col-6 mb-1 text-end">
@@ -176,7 +177,7 @@
                 <div class="col-md-6 m-auto text-center text-md-end">
                     <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-0" href="{% url 'purchase_order_list' %}">Cancel</a>
                     {% if purchase_order.status == "pending" or not purchase_order   %}
-                    <button class="btn bg-gradient-info mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Drfat</button>
+                    <button class="btn bg-gradient-primary mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Draft</button>
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
                     {% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "projects_admin_(IT)"  %}
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproved" title="Submit">Approved</button>
@@ -188,7 +189,26 @@
             </div>
         </div>
       
-    </form>
+      </form>
+ 
+</div>
+<!-- Bootstrap Modal for Negative Value Error -->
+<div class="modal fade" id="negativeValueModal" tabindex="-1" role="dialog" aria-labelledby="negativeValueModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="negativeValueModalLabel">Invalid Input</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Negative values are not allowed. Please enter a valid positive value.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 <div class="modal" id="noItemsModal" tabindex="-1" aria-labelledby="noItemsModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -206,23 +226,7 @@
         </div>
     </div>
 </div>
-<!-- Bootstrap Modal for Negative Value Error -->
-<div class="modal" id="negativeValueModal" tabindex="-1" aria-labelledby="negativeValueModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="negativeValueModalLabel">Invalid Input</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Negative values are not allowed. Please enter a valid positive value.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 
 <div class="modal" id="emptyRowModal" tabindex="-1" aria-labelledby="emptyRowModalLabel" aria-hidden="true">
@@ -238,6 +242,10 @@
         </div>
     </div>
 </div>
+
+</div>
+</div>
+
 
 {% endblock %}
 {% block extra_js %}
@@ -592,11 +600,7 @@ if (document.getElementById('vendor-choices')) {
       minMatchCharLength: 1
     }
   });
-  
-
-  
  }
- 
 
 // Function to populate vendor data in the card
 async function populateVendorData(selectedVendorId) {
@@ -621,9 +625,6 @@ element.addEventListener('change', async function(event) {
     const selectedVendorId = event.detail.value;
     populateVendorData(selectedVendorId);
 });
-
-
-
 
 if (document.getElementById('inventory_location-choices')) {
   var element = document.getElementById('inventory_location-choices');

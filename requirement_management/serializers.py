@@ -130,7 +130,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         required=True,
         queryset=User.objects.filter(roles__name = "quantity_surveyor"),
         style={
-            'base_template': 'custom_select.html',
+            'base_template': 'custom_quantity_surveyor_select.html',
             'custom_class':'col-6'
         },
         error_messages={

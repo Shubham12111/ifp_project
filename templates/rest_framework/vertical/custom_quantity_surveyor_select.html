@@ -1,0 +1,71 @@
+{% load rest_framework %}
+{% load static %}
+<div class="form-group {% if style.custom_class %} {{style.custom_class}} {% else %}col-6  {% endif %}">
+  {% if field.label %}
+    <label {% if style.hide_label %}class="sr-only"{% endif %}>
+      {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
+    </label>
+  {% endif %}
+
+
+<select class="form-control" name="{{ field.name }}" id="choices-{{ field.name }}">
+    <option disabled selected value>Select Quantity Surveyor</option>
+    {% if field.allow_null or field.allow_blank %}
+    <option value="" {% if not field.value %}selected{% endif %}>--------</option>
+    {% endif %}
+    {% for select in field.iter_options %}
+        {% if select.start_option_group %}
+        <optgroup label="{{ select.label }}">
+        {% elif select.end_option_group %}
+        </optgroup>
+        {% else %}
+        <option value="{{ select.value }}" {% if select.value|as_string == field.value|as_string %}selected{% endif %} {% if select.disabled %}disabled{% endif %}>{{ select.display_text }}</option>
+        {% endif %}
+    {% endfor %}
+</select>
+      
+  {% if field.errors %}
+    {% for error in field.errors %}
+      <span class="help-block">{{ error }}</span>
+    {% endfor %}
+  {% endif %}
+
+  {% if field.help_text %}
+    <span class="help-block">{{ field.help_text|safe }}</span>
+  {% endif %}
+</div>
+
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+
+<script>
+
+// Initialize Choices.js
+if (document.getElementById('choices-{{ field.name }}')) {
+  var element = document.getElementById('choices-{{ field.name }}');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search ....", 
+    fuseOptions: {
+      includeScore: true,
+      includeMatches: true,
+      threshold: 0, // Set to 0 for exact match
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 1
+    }
+  });
+
+  
+ }
+</script>
