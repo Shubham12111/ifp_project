@@ -15,7 +15,7 @@
                     <h5>Add Defects</h5>
                 </div>
                 <div class="card-body pt-0">
-                    <form role="form" method="POST" enctype="multipart/form-data">
+                   <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()" >
                         <div class='row'>
                             {% csrf_token %}
                             {% render_form serializer %}
@@ -39,7 +39,8 @@
                         <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
                         <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'requirement_edit' requirement_instance.id %}">Back</a>
             
-                    </form>
+                      </form>
+                        {% include 'components/loader.html' %}
                 </div>
             </div>
             <div class="card mt-4" id="basic-info">

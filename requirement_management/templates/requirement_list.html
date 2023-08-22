@@ -47,7 +47,7 @@
                         </td>
                         <td class="text-sm">{{requirement.quantity_surveyor.first_name|default:''|truncatechars:20|title}} {{requirement.quantity_surveyor.last_name|default:''|truncatechars:20|title}}<br>
                         </td>
-                        <td class="text-sm">{{requirement.requirement_date_time}}</td>
+                        <td class="text-sm">{{requirement.requirement_date_time|date:"M d, Y  H:i"}}</td>
                       
                         <td class="text-sm">{{requirement.status|title}}</td>
                         <td class="text-sm">

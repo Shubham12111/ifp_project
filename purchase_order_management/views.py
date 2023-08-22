@@ -487,6 +487,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
             messages.success(request, message)
             return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
         else:
+            print(serializer.errors)
             return JsonResponse({'success': False, 'errors': serializer.errors,  
             'status':status.HTTP_400_BAD_REQUEST}) 
 

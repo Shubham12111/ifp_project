@@ -309,10 +309,10 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         instance = self.get_queryset()
         if instance:
             # If the customer instance exists, initialize the serializer with instance and provided data.
-            serializer = self.serializer_class(instance = instance, data = data, context = {'request': request} )
+            data_dict = request.data.dict()
+            data_dict['email'] = instance.email if instance else None
+            serializer = self.serializer_class(instance = instance, data = data_dict, context = {'request': request} )
             if serializer.is_valid():
-                email = serializer.validated_data.pop('email', None)
-    
                 # If the serializer data is valid, save the updated customer instance.
                 serializer.save()
                 message = "Your Customer has been updated successfully!"
@@ -328,7 +328,7 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             else:
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'instance': instance}
+                    context = {'serializer': serializer, 'customer_instance': instance}
                     return render(request, self.template_name, context)
                 else:
                     # For API requests with invalid data, return an error response with serializer errors.

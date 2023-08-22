@@ -86,35 +86,7 @@ border-left-width: 1px;
 border: 1px solid color(srgb 0 0 0) !important;
 } */
 
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 999;
-    overflow: auto;
-}
 
-.modal-content {
-    margin: auto;
-    background-color: white;
-    padding: 20px;
-    max-width: 90%;
-    max-height: 90%;
-    text-align: center;
-}
-
-/* CSS for media inside the modal */
-.modal-content img,
-.modal-content video {
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
-    margin: 0 auto;
-}
 
 #fra-image-view-modal > [for="image-for-fra-image-view-modal"],
 #fra-image-view-modal > [for="video-for-fra-video-view-modal"] {
@@ -221,7 +193,25 @@ color: #344767;
     --bs-btn-border-color: #b3bac5 !important;
     --bs-btn-color: #b3bac5 !important;
 } */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  .text-primary
+  {
+    color: #d73632 !important ;
+  }
 
+
+  
 
 .custom-dropdown-toggle::after {
     content: '\f138'; /* Replace with your desired icon code or URL */

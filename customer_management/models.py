@@ -13,7 +13,7 @@ class BillingAddress(models.Model):
 
     user_id = models.ForeignKey("authentication.User", on_delete=models.CASCADE)
     vat_number= models.CharField(max_length=200, null=True, blank=True)
-    pan_number = models.CharField(max_length=200, null=True, blank=True)
+    #pan_number = models.CharField(max_length=200, null=True, blank=True)
     place_to_supply = models.CharField(max_length=200, null=True, blank=True)
     tax_preference = models.CharField(max_length=20, choices=TAX_PREFERENCE_CHOICES, null=True, blank=True)
     address = models.CharField(max_length=255 , null=True, blank=True)
