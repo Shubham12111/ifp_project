@@ -4,14 +4,34 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
 from rest_framework import generics, status
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
-from .serializers import RequirementSerializer, RequirementAddSerializer, RequirementDefectAddSerializer, RequirementDetailSerializer, RequirementDefectSerializer
-from .models import Requirement, RequirementDefect,RequirementDocument
+from .serializers import *
+from .models import Requirement, RequirementDefect,RequirementDocument, RequirementAsset
 from django.contrib import messages
 from rest_framework.response import Response
 from rest_framework import filters
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
+
+def filter_requirements(data_access_value, user):
+    # Define a mapping of data access values to corresponding filters.
+    filter_mapping = {
+        "self": Q(user_id=user),
+        "all": Q(),  # An empty Q() object returns all data.
+    }
+    queryset = Requirement.objects.all()
+    
+    if user.roles.name == "quantity_surveyor":
+        queryset =  queryset.filter(
+            Q(quantity_surveyor=user) | filter_mapping.get(data_access_value, Q())
+        )
+    elif user.roles.name == "surveyor":
+        queryset = queryset.filter(
+            Q(surveyor=user) | filter_mapping.get(data_access_value, Q())
+        )
+    else:
+        queryset = queryset.filter(filter_mapping.get(data_access_value, Q()))
+    return queryset 
 
 class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -46,15 +66,8 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        # Define a mapping of data access values to corresponding filters.
-        filter_mapping = {
-            "self": Q(user_id=request.user),
-            "all": Q(),  # An empty Q() object returns all data.
-        }
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping.
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-       
+        queryset = filter_requirements(data_access_value, self.request.user)
+
         if request.accepted_renderer.format == 'html':
             context = {'requirements':queryset}
             return render_html_response(context,self.template_name)
@@ -116,13 +129,17 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a requirement.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'add'
-        )
+        data = request.data.copy()
+        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+        file_list = data.get('file_list', None)
+
+        if file_list is not None and not any(file_list):
+            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+            serializer = self.serializer_class(data = data)
+        else:
+            serializer = self.serializer_class(data = request.data)
         
         message = "Congratulations! your requirement has been added successfully."
-        serializer = self.serializer_class(data=request.data)
-        
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
             serializer.save()
@@ -148,7 +165,103 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
+
+
+class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'requirement_detail.html'
+    serializer_class = RequirementAddSerializer
+    
+    def get_queryset(self):
+        """
+        Get the queryset for listing Requirement items.
+
+        Returns:
+            QuerySet: A queryset of Requirements items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        queryset = filter_requirements(data_access_value, self.request.user)
+        queryset =  queryset.filter(pk=self.kwargs.get('pk')).first()
+        
+
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        # This method handles GET requests for updating an existing Requirement object.
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            if instance:
+                document_paths = []
+                requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                
+                
+                for document in RequirementAsset.objects.filter(requirement_id=instance):
+                    extension = document.document_path.split('.')[-1].lower()
+
+                    is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+                    is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
+                    document_paths.append({
+                        'presigned_url': generate_presigned_url(document.document_path),
+                        'filename': document.document_path,
+                        'id': document.id,
+                        'is_video': is_video,
+                        'is_image': is_image
+                    })
+                
+                        
+                # Retrieve users associated with these roles
+                users_with_survey_permission = User.objects.filter(roles__name= "surveyor")
+                
+                context = {
+                    'serializer': serializer, 
+                    'requirement_instance': instance, 
+                    'requirement_defect': requirement_defect, 
+                    'document_paths': document_paths,
+                    'surveyers': users_with_survey_permission,
+                    }
+               
+
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('requirement_list'))
             
+    def post(self, request, *args, **kwargs):
+        surveyer_selected = request.POST.get('surveyer')
+        instance = self.get_queryset()
+        try:
+            instance.surveyor = User.objects.filter(pk=surveyer_selected).first()
+            instance.save()
+            
+            message = "Surveyor is assigned successfully."
+            
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('requirement_view', args=[instance.id]))
+            else:
+                return create_api_response(
+                        status_code=status.HTTP_200_OK,
+                        message=message
+                    )
+        except Exception as e:
+            message = "Something went wrong"
+            if request.accepted_renderer.format == 'html':
+                messages.warning(request, message)
+                return redirect(reverse('requirement_view'))
+            else:
+                return create_api_response(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        message=message
+                    )
+
 class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
     API view for updating a requirement.
@@ -186,12 +299,10 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             "all": Q(),  # An empty Q() object returns all data
         }
 
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        queryset = filter_requirements(data_access_value, self.request.user)
         queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
-        
         return queryset
+
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing Requirement object.
@@ -244,21 +355,27 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If successful, the requirement is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
-        data = request.data
         instance = self.get_queryset()
         if instance:
-            # If the requirement instance exists, initialize the serializer with instance and provided data.
-            serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
+            data = request.data.copy()
+            # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+            file_list = data.get('file_list', None)
+
+            if file_list is not None and not any(file_list):
+                del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+                serializer = self.serializer_class(data = data)
+            else:
+                serializer = self.serializer_class(instance=instance, data=request.data, context={'request': request})
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated requirement instance.
-                serializer.save()
+                serializer.update(instance, validated_data=serializer.validated_data)
                 message = "Your requirement has been updated successfully!"
 
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests, display a success message and redirect to requirement_list.
                     messages.success(request, message)
-                    return redirect('requirement_list')
+                    return redirect(reverse('requirement_edit', kwargs={'pk': instance.id}))
                 else:
                     # For API requests, return a success response with serialized data.
                     return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
@@ -309,11 +426,11 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         """
         Handle DELETE request to delete a requirement.
         """
-        # Get the requirement instance from the database.
-         # Call the handle_unauthenticated method to handle unauthenticated access.
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"fire_risk_assessment", HasDeleteDataPermission, 'delete'
+            self, "fire_risk_assessment", HasUpdateDataPermission, 'delete'
         )
+
+        # Get the requirement instance from the database.
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(user_id=request.user ),
@@ -322,12 +439,12 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = filter_requirements(data_access_value, self.request.user)
         instance = queryset.filter(pk=self.kwargs.get('pk')).first()
-        requirement = Requirement.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).first()
-        if requirement:
+
+        if instance:
             # Proceed with the deletion
-            requirement.delete()
+            instance.delete()
             messages.success(request, "Your requirement has been deleted successfully!")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your requirement has been deleted successfully!", )
@@ -355,13 +472,9 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
            self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
         )
         
-        # Define a mapping of data access values to corresponding filters.
-        filter_mapping = {
-            "self": Q(user_id=self.request.user ),
-            "all": Q(),  # An empty Q() object returns all data.
-        }
+        queryset = filter_requirements(data_access_value, self.request.user)
+        queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
         
-        queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('requirement_id')).first()
         return queryset
     
     def get_queryset_defect(self):
@@ -404,23 +517,27 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         # Call the handle_unauthenticated method to handle unauthenticated access.
         
         data = request.data.copy()
-        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
-        file_list = data.get('file_list', None)
-
-        if file_list is not None and not any(file_list):
-            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-
-        message = "Congratulations! your requirement defect has been added successfully."
+        
+        file_list = data.get('file_list', [])
+        
         requirement_instance = self.get_queryset()
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
+        
+        if not any(file_list):
+            del data['file_list']
+        
+        serializer_data = request.data if any(file_list) else data
+        
+        message = "Congratulations! your requirement defect has been added successfully."
+        
         # Check if the site address instance exists for the customer
         if defect_instance:
             # If the site address instance exists, update it.
-            serializer = self.serializer_class(data=data, instance=defect_instance, context={'request': request})
+            serializer = self.serializer_class(data=serializer_data, instance=defect_instance, context={'request': request})
             message = "Your requirement defect has been updated successfully!"
         else: 
             # If the site address instance does not exist, create a new one.
-            serializer = self.serializer_class(data=data, context={'request': request})
+            serializer = self.serializer_class(data=serializer_data, context={'request': request})
             message = "Your requirement defect has been added successfully!"
         
         
@@ -439,6 +556,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     data=serializer.data
                                     )
         else:
+            print(serializer.errors)
             # Invalid serializer data.
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template with invalid serializer data.
@@ -454,6 +572,195 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
    
+class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
+    
+    serializer_class = RequirementDefectResponseAddSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'defect_detail.html'
+    swagger_schema = None
+    
+    def get_queryset(self):
+        """
+        Get the filtered queryset for requirements based on the authenticated user.
+        """
+        queryset = RequirementDefect.objects.filter(pk=self.kwargs.get('defect_id')).order_by('-created_at')
+        return queryset
+    
+    def get_queryset_response(self):
+        """
+        Get the filtered queryset for requirements based on the authenticated user.
+        """
+        defect_instance = self.get_queryset().first()
+        queryset =  RequirementDefectResponse.objects.filter(defect_id = defect_instance).first()
+        return queryset
+
+    def get_documents(self):
+        """
+        Get the filtered document_paths.
+        """
+        document_paths = []
+        
+        defect_instance = self.get_queryset().first()
+        for document in RequirementDocument.objects.filter(defect_id=defect_instance):
+                extension = document.document_path.split('.')[-1].lower()
+
+                is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+                is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
+                
+                document_paths.append({
+                    'presigned_url': generate_presigned_url(document.document_path),
+                    'filename': document.document_path,
+                    'id': document.id,
+                    'is_video': is_video,
+                    'is_image': is_image
+                })
+        return document_paths
+    
+    def get_response_documents(self):
+        """
+        Get the filtered document_paths.
+        """
+        response_document_paths = []
+        
+        defect_instance = self.get_queryset().first()
+        defect_response_instance = self.get_queryset_response()
+        for document in RequirementDefectResponseImage.objects.filter(defect_response__defect_id=defect_instance,
+                                                                      defect_response = defect_response_instance):
+                extension = document.document_path.split('.')[-1].lower()
+
+                is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+                is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
+                
+                response_document_paths.append({
+                    'presigned_url': generate_presigned_url(document.document_path),
+                    'filename': document.document_path,
+                    'id': document.id,
+                    'is_video': is_video,
+                    'is_image': is_image
+                })
+        return response_document_paths
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        defect_instance = self.get_queryset().first()
+        
+        defect_response_instance = {}
+        response_document_paths= []
+        
+        if defect_instance:
+            defect_response_instance = self.get_queryset_response()
+            if defect_response_instance:
+                defect_response_serializer =  self.serializer_class(instance=defect_response_instance)
+                response_document_paths =  self.get_response_documents()
+                
+            else:
+                defect_response_serializer =  self.serializer_class()
+                
+        else:
+            messages.warning(request, "You are not authorized to perform this action")
+            return redirect(reverse('requirement_list'))
+
+         
+        # Defect response doesn't exist, prepare context for displaying form
+        context = {
+            'defect_instance': defect_instance,
+            'defect_response_serializer': defect_response_serializer,
+            'document_paths':self.get_documents(),
+            'defect_response_instance':defect_response_instance,
+            'response_document_paths':response_document_paths
+        }
+
+        return render_html_response(context, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add a requirement.
+        """
+        data = request.data.copy()
+        
+        file_list = data.get('file_list', [])
+        
+        defect_instance = self.get_queryset().first()
+        
+        defect_response_instance = self.get_queryset_response()
+        
+        if not any(file_list):
+            del data['file_list']
+        
+        serializer_data = request.data if any(file_list) else data
+        
+        
+        if defect_response_instance:
+            serializer = self.serializer_class(data=serializer_data, instance=defect_response_instance)  
+            message = "Congratulations! Your response has been updated successfully."
+        else:
+            serializer = self.serializer_class(data= serializer_data)
+            message = "Congratulations! Your response has been added successfully."
+        
+        if serializer.is_valid():
+            if not defect_response_instance:
+                serializer.validated_data['defect_id'] = defect_instance
+                serializer.validated_data['surveyor'] = defect_instance.requirement_id.surveyor
+            
+            submit_type = request.POST.get('submit_type')
+            serializer.validated_data['status'] = submit_type
+            instance = serializer.save()
+            
+            
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                # Redirect after successful POST
+                return redirect(reverse('requirement_defect_detail', kwargs={'defect_id': request.data.get('defect_id')}))  
+        else:
+            # Invalid serializer data.
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data.
+                context = {
+                    'defect_instance': defect_instance,
+                    'defect_response_serializer': serializer,
+                    'document_paths':self.get_documents(),
+                   
+                }
+                return render_html_response(context, self.template_name)
+
+class RequirementDefectResponseDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+    """
+    View for deleting a requirement.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = RequirementDefectSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+    
+    def delete(self, request, *args, **kwargs):
+        """
+        Handle DELETE request to delete a customer.
+        """
+        # Get the customer instance from the database
+        # Call the handle_unauthenticated method to handle unauthenticated access
+
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"fire_risk_assessment", HasDeleteDataPermission, 'delete'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        queryset = RequirementDefectResponse.objects.filter(pk= self.kwargs.get('pk'),status="draft")
+        
+        requirement_defect_response = queryset.first()
+        
+        if requirement_defect_response:
+            # Proceed with the deletion
+            requirement_defect_response.delete()
+            messages.success(request, "Defect resposne has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Your requirement resposne has been deleted successfully!", )
+        else:
+            messages.error(request, "Resposne defect not found")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Resposne defect not found", )
+                  
+
 class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
     View for deleting a requirement.
@@ -514,13 +821,11 @@ class RequirementRemoveDocumentView(generics.DestroyAPIView):
         """
         requirement_id = kwargs.get('requirement_id')
         if requirement_id:
-            requirement_instance = Requirement.objects.filter(pk=requirement_id).get()
+            requirement_instance = RequirementAsset.objects.filter(requirement_id=requirement_id, pk=  kwargs.get('document_id')).get()
             if requirement_instance and requirement_instance.document_path: 
                 
                 s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = requirement_instance.document_path)
-                # Remove the document_path from the requirement instance and save
-                requirement_instance.document_path = ''
-                requirement_instance.save()
+                requirement_instance.delete()
             return Response(
                 {"message": "Your requirement has been deleted successfully."},
                 status=status.HTTP_204_NO_CONTENT

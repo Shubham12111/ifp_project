@@ -2,10 +2,10 @@
     .slide-down-alert {
       position: fixed;
       top: -50px; /* Start above the viewport */
-      left: 50%;
+      left: 55%;
       transform: translateX(-50%);
       max-width: 100%; /* Set the max-width to 100% to make it responsive within the column */
-      width: 500px; /* Set a fixed width for larger screens */
+      width:600px; /* Set a fixed width for larger screens */
       text-align: center;
       opacity: 0;
       transition: top 0.5s ease-in-out, opacity 0.5s ease-in-out;
@@ -19,7 +19,7 @@
     
     </style>
     <div class="row" id="alert-row">
-        <div class="col-md-6">
+        <div class="col-md-12">
             {% if messages %}
             {% for message in messages %}
             <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show text-white slide-down-alert col" role="alert">
@@ -45,6 +45,6 @@
         // Auto-close the alert after 3 seconds (3000 milliseconds)
         setTimeout(() => {
         alert.classList.remove('show'); // Remove the 'show' class to hide the alert
-        }, 3000);
+        }, 90000);
     });
     </script>

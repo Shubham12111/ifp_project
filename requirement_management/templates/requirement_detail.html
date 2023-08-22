@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link id="pagestyle" href="{% static '/assets/css/slider.css' %}" rel="stylesheet" />
+
+{% endblock %}
+
+{% block title %} Fire Risk Assessment {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+
+<div class="container-fluid py-4">
+    <div class="card h-100">
+        <div class="card-body">
+            <div class="row gap-2">
+                <div class="col-md-5">
+                    <div class="sticky-md-top product-sticky">
+                      <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
+                        <div class="carousel-inner bg-light rounded">
+                            {% for item in document_paths %}
+                            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                <div class="zoomable-media">
+                                    {% if item.is_image %}
+                                    <img src="{{ item.presigned_url }}" class="d-block zoomable-image" alt="Product Image">
+                                    <div class="zoom-controls">
+                                        <i class="fas fa-plus zoom-in-button m-2"></i>
+                                        <i class="fas fa-minus zoom-out-button  mx-2"></i>
+                                        <i class="fas  fa-sync-alt reset-button  mx-2"></i>
+                                        
+                                    </div>
+                                    {% endif %}
+                                    {% if item.is_video %}
+                                    <video controls class="d-block zoomable-video">
+                                        <source src="{{ item.presigned_url }}" type="video/mp4">
+                                    </video>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0">
+                            {% for item in document_paths %}
+                            {% if item.is_image %}
+                            <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
+                                <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded  border me-4" alt="Product media">
+                            </li>
+                            {% endif %}
+                            {% if item.is_video %}
+                            <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
+                              <video  class="d-block wid-100 zoomable-video rounded  border p-2" >
+                                <source src="{{ item.presigned_url }}" type="video/mp4">
+                            </video>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                        </ol>
+                    </div>
+                    
+                    </div>
+                  </div>
+                <!-- Requirement and Customer Details -->
+                <div class="col-lg-6">
+                    <div class="card-body p-0">
+                        <p class="text-sm">
+                            {{ requirement_instance.description|safe}}</p>
+                        <hr class="horizontal gray-light my-4">
+                        <div class="row text-sm">
+                            <div class="row mb-2">
+                                <div class="col-3"><strong class="text-dark">Customer Name:</strong></div>
+                                <div class="col-9">{{ requirement_instance.customer_id.first_name|title }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-3"><strong class="text-dark">Email:</strong></div>
+                                <div class="col-9">{{ requirement_instance.customer_id.email }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-3"><strong class="text-dark">Site Address:</strong></div>
+                                <div class="col-9">{{ requirement_instance.site_address|title}}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-3"><strong class="text-dark">Date/Time:</strong></div>
+                                <div class="col-9">{{ requirement_instance.requirement_date_time }}</div>
+                            </div>
+                        </div>
+                       
+                    </div>
+                    {% if request.user.roles.name == "quantity_surveyor" and requirement_instance.quantity_surveyor ==  request.user %}
+                        <hr class="horizontal gray-light">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label class="text-dark font-weight-bolder mb-0">Assgin Surveyor</label>
+                                <select name="surveyer" class="form-control col-lg-4" id="surveyor-choices">
+                                    <option disabled selected value> Select an Surveyor </option>
+                                    {% for surveyer in surveyers %}
+                                    <option value="{{ surveyer.id }}" {% if requirement_instance.surveyor.id == surveyer.id %} selected {% endif %}>
+                                        {{ surveyer }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="text-end"> <!-- Add this div with the "text-end" class to align the button to the right -->
+                                <button type="submit" class="btn bg-gradient-primary">Submit</button>
+                            </div>
+                        
+                        </form>
+                    {% else %}
+                    {% if requirement_instance.surveyor %}
+                    <div class="row text-sm">
+                        <div class="row mb-2">
+                            <div class="col-3"><strong class="text-dark">Surveyor:</strong></div>
+                            <div class="col-9">{{requirement_instance.surveyor.first_name|title }} {{requirement_instance.surveyor.last_name|title }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% endif %}
+                   
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-lg-12">
+                    <h5 class="ms-3">Defects</h5>
+                       <table class="table table-flush text-dark dataTable-table">
+                            
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Due Date</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">UPRN</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for defect in requirement_defect %}
+                                    <tr>
+                                        <td class="text-sm">{{ defect.action|truncatechars:50 }}</td>
+                                        <td class="text-sm">{{ defect.description|safe|truncatechars:50 }}</td>
+                                        <td class="text-sm">{{ defect.due_date }}</td>
+                                        <td class="text-sm">{{ defect.UPRN|default:'' }}</td>
+                                        <td class="text-sm" >{{ defect.status|title }}</td>
+                                        <td class="text-sm">
+                                            <a href="{% url 'requirement_defect_detail' defect.id %}">
+                                                <i class="fas fa-eye text-secondary mx-4"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                        
+                    </div>
+                        
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<!-- Modal -->
+<div class="modal" id="fra-image-view-modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-end">
+                <div class="text-center">
+                    <div id="modal-content-inner"></div>
+                </div>
+                <button type="button" onclick="closeModal()" class="close btn bg-gradient-secondary text-center btn-sm mt-2" data-dismiss="modal" aria-label="Close">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/zoom_image.js' %}"></script>
+<script>
+
+// Initialize Choices.js
+if (document.getElementById('surveyor-choices')) {
+  var element = document.getElementById('surveyor-choices');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Surveyor", 
+  });
+
+  
+ }
+
+</script>
+
+{% endblock %}

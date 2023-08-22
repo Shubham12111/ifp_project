@@ -3,12 +3,41 @@ import uuid
 from .models import *
 from django.db import transaction
 from rest_framework import serializers
+from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 from django.conf import settings
 
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
+
+class CustomFileValidator(FileExtensionValidator):
+    def __init__(self, allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS, *args, **kwargs):
+        super().__init__(allowed_extensions, *args, **kwargs)
+
+    def __call__(self, value):
+        extension_error = None
+        size_error = None
+
+        try:
+            super().__call__(value)
+        except ValidationError as e:
+            extension_error = e.error_list[0].messages[0]
+
+        max_size = 5 * 1024 * 1024  # 5MB in bytes
+        if value.size > max_size:
+            size_error = "File size must be no more than 5MB."
+
+        if extension_error or size_error:
+            errors = {}
+            if extension_error:
+                errors['extension'] = [extension_error]
+            if size_error:
+                errors['size'] = [size_error]
+            raise serializers.ValidationError(errors)
+
 class ItemSerializer(serializers.ModelSerializer):
     item_name = serializers.CharField(
-        label=('Item Name'),
+        label=('Name'),
         max_length=500, 
         required=True, 
         style={
@@ -17,6 +46,7 @@ class ItemSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "Item Name is required.",
+            "blank":"Name is required.",
         },
     )
     description = serializers.CharField(
@@ -25,7 +55,9 @@ class ItemSerializer(serializers.ModelSerializer):
         style={'base_template': 'rich_textarea.html', 'rows': 5},
         error_messages={
             "required": "Description is required.",
+            "blank":"Description is required.",
         },
+        validators=[validate_description]
     )
     status = serializers.ChoiceField(
         choices=PRODUCT_STATUS_CHOICES,  # Assuming you've defined PRODUCT_STATUS_CHOICES
@@ -54,7 +86,8 @@ class ItemSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "Price is required.",
-             "invalid": "Price is invalid.",  
+            "invalid": "Price is invalid.",  
+            "blank":"Price is required.", 
         },
     )
     
@@ -66,6 +99,11 @@ class ItemSerializer(serializers.ModelSerializer):
             'base_template': 'custom_input.html',
             'custom_class':'col-6'
         },
+        error_messages={
+            "required": "Reference Number is required.",
+            "invalid": "Reference Number is invalid.",  
+            "blank":"Reference Number is required.", 
+        },
     )
     
     units = serializers.ChoiceField(
@@ -75,6 +113,11 @@ class ItemSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_select.html',
             'custom_class':'col-6 units'
+        },
+        error_messages={
+            "required": "Units is required.",
+            "invalid": "Units is invalid.",  
+            "blank":"Units is required.", 
         },
     )
     
@@ -87,8 +130,12 @@ class ItemSerializer(serializers.ModelSerializer):
             'custom_class':'col-6 quantity_per_box'
         },
     )
+
     file_list = serializers.ListField(
-        child=serializers.FileField(allow_empty_file=False,use_url=False ),
+        child=serializers.FileField(
+            allow_empty_file=False,
+            validators=[CustomFileValidator()],
+        ),
         label=('Documents'),  # Adjust the label as needed
         required=False,
         initial=[],
@@ -193,7 +240,6 @@ class ItemSerializer(serializers.ModelSerializer):
                     'id': document.id  #  document ID
                 })
 
-        print(document_paths)
+        
         representation['document_paths'] = document_paths
-
         return representation

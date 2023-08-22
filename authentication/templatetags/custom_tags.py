@@ -1,5 +1,8 @@
 from django import template
 from infinity_fire_solutions.permission import get_user_module_permissions
+from django.urls import resolve, Resolver404
+from common_app.models import MenuItem
+import re
 
 register = template.Library()
 
@@ -84,3 +87,36 @@ def has_view_permission(user, module_name):
             else:
                 return True
     return False
+
+@register.filter
+def get_active_menu(current_path):
+    """
+    Determines the active menu based on the current URL path.
+    
+    Args:
+        current_path (str): The current URL path.
+        
+    Returns:
+        str: The active menu name or None if no active menu found.
+    """
+    allowed_menu_items = MenuItem.objects.filter(parent=None).distinct().order_by('order')
+    current_url = current_path
+    active_menu = None
+    pattern = r"s$" 
+    # Use regular expression to extract the first segment (part between slashes)
+    match = re.match(r'^/([^/]+)/', current_url)
+    if match:
+        first_segment = match.group(1)
+    else:
+        first_segment = None
+    first_segment = re.sub(pattern, "", first_segment.replace(" ", "_")).lower()
+    for item in allowed_menu_items:
+        # Convert menu name to lowercase and replace spaces with underscores
+        # Remove trailing "s" from plural menu names
+        menu_name = re.sub(pattern, "", item.name.replace(" ", "_")).lower()
+        # Check if the menu name is in the first segment of the URL
+        if menu_name in first_segment:
+            active_menu = menu_name
+            return active_menu
+    
+    return active_menu

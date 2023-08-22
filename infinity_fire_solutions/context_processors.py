@@ -98,5 +98,4 @@ def custom_menu(request):
             
             # Generate the final menu data structure using the generate_menu function
             menu_data = generate_menu(request, allowed_menu_items)
-    print(menu_data) 
     return {'menu_items': menu_data}

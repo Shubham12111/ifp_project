@@ -1,0 +1,770 @@
+<!-- add_customer.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+{% block title %} Purchase Order Add{{ block.super }}{% endblock %}
+{% block content %}
+<style>
+    /* Add borders to the table */
+    .custom-table th,
+    .custom-table td {
+      border: 1px solid #dee2e6;
+      padding: 8px;
+    }
+    .btn.btn-outline-dotted {
+    border: 1px dotted #000; /* Replace #000 with the desired color for the border */
+    background-color: transparent;
+    color: #000; /* Replace #000 with the desired text color */
+}
+
+</style>
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-12 col-12 mt-3">
+            {% if purchase_order %}
+                <div id="existingPurchaseOrderData" style="display: none;">
+                    {{ existingPurchaseOrderData|json_script }}
+                </div>
+            {% endif %}
+            <form method="post" {% if purchase_order %} action="{% url 'purchase_order_edit' purchase_order.id %}" {% else %}action="{% url 'purchase_order_add' %}"{% endif %} >
+            
+            {% csrf_token %}
+            <div class="card">
+              <div class="card-body px-4 pb-0">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="po_number" class="form-label">Vendor</label>
+                                <select class="form-control" id="vendor-choices" name="vendor_id">
+                                    <option disabled selected value> Select an Vendor </option>
+
+                                    {% for vendor in vendor_list %}
+                                        <option value="{{vendor.id}}">{{vendor.email}}</option>
+                                    {% endfor %}
+                                </select>
+                                <div id ="vendor-card">
+                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0"  style="display: none;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="inventory_location" class="form-label">Inventory Location</label>
+                                <select class="form-control" id="inventory_location-choices" name="inventory_location_id">
+                                    <option disabled selected value>Select Inventory Location</option>
+                                    {% for inventory_location in inventory_location_list %}
+                                        <option value="{{inventory_location.id}}">{{inventory_location.name}}</option>
+                                    {% endfor %}
+                                </select>
+                                <div id ="inventorylocation-card">
+                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0"  style="display: none;">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row mb-4">
+                           <div class="col-md-12">
+                                <label for="po_number" class="form-label">PO Number</label>
+                                <input type="number" class="form-control" id="po_number" value="8795646525451" name="po_number" >
+                            </div>
+                        </div>
+                        <div class="row mb-4">
+                           <div class="col-md-6">
+                                <label for="order_date" class="form-label">Date</label>
+                                <input type="text"  class="form-control po_date" id="date" name="order_date" placeholder="DD/MM/YYYY">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="due_date" class="form-label">Due Date</label>
+                                <input type="text" class="form-control po_due_date" id="due_date" name="due_date" placeholder="DD/MM/YYYY">
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+
+                <div class="row mt-5">
+                    <div class="col-md-12">
+                        <table class="table-responsive custom-table mb-3 " style="width:100%">
+                                <thead>
+                                    <tr class="px-0">
+                                        <th class="text-start col-6">Item Name</th>
+                                        <th class="text-center col-2">Price</th>
+                                        <th class="text-center col-2">Quantity </th>
+                                        <th class="text-center col-2">Total</th>
+                                        <th class="text-center col-2">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemTableBody">
+                                    
+                                </tbody>
+                            </table>
+                            <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
+                        </div>
+                    </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6 ">
+                        {% if purchase_order.status == "sent_for_approval" %}
+                        <p class="notes text-sm">{{ existingPurchaseOrderData.notes }}</p>
+                        <label>Approval Notes</label>
+                        <textarea class="form-control notes" rows="6" name="approval_notes" ></textarea>
+
+                        {% elif purchase_order.status == "approved"  %}
+                        <p class="notes text-sm">{{ existingPurchaseOrderData.notes }}</p>
+                        Approval Notes
+                        <p class="approval_notes text-sm">{{ existingPurchaseOrderData.approval_notes }}</p>
+                        {% else %} 
+                        <label>Notes</label>
+                        <textarea class="form-control notes" rows="6" name="notes" ></textarea>
+                        <div class="form-group mt-4 ">
+                            <label>Attach File</label>
+                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept=".jpg, .jpeg, .png">
+                            <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png).</small>  
+                            {% if presigned_url %}
+                            <br><br>
+                            <a href="{{presigned_url}}" class="text-sm">{{file_name}}</a>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-1 "></div>
+                    <div class="col-md-5">
+                        <input type="hidden" id="subtotalInput" name="sub_total" value="0">
+                        <input type="hidden" id="grandTotalInput" name="total_amount" value="0">
+                        <div class="row mb-2">
+                            <div class="col-6 text-end mb-1">
+                                <p class="subtotal-label">Sub Total:</p>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <p class="mb-2 text-end subtotal-value"> £ 00.00</p>
+                            </div>
+                            <div class="col-6 mb-1 text-end">
+                                <p class="discount-label">Discount:</p>
+                            </div>
+                            <div class="col-2 text-end mb-2"></div>
+                            <div class="col-4 text-end mb-2">
+                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" value="00.00" onchange="calculateTotal()">
+                                <div class="error-message text-danger text-sm" id="discountError"></div>
+                            </div>
+                           
+                
+                            <div class="col-6 mb-1 text-end">
+                                <p class="tax-label">Tax:</p>
+                            </div>
+                            <div class="col-2 text-end mb-2"></div>
+                            <div class="col-4 mb-1 ">
+                                <input type="number" class="form-control tax-input" id="tax" name="tax" min="0" value="00.00" onchange="calculateTotal()">
+                            </div>
+                            <div class="col-6 mb-1 text-end">
+                                <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
+                            </div>
+                            <div class="col-6 mb-1">
+                                <p class="font-weight-bolder mb-0 text-end grand-total-value">£ 00.00</p>
+                                <div class="error-message text-danger text-sm" id="grandTotalError"></div>
+
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                <div class="row mt-5 mb-5">
+                <div class="col-6 col-lg-6 m-auto text-end"></div>
+                <div class="col-md-6 m-auto text-center text-md-end">
+                    <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-0" href="{% url 'purchase_order_list' %}">Cancel</a>
+                    {% if purchase_order.status == "pending" or not purchase_order   %}
+                    <button class="btn bg-gradient-info mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Drfat</button>
+                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
+                    {% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "projects_admin_(IT)"  %}
+                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproved" title="Submit">Approved</button>
+                    {% endif %}
+                    
+                </div>
+                </div>
+                
+            </div>
+        </div>
+      
+    </form>
+</div>
+<div class="modal" id="noItemsModal" tabindex="-1" aria-labelledby="noItemsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="noItemsModalLabel">No More Items Available</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                All items have been selected. No more items left to add.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Bootstrap Modal for Negative Value Error -->
+<div class="modal" id="negativeValueModal" tabindex="-1" aria-labelledby="negativeValueModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="negativeValueModalLabel">Invalid Input</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Negative values are not allowed. Please enter a valid positive value.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal" id="emptyRowModal" tabindex="-1" aria-labelledby="emptyRowModalLabel" aria-hidden="true">
+    <div class="modal-dialog  modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+           
+            <div class="modal-body">
+                You must add at least one item before submitting the form.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script>
+
+// Get a reference to the input element
+var invoiceInput = document.getElementById('po_number');
+
+// Generate a unique number using the current timestamp
+var uniqueNumber = Date.now();
+
+// Set the generated unique number as the value of the input
+invoiceInput.value = uniqueNumber;
+
+
+const addItemBtn = document.getElementById('addItemBtn');
+
+const subtotalValue = document.querySelector('.subtotal-value');
+const discountInput = document.querySelector('.discount-input');
+const taxInput = document.querySelector('.tax-input');
+const grandTotalValue = document.querySelector('.grand-total-value');
+const noItemsModal = new bootstrap.Modal(document.getElementById('noItemsModal'));
+const negativeValueModal = new bootstrap.Modal(document.getElementById('negativeValueModal'));
+const emptyRowModal = new bootstrap.Modal(document.getElementById('emptyRowModal'));
+const itemTableBody = document.getElementById('itemTableBody');
+
+
+
+// Assume you have retrieved existingPurchaseOrderData from the backend
+if (document.getElementById('existingPurchaseOrderData')) {
+    const existingPurchaseOrderData = JSON.parse(document.getElementById('existingPurchaseOrderData').textContent);
+
+    
+    if (existingPurchaseOrderData) {
+    // Function to safely access nested properties
+    function safeGetProperty(obj, prop) {
+        return obj && obj[prop] !== undefined ? obj[prop] : '';
+    }
+    // Populate the form fields with existing data
+        document.getElementById('vendor-choices').value = safeGetProperty(existingPurchaseOrderData, 'vendor_id');
+        document.getElementById('inventory_location-choices').value = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
+        document.getElementById('po_number').value = safeGetProperty(existingPurchaseOrderData, 'po_number');
+        document.querySelector('.po_date').value = safeGetProperty(existingPurchaseOrderData, 'order_date');
+        document.querySelector('.po_due_date').value = safeGetProperty(existingPurchaseOrderData, 'due_date');
+        document.querySelector('.tax-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'tax')).toFixed(2);
+        document.querySelector('.subtotal-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
+        document.querySelector('.discount-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'discount')).toFixed(2);
+        if ("{{ purchase_order.status }}" === "sent_for_approval") {
+                const notesValue = "{{ existingPurchaseOrderData.notes }}";
+                if (notesValue)
+                {
+                    document.querySelector('.notes').textContent = notesValue;
+                }   
+                
+                
+        }
+        else
+        {
+            document.querySelector('.notes').value = safeGetProperty(existingPurchaseOrderData, 'notes');
+
+        }
+        document.querySelector('.grand-total-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
+        // Populate item rows with existing item data
+
+    
+        // Populate vendor data for existing value on page load
+    document.addEventListener('DOMContentLoaded', async function() {
+        const existingVendorId = safeGetProperty(existingPurchaseOrderData, 'vendor_id');
+        if (existingVendorId) {
+            populateVendorData(existingVendorId);
+        }
+    });
+
+    // Populate inventory location data for existing value on page load
+    document.addEventListener('DOMContentLoaded', async function() {
+        const existingInventoryLocationId = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
+        if (existingInventoryLocationId) {
+            populateInventoryLocationData(existingInventoryLocationId);
+        }
+    });
+
+
+    itemTableBody.innerHTML = ''; // Clear existing rows
+    existingPurchaseOrderData.items.forEach(item => {
+        console.log(item)
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+        <td>
+            <select class="form-control item-dropdown" onchange="updatePrice(this)">
+            ${getUnselectedOptions(item.item_id)}
+            </select>
+        </td>
+        <td class="text-center"><input type="number" class="form-control item-price" value="${item.price}" min="0"></td>
+        <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0"></td>
+        <td class="text-center total">£${item.row_total}</td>
+        <td class="text-center">
+            <a class="remove-row-btn" onclick="removeRow(this)">
+            <i class="fas fa-times"></i>
+            </a>
+        </td>
+        `;
+        itemTableBody.appendChild(newRow);
+    });
+
+    // Calculate and populate totals based on existing item data
+    calculateTotal();
+
+    // Preselect options in dropdowns based on existing data
+    function preselectDropdownOption(dropdownId, value) {
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) {
+        const option = dropdown.querySelector(`option[value="${value}"]`);
+        if (option) {
+            option.selected = true;
+        }
+        }
+    }
+
+    preselectDropdownOption('vendor-choices', existingPurchaseOrderData.vendor_id);
+    preselectDropdownOption('inventory_location-choices', existingPurchaseOrderData.inventory_location_id);
+    }
+}
+    
+
+
+addItemBtn.addEventListener('click', () => {
+    const unselectedOptionsHtml = getUnselectedOptions();
+        if (unselectedOptionsHtml === '') {
+            noItemsModal.show(); // Show the modal
+            return; // Exit the function to prevent adding new rows
+        }
+const newRow = document.createElement('tr');
+newRow.innerHTML = `
+    <td>
+        <select id="itemSelect" class="form-control item-dropdown" onchange="updatePrice(this)">
+            ${getUnselectedOptions()}
+        </select>
+    </td>
+    <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
+    <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
+    <td class="text-center total">£00.00</td>
+    <td class="text-center">
+        <a class="remove-row-btn" onclick="removeRow(this)">
+            <i class="fas fa-times"></i>
+        </a>
+    </td>
+`;
+
+itemTableBody.appendChild(newRow);
+setInitialPrice(newRow);
+});
+
+function getUnselectedOptions() {
+    const selectedOptions = new Set();
+    const allDropdowns = document.querySelectorAll('.item-dropdown');
+    
+    allDropdowns.forEach(dropdown => {
+        const selectedOption = dropdown.options[dropdown.selectedIndex];
+        selectedOptions.add(selectedOption.value);
+    });
+
+    let unselectedOptionsHtml = '';
+
+    {% for item in item_list %}
+        if (!selectedOptions.has('{{ item.id }}')) {
+            unselectedOptionsHtml += `<option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>`;
+        }
+    {% endfor %}
+
+    return unselectedOptionsHtml;
+}
+
+
+            
+function setInitialPrice(row) {
+    const dropdown = row.querySelector('.item-dropdown');
+    const selectedOption = dropdown.options[dropdown.selectedIndex];
+    const priceInput = row.querySelector('.item-price');
+    priceInput.value = selectedOption.dataset.price;
+    recalculateTotal(row);
+}
+
+function updatePrice(selectElement) {
+const selectedOption = selectElement.options[selectElement.selectedIndex];
+const row = selectElement.closest('tr');
+const priceInput = row.querySelector('.item-price');
+priceInput.value = selectedOption.dataset.price;
+recalculateTotal(row);
+    
+}
+       
+
+
+itemTableBody.addEventListener('change', (event) => {
+    if (event.target.classList.contains('item-price') || event.target.classList.contains('quantity-input')) {
+        recalculateTotal(event.target.closest('tr'));
+    }
+});
+
+function removeRow(buttonElement) {
+    const row = buttonElement.closest('tr');
+    row.remove();
+    calculateTotal();
+}
+
+function recalculateTotal(row) {
+const priceInput = row.querySelector('.item-price');
+const quantityInput = row.querySelector('.quantity-input');
+
+const price = parseFloat(priceInput.value);
+const quantity = parseFloat(quantityInput.value);
+
+if (price >= 0 && quantity >= 0) {
+    const totalCell = row.querySelector('.total');
+    const total = (price * quantity).toFixed(2);
+    totalCell.textContent = `£${total}`;
+    calculateTotal();
+} else {
+    // Show the negative value error modal
+    negativeValueModal.show();
+    
+    // Reset the input fields to a valid state
+    priceInput.value = '0';
+    quantityInput.value = '1';
+}
+}
+function calculateTotal() {
+    let subtotal = 0;
+    const rows = itemTableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        const total = parseFloat(row.querySelector('.total').textContent.slice(1));
+        subtotal += total;
+    });
+    const discount = parseFloat(discountInput.value);
+    const tax = parseFloat(taxInput.value);
+
+    // Clear previous error messages
+    document.getElementById('discountError').textContent = '';
+    document.getElementById('grandTotalError').textContent = '';
+
+    if (discount > subtotal) {
+        document.getElementById('discountError').textContent = "Discount cannot be greater than subtotal.";
+        return; // Stop further processing
+    }
+
+    // Calculate amounts
+    const discountedSubtotal = subtotal - discount;
+    const taxedAmount = discountedSubtotal * tax;
+    const grandTotal = discountedSubtotal + taxedAmount;
+
+    // Update display values
+    grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
+    subtotalValue.textContent = `£${discountedSubtotal.toFixed(2)}`;
+
+    // Update hidden input values
+    const subtotalInput = document.getElementById('subtotalInput');
+    const grandTotalInput = document.getElementById('grandTotalInput');
+    subtotalInput.value = discountedSubtotal.toFixed(2);
+    grandTotalInput.value = grandTotal.toFixed(2);
+
+}
+
+
+
+    // Trigger the function on page load
+window.addEventListener('load', function() {
+const selectElement = document.getElementById('itemSelect');
+updatePrice(selectElement);
+});
+  // Check if the datetimepicker element exists
+  if (document.querySelector('.po_date')) {
+    // Get the default value for the datetime picker
+    const defaultDateValue = 'po_date';
+
+    // Convert the default value to a Date object (if available)
+    const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
+
+    // Create the flatpickr date-time picker and set the default date to the default value or current date
+    flatpickr('.po_date', {
+      allowInput: false,
+      defaultDate: defaultDate
+    });
+  }
+
+  if (document.querySelector('.po_due_date')) {
+    // Get the default value for the datetime picker
+    const defaultDateValue = 'po_due_date';
+
+    // Convert the default value to a Date object (if available)
+    const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
+
+    // Create the flatpickr date-time picker and set the default date to the default value or current date
+    flatpickr('.po_due_date', {
+      allowInput: false,
+      defaultDate: defaultDate
+    });
+  }
+
+
+// Initialize Choices.js
+if (document.getElementById('vendor-choices')) {
+  var element = document.getElementById('vendor-choices');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Vendor", 
+  });
+
+  
+ }
+ 
+
+// Function to populate vendor data in the card
+async function populateVendorData(selectedVendorId) {
+    try {
+        const response = await fetch(`/purchase_order/get_vendor_data/?id=${selectedVendorId}`);
+        const selectedVendorData = await response.json();
+        // Populate vendor data in the card
+        const cardBody = document.querySelector('#vendor-card .card-body');
+        cardBody.style.display = 'block';  // Show the card body
+        cardBody.innerHTML = `
+        <h6 class="card-subtitle mb-1">${selectedVendorData.data.first_name} ${selectedVendorData.data.last_name}</h6>
+        <p class="card-subtitle mb-1">+${selectedVendorData.data.phone_number}</p>
+        <p class="card-subtitle mb-1">${selectedVendorData.data.email}</p>
+        `;
+    } catch (error) {
+        console.error('Error fetching vendor data:', error);
+    }
+}
+
+// Listen for change event on the dropdown
+element.addEventListener('change', async function(event) {
+    const selectedVendorId = event.detail.value;
+    populateVendorData(selectedVendorId);
+});
+
+
+
+
+if (document.getElementById('inventory_location-choices')) {
+  var element = document.getElementById('inventory_location-choices');
+  const inventory_location = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    maxItemCount: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 4,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Inventory Location",
+  });
+}
+// Function to populate inventory location data in the card
+async function populateInventoryLocationData(selectedInventoryLocationId) {
+    try {
+        const response = await fetch(`/purchase_order/inventory_location/?id=${selectedInventoryLocationId}`);
+        const selectedInventoryLocationData = await response.json();
+        // Populate inventory location data in the card
+        const cardBody = document.querySelector('#inventorylocation-card .card-body');
+        cardBody.style.display = 'block';  // Show the card body
+        cardBody.innerHTML = `
+        <h6 class="card-subtitle mb-1">${selectedInventoryLocationData.data.name}</h6>
+        <p class="card-subtitle mb-1">${selectedInventoryLocationData.data.full_address}</p>
+        `;
+    } catch (error) {
+        console.error('Error fetching InventoryLocation data:', error);
+    }
+}
+
+// Listen for change event on the dropdown
+element.addEventListener('change', async function(event) {
+    const selectedInventoryLocationId = event.detail.value;
+    populateInventoryLocationData(selectedInventoryLocationId);
+});
+
+
+
+// Inside your JavaScript
+// Event listeners for the buttons
+const submitSaveAsDraftBtn = document.getElementById('submitSaveAsDraftBtn');
+const submitBtnApproval = document.getElementById('submitBtnApproval');
+const submitBtnApproved = document.getElementById('submitBtnApproved');
+
+
+if (submitSaveAsDraftBtn)
+{
+    submitSaveAsDraftBtn.addEventListener('click', function() {
+    submitForm('pending'); // Call the common function with the status
+
+});
+
+submitBtnApproval.addEventListener('click', function() {
+    submitForm('sent_for_approval'); // Call the common function with the status
+
+});
+
+}
+
+submitBtnApproved.addEventListener('click', function() {
+    submitForm('approved'); // Call the common function with the status
+});
+
+function submitForm(status) {
+    event.preventDefault(); // Prevent default button behavior
+
+    const form = document.querySelector('form');
+    
+    const formData = new FormData(form);
+    formData.append('status', status);
+    
+    // Get the subtotal, discount, and tax values
+    const subtotal = parseFloat(subtotalValue.textContent.slice(1));
+    const discount = parseFloat(discountInput.value);
+    const tax = parseFloat(taxInput.value);
+    
+    // Add the calculated values to the form data
+    formData.append('subtotal', subtotal.toFixed(2));
+    formData.append('discount', discount.toFixed(2));
+    formData.append('tax', tax.toFixed(2));
+
+    // Collect item row data
+    const rows = itemTableBody.querySelectorAll('tr');
+    let hasNonEmptyRow = false; // Flag to track non-empty rows
+
+    rows.forEach(row => {
+        const selectedOption = row.querySelector('.item-dropdown option:checked');
+        const itemId = selectedOption.value;
+        const itemPrice = parseFloat(row.querySelector('.item-price').value);
+        const quantity = parseFloat(row.querySelector('.quantity-input').value);
+        const rowTotal = parseFloat(row.querySelector('.total').textContent.slice(1)); // Get the row total
+        
+        // Check if any of the required fields are empty
+        if (!itemId || isNaN(itemPrice) || isNaN(quantity) || isNaN(rowTotal)) {
+            // Display the emptyRowModal
+            emptyRowModal.show();
+            return; // Stop further processing
+        }
+        
+        // Add item data to form data
+        formData.append(`items[${itemId}][price]`, itemPrice.toFixed(2));
+        formData.append(`items[${itemId}][quantity]`, quantity);
+        formData.append(`items[${itemId}][rowTotal]`, rowTotal.toFixed(2)); // Append row total
+        
+        hasNonEmptyRow = true; // Mark at least one non-empty row
+    });
+
+    if (!hasNonEmptyRow) {
+        // Display the emptyRowModal
+        emptyRowModal.show();
+    } 
+
+    
+    if (hasNonEmptyRow) {
+        // Make an AJAX POST request to your Django view
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+    }).then(response => {
+        response.json().then(data => {
+            if (data.errors) {
+                // Remove existing error messages
+                const existingErrorMessages = document.querySelectorAll('.help-block');
+                existingErrorMessages.forEach(errorMessage => errorMessage.remove());
+
+                // Display validation errors under respective fields
+                for (const fieldName in data.errors) {
+                    const field = document.querySelector(`[name="${fieldName}"]`);
+                    if (field) {
+                        const tagName = field.nodeName.toLowerCase(); // Get the lowercase tag name
+                        if (tagName === 'select') {
+                            // For select elements, display error message near the select element
+                            const selectContainer = field.closest('.choices'); // Adjust this selector based on your HTML structure
+                            console.log(selectContainer)
+                            if (selectContainer) {
+                                const errorElement = document.createElement('div');
+                                errorElement.classList.add('help-block', 'mt-2');
+                                errorElement.textContent = data.errors[fieldName].join(', ');
+                                selectContainer.appendChild(errorElement);
+                            }
+                        } else {
+                            // For other input elements, display error message under the field
+                            const errorElement = document.createElement('div');
+                            errorElement.classList.add('help-block', 'mt-2');
+                            errorElement.textContent = data.errors[fieldName].join(', ');
+                            field.parentElement.appendChild(errorElement);
+                        }
+                    }
+                }
+            }
+        else if  (response.ok)
+        {
+            // Successful response
+            window.location.href = '/purchase_order/list/';
+        }
+        else {
+            // Other error handling
+            alert('An error occurred while saving items.');
+        }
+
+
+
+        });
+        
+        
+
+    }).catch(error => {
+        console.error('Error:', error);
+    });
+    }
+
+    
+}
+
+
+</script>
+{% endblock %}

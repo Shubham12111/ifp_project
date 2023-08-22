@@ -124,6 +124,8 @@ class ContactSerializer(serializers.ModelSerializer):
         label=('Job Title'),
         max_length=100,
         required= False,
+        allow_null=True,
+        allow_blank=True,
         style={
             "input_type": "text",
             "autofocus": False,
@@ -136,6 +138,8 @@ class ContactSerializer(serializers.ModelSerializer):
         max_length=100,
         min_length=3,
         required=False,
+        allow_null=True,
+        allow_blank=True,
         style={
             "input_type": "text",
             "autocomplete": "off",
@@ -149,6 +153,7 @@ class ContactSerializer(serializers.ModelSerializer):
         max_length=225,
         min_length=5,
         required=False,
+        allow_null=True,
         style={
             "input_type": "text",
             "autofocus": False,
@@ -200,6 +205,8 @@ class ContactSerializer(serializers.ModelSerializer):
         label=('Post Code'),
         max_length=7,
         required=False,
+        allow_null=True,
+        allow_blank=True,
         style={
             "input_type": "text",
             "autofocus": False,

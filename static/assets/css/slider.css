@@ -1,0 +1,472 @@
+/* Add these styles for zoom controls */
+/* Add these styles for zoom controls */
+.zoomable-image {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease-in-out;
+  cursor: pointer;
+}
+
+.zoom-controls {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.zoom-controls button {
+  padding: 5px 10px;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+
+
+
+/*====== Font-weight css ends ======*/
+/*====== width, Height css starts ======*/
+.wid-10 {
+  width: 10px;
+}
+
+.hei-10 {
+  height: 10px;
+}
+
+.wid-15 {
+  width: 15px;
+}
+
+.hei-15 {
+  height: 15px;
+}
+
+.wid-20 {
+  width: 20px;
+}
+
+.hei-20 {
+  height: 20px;
+}
+
+.wid-25 {
+  width: 25px;
+}
+
+.hei-25 {
+  height: 25px;
+}
+
+.wid-30 {
+  width: 30px;
+}
+
+.hei-30 {
+  height: 30px;
+}
+
+.wid-35 {
+  width: 35px;
+}
+
+.hei-35 {
+  height: 35px;
+}
+
+.wid-40 {
+  width: 40px;
+}
+
+.hei-40 {
+  height: 40px;
+}
+
+.wid-45 {
+  width: 45px;
+}
+
+.hei-45 {
+  height: 45px;
+}
+
+.wid-50 {
+  width: 50px;
+}
+
+.hei-50 {
+  height: 50px;
+}
+
+.wid-55 {
+  width: 55px;
+}
+
+.hei-55 {
+  height: 55px;
+}
+
+.wid-60 {
+  width: 60px;
+}
+
+.hei-60 {
+  height: 60px;
+}
+
+.wid-65 {
+  width: 65px;
+}
+
+.hei-65 {
+  height: 65px;
+}
+
+.wid-70 {
+  width: 70px;
+}
+
+.hei-70 {
+  height: 70px;
+}
+
+.wid-75 {
+  width: 75px;
+}
+
+.hei-75 {
+  height: 75px;
+}
+
+.wid-80 {
+  width: 80px;
+}
+
+.hei-80 {
+  height: 80px;
+}
+
+.wid-85 {
+  width: 85px;
+}
+
+.hei-85 {
+  height: 85px;
+}
+
+.wid-90 {
+  width: 90px;
+}
+
+.hei-90 {
+  height: 90px;
+}
+
+.wid-95 {
+  width: 95px;
+}
+
+.hei-95 {
+  height: 95px;
+}
+
+.wid-100 {
+  width: 100px;
+}
+
+.hei-100 {
+  height: 100px;
+}
+
+.wid-105 {
+  width: 105px;
+}
+
+.hei-105 {
+  height: 105px;
+}
+
+.wid-110 {
+  width: 110px;
+}
+
+.hei-110 {
+  height: 110px;
+}
+
+.wid-115 {
+  width: 115px;
+}
+
+.hei-115 {
+  height: 115px;
+}
+
+.wid-120 {
+  width: 120px;
+}
+
+.hei-120 {
+  height: 120px;
+}
+
+.wid-125 {
+  width: 125px;
+}
+
+.hei-125 {
+  height: 125px;
+}
+
+.wid-130 {
+  width: 130px;
+}
+
+.hei-130 {
+  height: 130px;
+}
+
+.wid-135 {
+  width: 135px;
+}
+
+.hei-135 {
+  height: 135px;
+}
+
+.wid-140 {
+  width: 140px;
+}
+
+.hei-140 {
+  height: 140px;
+}
+
+.wid-145 {
+  width: 145px;
+}
+
+.hei-145 {
+  height: 145px;
+}
+
+.wid-150 {
+  width: 150px;
+}
+
+.hei-150 {
+  height: 150px;
+}
+
+/*====== width, Height css ends ======*/
+/*====== border-width css starts ======*/
+.b-wid-1 {
+  border-width: 1px;
+}
+
+.b-wid-2 {
+  border-width: 2px;
+}
+
+.b-wid-3 {
+  border-width: 3px;
+}
+
+.b-wid-4 {
+  border-width: 4px;
+}
+
+.b-wid-5 {
+  border-width: 5px;
+}
+
+.b-wid-6 {
+  border-width: 6px;
+}
+
+.b-wid-7 {
+  border-width: 7px;
+}
+
+.b-wid-8 {
+  border-width: 8px;
+}
+
+
+
+
+
+/**  =====================
+      e-commerce css start
+==========================  **/
+.ecomm-prod-slider {
+  display: flex;
+}
+.ecomm-prod-slider .carousel-inner,
+.ecomm-prod-slider .carousel-inner img,
+.ecomm-prod-slider .carousel-inner video,
+.ecomm-prod-slider .product-carousel-indicators {
+  height: 100% !important;
+}
+@media (max-width: 575.98px) {
+  .ecomm-prod-slider .carousel-inner,
+.ecomm-prod-slider .carousel-inner img,
+.ecomm-prod-slider .carousel-inner video,
+.ecomm-prod-slider .product-carousel-indicators {
+    height: 220px;
+  }
+}
+.ecomm-prod-slider .carousel-inner img {
+  width: -webkit-fill-available;
+  width: -moz-available;
+  margin: 0 auto;
+}
+.ecomm-prod-slider .product-carousel-indicators {
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex-direction: column;
+}
+.ecomm-prod-slider .product-carousel-indicators::-webkit-scrollbar {
+  width: 6px;
+  opacity: 0;
+}
+.ecomm-prod-slider .product-carousel-indicators::-webkit-scrollbar:hover {
+  opacity: 1;
+}
+.ecomm-prod-slider .product-carousel-indicators::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ecomm-prod-slider .product-carousel-indicators::-webkit-scrollbar-thumb {
+  background: #ececf0;
+}
+.ecomm-prod-slider .product-carousel-indicators::-webkit-scrollbar-thumb:hover {
+  background: #b3b3c2;
+}
+
+.rel-prod-card {
+  position: absolute;
+  top: 0;
+  left: calc(var(--bs-gutter-x) * 0.5);
+  right: calc(var(--bs-gutter-x) * 0.5);
+  bottom: 0;
+}
+@media (max-width: 575.98px) {
+  .rel-prod-card {
+    position: relative;
+    left: 0;
+    right: 0;
+  }
+  .rel-prod-card .rel-prod-list {
+    height: 400px;
+  }
+}
+
+.rel-prod-list {
+  height: calc(100% - 140px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex-direction: column;
+}
+.rel-prod-list::-webkit-scrollbar {
+  width: 6px;
+  opacity: 0;
+}
+.rel-prod-list::-webkit-scrollbar:hover {
+  opacity: 1;
+}
+.rel-prod-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.rel-prod-list::-webkit-scrollbar-thumb {
+  background: #ececf0;
+}
+.rel-prod-list::-webkit-scrollbar-thumb:hover {
+  background: #b3b3c2;
+}
+
+.ecom-wrapper {
+  display: flex;
+}
+.ecom-wrapper .ecom-filter {
+  width: 300px;
+  margin-right: var(--bs-gutter-x);
+}
+.ecom-wrapper .ecom-filter .scroll-block {
+  height: calc(100vh - 120px);
+}
+.ecom-wrapper .ecom-offcanvas {
+  --bs-offcanvas-width: 301px;
+}
+.ecom-wrapper .ecom-offcanvas .sticky-xxl-top {
+  top: 100px;
+}
+.ecom-wrapper .ecom-offcanvas.show .collapse-horizontal.collapse:not(.show) {
+  display: block;
+}
+.ecom-wrapper .ecom-offcanvas.show .ecom-filter {
+  margin-right: 0;
+}
+.ecom-wrapper .ecom-offcanvas.show .ecom-filter .scroll-block {
+  height: calc(100vh - 90px);
+}
+
+.product-carousel-indicators {
+  justify-content: flex-start;
+}
+
+.horizontal-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.horizontal-scroll::-webkit-scrollbar {
+  height: 6px;
+  opacity: 0;
+}
+.horizontal-scroll::-webkit-scrollbar:hover {
+  opacity: 1;
+}
+.horizontal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.horizontal-scroll::-webkit-scrollbar-thumb {
+  background: #ececf0;
+}
+.horizontal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #b3b3c2;
+}
+
+.prod-select {
+  background-image: none;
+}
+
+.product-card .card-img-top {
+  position: relative;
+  height: 220px;
+  width: 100%;
+  overflow: hidden;
+}
+.product-card .card-img-top .img-prod {
+  position: absolute;
+  width: auto;
+  height: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.product-card .prod-content {
+  -webkit-line-clamp: 2;
+  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-sticky {
+  top: 85px;
+}
+
+
+
+

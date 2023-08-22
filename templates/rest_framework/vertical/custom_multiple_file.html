@@ -20,18 +20,26 @@
     >
    
     {% if field.help_text %}
-    </br>
+  
       <span class="text-sm text-muted mt-1" style="font-size: 0.775rem !important;">
         Note: {{ field.help_text|safe }}
       </span>
     {% endif %}
   
     {% if field.errors %}
-      <div class="invalid-feedback">
-        {% for error in field.errors %}
-          <span class="help-block">{{ error }}</span>
-        {% endfor %}
-      </div>
-    {% endif %}
+
+      {% for key, error_dict in field.errors.items %}
+        {% if error_dict.extension %}
+        <br>
+        <span class="help-block">{{error_dict.extension.0}}</span>
+        {% endif %}
+        {% if error_dict.size %}
+        <br>
+        <span class="help-block">{{error_dict.size.0}}</span>
+        {% endif %}
+      {% endfor %}
+   
+  {% endif %}
+    
   </div>
   

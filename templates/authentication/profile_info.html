@@ -8,7 +8,7 @@
           </h5>
           <p class="mb-0 font-weight-bold text-sm">
             
-            {{ request.user.roles.name }}
+            {{ request.user.roles.get_name_display }}
           </p>
         </div>
       </div>
