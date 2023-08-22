@@ -120,6 +120,20 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         }
 
     )
+    
+    reference_number = serializers.CharField(
+        label=('Reference Number'),
+        max_length=50,
+        required = False,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "invalid": "Reference Number is invalid.",  
+            "blank":"Reference Number is required.", 
+        },
+    )
    
     quantity_surveyor = serializers.PrimaryKeyRelatedField(
         label=('Quantity Surveyor'),
@@ -178,7 +192,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requirement
-        fields = ('customer_id','description','site_address', 'quantity_surveyor', 'requirement_date_time','file_list')
+        fields = ('customer_id','description','site_address', 'quantity_surveyor', 'reference_number', 'requirement_date_time','file_list')
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
