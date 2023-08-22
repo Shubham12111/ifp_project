@@ -215,6 +215,8 @@ class BillingDetailSerializer(serializers.ModelSerializer):
         # Custom validation for VAT number format (United Kingdom VAT number)
         if not re.match(r'^\d{9}$', value):
             raise serializers.ValidationError("Invalid VAT number format. It should be a 9-digit number.")
+        if int(value) == 0:
+            raise serializers.ValidationError("Only zeros are not allowed in VAT Number")
         return value
     
     def validate_pan_number(self, value):
