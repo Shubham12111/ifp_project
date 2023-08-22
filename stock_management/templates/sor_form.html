@@ -9,8 +9,10 @@
          <div class="col-12  m-auto">
          <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8" enctype="multipart/form-data">
              <!--single form panel-->
-             <div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
+
+             <div class="card p-3  bg-white js-active">
                <h5 class="mb-2">{% if item_instance %} Edit {% else %} Add {% endif %} SOR</h5>
+
                <div class="multisteps-form__content mt-2 row">
                  {% csrf_token %}
                   {% render_form serializer %}

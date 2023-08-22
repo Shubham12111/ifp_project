@@ -215,6 +215,8 @@ class BillingDetailSerializer(serializers.ModelSerializer):
         # Custom validation for VAT number format (United Kingdom VAT number)
         if not re.match(r'^\d{9}$', value):
             raise serializers.ValidationError("Invalid VAT number format. It should be a 9-digit number.")
+        if int(value) == 0:
+            raise serializers.ValidationError("Only zeros are not allowed in VAT Number")
         return value
     
     def validate_pan_number(self, value):
@@ -341,14 +343,10 @@ class VendorRemarkSerializer(serializers.ModelSerializer):
 
     remarks = serializers.CharField(
         label=('Remarks '),
-        required=True,
         max_length=255,
+        required = False,
         style={
            'base_template': 'rich_textarea.html',
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Remarks is required.",
         },
          validators=[validate_remarks]
     )

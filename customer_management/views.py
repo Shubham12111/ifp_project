@@ -399,8 +399,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         }
         
         billing_address = BillingAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
-        billing_address = billing_address.filter(user_id__id=self.kwargs.get('customer_id'),
-                                                       pk=self.kwargs.get('address_id')).first()
+        billing_address = billing_address.filter(user_id__id=self.kwargs.get('customer_id')).first()
         return billing_address
 
     def get(self, request, *args, **kwargs):

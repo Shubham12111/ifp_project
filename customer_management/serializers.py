@@ -207,14 +207,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
             'base_template': 'custom_input.html'
         },
     )
-    place_to_supply = serializers.CharField(
-        label='Place To Supply',
-        required=False,
-        max_length=50,
-        style={
-            'base_template': 'custom_input.html'
-        },
-    )
+    
     tax_preference = serializers.ChoiceField(
         label='Tax Preference',
         choices=TAX_PREFERENCE_CHOICES,
@@ -273,6 +266,8 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         # Custom validation for VAT number format (United Kingdom VAT number)
         if not re.match(r'^\d{9}$', value):
             raise serializers.ValidationError("Invalid VAT number format. It should be a 9-digit number.")
+        if int(value) == 0:
+            raise serializers.ValidationError("Only zeros are not allowed in VAT Number")
         return value
     
     def validate_pan_number(self, value):
@@ -290,7 +285,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BillingAddress
-        fields = ['vat_number', 'pan_number', 'place_to_supply', 'tax_preference', 'address',
+        fields = ['vat_number', 'pan_number', 'tax_preference', 'address',
                   'country', 'town', 'county', 'post_code']
         
 
