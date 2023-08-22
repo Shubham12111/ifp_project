@@ -159,7 +159,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             validators=[CustomFileValidator()],
         ),
         label=('Documents'),  # Adjust the label as needed
-        required=False,
+        required=True,
         initial=[],
         style={
             "input_type": "file",
