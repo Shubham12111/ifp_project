@@ -19,7 +19,7 @@
               <div class="ms-auto my-auto">
                 {% if request.user|has_add_permission:"requirement" %}
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
-                <a href="{% url 'requirement_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; FRA Actions</a>
+                <a href="{% url 'requirement_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add FRA Actions</a>
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
