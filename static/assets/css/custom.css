@@ -194,11 +194,36 @@ color: #344767;
     overflow-y: auto;
     width: 150px !important;
     color: #344767 !important;
+    border: 1px solid #344767 !important;
 }
 
-.custom-search {
+#dateRangeInput::placeholder {
+    color: #344767; /* Placeholder text color */
+    display: inline-block;
+    padding: var(--bs-btn-padding-y) var(--bs-btn-padding-x);
+    font-family: var(--bs-btn-font-family);
+    font-size: var(--bs-btn-font-size);
+    font-weight: var(--bs-btn-font-weight);
+    line-height: var(--bs-btn-line-height);
+    color: var(--bs-btn-color);
+    text-align: left;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: var(--bs-btn-border-width) solid var(--bs-btn-border-color);
+    border-radius: var(--bs-btn-border-radius);
+    background-color: var(--bs-btn-bg);
+    font-weight: 600;
+    white-space: nowrap;
+    
+  }
+/* .custom-search {
     --bs-btn-border-color: #b3bac5 !important;
     --bs-btn-color: #b3bac5 !important;
+} */
+
+
+.custom-dropdown-toggle::after {
+    content: '\f138'; /* Replace with your desired icon code or URL */
+    margin-left: 1.5rem !important; /* Adjust spacing between default and custom icons */
 }
-
-

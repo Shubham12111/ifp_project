@@ -137,7 +137,7 @@ class ContactSerializer(serializers.ModelSerializer):
         label=('Company Name'),
         max_length=100,
         min_length=3,
-        required=False,
+        required=True,
         allow_null=True,
         allow_blank=True,
         style={
