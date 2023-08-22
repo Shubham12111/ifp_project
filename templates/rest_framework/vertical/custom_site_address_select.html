@@ -6,7 +6,7 @@
       {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
     </label>
   {% endif %}
- <select class="form-control custom-select" name="{{ field.name }}" id="choices-{{ field.name }}">
+ <select class="form-select custom-select" name="{{ field.name }}" id="choices-{{ field.name }}">
 </select>
 {% if field.help_text %}
 <span class="help-block">{{ field.help_text|safe }}</span>

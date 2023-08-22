@@ -27,22 +27,36 @@
               </div>
             </div>
           </div>
-          <div class="filters  mt-4">
-            <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle " data-bs-toggle="dropdown" id="navbarDropdownMenuLink2">
-               {% if contact_type_filter %} {{contact_type_filter}} {% else %}Contact Type {% endif %}
-            </a>
-            <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="navbarDropdownMenuLink2" data-popper-placement="bottom-end">
-  
-             {% for contact_type in contact_types %}
-              <li>
-                <a class="dropdown-item border-radius-md" href="?contact_type={{ contact_type.name }}">{{ contact_type.name }}</a>
-              </li>
-              {% endfor %}
-              <li><hr class="horizontal dark my-2"></li>
-              <li><a class="dropdown-item border-radius-md text-danger" onclick="removeContactTypeFilter()">Remove Filter</a></li>
-      
-            </ul>
+
+          <label class="mt-4 text-muted">Filters:</label>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="filters">
+               <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle d-flex align-items-center " data-bs-toggle="dropdown" id="navbarDropdownMenuLink2">
+                    <span class="flex-grow-1 text-start">
+                      {% if contact_type_filter %} {{contact_type_filter}} {% else %}Contact Type {% endif %}
+                    </span>
+                 
+                  </a>
+                <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="navbarDropdownMenuLink2" data-popper-placement="bottom-end">
+                  {% for contact_type in contact_types %}
+                    <li>
+                      <a class="dropdown-item border-radius-md" href="?contact_type={{ contact_type.name }}">{{ contact_type.name }}</a>
+                    </li>
+                  {% endfor %}
+                  <li><hr class="horizontal dark my-2"></li>
+                  <li><a class="dropdown-item border-radius-md text-danger" onclick="removeContactTypeFilter()">Remove Filter</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-3"></div>
+            <div class="col-xs-12 col-sm-12 col-lg-3 col-md-3  text-end">
+              <div class="search">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+              </div>
+            </div>
           </div>
+          
         </div>
         <div class="card-body px-0 pb-0">
          <div class="table-responsive">
@@ -50,7 +64,7 @@
               <thead class="thead-light">
                 <tr>
                   <th>First Name</th>
-                  <th >Last Name</th>
+                  <th>Last Name</th>
                   <th>Email</th>
                   <th>Phone</th>
                   <th>Contact Type</th>
@@ -127,14 +141,24 @@
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/custom_convert.js' %}"></script>
 <script>
-  if (document.getElementById('contact-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 25
-    });
+if (document.getElementById('contact-list')) {
+  const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
+    searchable: false,
+    fixedHeight: false,
+    perPage: 25,
+    perPageSelect: false,
+  });
 
-  };
+  const dataTableTop = document.querySelector('.dataTable-top');
+  if (dataTableTop) {
+    dataTableTop.parentNode.removeChild(dataTableTop);
+  }
+  const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+      const searchText = searchInput.value.toLowerCase();
+      dataTableSearch.search(searchText).draw();
+    });
+}
   // JavaScript code to handle removing the contact_type filter
   const removeContactTypeFilter = () => {
     const currentUrl = new URL(window.location.href);

@@ -163,13 +163,22 @@ if (document.querySelector('.datepicker')) {
     onClose: function(selectedDates, dateStr, instance) {
       if (selectedDates.length === 2) {
         // When the user selects a date range, apply the filter
-        const startDate = selectedDates[0].toISOString().split('T')[0];
-        const endDate = selectedDates[1].toISOString().split('T')[0];
-        applyFilter('dateRange', [startDate, endDate]);
+        const startDate = selectedDates[0];
+        startDate.setHours(0, 0, 0, 0); // Set time to start of the day
+        const endDate = selectedDates[1];
+        endDate.setHours(23, 59, 59, 999); // Set time to end of the day
+
+        // Manually format the ISO strings without time zone offset
+        const formattedStartDate = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`;
+        const formattedEndDate = `${endDate.getFullYear()}-${(endDate.getMonth() + 1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}`;
+
+        applyFilter('dateRange', [formattedStartDate, formattedEndDate]);
       }
     }
   });
 }
+
+
 
 
 

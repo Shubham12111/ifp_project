@@ -12,11 +12,13 @@
                     <a class="nav-link active"> FRA Actions</a>
                 {% endif %}
             </li>
-            {% if requirement_instance %}
+            
             <li class="nav-item">
-                 <a class="nav-link {% if '/fire_risk_assessment/defects/' in request.path %}active{% endif %}"  href="{% url 'requirement_defects' requirement_instance.id  %}" >
-                Defects
-              </a>
+              {% if requirement_instance %}
+                 <a class="nav-link {% if '/fire_risk_assessment/defects/' in request.path %}active{% endif %}"  href="{% url 'requirement_defects' requirement_instance.id  %}" >Defects</a>
+              {% else %}
+              <a class="nav-link">Defects</a>
+            
             </li>
             {% endif %}
           </ul>

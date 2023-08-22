@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                       </li>
                       </ul>`;
-                const siteDropdown = data.data.site_address.map(site => `<option value="${site.id}">${site.site_name}</option>`).join('');
+                const siteDropdown = data.data.site_address.map(site => `<option value="${site.id}">${site.site_name.length > 50 ? site.site_name.slice(0, 50) + '...' : site.site_name}</option>`).join('');
                 customerDetailsCard.querySelector('.customer-body').innerHTML = customerDetails;
                 // Show the customer details card
                 customerDetailsCard.style.display = 'block';
