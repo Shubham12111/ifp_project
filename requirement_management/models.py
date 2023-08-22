@@ -33,7 +33,6 @@ class Requirement(models.Model):
     quantity_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor_requirement')
     surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor', null=True, blank=False)
     status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='pending')
-    reference_number = models.CharField(max_length=50, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -61,6 +60,7 @@ class RequirementDefect(models.Model):
     description = RichTextField()
     defect_period = models.DateTimeField()
     due_date = models.DateTimeField()
+    reference_number = models.CharField(max_length=50, null=True)
     status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

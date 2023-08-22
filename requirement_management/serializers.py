@@ -44,7 +44,7 @@ class RequirementDefectSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = RequirementDefect
-        fields = ('id', 'requirement_id', 'action', 'description', 'defect_period', 'due_date', 'status')
+        fields = ('id', 'requirement_id', 'action', 'description', 'reference_number', 'defect_period', 'due_date', 'status')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -120,20 +120,6 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         }
 
     )
-    
-    reference_number = serializers.CharField(
-        label=('Reference Number'),
-        max_length=50,
-        required = False,
-        style={
-            'base_template': 'custom_input.html',
-            'custom_class':'col-6'
-        },
-        error_messages={
-            "invalid": "Reference Number is invalid.",  
-            "blank":"Reference Number is required.", 
-        },
-    )
    
     quantity_surveyor = serializers.PrimaryKeyRelatedField(
         label=('Quantity Surveyor'),
@@ -192,7 +178,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requirement
-        fields = ('customer_id','description','site_address', 'quantity_surveyor', 'reference_number', 'requirement_date_time','file_list')
+        fields = ('customer_id','description','site_address', 'quantity_surveyor', 'requirement_date_time','file_list')
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
@@ -345,6 +331,20 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         },
     )
     
+    reference_number = serializers.CharField(
+        label=('Reference Number'),
+        max_length=50,
+        required = False,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "invalid": "Reference Number is invalid.",  
+            "blank":"Reference Number is required.", 
+        },
+    )
+    
     status = serializers.ChoiceField(
         label='Status',
         choices=REQUIREMENT_DEFECT_CHOICES,
@@ -385,7 +385,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = RequirementDefect
-        fields = ('action',  'description', 'defect_period', 'due_date', 'UPRN', 'status','file_list')
+        fields = ('action',  'description', 'defect_period', 'due_date', 'UPRN', 'reference_number', 'status','file_list')
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
