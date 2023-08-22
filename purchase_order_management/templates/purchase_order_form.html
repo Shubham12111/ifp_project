@@ -36,7 +36,7 @@
                     <div class="col-md-6">
                         <div class="row">
                             <div class="col-md-6">
-                                <label for="po_number" class="form-label">Vendor</label>
+                                <label for="po_number" class="form-label">Vendor <span class="text-danger">*</span></label>
                                 <select class="form-control" id="vendor-choices" name="vendor_id">
                                     <option disabled selected value> Select an Vendor </option>
 
@@ -45,12 +45,12 @@
                                     {% endfor %}
                                 </select>
                                 <div id ="vendor-card">
-                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0"  style="display: none;">
+                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0 text-sm"  style="display: none;">
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label for="inventory_location" class="form-label">Inventory Location</label>
+                                <label for="inventory_location" class="form-label">Inventory Location <span class="text-danger">*</span></label>
                                 <select class="form-control" id="inventory_location-choices" name="inventory_location_id">
                                     <option disabled selected value>Select Inventory Location</option>
                                     {% for inventory_location in inventory_location_list %}
@@ -58,7 +58,7 @@
                                     {% endfor %}
                                 </select>
                                 <div id ="inventorylocation-card">
-                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0"  style="display: none;">
+                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0 text-sm"  style="display: none;">
                                     </div>
                                 </div>
 
@@ -68,18 +68,18 @@
                     <div class="col-md-6">
                         <div class="row mb-4">
                            <div class="col-md-12">
-                                <label for="po_number" class="form-label">PO Number</label>
+                                <label for="po_number" class="form-label">PO Number <span class="text-danger">*</span></label>
                                 <input type="number" class="form-control" id="po_number" value="8795646525451" name="po_number" >
                             </div>
                         </div>
                         <div class="row mb-4">
                            <div class="col-md-6">
-                                <label for="order_date" class="form-label">Date</label>
-                                <input type="text"  class="form-control po_date" id="date" name="order_date" placeholder="DD/MM/YYYY">
+                                <label for="order_date" class="form-label">Date <span class="text-danger">*</span></label>
+                                <input type="text"  class="form-control po_date" id="date" name="order_date" placeholder="YYYY/MM/DD">
                             </div>
                             <div class="col-md-6">
-                                <label for="due_date" class="form-label">Due Date</label>
-                                <input type="text" class="form-control po_due_date" id="due_date" name="due_date" placeholder="DD/MM/YYYY">
+                                <label for="due_date" class="form-label">Due Date <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control po_due_date" id="due_date" name="due_date" placeholder="YYYY/MM/DD">
                             </div>
                         </div> 
                     </div>
@@ -87,13 +87,13 @@
 
                 <div class="row mt-5">
                     <div class="col-md-12">
-                        <table class="table-responsive custom-table mb-3 " style="width:100%">
+                        <table class="table-responsive custom-table mb-3  text-sm" style="width:100%">
                                 <thead>
                                     <tr class="px-0">
                                         <th class="text-start col-6">Item Name</th>
-                                        <th class="text-center col-2">Price</th>
+                                        <th class="text-center col-2">£ Price</th>
                                         <th class="text-center col-2">Quantity </th>
-                                        <th class="text-center col-2">Total</th>
+                                        <th class="text-center col-2">£ Total</th>
                                         <th class="text-center col-2">Action</th>
                                     </tr>
                                 </thead>
@@ -145,18 +145,20 @@
                                 <p class="discount-label">Discount:</p>
                             </div>
                             <div class="col-2 text-end mb-2"></div>
-                            <div class="col-4 text-end mb-2">
-                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" value="00.00" onchange="calculateTotal()">
-                                <div class="error-message text-danger text-sm" id="discountError"></div>
+                            <div class="col-2 text-end mb-2"></div>
+                            <div class="col-2 text-end mb-2">
+                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()">
                             </div>
+                            <div class="error-message text-danger text-sm text-end mb-2" id="discountError"></div>
                            
                 
                             <div class="col-6 mb-1 text-end">
                                 <p class="tax-label">Tax:</p>
                             </div>
                             <div class="col-2 text-end mb-2"></div>
-                            <div class="col-4 mb-1 ">
-                                <input type="number" class="form-control tax-input" id="tax" name="tax" min="0" value="00.00" onchange="calculateTotal()">
+                            <div class="col-2 text-end mb-2"></div>
+                            <div class="col-2 mb-1 ">
+                                <input type="number" class="form-control tax-input" id="tax" name="tax" min="0" placeholder="00.00" onchange="calculateTotal()">
                             </div>
                             <div class="col-6 mb-1 text-end">
                                 <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
@@ -332,7 +334,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
         </td>
         <td class="text-center"><input type="number" class="form-control item-price" value="${item.price}" min="0"></td>
         <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0"></td>
-        <td class="text-center total">£${item.row_total}</td>
+        <td class="text-center total">${item.row_total}</td>
         <td class="text-center">
             <a class="remove-row-btn" onclick="removeRow(this)">
             <i class="fas fa-times"></i>
@@ -372,19 +374,21 @@ addItemBtn.addEventListener('click', () => {
 const newRow = document.createElement('tr');
 newRow.innerHTML = `
     <td>
-        <select id="itemSelect" class="form-control item-dropdown" onchange="updatePrice(this)">
-            ${getUnselectedOptions()}
-        </select>
+        <select id="itemSelect" class="form-select item-dropdown" onchange="updatePrice(this)">
+                <option value="">Select Item</option>
+                ${unselectedOptionsHtml}
+            </select>
     </td>
     <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
     <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
-    <td class="text-center total">£00.00</td>
+    <td class="text-center total">00.00</td>
     <td class="text-center">
         <a class="remove-row-btn" onclick="removeRow(this)">
             <i class="fas fa-times"></i>
         </a>
     </td>
 `;
+
 
 itemTableBody.appendChild(newRow);
 setInitialPrice(newRow);
@@ -415,11 +419,15 @@ function getUnselectedOptions() {
 function setInitialPrice(row) {
     const dropdown = row.querySelector('.item-dropdown');
     const selectedOption = dropdown.options[dropdown.selectedIndex];
+    
+    if (!selectedOption) {
+        return; // No selected option, exit the function
+    }
+    
     const priceInput = row.querySelector('.item-price');
     priceInput.value = selectedOption.dataset.price;
     recalculateTotal(row);
 }
-
 function updatePrice(selectElement) {
 const selectedOption = selectElement.options[selectElement.selectedIndex];
 const row = selectElement.closest('tr');
@@ -444,26 +452,40 @@ function removeRow(buttonElement) {
 }
 
 function recalculateTotal(row) {
-const priceInput = row.querySelector('.item-price');
-const quantityInput = row.querySelector('.quantity-input');
-
-const price = parseFloat(priceInput.value);
-const quantity = parseFloat(quantityInput.value);
-
-if (price >= 0 && quantity >= 0) {
-    const totalCell = row.querySelector('.total');
-    const total = (price * quantity).toFixed(2);
-    totalCell.textContent = `£${total}`;
-    calculateTotal();
-} else {
-    // Show the negative value error modal
-    negativeValueModal.show();
+    const dropdown = row.querySelector('.item-dropdown');
+    const selectedOption = dropdown.options[dropdown.selectedIndex];
     
-    // Reset the input fields to a valid state
-    priceInput.value = '0';
-    quantityInput.value = '1';
+    if (!selectedOption || selectedOption.value === '') {
+        return; // No valid option selected, exit the function
+    }
+
+    const priceInput = row.querySelector('.item-price');
+    const quantityInput = row.querySelector('.quantity-input');
+    const totalCell = row.querySelector('.total');
+
+    const price = parseFloat(priceInput.value);
+    const quantity = parseFloat(quantityInput.value);
+
+    if (price >= 0 && quantity >= 0) {
+        const total = (price * quantity).toFixed(2);
+        totalCell.textContent = `£${total}`;
+        calculateTotal();
+    } else {
+        // Show the negative value error modal
+        negativeValueModal.show();
+        
+        // Reset the input fields to a valid state
+        priceInput.value = '0';
+        quantityInput.value = '1';
+
+        // Update the total cell to show the reset value
+        totalCell.textContent = '00.00';
+    }
 }
-}
+
+
+
+
 function calculateTotal() {
     let subtotal = 0;
     const rows = itemTableBody.querySelectorAll('tr');
@@ -471,17 +493,23 @@ function calculateTotal() {
         const total = parseFloat(row.querySelector('.total').textContent.slice(1));
         subtotal += total;
     });
-    const discount = parseFloat(discountInput.value);
-    const tax = parseFloat(taxInput.value);
+
+    // Get discount and tax values (if they exist)
+    const discountInput = document.getElementById('discount');
+    const discount = parseFloat(discountInput.value) || 0; // Use 0 if parsing fails
+
+    const taxInput = document.getElementById('tax');
+    const tax = parseFloat(taxInput.value) || 0; // Use 0 if parsing fails
 
     // Clear previous error messages
     document.getElementById('discountError').textContent = '';
     document.getElementById('grandTotalError').textContent = '';
 
-    if (discount > subtotal) {
-        document.getElementById('discountError').textContent = "Discount cannot be greater than subtotal.";
+    if (isNaN(discount) || discount > subtotal) {
+        document.getElementById('discountError').textContent = "Discount is invalid or greater than subtotal.";
         return; // Stop further processing
     }
+  
 
     // Calculate amounts
     const discountedSubtotal = subtotal - discount;
@@ -552,8 +580,19 @@ if (document.getElementById('vendor-choices')) {
     resetScrollPosition: true,
     shouldSort: true,
     shouldSortItems: false,
+    searchFields: ['label'],
     searchPlaceholderValue: "Search Vendor", 
+    fuseOptions: {
+      includeScore: true,
+      includeMatches: true,
+      threshold: 0, // Set to 0 for exact match
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 1
+    }
   });
+  
 
   
  }
@@ -568,9 +607,9 @@ async function populateVendorData(selectedVendorId) {
         const cardBody = document.querySelector('#vendor-card .card-body');
         cardBody.style.display = 'block';  // Show the card body
         cardBody.innerHTML = `
-        <h6 class="card-subtitle mb-1">${selectedVendorData.data.first_name} ${selectedVendorData.data.last_name}</h6>
-        <p class="card-subtitle mb-1">+${selectedVendorData.data.phone_number}</p>
-        <p class="card-subtitle mb-1">${selectedVendorData.data.email}</p>
+        <h6 class="text-sm mb-1">${selectedVendorData.data.first_name} ${selectedVendorData.data.last_name}</h6>
+        <p class="text-sm mb-1">+${selectedVendorData.data.phone_number}</p>
+        <p class="text-sm mb-1">${selectedVendorData.data.email}</p>
         `;
     } catch (error) {
         console.error('Error fetching vendor data:', error);
@@ -601,7 +640,17 @@ if (document.getElementById('inventory_location-choices')) {
     resetScrollPosition: true,
     shouldSort: true,
     shouldSortItems: false,
+    searchFields: ['label'],
     searchPlaceholderValue: "Search Inventory Location",
+    fuseOptions: {
+      includeScore: true,
+      includeMatches: true,
+      threshold: 0, // Set to 0 for exact match
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 1
+    }
   });
 }
 // Function to populate inventory location data in the card
@@ -613,8 +662,8 @@ async function populateInventoryLocationData(selectedInventoryLocationId) {
         const cardBody = document.querySelector('#inventorylocation-card .card-body');
         cardBody.style.display = 'block';  // Show the card body
         cardBody.innerHTML = `
-        <h6 class="card-subtitle mb-1">${selectedInventoryLocationData.data.name}</h6>
-        <p class="card-subtitle mb-1">${selectedInventoryLocationData.data.full_address}</p>
+        <h6 class="text-sm mb-1">${selectedInventoryLocationData.data.name}</h6>
+        <p class="text-sm mb-1">${selectedInventoryLocationData.data.full_address}</p>
         `;
     } catch (error) {
         console.error('Error fetching InventoryLocation data:', error);
@@ -664,14 +713,27 @@ function submitForm(status) {
     
     // Get the subtotal, discount, and tax values
     const subtotal = parseFloat(subtotalValue.textContent.slice(1));
-    const discount = parseFloat(discountInput.value);
-    const tax = parseFloat(taxInput.value);
-    
-    // Add the calculated values to the form data
+     // Add the calculated values to the form data
     formData.append('subtotal', subtotal.toFixed(2));
-    formData.append('discount', discount.toFixed(2));
-    formData.append('tax', tax.toFixed(2));
+    // Get and validate the discount value
+    const discountInputValue = discountInput.value;
+    const discount = parseFloat(discountInputValue);
+    if (!isNaN(discount) && discountInputValue !== '') {
+        formData.append('discount', discount.toFixed(2));
+    } else {
+        formData.append('discount', '0.00'); // Default to 0 if discount is empty or not a number
+    }
 
+    // Get and validate the tax value
+    const taxInputValue = taxInput.value;
+    const tax = parseFloat(taxInputValue);
+    if (!isNaN(tax) && taxInputValue !== '') {
+        formData.append('tax', tax.toFixed(2));
+    } else {
+        formData.append('tax', '0.00'); // Default to 0 if tax is empty or not a number
+    }
+    
+   
     // Collect item row data
     const rows = itemTableBody.querySelectorAll('tr');
     let hasNonEmptyRow = false; // Flag to track non-empty rows

@@ -27,17 +27,24 @@
                   </div>
                 </div>
               </div>
-              <div class="filters  mt-4">
+              <label class="text-sm">Filters:</label>
+                <div class="d-flex flex-wrap mt-4">
+
                 <label>Search Vendor <input type="text" class="form-control" name="vendor" id="vendor-filter"></label>
                 <label>Search Location <input type="text"  class="form-control" name="location"  id="location-filter"></label>
-                <label>Status
-                    <select id="status-filter" name="status" class="form-control">
+                <div class="form-group">
+                  <label>Status
+                   
+                    <select id="status-filter" name="status" class="form-select" > 
+                      
                         <option value="">All</option>
                         {% for status in  status_list %}
                           <option value="{{status.0}}">{{status.1}}</option>
                         {% endfor %}
                     </select>
                 </label>
+                </div>
+               
                 <label>Due Date <input type="date" name="due_date"  class="form-control due-date-filter" id="due-date-filter"></label>
                 <label>Order Date <input type="date" name="order_date"  class="form-control order-date-filter" id="order-date-filter"></label>
                 <button id="search-button" class="btn bg-gradient-primary mt-2 mx-2">Search</button>

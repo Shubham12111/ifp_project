@@ -29,11 +29,23 @@
 }
 .swal2-styled.swal2-confirm
 {
-    background-image : linear-gradient(310deg, #5d1a14 0%, #f64936 100%) !important;
+    background-color: #d73632 !important;
+    background-image: none !important;
 }
 .swal2-styled.swal2-confirm:hover, .swal2-styled.swal2-confirm:focus
 {
-    background-image : linear-gradient(310deg, #5d1a14 0%, #f64936 100%) !important;
+    background-color: #d73632 !important;
+    background-image: none !important;
+}
+.swal2-actions:not(.swal2-loading) .swal2-styled:hover
+{
+    background-color: #8392AB !important;
+    background-image: none !important;
+}
+.swal2-styled.swal2-cancel
+{
+    background-color: #8392AB !important;
+    background-image: none !important;
 }
 
 /* Style for the table header text */
@@ -135,11 +147,14 @@ color: #344767;
     pointer-events: none;
     transition: 0.3s ease;
 }
-  
-  
-
 
 /* theme  */
+.dropdown-toggle {
+    position: relative; /* Ensure the dropdown is positioned relative to its container */
+    max-height: 200px; /* Set a maximum height for the dropdown */
+    overflow-y: auto; /* Enable scrolling if content exceeds the maximum height */
+    width: 150px !important; /* Set a fixed width for the dropdown */
+  }
 
 @media (min-width: 992px) {
     .timeline-one-side .timeline-content {
@@ -172,3 +187,43 @@ color: #344767;
 }
 
 
+.custom-date-search {
+    width: 200px;
+    /* position: relative; */
+    height: 43px;
+    overflow-y: auto;
+    width: 150px !important;
+    color: #344767 !important;
+    border: 1px solid #344767 !important;
+}
+
+#dateRangeInput::placeholder {
+    color: #344767; /* Placeholder text color */
+    display: inline-block;
+    padding: var(--bs-btn-padding-y) var(--bs-btn-padding-x);
+    font-family: var(--bs-btn-font-family);
+    font-size: var(--bs-btn-font-size);
+    font-weight: var(--bs-btn-font-weight);
+    line-height: var(--bs-btn-line-height);
+    color: var(--bs-btn-color);
+    text-align: left;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: var(--bs-btn-border-width) solid var(--bs-btn-border-color);
+    border-radius: var(--bs-btn-border-radius);
+    background-color: var(--bs-btn-bg);
+    font-weight: 600;
+    white-space: nowrap;
+    
+  }
+/* .custom-search {
+    --bs-btn-border-color: #b3bac5 !important;
+    --bs-btn-color: #b3bac5 !important;
+} */
+
+
+.custom-dropdown-toggle::after {
+    content: '\f138'; /* Replace with your desired icon code or URL */
+    margin-left: 1.5rem !important; /* Adjust spacing between default and custom icons */
+}

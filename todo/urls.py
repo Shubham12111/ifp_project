@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 
 
 urlpatterns = [
+    path('search/', ToDoUserSearchAPIView.as_view(), name='todo_search_user'),
     path('list/', ToDoListAPIView.as_view(), name='todo_list'),
     path('add/', ToDoAddView.as_view(), name='todo_add'),
     path('edit/<int:pk>/', ToDoUpdateView.as_view(), name='todo_edit'),

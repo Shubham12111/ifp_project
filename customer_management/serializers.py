@@ -140,7 +140,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            'base_template': 'custom_input.html'
+            'base_template': 'customer_email.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -291,6 +291,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
 
 class SiteAddressSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(
+        label='Site Name',
         max_length=255,
         min_length=3,
         required=True,
@@ -305,6 +306,7 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         
     )
     address = serializers.CharField(
+        label='Address',
         max_length=255,
         min_length=5,
         required=True,
@@ -336,6 +338,7 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         },
     )
     post_code = serializers.CharField(
+        label='Post Code',
         max_length=7,
         required=True,
         allow_blank=True,

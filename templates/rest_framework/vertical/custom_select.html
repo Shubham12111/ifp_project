@@ -61,9 +61,6 @@
   });
 };
 
-
-
-
 // Initialize Choices.js
 if (document.getElementById('choices-{{ field.name }}')) {
   var element = document.getElementById('choices-{{ field.name }}');
@@ -80,6 +77,15 @@ if (document.getElementById('choices-{{ field.name }}')) {
     shouldSort: true,
     shouldSortItems: false,
     searchPlaceholderValue: "Search ....", 
+    fuseOptions: {
+      includeScore: true,
+      includeMatches: true,
+      threshold: 0, // Set to 0 for exact match
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 1
+    }
   });
 
   

@@ -13,14 +13,13 @@ function CustomconfirmDelete(itemId, confirmMessage, successMessage, deleteUrl) 
     const csrfToken = getCookie('csrftoken');
 
     Swal.fire({
-        title: 'Confirm Delete',
-        text: confirmMessage,
-        icon: 'warning',
+        title: '<h4 class="mb-0">Confirm Delete</h4>',
+        html: '<div class="custom-content text-sm">' + confirmMessage + '</div>', // Use a custom class for the content
         showCancelButton: true,
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'Cancel',
         cancelButtonColor: '#6c757d',
-        confirmButtonColor: '#6c757d',
+        confirmButtonColor: '#d73632',
         reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {

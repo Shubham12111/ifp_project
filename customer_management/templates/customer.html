@@ -18,6 +18,7 @@
                         {% csrf_token %}
                         {% render_form serializer %}
                     </div>
+                    
                     <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
                     <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_list' %}">Back</a>
                     
