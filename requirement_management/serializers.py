@@ -47,7 +47,7 @@ class RequirementDefectSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = RequirementDefect
-        fields = ('id', 'requirement_id', 'action', 'description', 'defect_period', 'due_date', 'status')
+        fields = ('id', 'requirement_id', 'action', 'description', 'reference_number', 'defect_period', 'due_date', 'status')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -360,6 +360,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         },
     )
     
+
     def get_initial(self):
         
         fields = self.fields
@@ -383,6 +384,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
             for field in fields.values()
             if not field.read_only
         ])
+
     
     def validate_UPRN(self, value):
         cleaned_value = str(value).replace(" ", "")  # Remove spaces
@@ -415,6 +417,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequirementDefect
         fields = ('action',  'description', 'defect_period', 'due_date', 'UPRN','file_list')
+
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
