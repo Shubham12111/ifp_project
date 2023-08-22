@@ -1,6 +1,7 @@
 import uuid
 from django.conf import settings
 from rest_framework import serializers
+from rest_framework.fields import empty
 from .models import *
 from django.utils.html import strip_tags
 from authentication.models import User
@@ -10,6 +11,8 @@ from infinity_fire_solutions.aws_helper import *
 from django.db import transaction
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
+from collections import OrderedDict
+from collections.abc import Mapping
 
 class CustomerNameField(serializers.RelatedField):
     def to_representation(self, value):
@@ -77,6 +80,7 @@ class RequirementSerializer(serializers.ModelSerializer):
         return data
 
 class RequirementAddSerializer(serializers.ModelSerializer):
+
     customer_id = serializers.PrimaryKeyRelatedField(
         label=('Customer'),
         required=True,
@@ -160,6 +164,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         ),
         label=('Documents'),  # Adjust the label as needed
         required=False,
+        write_only=True,
         initial=[],
         style={
             "input_type": "file",
@@ -179,6 +184,30 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = Requirement
         fields = ('customer_id','description','site_address', 'quantity_surveyor', 'requirement_date_time','file_list')
+    
+    def get_initial(self):
+        
+        fields = self.fields
+        
+        if hasattr(self, 'initial_data'):
+            # initial_data may not be a valid type
+            if not isinstance(self.initial_data, Mapping):
+                return OrderedDict()
+
+            return OrderedDict([
+                (field_name, field.get_value(self.initial_data))
+                for field_name, field in fields.items()
+                if (field.get_value(self.initial_data) is not empty) and
+                not field.read_only
+            ])
+
+        fields['file_list'].required = True
+        
+        return OrderedDict([
+            (field.field_name, field.get_initial())
+            for field in fields.values()
+            if not field.read_only
+        ])
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
@@ -236,7 +265,6 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         Returns:
             dict: The serialized representation of the Conversation.
         """
-        
         representation = super().to_representation(instance)
 
         document_paths = []
@@ -300,6 +328,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         ),
     label=('Documents'),  # Adjust the label as needed
     required=False,
+    write_only=True,
     initial=[],
     style={
         "input_type": "file",
@@ -331,29 +360,31 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         },
     )
     
-    reference_number = serializers.CharField(
-        label=('Reference Number'),
-        max_length=50,
-        required = False,
-        style={
-            'base_template': 'custom_input.html',
-            'custom_class':'col-6'
-        },
-        error_messages={
-            "invalid": "Reference Number is invalid.",  
-            "blank":"Reference Number is required.", 
-        },
-    )
-    
-    status = serializers.ChoiceField(
-        label='Status',
-        choices=REQUIREMENT_DEFECT_CHOICES,
-        required=True,
-        style={
-            'base_template': 'custom_select.html',
-            'custom_class': 'col-6'
-        },
-    )
+
+    def get_initial(self):
+        
+        fields = self.fields
+        
+        if hasattr(self, 'initial_data'):
+            # initial_data may not be a valid type
+            if not isinstance(self.initial_data, Mapping):
+                return OrderedDict()
+
+            return OrderedDict([
+                (field_name, field.get_value(self.initial_data))
+                for field_name, field in fields.items()
+                if (field.get_value(self.initial_data) is not empty) and
+                not field.read_only
+            ])
+
+        fields['file_list'].required = True
+        
+        return OrderedDict([
+            (field.field_name, field.get_initial())
+            for field in fields.values()
+            if not field.read_only
+        ])
+
     
     def validate_UPRN(self, value):
         cleaned_value = str(value).replace(" ", "")  # Remove spaces
@@ -385,7 +416,8 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = RequirementDefect
-        fields = ('action',  'description', 'defect_period', 'due_date', 'UPRN', 'reference_number', 'status','file_list')
+        fields = ('action',  'description', 'defect_period', 'due_date', 'UPRN','file_list')
+
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
