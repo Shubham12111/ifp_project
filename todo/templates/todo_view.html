@@ -70,7 +70,7 @@
           {% if todo_data.status != 'completed' %}
             <div class="d-flex mt-4">
                 <div class="flex-grow-1 my-auto">
-                <form role="form" method="POST" autocomplete="off" class="multisteps-form__form">
+               <form role="form"  method="POST" autocomplete="off" class="multisteps-form__form" onsubmit="showLoader()>
                     {% csrf_token %}
                     {% render_form serializer %}
                     <div class="row mt-2">
@@ -80,7 +80,8 @@
                             <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
                         </div>
                       </div>
-                  </form>
+                    </form>
+                  {% include 'components/loader.html' %}
                 </div>
               </div>
               {% endif %}

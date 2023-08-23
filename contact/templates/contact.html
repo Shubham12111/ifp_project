@@ -6,10 +6,10 @@
 <!-- base.html -->
 <div class="container-fluid py-4">
    <div class="row">
-        <div class="col-12 col-lg-8 m-auto">
-          <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8">
+        <div class="col-12  m-auto">
+          <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8"  onsubmit="showLoader()">
             <!--single form panel-->
-            <div class="card multisteps-form__panel p-3 border-radius-xl bg-white js-active" data-animation="FadeIn">
+            <div class="card  p-3 bg-white js-active" data-animation="FadeIn">
               <h4 class="font-weight-bolder">{% if contact %}Edit {% else %} Add {% endif %} Contact</h4>
               <div class="multisteps-form__content">
                 {% csrf_token %}
@@ -31,6 +31,7 @@
             </div>
           
           </form>
+          {% include 'components/loader.html' %}
       </div>
   </div>
   {% endblock %}

@@ -7,6 +7,11 @@ from infinity_fire_solutions.custom_form_validation import *
 from django.conf import settings
 
 
+def validate_non_negative(value):
+    if value < 0:
+        raise ValidationError("Value cannot be negative.")
+
+
 def validate_file_size(value):
     """
     Validate the file size is within the allowed limit.
@@ -113,6 +118,21 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     validators=[file_extension_validator, validate_file_size],
     )  
 
+    discount = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        required=False,
+        validators=[validate_non_negative]    # Apply MinValueValidator
+    )
+    tax = serializers.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        required=False,
+        validators=[validate_non_negative]  # Apply MinValueValidator
+    )
+
     class Meta:
         model = PurchaseOrder
         fields = ['po_number', 'vendor_id', 'inventory_location_id', 'order_date', 'due_date', 'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file']
@@ -123,15 +143,6 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Sub Total must be a positive value.")
         return value
 
-    def validate_discount(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Discount must be a positive value.")
-        return value
-
-    def validate_tax(self, value):
-        if value < 0:
-            raise serializers.ValidationError("Tax must be a positive value.")
-        return value
 
     def validate_total_amount(self, value):
         if value < 0:

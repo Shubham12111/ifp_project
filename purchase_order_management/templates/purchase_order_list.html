@@ -14,7 +14,7 @@
            <div class="card-header pb-0 ps-3 pt-3">
              <div class="d-lg-flex justify-content-between">
                <div>
-                 <h4 class="mb-0">Purchase Orders</h4>
+                <h4 class="mb-0">Purchase Orders</h4>
                </div>
                <div class="ms-auto my-auto mt-lg-0 mt-4">
                   <div class="ms-auto my-auto">
@@ -27,20 +27,27 @@
                   </div>
                 </div>
               </div>
-              <div class="filters  mt-4">
-                <label>Search Vendor <input type="text" class="form-control" name="vendor" id="vendor-filter"></label>
-                <label>Search Location <input type="text"  class="form-control" name="location"  id="location-filter"></label>
-                <label>Status
-                    <select id="status-filter" name="status" class="form-control">
+              <label class="mt-2 text-muted">Filters:</label>
+                <div class="d-flex flex-wrap ">
+
+                <label>Search Vendor <input type="text" class="form-control" placeholder="Search Vendor" name="vendor" id="vendor-filter"></label>
+                <label>Search Location <input type="text" placeholder="Search Loaction" class="form-control " name="location"  id="location-filter"></label>
+                <div class="form-group">
+                  <label>Status
+                   
+                    <select id="status-filter" name="status" class="form-select" > 
+                      
                         <option value="">All</option>
                         {% for status in  status_list %}
                           <option value="{{status.0}}">{{status.1}}</option>
                         {% endfor %}
                     </select>
                 </label>
-                <label>Due Date <input type="date" name="due_date"  class="form-control due-date-filter" id="due-date-filter"></label>
-                <label>Order Date <input type="date" name="order_date"  class="form-control order-date-filter" id="order-date-filter"></label>
-                <button id="search-button" class="btn bg-gradient-primary mt-2 mx-2">Search</button>
+                </div>
+               
+                <label>Due Date <input type="date" name="due_date" placeholder="Due Date"  class="form-control due-date-filter" id="due-date-filter"></label>
+                <label>Order Date <input type="date" name="order_date"  placeholder="Order Date"  class="form-control order-date-filter" id="order-date-filter"></label>
+                <button id="search-button" class="btn bg-gradient-primary btn-sm mb-0 mt-3 mx-3" style="height: 41px;">Search</button>
                 <button id="clear-button" class="btn btn-secondary" style="display: none;">Clear Filters</button>
             </div>
              </div>

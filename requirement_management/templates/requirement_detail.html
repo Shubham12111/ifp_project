@@ -80,7 +80,7 @@
                             </div>
                             <div class="row mb-2">
                                 <div class="col-3"><strong class="text-dark">Date/Time:</strong></div>
-                                <div class="col-9">{{ requirement_instance.requirement_date_time }}</div>
+                                <div class="col-9">{{ requirement_instance.requirement_date_time|date:"M d, Y  H:i" }}</div>
                             </div>
                         </div>
                        
@@ -104,7 +104,8 @@
                                 <button type="submit" class="btn bg-gradient-primary">Submit</button>
                             </div>
                         
-                        </form>
+                          </form>
+ {% include 'components/loader.html' %}
                     {% else %}
                     {% if requirement_instance.surveyor %}
                     <div class="row text-sm">
@@ -137,9 +138,9 @@
                                 <tbody>
                                     {% for defect in requirement_defect %}
                                     <tr>
-                                        <td class="text-sm">{{ defect.action|truncatechars:50 }}</td>
-                                        <td class="text-sm">{{ defect.description|safe|truncatechars:50 }}</td>
-                                        <td class="text-sm">{{ defect.due_date }}</td>
+                                        <td class="text-sm">{{ defect.action|truncatechars:20 }}</td>
+                                        <td class="text-sm">{{ defect.description|safe|truncatechars:20 }}</td>
+                                        <td class="text-sm">{{ defect.due_date|date:"M d, Y  H:i" }}</td>
                                         <td class="text-sm">{{ defect.UPRN|default:'' }}</td>
                                         <td class="text-sm" >{{ defect.status|title }}</td>
                                         <td class="text-sm">

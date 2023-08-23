@@ -57,11 +57,11 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <span class="mb-2  font-weight-bold" >Date:</span>
-                        <span class="text-dark ms-2 ">{{purchase_order.order_date}}</span>
+                        <span class="text-dark ms-2 ">{{purchase_order.order_date|date:"M d, Y"}}</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span class="mb-2  font-weight-bold">Order Date:</span>
-                            <span class="text-dark ms-2 ">{{purchase_order.due_date}}</span>
+                            <span class="text-dark ms-2 ">{{purchase_order.due_date|date:"M d, Y"}}</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span class="font-weight-bold">Status:</span>
@@ -163,7 +163,8 @@
                         <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitButton" type="button">Save</button>
                     </div>
                 </div>
-            </form>
+              </form>
+ {% include 'components/loader.html' %}
         </div>
     </div>
 </div>

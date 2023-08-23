@@ -31,9 +31,9 @@
             <!-- Navbar -->
             {% include 'includes/breadcrumb.html' %}
             {% block content %}{% endblock %}
-
+           
         </main>
-
+        
     <!-- Footer -->
     <script src="{% static 'assets/js/core/popper.min.js' %}"></script>
     <script src="{% static 'assets/js/core/bootstrap.min.js' %}"></script>
@@ -55,6 +55,13 @@
       }
     </script>
 
+    <script>
+      function showLoader() {
+        const loaderOverlay = document.getElementById('loaderOverlay');
+        loaderOverlay.classList.remove('d-none');
+    
+      }
+    </script>
   {% block extra_js %}{% endblock %}
   <script async defer src="https://buttons.github.io/buttons.js"></script>
     <!-- Control Center for Soft Dashboard: parallax effects, scripts for the example pages, etc -->

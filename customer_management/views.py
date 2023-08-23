@@ -309,7 +309,9 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         instance = self.get_queryset()
         if instance:
             # If the customer instance exists, initialize the serializer with instance and provided data.
-            serializer = self.serializer_class(instance = instance, data = data, context = {'request': request} )
+            data_dict = request.data.dict()
+            data_dict['email'] = instance.email if instance else None
+            serializer = self.serializer_class(instance = instance, data = data_dict, context = {'request': request} )
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated customer instance.
                 serializer.save()
@@ -326,7 +328,7 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             else:
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'instance': instance}
+                    context = {'serializer': serializer, 'customer_instance': instance}
                     return render(request, self.template_name, context)
                 else:
                     # For API requests with invalid data, return an error response with serializer errors.
@@ -397,8 +399,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         }
         
         billing_address = BillingAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
-        billing_address = billing_address.filter(user_id__id=self.kwargs.get('customer_id'),
-                                                       pk=self.kwargs.get('address_id')).first()
+        billing_address = billing_address.filter(user_id__id=self.kwargs.get('customer_id')).first()
         return billing_address
 
     def get(self, request, *args, **kwargs):

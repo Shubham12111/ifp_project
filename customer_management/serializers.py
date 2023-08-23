@@ -140,7 +140,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            'base_template': 'custom_input.html'
+            'base_template': 'customer_email.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -200,21 +200,6 @@ class BillingAddressSerializer(serializers.ModelSerializer):
             'base_template': 'custom_input.html'
         },
     )
-    pan_number = serializers.CharField(
-        label='NION',
-        required=True,
-        style={
-            'base_template': 'custom_input.html'
-        },
-    )
-    place_to_supply = serializers.CharField(
-        label='Place To Supply',
-        required=False,
-        max_length=50,
-        style={
-            'base_template': 'custom_input.html'
-        },
-    )
     tax_preference = serializers.ChoiceField(
         label='Tax Preference',
         choices=TAX_PREFERENCE_CHOICES,
@@ -267,35 +252,32 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_input.html'
         },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Post Code is required.",
+          
+        },
+        validators=[validate_uk_postcode] 
     )
     
     def validate_vat_number(self, value):
         # Custom validation for VAT number format (United Kingdom VAT number)
         if not re.match(r'^\d{9}$', value):
             raise serializers.ValidationError("Invalid VAT number format. It should be a 9-digit number.")
+        if int(value) == 0:
+            raise serializers.ValidationError("Only zeros are not allowed in VAT Number")
         return value
     
-    def validate_pan_number(self, value):
-        # Custom validation for NION format (National Insurance Number in the UK)
-        if not re.match(r'^[A-Z]{2}\d{6}[A-Z]$', value):
-            raise serializers.ValidationError("Invalid NION format. It should consist of two letters, six digits, and a final letter (e.g., AB123456C).")
-        return value
-    
-    def validate_post_code(self, value):
-        # check if value contains only spaces.
-        if self.initial_data["post_code"].isspace():
-            raise serializers.ValidationError("Invalid Post code. Post code can not contain only spaces.")
-        value = validate_uk_postcode(value)
-        return value
     
     class Meta:
         model = BillingAddress
-        fields = ['vat_number', 'pan_number', 'place_to_supply', 'tax_preference', 'address',
+        fields = ['vat_number','tax_preference', 'address',
                   'country', 'town', 'county', 'post_code']
         
 
 class SiteAddressSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(
+        label='Site Name',
         max_length=255,
         min_length=3,
         required=True,
@@ -310,11 +292,17 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         
     )
     address = serializers.CharField(
+        label='Address',
         max_length=255,
         min_length=5,
         required=True,
         style={
             'base_template': 'custom_fullwidth_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Address is required.",
+          
         },
         
     )
@@ -341,12 +329,18 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         },
     )
     post_code = serializers.CharField(
+        label='Post Code',
         max_length=7,
         required=True,
-        allow_blank=True,
-        allow_null=True,
+        allow_blank=False,
+        allow_null=False,
         style={
             'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Post Code is required.",
+          
         },
         validators=[validate_uk_postcode] 
     )
@@ -399,6 +393,8 @@ class ContactPersonSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField(
         label=('Email '),
+        validators=[UniqueValidator(queryset=ContactPerson.objects.all(), message="Email already exists. Please use a different email.")],
+
         required=True,
         max_length=100,
         style={

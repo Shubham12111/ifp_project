@@ -129,17 +129,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
             "base_template": 'custom_input.html'
         },
     )
-    pan_number = serializers.CharField(
-        label='PAN Number',
-        max_length=20,
-        required=True,
-        style={
-           "input_type": "text",
-            "autocomplete": "off",
-            "autofocus": False,
-            "base_template": 'custom_input.html'
-        },
-    )
+    
     tax_preference = serializers.ChoiceField(
         label='Tax Preferences',
         choices= TAX_PREFERENCE_CHOICES,
@@ -152,13 +142,11 @@ class BillingDetailSerializer(serializers.ModelSerializer):
     address = serializers.CharField(
         label='Address',
         max_length=255,
-        required=False,
-        style={
-           "input_type": "text",
-            "autocomplete": "off",
-            "autofocus": False,
-            
-        },
+        min_length=5,
+        required=True,
+        allow_blank=True,
+        allow_null=True,
+        
     )
     country = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.all(),
@@ -181,22 +169,23 @@ class BillingDetailSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
-
-    
     post_code = serializers.CharField(
-        label=('Post Code'),
+        label='Post Code',
         max_length=7,
         required=False,
+        allow_blank=True,
+        allow_null=True,
         style={
-            "input_type": "text",
-            "autofocus": False,
-            "autocomplete": "off",
             'base_template': 'custom_input.html'
         },
-
-        validators=[validate_uk_postcode]
-
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Post Code is required.",
+          
+        },
+        validators=[validate_uk_postcode] 
     )
+    
     vendor_status = serializers.ChoiceField(
         label='Vendor Status',
         choices=VENDOR_STATUS_CHOICES,
@@ -209,20 +198,17 @@ class BillingDetailSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = Vendor 
-        fields = ('vat_number','pan_number','tax_preference','vendor_status','address','town','county','country','post_code')
+        fields = ('vat_number','tax_preference','vendor_status','address','town','county','country','post_code')
+
+    
 
     def validate_vat_number(self, value):
         # Custom validation for VAT number format (United Kingdom VAT number)
         if not re.match(r'^\d{9}$', value):
             raise serializers.ValidationError("Invalid VAT number format. It should be a 9-digit number.")
+        if int(value) == 0:
+            raise serializers.ValidationError("Only zeros are not allowed in VAT Number")
         return value
-    
-    def validate_pan_number(self, value):
-        # Custom validation for PAN number format (National Insurance Number in the UK)
-        if not re.match(r'^[A-Z]{2}\d{6}[A-Z]$', value):
-            raise serializers.ValidationError("Invalid PAN number format. It should consist of two letters, six digits, and a final letter (e.g., AB123456C).")
-        return value
-
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -296,6 +282,7 @@ class VendorContactPersonSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField(
         label=('Email '),
+        validators=[UniqueValidator(queryset=VendorContactPerson.objects.all(), message="Email already exists. Please use a different email.")],
         required=True,
         max_length=100,
         style={
@@ -341,16 +328,14 @@ class VendorRemarkSerializer(serializers.ModelSerializer):
 
     remarks = serializers.CharField(
         label=('Remarks '),
-        required=True,
         max_length=255,
+        required = False,
+        allow_blank=True,
+        allow_null=True,
         style={
            'base_template': 'rich_textarea.html',
         },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Remarks is required.",
-        },
-         validators=[validate_remarks]
+        #  validators=[validate_remarks]
     )
     class Meta:
         model = Vendor

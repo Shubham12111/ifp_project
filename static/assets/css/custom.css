@@ -29,11 +29,23 @@
 }
 .swal2-styled.swal2-confirm
 {
-    background-image : linear-gradient(310deg, #5d1a14 0%, #f64936 100%) !important;
+    background-color: #d73632 !important;
+    background-image: none !important;
 }
 .swal2-styled.swal2-confirm:hover, .swal2-styled.swal2-confirm:focus
 {
-    background-image : linear-gradient(310deg, #5d1a14 0%, #f64936 100%) !important;
+    background-color: #d73632 !important;
+    background-image: none !important;
+}
+.swal2-actions:not(.swal2-loading) .swal2-styled:hover
+{
+    background-color: #8392AB !important;
+    background-image: none !important;
+}
+.swal2-styled.swal2-cancel
+{
+    background-color: #8392AB !important;
+    background-image: none !important;
 }
 
 /* Style for the table header text */
@@ -74,35 +86,7 @@ border-left-width: 1px;
 border: 1px solid color(srgb 0 0 0) !important;
 } */
 
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 999;
-    overflow: auto;
-}
 
-.modal-content {
-    margin: auto;
-    background-color: white;
-    padding: 20px;
-    max-width: 90%;
-    max-height: 90%;
-    text-align: center;
-}
-
-/* CSS for media inside the modal */
-.modal-content img,
-.modal-content video {
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
-    margin: 0 auto;
-}
 
 #fra-image-view-modal > [for="image-for-fra-image-view-modal"],
 #fra-image-view-modal > [for="video-for-fra-video-view-modal"] {
@@ -135,11 +119,14 @@ color: #344767;
     pointer-events: none;
     transition: 0.3s ease;
 }
-  
-  
-
 
 /* theme  */
+.dropdown-toggle {
+    position: relative; /* Ensure the dropdown is positioned relative to its container */
+    max-height: 200px; /* Set a maximum height for the dropdown */
+    overflow-y: auto; /* Enable scrolling if content exceeds the maximum height */
+    width: auto!important; /* Set a fixed width for the dropdown */
+  }
 
 @media (min-width: 992px) {
     .timeline-one-side .timeline-content {
@@ -172,3 +159,64 @@ color: #344767;
 }
 
 
+.custom-date-search {
+    width: 200px;
+    /* position: relative; */
+    height: 43px;
+    overflow-y: auto;
+    width: 150px !important;
+    color: #344767 !important;
+    border: 1px solid #344767 !important;
+}
+
+#dateRangeInput::placeholder {
+    color: #344767; /* Placeholder text color */
+    display: inline-block;
+    padding: var(--bs-btn-padding-y) var(--bs-btn-padding-x);
+    font-family: var(--bs-btn-font-family);
+    font-size: var(--bs-btn-font-size);
+    font-weight: var(--bs-btn-font-weight);
+    line-height: var(--bs-btn-line-height);
+    color: var(--bs-btn-color);
+    text-align: left;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: var(--bs-btn-border-width) solid var(--bs-btn-border-color);
+    border-radius: var(--bs-btn-border-radius);
+    background-color: var(--bs-btn-bg);
+    font-weight: 600;
+    white-space: nowrap;
+    
+  }
+/* .custom-search {
+    --bs-btn-border-color: #b3bac5 !important;
+    --bs-btn-color: #b3bac5 !important;
+} */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  .text-primary
+  {
+    color: #d73632 !important ;
+  }
+
+
+  
+
+.custom-dropdown-toggle::after {
+    content: '\f138'; /* Replace with your desired icon code or URL */
+    margin-left: 1.5rem !important; /* Adjust spacing between default and custom icons */
+}
+.choices{
+     margin-bottom: 0px !important;
+}

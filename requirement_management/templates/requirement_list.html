@@ -19,13 +19,14 @@
               <div class="ms-auto my-auto">
                 {% if request.user|has_add_permission:"requirement" %}
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
-                <a href="{% url 'requirement_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; FRA Actions</a>
+                <a href="{% url 'requirement_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add FRA Actions</a>
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
               </div>
             </div>
           </div>
+          {% include 'components/table_search.html' %}
         </div>
         <div class="card-body px-0 pb-0">
          <div class="table-responsive">
@@ -46,7 +47,7 @@
                         </td>
                         <td class="text-sm">{{requirement.quantity_surveyor.first_name|default:''|truncatechars:20|title}} {{requirement.quantity_surveyor.last_name|default:''|truncatechars:20|title}}<br>
                         </td>
-                        <td class="text-sm">{{requirement.requirement_date_time}}</td>
+                        <td class="text-sm">{{requirement.requirement_date_time|date:"M d, Y  H:i"}}</td>
                       
                         <td class="text-sm">{{requirement.status|title}}</td>
                         <td class="text-sm">
@@ -100,9 +101,20 @@
     const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
       searchable: true,
       fixedHeight: false,
-      perPage: 25
+      perPage: 25,
+      perPageSelect: false,
     });
 
-  };
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+  }
+
 </script>
 {% endblock %}     

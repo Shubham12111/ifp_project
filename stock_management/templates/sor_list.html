@@ -23,6 +23,7 @@
               {% endif %}
             </div>
           </div>
+          {% include 'components/table_search.html' %}
         </div>
         <div class="card-body px-0 pb-0">
           <div class="table-responsive">
@@ -34,7 +35,7 @@
                   <th>Price ( £ )</th>
                   <th>Reference Number</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th class="custom-last-column">Actions</th>
                 </tr>
               </thead>
               <tbody class="ml-4">
@@ -96,8 +97,19 @@
     const dataTableSearch = new simpleDatatables.DataTable("#item-list", {
       searchable: true,
       fixedHeight: false,
-      perPage: 25
+      perPage: 25,
+      perPageSelect: false,
     });
-  };
+
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+  }
 </script>
 {% endblock %}

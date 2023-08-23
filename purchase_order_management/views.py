@@ -254,11 +254,6 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         Handle POST request to add a requirement.
         """
-        # Call the handle_unauthenticated method to handle unauthenticated access.
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'add'
-        )
-        
         data = request.data
         with transaction.atomic():
             serializer = self.serializer_class(data=request.data)
@@ -492,6 +487,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
             messages.success(request, message)
             return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
         else:
+            print(serializer.errors)
             return JsonResponse({'success': False, 'errors': serializer.errors,  
             'status':status.HTTP_400_BAD_REQUEST}) 
 
