@@ -282,6 +282,7 @@ class VendorContactPersonSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField(
         label=('Email '),
+        validators=[UniqueValidator(queryset=VendorContactPerson.objects.all(), message="Email already exists. Please use a different email.")],
         required=True,
         max_length=100,
         style={
@@ -329,10 +330,12 @@ class VendorRemarkSerializer(serializers.ModelSerializer):
         label=('Remarks '),
         max_length=255,
         required = False,
+        allow_blank=True,
+        allow_null=True,
         style={
            'base_template': 'rich_textarea.html',
         },
-         validators=[validate_remarks]
+        #  validators=[validate_remarks]
     )
     class Meta:
         model = Vendor

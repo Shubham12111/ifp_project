@@ -125,7 +125,7 @@ color: #344767;
     position: relative; /* Ensure the dropdown is positioned relative to its container */
     max-height: 200px; /* Set a maximum height for the dropdown */
     overflow-y: auto; /* Enable scrolling if content exceeds the maximum height */
-    width: 150px !important; /* Set a fixed width for the dropdown */
+    width: auto!important; /* Set a fixed width for the dropdown */
   }
 
 @media (min-width: 992px) {
@@ -216,4 +216,7 @@ color: #344767;
 .custom-dropdown-toggle::after {
     content: '\f138'; /* Replace with your desired icon code or URL */
     margin-left: 1.5rem !important; /* Adjust spacing between default and custom icons */
+}
+.choices{
+     margin-bottom: 0px !important;
 }
