@@ -102,7 +102,9 @@ class ContactSerializer(serializers.ModelSerializer):
         label=('Phone'),
         max_length=14,
         min_length=10,
-        required= True,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
         style={
             "input_type": "text",
             "autofocus": False,
