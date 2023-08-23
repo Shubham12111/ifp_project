@@ -88,6 +88,62 @@ display: inline-block;
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<!-- Include Required Prerequisites -->
+<script type="text/javascript" src="//cdn.jsdelivr.net/jquery/1/jquery.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+
+ 
+<!-- Include Date Range Picker -->
+<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
+<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+
+<script>
+  // Initialize the Date Range Picker
+// Initialize the Date Range Picker
+document.addEventListener('DOMContentLoaded', function() {
+    var start = moment().subtract(29, 'days');
+    var end = moment();
+
+    function cb(start, end) {
+        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+    }
+
+    $('#reportrange').daterangepicker({
+        startDate: start,
+        endDate: end,
+        ranges: {
+            'Today': [moment(), moment()],
+            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        },
+        // Automatically apply the selected date range
+        autoApply: true,
+        // Customize the button labels
+        locale: {
+            applyLabel: 'Apply', // Change the "Apply" button label
+            cancelLabel: 'Remove Filter', // Change the "Cancel" button label
+        }
+    }, function(start, end, label) {
+        // This callback function is triggered when a range is selected
+        cb(start, end);
+
+        // Hide the specific buttons
+        $('.range_inputs .applyBtn').addClass('hide');
+        $('.range_inputs .cancelBtn').addClass('hide');
+    });
+
+    // Initial callback
+    cb(start, end);
+});
+
+
+
+</script>
+
+
+
+
 <script>
 const searchInput = document.getElementById('searchAssigned');
 const applySearchButton = document.getElementById('applySearch');
