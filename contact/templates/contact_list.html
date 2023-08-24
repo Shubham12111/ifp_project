@@ -104,13 +104,13 @@
                         {% endif %}
                         {% if request.user|has_view_permission:"contact" %}
                         <li>
-                          <a href="{% url 'contact_conversation' contact.pk %}" class="dropdown-item border-radius-md" >Conversion</a>
+                          <a href="{% url 'contact_conversation' contact.pk %}" class="dropdown-item border-radius-md" >Conversation</a>
                         </li>
                         {% endif %}
                         <li>
                           {% if request.user|has_update_permission:"contact" %}
-                          <a href="#" data-bs-toggle="tooltip" class="dropdown-item border-radius-md"   onclick="showPopupAndRedirect('{% url 'convert_to_custmoer' contact.pk %}')">
-                            Convert TO Customer
+                          <a href="#" data-bs-toggle="tooltip" class="dropdown-item border-radius-md"   onclick="showPopupAndRedirect('{% url 'convert_to_customer' contact.pk  %}')">
+                            Convert To Customer
                           
                           </a>
                         {% endif %}

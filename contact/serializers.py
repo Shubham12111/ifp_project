@@ -102,9 +102,7 @@ class ContactSerializer(serializers.ModelSerializer):
         label=('Phone'),
         max_length=14,
         min_length=10,
-        required=False,
-        allow_null=True,
-        allow_blank=True,
+        required= True,
         style={
             "input_type": "text",
             "autofocus": False,
@@ -139,7 +137,7 @@ class ContactSerializer(serializers.ModelSerializer):
         label=('Company Name'),
         max_length=100,
         min_length=3,
-        required=True,
+        required=False,
         allow_null=True,
         allow_blank=True,
         style={
@@ -156,7 +154,6 @@ class ContactSerializer(serializers.ModelSerializer):
         min_length=5,
         required=False,
         allow_null=True,
-        allow_blank=True,
         style={
             "input_type": "text",
             "autofocus": False,
@@ -171,7 +168,7 @@ class ContactSerializer(serializers.ModelSerializer):
         queryset=ContactType.objects.all(),
         style={
             'base_template': 'custom_select.html',
-             'custom_class':'col-6'
+             'custom_class':'col-12'
         },
         error_messages={
             "required": "This field is required.",
@@ -202,6 +199,8 @@ class ContactSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
+
+    
     post_code = serializers.CharField(
         label=('Post Code'),
         max_length=7,
@@ -221,7 +220,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ['first_name','last_name', 'email', 'phone_number','company_name', 'job_title','contact_type','address','town','county','country','post_code',]
+        fields = ['contact_type','first_name','last_name', 'email', 'phone_number','company_name', 'job_title','address','town','county','country','post_code',]
 
         extra_kwargs={
             'name':{'required':True},
@@ -248,6 +247,7 @@ class ContactSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Last Name should be at least 2 characters long.")
 
         return value
+    
 
 
 class ConversationViewSerializer(serializers.ModelSerializer):
@@ -314,22 +314,23 @@ class ConversationSerializer(serializers.ModelSerializer):
     required=False,
     style={
         "input_type": "file",
+        'accept': '.png, .jpg, .jpeg, .doc, .docx, .pdf, .txt, .zip, .csv , .xls, .xlsx ',
         "class": "form-control",
         "autofocus": False,
         "autocomplete": "off",
         'base_template': 'custom_file.html',
         'help_text':True,
-        'accept': ','.join(settings.SUPPORTED_EXTENSIONS), 
-        
     },
     validators=[file_extension_validator, validate_file_size],
     help_text=_('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
-    )   
-     
+    )    
     # Custom CharField for the message with more rows (e.g., 5 rows)
     message = serializers.CharField(max_length=1000, 
                                     required=True, 
-                                    style={'base_template': 'rich_textarea.html', 'rows': 5},
+                                    style={'base_template': 'rich_textarea.html',
+                                            'rows': 5,
+                                            'color':'black',
+                                            'font-size':'0.875rem'},
                                     error_messages={
                                             "required": "This field is required.",
                                             "blank": "Message is required.",
@@ -343,6 +344,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         style={
             "input_type": "input",
             "autofocus": False,
+            "autocomplete": "off",
             'base_template': 'custom_fullwidth_input.html',
         },
         error_messages={
