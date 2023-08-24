@@ -129,11 +129,12 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a requirement.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
-        data = request.data.copy()
+        data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
         if file_list is not None and not any(file_list):
+            data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
             serializer = self.serializer_class(data = data)
         else:
@@ -357,11 +358,12 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         """
         instance = self.get_queryset()
         if instance:
-            data = request.data.copy()
+            data = request.data
             # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
             file_list = data.get('file_list', None)
 
             if file_list is not None and not any(file_list):
+                data = data.copy()
                 del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
                 serializer = self.serializer_class(data = data)
             else:
