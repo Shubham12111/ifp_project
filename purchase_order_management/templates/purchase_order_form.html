@@ -92,9 +92,9 @@
                                 <thead>
                                     <tr class="px-0">
                                         <th class="text-start col-6">Item Name</th>
-                                        <th class="text-center col-2">£ Price</th>
+                                        <th class="text-center col-2">Price(£)</th>
                                         <th class="text-center col-2">Quantity </th>
-                                        <th class="text-center col-2">£ Total</th>
+                                        <th class="text-center col-2">Total(£)</th>
                                         <th class="text-center col-2">Action</th>
                                     </tr>
                                 </thead>
@@ -140,7 +140,7 @@
                                 <p class="subtotal-label">Sub Total:</p>
                             </div>
                             <div class="col-6 mb-1">
-                                <p class="mb-2 text-end subtotal-value"> £ 00.00</p>
+                                <p class="mb-2 text-end subtotal-value"> £00.00</p>
                             </div>
                             <div class="col-6 mb-1 text-end">
                                 <p class="discount-label">Discount:</p>
@@ -165,7 +165,7 @@
                                 <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
                             </div>
                             <div class="col-6 mb-1">
-                                <p class="font-weight-bolder mb-0 text-end grand-total-value">£ 00.00</p>
+                                <p class="font-weight-bolder mb-0 text-end grand-total-value">£00.00</p>
                                 <div class="error-message text-danger text-sm" id="grandTotalError"></div>
 
                             </div>
@@ -293,7 +293,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
         document.querySelector('.po_date').value = safeGetProperty(existingPurchaseOrderData, 'order_date');
         document.querySelector('.po_due_date').value = safeGetProperty(existingPurchaseOrderData, 'due_date');
         document.querySelector('.tax-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'tax')).toFixed(2);
-        document.querySelector('.subtotal-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
+        document.querySelector('.subtotal-value').textContent = `£${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
         document.querySelector('.discount-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'discount')).toFixed(2);
         if ("{{ purchase_order.status }}" === "sent_for_approval") {
                 const notesValue = "{{ existingPurchaseOrderData.notes }}";
@@ -520,19 +520,19 @@ function calculateTotal() {
   
 
     // Calculate amounts
-    const discountedSubtotal = subtotal - discount;
-    const taxedAmount = discountedSubtotal * tax;
-    const grandTotal = discountedSubtotal + taxedAmount;
+        const discountedSubtotal = subtotal - discount;
+        const taxAmount = discountedSubtotal * (tax / 100); // Calculate tax as a percentage of discountedSubtotal
+        const grandTotal = discountedSubtotal + taxAmount;
 
-    // Update display values
-    grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
-    subtotalValue.textContent = `£${discountedSubtotal.toFixed(2)}`;
+        // Update display values
+        grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
+        subtotalValue.textContent = `£${subtotal.toFixed(2)}`;
 
-    // Update hidden input values
-    const subtotalInput = document.getElementById('subtotalInput');
-    const grandTotalInput = document.getElementById('grandTotalInput');
-    subtotalInput.value = discountedSubtotal.toFixed(2);
-    grandTotalInput.value = grandTotal.toFixed(2);
+        // Update hidden input values
+        const subtotalInput = document.getElementById('subtotalInput');
+        const grandTotalInput = document.getElementById('grandTotalInput');
+        subtotalInput.value = subtotal.toFixed(2);
+        grandTotalInput.value = grandTotal.toFixed(2);
 
 }
 
@@ -762,8 +762,8 @@ function submitForm(status) {
     });
 
     if (!hasNonEmptyRow) {
-        // Display the emptyRowModal
-        emptyRowModal.show();
+        console.log("adjhkafj")
+        
     } 
 
     

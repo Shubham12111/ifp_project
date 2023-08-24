@@ -125,7 +125,7 @@ color: #344767;
     position: relative; /* Ensure the dropdown is positioned relative to its container */
     max-height: 200px; /* Set a maximum height for the dropdown */
     overflow-y: auto; /* Enable scrolling if content exceeds the maximum height */
-    width: 160px !important;
+    width: 168px !important;
   }
 
 @media (min-width: 992px) {
@@ -164,13 +164,16 @@ color: #344767;
     /* position: relative; */
     height: 43px;
     overflow-y: auto;
-    width: 150px !important;
+    width: 200px !important;
     color: #344767 !important;
     border: 1px solid #344767 !important;
 }
-
+.range_inputs
+{
+    display: none;
+}
 #dateRangeInput::placeholder {
-    color: #344767; /* Placeholder text color */
+    color: #344767 !important; /* Placeholder text color */
     display: inline-block;
     padding: var(--bs-btn-padding-y) var(--bs-btn-padding-x);
     font-family: var(--bs-btn-font-family);
