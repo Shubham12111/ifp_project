@@ -518,7 +518,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
         
-        data = request.data.copy()
+        data = request.data
         
         file_list = data.get('file_list', [])
         
@@ -526,6 +526,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
         
         if not any(file_list):
+            data = data.copy()      # make a mutable copy of data before performing delete.
             del data['file_list']
         
         serializer_data = request.data if any(file_list) else data
@@ -678,7 +679,7 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         """
         Handle POST request to add a requirement.
         """
-        data = request.data.copy()
+        data = request.data
         
         file_list = data.get('file_list', [])
         
@@ -687,6 +688,7 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         defect_response_instance = self.get_queryset_response()
         
         if not any(file_list):
+            data = data.copy()        # make a mutable copy of data before performing delete.
             del data['file_list']
         
         serializer_data = request.data if any(file_list) else data
