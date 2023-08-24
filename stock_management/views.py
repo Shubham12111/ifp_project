@@ -346,7 +346,7 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             else:
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'instance': instance}
+                    context = {'serializer': serializer, 'vendor_instance': instance}
                     return render(request, self.template_name, context)
                 else:
                     # For API requests with invalid data, return an error response with serializer errors.
