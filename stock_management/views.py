@@ -23,7 +23,29 @@ from .serializers import *
 
 from .serializers import VendorSerializer,BillingDetailSerializer
 
-# Create your views here.
+class VendorSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+    template_name = 'vendor.html'
+
+    def get(self, request, *args, **kwargs):
+        search_term = request.GET.get('term')
+        data = {}
+        if search_term:
+            vendor_list = Vendor.objects.filter(
+                            Q(first_name__icontains=search_term) |
+                            Q(last_name__icontains=search_term) |
+                            Q(email__icontains=search_term)
+                        )
+            
+            # Get the email from the vendor_list
+            results = [user.email for user in vendor_list]
+            
+            data = {'results': results}
+        return create_api_response(status_code=status.HTTP_200_OK,
+                                message="Vendor data",
+                                data=data)
+
 
 class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
     """

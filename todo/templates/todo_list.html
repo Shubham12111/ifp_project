@@ -1,6 +1,10 @@
 <!-- add_contact.html -->
 {% extends 'base.html' %}
 {% load static %}
+{% block extra_css %}
+<link id="pagestyle" href="{% static 'assets/css/daterangepicker.css' %}" rel="stylesheet" />
+
+{% endblock %}
 {% block title %} Todo List {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
@@ -8,7 +12,8 @@
 <style>
 ul li input[type=text] {
 display: inline-block;
-}</style>
+}
+</style>
 <div class="container-fluid py-4">
   <div class="row mt-4">
     <div class="col-lg-12 col-12">
@@ -27,6 +32,14 @@ display: inline-block;
             </div>
           </div>
           {% include 'filter.html' %}
+          <div class="row mt-4">
+            <div class="col-md-6"></div>
+          <div class="col-3"></div>
+          <div class="col-xs-12 col-sm-12 col-lg-3 col-md-3  text-end">
+            <div class="search">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+            </div>
+          </div>
         </div>
         <div class="card-body px-0 pb-0">
           <div class="table-responsive">
@@ -90,14 +103,10 @@ display: inline-block;
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/jquery.min.js' %}"></script>
 <script src="{% static 'assets/js/moment.min.js' %}"></script>
-
-<!-- Include Date Range Picker -->
-<script type="text/javascript" src="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js"></script>
-<link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.css" />
+<script src="{% static 'assets/js/daterangepicker.js' %}"></script>
 
 <script>
 // Initialize the Date Range Picker
-
 document.addEventListener('DOMContentLoaded', function() {
     let initialStartDate, initialEndDate; // Variables to store the initial dates
 
@@ -155,6 +164,24 @@ function dateclearFilter(filterType) {
 
 </script>
 <script>
+  if (document.getElementById('todo-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#todo-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25,
+      perPageSelect: false,
+    });
+
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+}
 const searchInput = document.getElementById('searchAssigned');
 const applySearchButton = document.getElementById('applySearch');
 const searchResults = document.getElementById('searchResults');
@@ -238,14 +265,7 @@ document.addEventListener('click', () => {
   }
 });
 
-  if (document.getElementById('todo-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#todo-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 25
-    });
 
-  };
 // JavaScript code to apply the filter on each field
 function applyFilter(filterName, filterValue) {
   

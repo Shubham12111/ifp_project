@@ -544,6 +544,8 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
             for item in purchase_order_items
         ]
         
+        print(purchase_order_items, "purchase_order_items")
+
         all_serializers = [invoice_serializer] + received_inventory_serializers
         all_valid = all(serializer.is_valid() for serializer in all_serializers)
         

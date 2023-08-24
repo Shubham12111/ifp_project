@@ -23,34 +23,34 @@
 </style>
 <div class="container-fluid py-4">
     <div class="card">
-        <div class="card-body px-3 pb-3 pt-3">
+        <div class="card-body px-4 pb-0 mb-10">
             <div class="row">
-                <div class="col-lg-3 col-md-3 col-12">
+                <div class="col-lg-4 col-md-4 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Vendor Information </h6>
-                            <span class="mb-2 text-xs">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
-                            <span class="mb-2 text-xs">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
-                            <span class="mb-2 text-xs">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
+                            <span class="mb-2 text-sm">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
+                            <span class="mb-2 text-sm">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
+                            <span class="mb-2 text-sm">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
                             </div>
                         </li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-md-3 col-12">
+                <div class="col-lg-4 col-md-4 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Inventory Location Information</h6>
-                            <span class="mb-2 text-xs">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
-                            <span class="mb-2 text-xs">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
                             </div>
                         </li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-12 ms-auto">
+                <div class="col-lg-3 col-12 ms-auto text-sm">
                    <div class="d-flex justify-content-between">
                         <span class="mb-2 font-weight-bold">PO Number :</span>
                         <span class="text-dark ms-2">{{purchase_order.po_number}}</span>
@@ -70,12 +70,14 @@
                         
                 </div>
             </div>
+           
             <form method="post" enctype="multipart/form-data" id="invoiceForm">
                 {% csrf_token %}
                 
-                <div class="row mt-5">
+                <div class="row mt-3">
                     <div class="col-md-12">
-                    <!-- Input fields for invoice details -->
+                        <h6 class="mx-1  mb-3">Invoice Details:</h6>
+                         <!-- Input fields for invoice details -->
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label for="invoiceNumber">Invoice Number:</label>
@@ -90,14 +92,16 @@
                                 <input type="file" name="file" id="invoicePDF"  class="form-control" accept=".pdf">
                             </div>
                         </div>
+
+                        <h6 class="mx-1 mb-3 mt-5">Item Details:</h6>
                         <table class="table-responsive custom-table mb-3 " style="width:100%">
                                 <thead>
-                                    <tr class="px-0">
+                                    <tr class="px-0 text-sm">
                                         <th class="text-start col-4">Item Name</th>
-                                        <th class="text-center col-2">Price</th>
+                                        <th class="text-center col-2">Price(£)</th>
                                         <th class="text-center col-2">Quantity </th>
-                                        <th class="text-center col-2">Recived Quantity </th>
-                                        <th class="text-center col-3">Total</th>
+                                        <th class="text-center col-2">Received Quantity </th>
+                                        <th class="text-center col-3">Totale(£)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -105,19 +109,20 @@
                                     {% for item in purchase_order_items %}
                                     <tr class="">
                                         <td class="text-sm">{{item.item_name}} </td>
-                                        <td class="text-sm text-center">£ {{item.unit_price}} </td>
+                                        <td class="text-sm text-center">{{item.unit_price}} </td>
                                         <td class="text-sm text-center">{{item.quantity}} </td>
                                         <td class="text-sm">
                                             <input type="number" class="form-control quantity-input" value="0" data-max="{{item.quantity}}" data-item-id="{{item.id}}" id="">
                                             <p class="error-message text-sm text-danger" style=" display: none;">Exceeds available quantity</p>
                                         </td>
 
-                                        <td class="text-sm text-center">£ {{item.row_total}} </td>
+                                        <td class="text-sm text-center">{{item.row_total}} </td>
                                     </tr>
                                     {% endfor %}
                                     
                                 </tbody>
                             </table>
+                            <div class="error-message text-danger text-sm mb-2" id="rowError"></div>
                         </div>
                 </div>
                     <div class="row mt-4">
@@ -215,15 +220,42 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(document.getElementById('invoiceForm'));
         const quantityInputs = document.querySelectorAll('.quantity-input');
         
-        const recipeQuantities = [];
+        const Quantities = [];
+        let hasReceivedInventory = false; // Flag to track if any row has received inventory
+
         quantityInputs.forEach(input => {
             const purchase_order_item_id = input.getAttribute('data-item-id');
             const received_inventory = input.value;
-            recipeQuantities.push({ purchase_order_item_id, received_inventory });
-        });
+            Quantities.push({ purchase_order_item_id, received_inventory });
+
+            if (received_inventory !== "0") {
+                hasReceivedInventory = true;
+                 }
+             });
+
+            if (hasReceivedInventory) {
+                // If at least one row has received_inventory, proceed to form submission
+                formData.append('purchase_order_items', JSON.stringify(Quantities));
+                // ... Code to submit the form or further processing
+            } else {
+                // Display an error message if all rows have zero received_inventory
+                const rowErrorElement = document.getElementById('rowError');
+                if (rowErrorElement) {
+                    rowErrorElement.textContent = "Add received inventory to at least one item.";
+
+                    // Clear the error message after 3 seconds
+                    setTimeout(() => {
+                        rowErrorElement.textContent = "";
+                    }, 3000); // 3000 milliseconds = 3 seconds
+                }
+            }
+
+
+        console.log(hasReceivedInventory, Quantities, formData)
         
-        formData.append('purchase_order_items', JSON.stringify(recipeQuantities));
-        
+        if (hasReceivedInventory)
+        {
+
         // Send data via Fetch API
         fetch('{% url 'purchase_order_convert_to_invoice' purchase_order.id %}', {
             method: 'POST',
@@ -233,7 +265,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }).then(response => {
         response.json().then(data => {
-            console.log(data, "dsjasja")
             if (data.errors) {
                 const existingErrorMessages = document.querySelectorAll('.help-block');
                 existingErrorMessages.forEach(errorMessage => errorMessage.remove());
@@ -296,6 +327,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }).catch(error => {
             // Handle error
         });
+
+    }
     });
 });
 

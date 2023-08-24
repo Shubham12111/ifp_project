@@ -1,70 +1,70 @@
 
 <div class="d-flex flex-wrap ">
     <div>
-        <label for="vendor-filter"> Vendor </label><br>
         <div class="dropdown d-inline me-2">
-            <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle custom-dropdown-toggle" data-bs-toggle="dropdown" id="statusDropdown">
-            <span class="flex-grow-1 text-start">All</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="statusDropdown" data-popper-placement="bottom-end">
-                {% for status in status_list %}
+            <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle custom-dropdown-toggle " data-bs-toggle="dropdown" id="vendorDropdown">
+                Vendor
+              </a>
+            <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="vendorDropdown" data-popper-placement="left-start">
                 <li>
-                        <a class="dropdown-item border-radius-md text-start " href="#" onclick="applyFilter('status', '{{ status.0 }}')">{{ status.1 }}</a>
+                  <input type="text" id="searchVendor" class="form-control" placeholder="Search">
                 </li>
-                {% endfor %}
+                <li><hr class="dropdown-divider"></li>
+                <li id="searchResults"></li>
                 <li><hr class="horizontal dark my-2"></li>
-                <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('status')">Remove Filter</a></li>
-            
-            </ul>
+              <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('vendor')">Remove Filter</a>
+              </li>
         </div> 
     </div>
 
     <div>
-        <label for="vendor-filter"> Loaction </label><br>
         <div class="dropdown d-inline me-2">
-            <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle custom-dropdown-toggle" data-bs-toggle="dropdown" id="statusDropdown">
-            <span class="flex-grow-1 text-start">All</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="statusDropdown" data-popper-placement="bottom-end">
-                {% for status in status_list %}
+            <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle custom-dropdown-toggle " data-bs-toggle="dropdown" id="locationDropdown">
+                Location
+              </a>
+            <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="locationDropdown" data-popper-placement="left-start">
                 <li>
-                        <a class="dropdown-item border-radius-md text-start " href="#" onclick="applyFilter('status', '{{ status.0 }}')">{{ status.1 }}</a>
+                  <input type="text" id="searchLocation" class="form-control" placeholder="Search">
                 </li>
-                {% endfor %}
+                <li><hr class="dropdown-divider"></li>
+                <li id="locationsearchResults"></li>
                 <li><hr class="horizontal dark my-2"></li>
-                <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('status')">Remove Filter</a></li>
-            
-            </ul>
+              <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('vendor')">Remove Filter</a>
+              </li>
         </div> 
     </div>
     <div>
-        <label for="vendor-filter"> Status </label><br>
         <div class="dropdown d-inline me-2">
-            <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle custom-dropdown-toggle" data-bs-toggle="dropdown" id="statusDropdown">
-            <span class="flex-grow-1 text-start">All</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="statusDropdown" data-popper-placement="bottom-end">
-                {% for status in status_list %}
-                <li>
-                        <a class="dropdown-item border-radius-md text-start " href="#" onclick="applyFilter('status', '{{ status.0 }}')">{{ status.1 }}</a>
-                </li>
-                {% endfor %}
-                <li><hr class="horizontal dark my-2"></li>
-                <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('status')">Remove Filter</a></li>
-            
-            </ul>
+            <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle custom-dropdown-toggle  " data-bs-toggle="dropdown" id="statusDropdown">
+            <span class="flex-grow-1 text-start custom-search">Status</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3 " aria-labelledby="statusDropdown" data-popper-placement="bottom-end">
+    
+            {% for status in status_list %}
+            <li>
+            <a class="dropdown-item border-radius-md text-start " href="#" onclick="applyFilter('status', '{{ status.0 }}')">{{ status.1 }}</a>
+            </li>
+        {% endfor %}
+        <li><hr class="horizontal dark my-2"></li>
+        <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('status')">Remove Filter</a></li>
+    
+        </ul>
+        </div>
+    </div>
+    <div class="input-container">
+        <div class="dropdown d-inline">
+            <input type="date" name="order_date" placeholder="Order Date" class="form-control custom-date-search order-date-filter text-uppercase" id="order-date-filter"
+            >
         </div> 
     </div>
-    <div>
-        <label for="vendor-filter"> Order Date </label><br>
-        <div class="dropdown d-inline me-2">
-            <input type="date" name="order_date" placeholder="Order Date" class="form-control order-date-filter" id="order-date-filter">
+    
+    <div class="input-container">
+        <div class="dropdown d-inline">
+            <input type="date" name="due_date" placeholder="Due Date" class="form-control custom-date-search due-date-filter text-uppercase" id="due-date-filter">
         </div> 
     </div>
-
-    <div>
-        <label for="vendor-filter"> Due Date </label><br>
-        <div class="dropdown d-inline me-2">
-            <input type="date" name="due_date" placeholder="Due Date" class="form-control due-date-filter" id="due-date-filter">
-        </div> 
+    
+    <a href="" class="btn bg-gradient-secondary me-3 float-right" onclick="clearAllFilters()">
+        Clear Filters
+    </a>
     </div>
