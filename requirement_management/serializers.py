@@ -282,7 +282,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     
 class RequirementDefectAddSerializer(serializers.ModelSerializer):
     action = serializers.CharField(
-        max_length=500, 
+        max_length=1000, 
         required=True, 
         style={'base_template': 'custom_fullwidth_input.html'},
         error_messages={
