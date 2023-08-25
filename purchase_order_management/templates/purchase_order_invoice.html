@@ -4,6 +4,12 @@
 {% load custom_tags %}
 {% block title %} Purchase Order View{{ block.super }}{% endblock %}
 {% block content %}
+<style>
+     /* Add CSS rules here */
+     .form-control.comments {
+      resize: none; /* Disable textarea resizing */
+    }
+</style>
 {% include 'components/alert.html' %}
 <style>
     /* Add borders to the table */
@@ -23,7 +29,7 @@
 </style>
 <div class="container-fluid py-4">
     <div class="card">
-        <div class="card-body px-4 pb-0 mb-10">
+        <div class="card-body px-4 pb-0">
             <div class="row">
                 <div class="col-lg-4 col-md-4 col-12">
                     <ul class="list-group">
@@ -74,24 +80,8 @@
             <form method="post" enctype="multipart/form-data" id="invoiceForm">
                 {% csrf_token %}
                 
-                <div class="row mt-3">
+                <div class="row mt-0">
                     <div class="col-md-12">
-                        <h6 class="mx-1  mb-3">Invoice Details:</h6>
-                         <!-- Input fields for invoice details -->
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="invoiceNumber">Invoice Number:</label>
-                                <input type="text" id="invoiceNumber" name="invoice_number" class="form-control" placeholder="Enter Invoice Number" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="invoiceDate">Invoice Date:</label>
-                                <input type="date" id="invoiceDate" name="invoice_date"  class="form-control invoice_date" required>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="invoicePDF">Invoice PDF:</label>
-                                <input type="file" name="file" id="invoicePDF"  class="form-control" accept=".pdf">
-                            </div>
-                        </div>
 
                         <h6 class="mx-1 mb-3 mt-5">Item Details:</h6>
                         <table class="table-responsive custom-table mb-3 " style="width:100%">
@@ -124,11 +114,38 @@
                             </table>
                             <div class="error-message text-danger text-sm mb-2" id="rowError"></div>
                         </div>
-                </div>
-                    <div class="row mt-4">
+                    </div>
+                    <div class="row mt-2">
                         <div class="col-md-6 ">
+                            <div class="row mb-6">
+                                <div class="col-md-3">
+                                    <label for="invoiceNumber">Invoice Number:</label>
+                                </div>
+                                <div class="col-md-9 mb-4">
+                                    <input type="text" id="invoiceNumber" name="invoice_number" class="form-control" placeholder="Enter Invoice Number" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="invoiceDate">Invoice Date:</label>
+                                </div>
+                                <div class="col-md-9 mb-4">
+                                    <input type="date" id="invoiceDate" name="invoice_date"  class="form-control invoice_date" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="invoicePDF">Invoice PDF:</label>
+                                </div>
+                                <div class="col-md-9 mb-4">
+                                    <input type="file" name="file" id="invoicePDF"  class="form-control" accept=".pdf">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="invoicePDF">Coments:</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <textarea class="form-control comments" rows="6" name="comments" ></textarea>
+                                </div>
+                            </div>
+    
                             {% if purchase_order.notes %}
-                            <h6 class=" text-sm">Notes </h6>
+                            <h6 class=" text-sm">Additional  Notes </h6>
                             <span class="notes text-sm">{{ purchase_order.notes }}</span>
                             <br>
                             {% endif %}
@@ -136,10 +153,7 @@
                                 <h6 class="mt-2  text-sm">Approval Notes </h6>
                                 <span class="approval_notes text-sm">{{ purchase_order.approval_notes }}</span>
                             {% endif %}
-                            <br>
-                            <label>Comments</label>
-                            <textarea class="form-control comments" rows="6" name="comments" ></textarea>
-                            </textarea>
+                            
                         </div>
 
                         <div class="col-lg-3 col-12 ms-auto">
@@ -169,7 +183,7 @@
                     </div>
                 </div>
               </form>
- {% include 'components/loader.html' %}
+             
         </div>
     </div>
 </div>

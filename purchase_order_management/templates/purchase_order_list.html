@@ -13,6 +13,9 @@
     display: inline-block;
     margin-right: 10px; /* Adjust the spacing as needed */
 }
+.custom-date-search {
+  width: 120px !important;
+}
   </style>
  {% include 'components/alert.html' %}
  <div class="container-fluid py-4">
@@ -186,7 +189,7 @@ function updateLocationSearchResults(results) {
 }
 
 // Function to handle Apply Filter button click
-function handleApplyFilter() {
+function handlelocationApplyFilter() {
   const searchTerm = locationsearchInput.value;
 
   // Make a request to your backend API with the searchTerm
@@ -214,59 +217,129 @@ function toggleDropdown() {
 const locationinputField = document.getElementById('searchLocation');
 
 locationinputField.addEventListener('input', () => {
-  handleApplyFilter();
+  handlelocationApplyFilter();
   toggleDropdown();
   event.stopPropagation();
 });
 
 
-
-
-// Check if the datetimepicker element exists
-if (document.querySelector('.order-date-filter')) {
-  const defaultDateValue = document.getElementById("order-date-filter").value;
-  const defaultDate = defaultDateValue ? new Date(defaultDateValue) : '';
-
-  // Create the flatpickr date-time picker and set the default date to the default value or current date
-  const orderDatepicker = flatpickr('.order-date-filter', {
-    allowInput: false,
-    defaultDate: defaultDate,
-    dateFormat: "Y-m-d",
-    onClose: function(selectedDates, dateStr, instance) {
-      console.log("Selected Dates:", selectedDates);
-      applyFilter('order_date', selectedDates);
-    }
-  });
+// JavaScript code to apply the filter on each field
+function applyFilter(filterName, filterValue) {
+  
+  // Handle date range filter
+  if (filterName === 'order_date') {
+    filterValue = filterValue; // Use a custom delimiter to separate start and end dates
+    
+  }
+  else if (filterName === 'due_date') {
+    filterValue = filterValue; // Use a custom delimiter to separate start and end dates
+    
+  }
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set(filterName, filterValue);
+  window.location.href = currentUrl.toString();
 }
 
 
+
+if (document.querySelector('.order-date-filter')) {
+  flatpickr('.order-date-filter', {
+    mode: "range",
+    dateFormat: "Y-m-d",
+  });
+  
+  
+}
+ // Adding an input event listener to detect changes in the input field
+ const orderDateFilter = document.querySelector('.order-date-filter');
+    orderDateFilter.addEventListener('input', function() {
+      // Get the current value of the input field
+      const inputValue = orderDateFilter.value;
+      // Call your applyFilter function here with the input value
+      applyFilter('order_date', [inputValue]);
+    });
+  
+
+
+if (document.querySelector('.due-date-filter')) {
+  flatpickr('.due-date-filter', {
+    mode: "range",
+    dateFormat: "Y-m-d",
+  });
+  
+  
+}
+ // Adding an input event listener to detect changes in the input field
+ const dueDateFilter = document.querySelector('.due-date-filter');
+ dueDateFilter.addEventListener('input', function() {
+      // Get the current value of the input field
+      const inputValue = dueDateFilter.value;
+      // Call your applyFilter function here with the input value
+      applyFilter('due_date', [inputValue]);
+    });
+  
+
 // Check URL parameters on page load and update search and filter selections
 window.addEventListener('DOMContentLoaded', function() {
-  const filterNames = ['vendor', 'location', 'status', 'assigned_to', 'dateRange'];
+  const filterNames = ['vendor', 'location', 'status', 'order_date','due_date'];
   filterNames.forEach(filterName => {
     const filterValue = new URLSearchParams(window.location.search).get(filterName);
-    console.log(filterName, "sa")
+    
     if (filterValue) {
       let displayedValue = filterValue; // Default displayed value is the filter value itself
 
-      if (filterName === 'dateRange') {
-        const formattedDateRange = filterValue.replace('_', ' to ');
-        displayedValue = formattedDateRange;
+
+      if (filterName === 'order_date') {
         // Also update the date range input field if needed
-        document.getElementById('reportrange').value = formattedDateRange;
-      } else if (filterValue.length > 9) {
+        document.getElementById('order-date-filter').value = filterValue;
+      } 
+      
+      else if (filterName === 'due_date') {
+        // Also update the date range input field if needed
+        document.getElementById('due-date-filter').value = filterValue;
+      } 
+      
+      
+      else if (filterValue.length > 9) {
         // Truncate the filter value if it's longer than 5 characters
         displayedValue = filterValue.substring(0, 9) + '..';
+        // Update the dropdown element with the displayed value
+        document.getElementById(`${filterName}Dropdown`).textContent = displayedValue.replace(/_/g, ' ');
       }
 
-      // Update the dropdown element with the displayed value
-      document.getElementById(`${filterName}Dropdown`).textContent = displayedValue.replace(/_/g, ' ');
+      
 
     }
   });
 });
 
 
+  // JavaScript code to clear all the filters
+  function clearAllFilters() {
+  const currentUrl = new URL(window.location.href);
+  const queryParams = new URLSearchParams(currentUrl.search);
+  const filterNames = ['vendor', 'location', 'status', 'order_date','due_date']; // Add dateRange to the filterNames array
+
+  filterNames.forEach(filterName => {
+    queryParams.delete(filterName);
+
+    if (filterName === 'order_date') {
+      document.getElementById('order-date-filter').value = "";
+    }
+    else if (filterName === 'due_date') {
+      document.getElementById('due-date-filter').value = "";
+    }
+
+    else{
+      document.getElementById(`${filterName}Dropdown`).textContent = filterName;
+    }
+   
+    
+  });
+
+  window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+  window.location.reload(); // Reload the page after clearing all filters
+}
 
 
  // Check if the datetimepicker element exists
@@ -303,7 +376,10 @@ window.addEventListener('DOMContentLoaded', function() {
 
 
 
-var searchUrl = '/purchase_order/list/';
+
+
+var searchUrl = window.location.href;
+
 var dataTable;
 // Config for the first table
 var columnsConfig1 = [
@@ -342,34 +418,6 @@ function hasFilters() {
     return (vendor || location || status || dueDate || orderDate);
 }
 
-// Show or hide the "Clear Filters" button based on filters
-function updateClearButton() {
-    var clearButton = document.getElementById("clear-button");
-    
-    if (hasFilters()) {
-        clearButton.style.display = "inline-block";
-    } else {
-        clearButton.style.display = "none";
-    }
-}
-
-
-// Initial check when the page loads
-updateClearButton();
-
-document.getElementById("search-button").addEventListener("click", function() {
-  searchUrl  ='/purchase_order/list/?vendor=' + document.getElementById('vendor-filter').value +
-              '&location=' + document.getElementById('location-filter').value +
-              '&status=' + document.getElementById('status-filter').value +
-              '&due_date=' + document.getElementById('due-date-filter').value +
-              '&order_date=' + document.getElementById('order-date-filter').value;
-    initializeDataTable("purchase-order-list", searchUrl, columnsConfig1);
-    updateClearButton(); // Update the "Clear Filters" button visibility
-});
-
-document.getElementById("clear-button").addEventListener("click", function() {
-  window.location.reload();
-});
 
 
 function initializeDataTable(tableId, dataUrl, columnsConfig) {
@@ -391,6 +439,7 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
             }).then(function (data) {
                 // Parse the received data
                 const responseData = data.data;
+
                 if (responseData.length > 0) {
                 // Format the data for DataTable consumption
                   var formattedData = {
@@ -477,6 +526,10 @@ function getStatusCellContent(status) {
 // Function to generate link action HTML
 function generateLinkAction(item, action) {
     var url = action.urlField;
+    if (item.status == "sent_for_approval")
+    {
+      return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">Approve </a></li>';
+    }
     return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">' + action.label + '</a></li>';
 }
 
@@ -484,6 +537,8 @@ function generateLinkAction(item, action) {
 function generateActionButtons(item, columnConfig) {
     var status = item['status'];
     var conditionalActionsHTML = '';
+
+
     {% if request.user|has_update_permission:'purchase_order'%}
     
     if ((status === "pending")) {
@@ -497,7 +552,6 @@ function generateActionButtons(item, columnConfig) {
             }
         
     } 
-
 
     else if ((status === "sent_for_approval")) {
         var actionsHTML = columnConfig.linkActions.map(function(action) {
@@ -515,6 +569,9 @@ function generateActionButtons(item, columnConfig) {
 
     
     {% endif %}
+
+
+
 
     {% if request.user.roles.name == "projects_admin_(IT)" %}
       else if (status === "approved" || status == "partially_completed") {

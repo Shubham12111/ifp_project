@@ -127,7 +127,8 @@
                             <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png).</small>  
                             {% if presigned_url %}
                             <br><br>
-                            <a href="{{presigned_url}}" class="text-sm">{{file_name}}</a>
+                            
+                            <a href="{{presigned_url.0}}" class="text-sm">{{file_name}}</a>
                             {% endif %}
                         </div>
                         {% endif %}

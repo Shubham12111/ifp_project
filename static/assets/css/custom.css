@@ -172,7 +172,8 @@ color: #344767;
 {
     display: none;
 }
-#dateRangeInput::placeholder {
+
+#reportrange::placeholder {
     color: #344767 !important; /* Placeholder text color */
     display: inline-block;
     padding: var(--bs-btn-padding-y) var(--bs-btn-padding-x);
@@ -191,7 +192,7 @@ color: #344767;
     font-weight: 600;
     white-space: nowrap;
     
-  }
+}
   
 .custom-search {
     --bs-btn-border-color: #b3bac5 !important;
@@ -248,4 +249,36 @@ color: #344767;
 
     box-shadow: 0 8px 26px -4px rgb(20 20 20 / 15%), 0 8px 9px -5px rgb(20 20 20 / 6%);
     cursor: pointer;
+}
+
+.daterangepicker td.active, .daterangepicker td.active:hover
+{
+    background-color: #ce3233 !important;
+}
+
+.daterangepicker .calendar th, .daterangepicker .calendar td
+{
+    border: 1px solid transparent;
+    border-radius: 150px !important;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    color: #393939;
+    cursor: pointer;
+    max-width: 86px;
+    height: 39px;
+    font-weight: 400;
+    line-height: 39px;
+    margin: 0;
+    display: inline-block;
+    position: relative;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    text-align: center
+}
+
+.flatpickr-calendar .flatpickr-day.today, .flatpickr-calendar .flatpickr-day.selected, .flatpickr-calendar .flatpickr-day.startRange, .flatpickr-calendar .flatpickr-day.endRange
+{
+    background: #d53436 !important;
 }
