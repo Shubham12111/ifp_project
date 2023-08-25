@@ -122,11 +122,12 @@ class ItemSorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         message = "Congratulations! sor has been added successfully."
         
-        data = request.data.copy()
+        data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
         if file_list is not None and not any(file_list):
+            data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
         
 
@@ -260,11 +261,12 @@ class ItemSorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If unsuccessful, an error response is returned.
         """
 
-        data = request.data.copy()
+        data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
         if file_list is not None and not any(file_list):
+            data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
 
         data['item_type'] = 'sor'
