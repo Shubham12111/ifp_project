@@ -8,19 +8,18 @@
 {% include 'components/alert.html' %}
 <div class="container-fluid my-3 py-3">
     <div class="col-lg-12">
-           
-            <!-- Card Basic Info -->
-            <div class="card" id="basic-info">
-                <div class="card-header">
-                    <h5>Add Defects</h5>
-                </div>
-                <div class="card-body pt-0">
-                   <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()" >
-                        <div class='row'>
-                            {% csrf_token %}
-                            {% render_form serializer %}
-                        </div>
-                         {% if serializer.data.document_paths and  defect_instance %}
+         <!-- Card Basic Info -->
+        <div class="card" id="basic-info">
+            <div class="card-header">
+                <h5>Add Defects</h5>
+            </div>
+            <div class="card-body pt-0">
+                <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()" >
+                    <div class='row'>
+                        {% csrf_token %}
+                        {% render_form serializer %}
+                    </div>
+                        {% if serializer.data.document_paths and  defect_instance %}
                             {% for document in serializer.data.document_paths %}
                                 <div class="col-lg-12">
                                     <div style="position: relative;">
@@ -35,30 +34,30 @@
                                     </div>
                                 </div>
                             {% endfor %}
-                        {% endif %}
-                        <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                        <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'requirement_edit' requirement_instance.id %}">Back</a>
-            
-                      </form>
-                        {% include 'components/loader.html' %}
-                </div>
+                    {% endif %}
+                    <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
+                    <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'requirement_edit' requirement_instance.id %}">Back</a>
+        
+                    </form>
+                    {% include 'components/loader.html' %}
+            </div>
             </div>
             <div class="card mt-4" id="basic-info">
                 <div class="table-responsive">
                     <table class="table table-flush text-dark" id="defect-requirement-list">
                         <thead class="thead-light">
-                            <tr>
+                            <tr class="text-sm">
                                 <th>Action</th>
                                 <th>Description</th>
                                 <th>Defect Period</th>
                                 <th>Due Date</th>
                                 <th>Status</th>
-                                <th>Actions</th>
+                                <th class="custom-last-column">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="ml-4">
                             {% for defect in defects_list %}
-                            <tr>
+                            <tr class="text-sm">
                                 <td>{{ defect.action|truncatechars:20}}</td>
                                 <td class="text-truncate" style="max-width: 150px;">{{ defect.description|safe|truncatechars:50 }}</td>
                                 <td>{{ defect.defect_period }}</td>

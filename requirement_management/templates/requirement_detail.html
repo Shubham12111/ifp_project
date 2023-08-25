@@ -5,13 +5,16 @@
 
 {% endblock %}
 
-{% block title %} Fire Risk Assessment {{ block.super }}{% endblock %}
+{% block title %} FRA Actions  {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
 
 <div class="container-fluid py-4">
     <div class="card h-100">
+        <div class="card-header  pb-0">
+            <h5> FRA Actions </h5>
+          </div>
         <div class="card-body">
             <div class="row gap-2">
                 <div class="col-md-5">
@@ -87,7 +90,7 @@
                     </div>
                     {% if request.user.roles.name == "quantity_surveyor" and requirement_instance.quantity_surveyor ==  request.user %}
                         <hr class="horizontal gray-light">
-                        <form method="post">
+                        <form method="post" id="surveyor-form" {% if requirement_instance.surveyor %}  style="display: none;" {% endif %}>
                             {% csrf_token %}
                             <div class="form-group">
                                 <label class="text-dark font-weight-bolder mb-0">Assgin Surveyor</label>
@@ -102,46 +105,56 @@
                             </div>
                             <div class="text-end"> <!-- Add this div with the "text-end" class to align the button to the right -->
                                 <button type="submit" class="btn bg-gradient-primary">Submit</button>
+                                <button type="button" class="btn btn-secondary" id="cancel-button">Cancel</button>
+
                             </div>
                         
                           </form>
- {% include 'components/loader.html' %}
-                    {% else %}
-                    {% if requirement_instance.surveyor %}
-                    <div class="row text-sm">
-                        <div class="row mb-2">
-                            <div class="col-3"><strong class="text-dark">Surveyor:</strong></div>
-                            <div class="col-9">{{requirement_instance.surveyor.first_name|title }} {{requirement_instance.surveyor.last_name|title }}</div>
+                       
+                        <div class="row text-sm"  {% if not requirement_instance.surveyor %}  style="display: none;" {% endif %}>
+                            <div class="row mb-2">
+                                <div class="col-3"><strong class="text-dark">Surveyor:</strong></div>
+                                <div class="col-9">{{requirement_instance.surveyor.first_name|title }} {{requirement_instance.surveyor.last_name|title }}<a href="#" class="text-primary" id="change-surveyor-link"> Change Surveyor</a></div> 
+                            </div>
                         </div>
-                    </div>
-                    {% endif %}
+                       
+                        {% else %}
+                        {% if requirement_instance.surveyor %}
+                        <div class="row text-sm">
+                            <div class="row mb-2">
+                                <div class="col-3"><strong class="text-dark">Surveyor:</strong></div>
+                                <div class="col-9">{{requirement_instance.surveyor.first_name|title }} {{requirement_instance.surveyor.last_name|title }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
 
-                    {% endif %}
+                        {% endif %}
                    
                 </div>
             </div>
             <div class="row mt-5">
                 <div class="col-lg-12">
                     <h5 class="ms-3">Defects</h5>
-                       <table class="table table-flush text-dark dataTable-table">
-                            
-                                <thead>
-                                    <tr>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Due Date</th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">UPRN</th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
-                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
-                                    </tr>
-                                </thead>
+                       <table class="table table-flush text-dark">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">UPRN</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Due Date</th>
+                                    
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Action</th>
+                                </tr>
+                            </thead>
                                 <tbody>
                                     {% for defect in requirement_defect %}
                                     <tr>
-                                        <td class="text-sm">{{ defect.action|truncatechars:20 }}</td>
-                                        <td class="text-sm">{{ defect.description|safe|truncatechars:20 }}</td>
-                                        <td class="text-sm">{{ defect.due_date|date:"M d, Y  H:i" }}</td>
+                                        <td class="text-sm">{{ defect.action|truncatechars:10 }}</td>
+                                        <td class="text-sm">{{ defect.description|safe|truncatechars:10 }}</td>
                                         <td class="text-sm">{{ defect.UPRN|default:'' }}</td>
+                                        <td class="text-sm">{{ defect.due_date|date:"M d, Y  H:i" }}</td>
+                                        
                                         <td class="text-sm" >{{ defect.status|title }}</td>
                                         <td class="text-sm">
                                             <a href="{% url 'requirement_defect_detail' defect.id %}">
@@ -183,6 +196,19 @@
 <script src="{% static 'assets/js/zoom_image.js' %}"></script>
 <script>
 
+const changeSurveyorLink = document.getElementById('change-surveyor-link');
+const surveyorForm = document.getElementById('surveyor-form');
+const cancelButton = document.getElementById('cancel-button');
+    if (changeSurveyorLink && surveyorForm) {
+        changeSurveyorLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            surveyorForm.style.display = 'block'; // Display the form
+        });
+    }
+
+cancelButton.addEventListener('click', () => {
+        window.location.reload(); // Refresh the page when Cancel is clicked
+    });
 // Initialize Choices.js
 if (document.getElementById('surveyor-choices')) {
   var element = document.getElementById('surveyor-choices');
