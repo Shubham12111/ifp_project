@@ -324,7 +324,7 @@ class ItemSorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "SOR not found",
+                message = "SOR not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -368,6 +368,6 @@ class ItemSorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="SOR has been deleted successfully!", )
         else:
-            messages.error(request, "SOR not found")
+            messages.error(request, "SOR not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="SOR not found", )
+                                        message="SOR not found OR You are not authorized to perform this action.", )

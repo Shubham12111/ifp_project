@@ -544,7 +544,7 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Customer not found.",
+                message = "Customer not found OR You are not authorized to perform this action.",
                 ),
 
     }

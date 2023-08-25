@@ -327,7 +327,7 @@ class ItemDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Item not found",
+                message = "Item not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -371,9 +371,9 @@ class ItemDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Item has been deleted successfully!", )
         else:
-            messages.error(request, "Item not found")
+            messages.error(request, "Item not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Item not found", )
+                                        message="Item not found OR You are not authorized to perform this action.", )
 
 class ItemRemoveImageView(generics.DestroyAPIView):
     """
