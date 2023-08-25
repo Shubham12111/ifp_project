@@ -147,7 +147,7 @@ class ItemSerializer(serializers.ModelSerializer):
             'base_template': 'custom_multiple_file.html',
             'help_text': True,
             'multiple': True,
-            'accept': ','.join(settings.IMAGE_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
+            'accept': ".png, .jpg, .jpeg",
             'allow_null': True,  # Allow None values
         },
         help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_SUPPORTED_EXTENSIONS))
@@ -177,7 +177,7 @@ class ItemSerializer(serializers.ModelSerializer):
             return value  # No need to check for uniqueness if updating the same instance
 
         if Item.objects.filter(reference_number=value).exists():
-            raise serializers.ValidationError("This reference number reference number is already in use.")
+            raise serializers.ValidationError("This reference number is already in use.")
         
         return value
 

@@ -85,6 +85,8 @@ class VendorSerializer(serializers.ModelSerializer):
         label=('Company'),
         max_length=100,
         required=False,
+        allow_null=True,
+        allow_blank= True,
         style={
             "input_type": "text",
             "autocomplete": "off",
@@ -298,7 +300,7 @@ class VendorContactPersonSerializer(serializers.ModelSerializer):
         },
     )
     phone_number = serializers.CharField(
-        label=('Phone'),
+        label=('Phone Number'),
         max_length=14,
         min_length=10,
         required= True,
