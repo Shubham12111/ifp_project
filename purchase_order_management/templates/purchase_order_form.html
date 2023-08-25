@@ -441,10 +441,11 @@ function recalculateTotal(row) {
 
         // Reset the input fields to a valid state
         priceInput.value = price;
-        quantityInput.value = '1';
+        quantityInput.value = quantity
 
         // Update the total cell to show the reset value
         totalCell.textContent = '00.00';
+
     }
 }
 
@@ -753,36 +754,44 @@ function submitForm(status) {
         const rowTotal = parseFloat(row.querySelector('.total').textContent); // Get the row total
         
         // Check if any of the required fields are empty
-        if (!itemId || isNaN(itemPrice) || isNaN(quantity) || isNaN(rowTotal)) {
+        if (!itemId || isNaN(itemPrice) || isNaN(quantity) || isNaN(rowTotal) || quantity < 0) {
+            
+            hasNonEmptyRow = false
+
             const rowErrorElement = document.getElementById('rowError');
                 if (rowErrorElement) {
-                    rowErrorElement.textContent = "You must add at least one item before submitting the form.";
+                    rowErrorElement.textContent = "Please ensure all fields are filled correctly.";
                     // Clear the error message after 1 second
                     setTimeout(() => {
                         rowErrorElement.textContent = "";
-                    }, 3000); // 1000 milliseconds = 1 second
+                    }, 6000); // 1000 milliseconds = 1 second
                 }
             return; // Stop further processing
         }
+        else
+        {
+            // Add item data to form data
+            formData.append(`items[${itemId}][price]`, itemPrice.toFixed(2));
+            formData.append(`items[${itemId}][quantity]`, quantity);
+            formData.append(`items[${itemId}][rowTotal]`, rowTotal.toFixed(2)); // Append row total
+            
+            hasNonEmptyRow = true;
+        }
         
-        // Add item data to form data
-        formData.append(`items[${itemId}][price]`, itemPrice.toFixed(2));
-        formData.append(`items[${itemId}][quantity]`, quantity);
-        formData.append(`items[${itemId}][rowTotal]`, rowTotal.toFixed(2)); // Append row total
         
-        hasNonEmptyRow = true; // Mark at least one non-empty row
     });
 
-    if (!hasNonEmptyRow) {
-    const rowErrorElement = document.getElementById('rowError');
-    if (rowErrorElement) {
-        rowErrorElement.textContent = "You must add at least one item before submitting the form.";
-        // Clear the error message after 1 second
-        setTimeout(() => {
-                rowErrorElement.textContent = "";
-            }, 2000); // 1000 milliseconds = 1 second
+    if (!hasNonEmptyRow)
+    {
+        const rowErrorElement = document.getElementById('rowError');
+        if (rowErrorElement) {
+            rowErrorElement.textContent = "Please ensure all fields are filled correctly.";
+            // Clear the error message after 1 second
+            setTimeout(() => {
+                    rowErrorElement.textContent = "";
+                }, 3000); // 1000 milliseconds = 1 second
+        }
     }
-}
 
     
     if (hasNonEmptyRow) {
