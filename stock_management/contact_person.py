@@ -87,7 +87,7 @@ class VendorContactPersonView(CustomAuthenticationMixin, generics.CreateAPIView)
                 return render_html_response(context,self.template_name)
             
             else:
-                messages.error(request, "Vendor not found.")
+                messages.error(request, "Vendor not found OR You are not authorized to perform this action..")
                 return redirect(reverse('vendor_list'))
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
@@ -191,7 +191,7 @@ class VendorRemoveContactPersonView(CustomAuthenticationMixin, generics.DestroyA
             messages.success(request,success_message)
             return create_api_response(status_code=status.HTTP_200_OK,message=success_message )
         else:
-            error_message= "Vendor contact person not found."
+            error_message= "Vendor contact person not found OR You are not authorized to perform this action."
             messages.error(request,error_message)
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message=error_message, )

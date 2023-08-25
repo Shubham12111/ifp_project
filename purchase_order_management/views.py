@@ -121,7 +121,7 @@ def get_vendor_data(request):
                                  data=serializer.data)
             
         except Vendor.DoesNotExist:
-            return JsonResponse({"error": "Vendor not found"}, status=404)
+            return JsonResponse({"error": "Vendor not found OR You are not authorized to perform this action."}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
@@ -138,7 +138,7 @@ def get_inventory_location_data(request):
                                  data=serializer.data)
             
         except Vendor.DoesNotExist:
-            return JsonResponse({"error": "Vendor not found"}, status=404)
+            return JsonResponse({"error": "Vendor not found OR You are not authorized to perform this action."}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 

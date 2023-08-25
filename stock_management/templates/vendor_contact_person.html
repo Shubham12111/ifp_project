@@ -62,7 +62,7 @@
                                 {% if request.user|has_delete_permission:"stock_management" %}
                                 <li>
                                     <a href="#" type="button" class="dropdown-item border-radius-md"
-                                        onclick="CustomconfirmDelete({{vendor_instance.id}}{{contact_person.id}}, 'Are you sure you want to delete this contact person??','The contact person has been deleted successfully.','{% url 'vendor_contact_person_delete' vendor_instance.id contact_person.id %}')">
+                                        onclick="CustomconfirmDelete({{vendor_instance.id}}{{contact_person.id}}, 'Are you sure you want to delete this contact person?','The contact person has been deleted successfully.','{% url 'vendor_contact_person_delete' vendor_instance.id contact_person.id %}')">
                                      Delete
                                         </a>
                                 </li>

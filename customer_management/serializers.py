@@ -73,6 +73,8 @@ class ContactCustomerSerializer(serializers.ModelSerializer):
         max_length=14,
         min_length=10,
         required=False,
+        allow_null=True,
+        allow_blank=True,
         style={
             'base_template': 'custom_input.html'
         },
@@ -414,6 +416,8 @@ class ContactPersonSerializer(serializers.ModelSerializer):
         max_length=14,
         min_length=10,
         required=False,
+        allow_null=True,
+        allow_blank=True,
         style={
             'base_template': 'custom_input.html'
         },
