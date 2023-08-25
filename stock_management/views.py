@@ -385,7 +385,7 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Vendor not found",
+                message = "Vendor not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -429,9 +429,9 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Vendor has been deleted successfully!", )
         else:
-            messages.error(request, "Vendor not found")
+            messages.error(request, "Vendor not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Vendor not found", )
+                                        message="Vendor not found OR You are not authorized to perform this action.", )
        
 class VendorBillingDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -502,7 +502,7 @@ class VendorBillingDetailView(CustomAuthenticationMixin, generics.CreateAPIView)
             if vendor_instance:
                 return render_html_response(context, self.template_name)
             else:
-                messages.error(request, "Vendor not found.")
+                messages.error(request, "Vendor not found OR You are not authorized to perform this action.")
                 return redirect(reverse('vendor_list'))
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Alloweded")
@@ -634,7 +634,7 @@ class VendorRemarkView(CustomAuthenticationMixin, generics.CreateAPIView):
             if vendor_instance:
                 return render_html_response(context, self.template_name)
             else:
-                messages.error(request, "Vendor not found.")
+                messages.error(request, "Vendor not found OR You are not authorized to perform this action.")
                 return redirect(reverse('vendor_list'))
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Alloweded")

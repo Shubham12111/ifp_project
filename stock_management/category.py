@@ -301,7 +301,7 @@ class CategoryDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Category not found",
+                message = "Category not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -342,10 +342,10 @@ class CategoryDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Category has been deleted successfully!", )
         else:
-            messages.error(request, "Category not found")
+            messages.error(request, "Category not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
 
-                                        message="Category not found", )
+                                        message="Category not found OR You are not authorized to perform this action.", )
 
 class CategoryDeleteRemoveImageView(generics.DestroyAPIView):
     """
@@ -371,6 +371,6 @@ class CategoryDeleteRemoveImageView(generics.DestroyAPIView):
             )
         else:
             return Response(
-                {"message": "Requirement Defect not found or you don't have permission to delete."},
+                {"message": "Requirement Defect not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )

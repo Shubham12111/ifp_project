@@ -295,7 +295,7 @@ class InventoryLocationDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Inventory Location not found",
+                message = "Inventory Location not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -332,6 +332,6 @@ class InventoryLocationDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="InventoryLocation has been deleted successfully!", )
         else:
-            messages.error(request, "Inventory Location not found")
+            messages.error(request, "Inventory Location not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="InventoryLocation not found", )
+                                        message="InventoryLocation not found OR You are not authorized to perform this action.", )

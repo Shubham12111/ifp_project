@@ -555,6 +555,6 @@ class ToDoDeleteCommentView(generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_200_OK,
                                         message="Your comment has been deleted successfully!", )
         else:
-            messages.error(request, "Comment not found")
+            messages.error(request, "Comment not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND)
 

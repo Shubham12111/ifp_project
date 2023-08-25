@@ -416,7 +416,7 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Requirement not found.",
+                message = "Requirement not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -449,9 +449,9 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your requirement has been deleted successfully!", )
         else:
-            messages.error(request, "Requirement not found")
+            messages.error(request, "Requirement not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Requirement not found", )
+                                        message="Requirement not found OR You are not authorized to perform this action.", )
     
 class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -756,9 +756,9 @@ class RequirementDefectResponseDeleteView(CustomAuthenticationMixin, generics.De
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your requirement resposne has been deleted successfully!", )
         else:
-            messages.error(request, "Resposne defect not found")
+            messages.error(request, "Resposne defect not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Resposne defect not found", )
+                                        message="Resposne defect not found OR You are not authorized to perform this action.", )
                   
 
 class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
@@ -804,9 +804,9 @@ class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your requirement defect has been deleted successfully!", )
         else:
-            messages.error(request, "requirement defect not found")
+            messages.error(request, "requirement defect not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="requirement defect not found", )
+                                        message="requirement defect not found OR You are not authorized to perform this action.", )
             
 
 class RequirementRemoveDocumentView(generics.DestroyAPIView):
@@ -832,7 +832,7 @@ class RequirementRemoveDocumentView(generics.DestroyAPIView):
             )
         else:
             return Response(
-                {"message": "Requirement not found or you don't have permission to delete."},
+                {"message": "Requirement not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
                   
@@ -859,6 +859,6 @@ class RequirementDefectRemoveDocumentView(generics.DestroyAPIView):
             )
         else:
             return Response(
-                {"message": "Requirement Defect not found or you don't have permission to delete."},
+                {"message": "Requirement Defect not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
