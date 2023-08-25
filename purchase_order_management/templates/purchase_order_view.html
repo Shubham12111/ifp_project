@@ -1,6 +1,7 @@
 <!-- add_customer.html -->
 {% extends 'base.html' %}
 {% load static %}
+{% load inventory_tags %}
 {% load custom_tags %}
 {% block title %} Purchase Order View{{ block.super }}{% endblock %}
 {% block content %}
@@ -22,17 +23,17 @@
 }
 </style>
 <div class="container-fluid py-4">
-    <div class="card">
-        <div class="card-body px-3 pb-3 pt-3">
+    <div class="card ">
+        <div class="card-body px-4 pb-0 mb-10">
             <div class="row">
                 <div class="col-lg-4 col-md-4 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Vendor Information </h6>
-                            <span class="mb-2 text-xs">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
-                            <span class="mb-2 text-xs">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
-                            <span class="mb-2 text-xs">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
+                            <span class="mb-2 text-sm">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
+                            <span class="mb-2 text-sm">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
+                            <span class="mb-2 text-sm">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
                             </div>
                         </li>
                     </ul>
@@ -43,17 +44,17 @@
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Inventory Location Information</h6>
-                            <span class="mb-2 text-xs">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
-                            <span class="mb-2 text-xs">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
                             </div>
                         </li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-12 ms-auto">
+                <div class="col-lg-3 col-12 ms-auto text-sm">
                    <div class="d-flex justify-content-between">
                         <span class="mb-2 font-weight-bold">PO Number :</span>
-                        <span class="text-dark ms-2">{{purchase_order.po_number}}</span>
+                        <span class="text-dark ms-2 ">{{purchase_order.po_number}}</span>
                     </div>
                     <div class="d-flex justify-content-between">
                         <span class="mb-2  font-weight-bold" >Date:</span>
@@ -77,18 +78,18 @@
                             <thead>
                                 <tr class="px-0">
                                     <th class="text-start col-6 text-sm">Item Name</th>
-                                    <th class="text-center col-2 text-sm">Price</th>
+                                    <th class="text-center col-2 text-sm">Price(£)</th>
                                     <th class="text-center col-2 text-sm">Quantity </th>
-                                    <th class="text-center col-2 text-sm">Total</th>
+                                    <th class="text-center col-2 text-sm">Total(£)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in purchase_order_items %}
                                 <tr class="">
                                     <td class="text-sm">{{item.item_name}} </td>
-                                    <td class="text-sm text-center">£ {{item.unit_price}} </td>
+                                    <td class="text-sm text-center">{{item.unit_price}} </td>
                                     <td class="text-sm text-center">{{item.quantity}} </td>
-                                    <td class="text-sm text-center">£ {{item.row_total}} </td>
+                                    <td class="text-sm text-center">{{item.row_total}} </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -98,7 +99,7 @@
                 <div class="row mt-4">
                     <div class="col-md-6 ">
                         {% if purchase_order.notes %}
-                        <h6 class=" text-sm">Notes </h6>
+                        <h6 class=" text-sm">Additional Notes </h6>
                         <span class="notes text-sm">{{ purchase_order.notes }}</span>
                         <br>
                         {% endif %}
@@ -108,61 +109,149 @@
                         {% endif %}
                         {% if presigned_url %}
                             <br><br>
-                            <a href="{{presigned_url}}" class="text-sm">{{file_name}}</a>
+                            <a href="{{presigned_url.0}}" class="text-sm">{{file_name}}</a>
                             {% endif %}
                     </div>
                     <div class="col-lg-3 col-12 ms-auto">
                          <div class="d-flex justify-content-between">
                                 <span class="mb-2 text-sm">Sub Total</span>
-                                <span class="text-dark font-weight-bold ms-2">£ {{ purchase_order.sub_total }}</span>
+                                <span class="text-dark font-weight-bold ms-2">£{{ purchase_order.sub_total }}</span>
                             </div>
                         <div class="d-flex justify-content-between">
                             <span class="mb-2 text-sm">Discount </span>
-                            <span class="text-dark ms-2 font-weight-bold">£ {{ purchase_order.discount}}</span>
+                            <span class="text-dark ms-2 font-weight-bold">£{{ purchase_order.discount}}</span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span class="text-sm"> Taxes:</span>
-                            <span class="text-dark ms-2 font-weight-bold">£ {{ purchase_order.tax }}</span>
+                            <span class="text-sm"> Tax (%):</span>
+                            <span class="text-dark ms-2 font-weight-bold">£{{ purchase_order.tax }}</span>
                         </div>
                         <div class="d-flex justify-content-between mt-4">
                             <span class="mb-2 text-lg">Total</span>
-                            <span class="text-dark text-lg ms-2 font-weight-bold">£ {{ purchase_order.total_amount }}</span>
+                            <span class="text-dark text-lg ms-2 font-weight-bold">£{{ purchase_order.total_amount }}</span>
                     </div>
                 </div>
             </div>
             {% if invoice_item_list %}
             <div class="row mt-5">
                 <div class="col-md-12">
-                    <h6>Invoices</h6>
-                    <table class="table-responsive custom-table mb-3 " style="width:100%">
-                            <thead>
-                                <tr class="px-0">
-                                    <th class="text-start col-3 text-sm">Invoice Number</th>
-                                    <th class="text-start col-2 text-sm">Invoice Date</th>
-                                    <th class=" col-2 text-sm">Received Inventory </th>
-                                    <th class="col-2 text-sm">Created At</th>
-                                    <th class="text-center col-2 text-sm">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for invoice_item in invoice_item_list %}
-                                <tr class="">
-                                    <td class="text-sm">{{invoice_item.invoice_number}} </td>
-                                    <td class="text-sm">{{invoice_item.invoice_date}} </td>
-                                    <td class="text-sm">{{invoice_item.calculate_received_inventory}} </td>
-                                    <td class="text-sm">{{invoice_item.created_at}} </td>
-                                    <td class="text-center text-sm">
-                                        <a href="{% url 'purchase_order_invoice' purchase_order.id invoice_item.id %}"> <i class="fas fa-eye" aria-hidden="true"></i>
-                                        </a></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="col-lg-3 col-md-6 col-12">
+                        <h6 class="mb-3">Invoices</h6>
+                        <div class="timeline timeline-one-side">
+                        
+                        {% for invoice_item in invoice_item_list %}
+                        <div class="timeline-block mb-3">
+                            <span class="timeline-step">
+                            <i class="ni ni-check-bold text-success text-gradient"></i>
+                            </span>
+                                <div class="timeline-content">
+                                    <a href="#" class="invoice-link" data-invoice="{{ invoice_item.id }}" data-po="{{purchase_order.id}}">
+                                        {{invoice_item.invoice_number}}</a>
+                                    </h6>
+                                        <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{invoice_item.invoice_date}}</p>
+                                    </div>
+                                </div>
+                        {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                   
                     </div>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
-            
+
+<!-- Modal -->
+<div class="modal fade" id="invoiceModal" tabindex="-1" role="dialog" aria-labelledby="invoiceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-center trt-md" id="invoiceModalLabel">Invoice Details</h5>
+                
+            </div>
+            <div class="modal-body" id="modalContent">
+                
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+               
+            </div>
+        </div>
+    </div>
+</div>
+   
+{% endblock %}
+{% block extra_js %}
+<!-- JavaScript to handle modal and AJAX -->
+<script>
+    const invoiceLinks = document.querySelectorAll('.invoice-link');
+    const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+    const modalContent = document.getElementById('modalContent');
+   
+    invoiceLinks.forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault(); // Prevents the default link behavior
+
+            const invoiceNumber = link.getAttribute('data-invoice');
+            const po_id = link.getAttribute('data-po');
+
+            // Make an AJAX request to fetch invoice item details
+            fetch(`/purchase_order/invoice/view/${po_id}/${invoiceNumber}/`).then(function (response) {
+                console.log(response)
+                // Check if the network response is successful
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+                }).then(function (data) {
+
+                    responsedata= data.data
+                    // Use data.invoice_item to populate the modal content
+                    modalContent.innerHTML = `
+                    <table class="custom-table mb-4" style="width: 100%; text-sm">
+                                    <thead>
+                                        <tr class="text-sm">
+                                            <th>Item Name</th>
+                                            <th>Unit Price</th>
+                                            
+                                            <th>Quantity</th>
+                                            <th>Received Inventory</th>
+                                           
+                                            
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-sm">
+                                        ${responsedata.purchase_order_items.map(item => `
+                                            <tr>
+                                                <td>${item.item_name}</td>
+                                                <td>${item.unit_price}</td>
+                                                <td>${item.quantity}</td>
+                                                <td>${item.received_inventory}</td>
+                                               
+                                               
+                                                
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                                <div>
+                                <h6 class="mb-2 text-sm">Comments</h6>
+                                <p class="text-sm">${responsedata.comments}</p>
+                                <a href="${responsedata.presigned_url[0]}" class="mt-5" target="_blank">${responsedata.file_name}</a>
+                            </div>
+                            `;
+                   
+
+                    // Show the modal
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('Error fetching invoice item:', error);
+                });
+            });
+    });
+</script>
+
 {% endblock %}

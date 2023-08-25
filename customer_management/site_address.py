@@ -99,7 +99,7 @@ class CustomerSiteAddressView(CustomAuthenticationMixin, generics.CreateAPIView)
                         'site_address_list':self.get_site_address()}
                 return render_html_response(context,self.template_name)
             else:
-                messages.error(request, "Customer not found.")
+                messages.error(request, "Customer not found OR You are not authorized to perform this action.")
                 return redirect(reverse('customer_list'))
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED,
@@ -193,7 +193,7 @@ class CustomerRemoveSiteAddressView(CustomAuthenticationMixin, generics.DestroyA
             messages.success(request,success_message)
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,message=success_message )
         else:
-            error_message= "Customer site address not found"
+            error_message= "Customer site address not found OR You are not authorized to perform this action."
             messages.error(request,error_message)
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message=error_message, )

@@ -1,6 +1,10 @@
 <!-- add_contact.html -->
 {% extends 'base.html' %}
 {% load static %}
+{% block extra_css %}
+<link id="pagestyle" href="{% static 'assets/css/daterangepicker.css' %}" rel="stylesheet" />
+
+{% endblock %}
 {% block title %} Todo List {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
@@ -8,7 +12,8 @@
 <style>
 ul li input[type=text] {
 display: inline-block;
-}</style>
+}
+</style>
 <div class="container-fluid py-4">
   <div class="row mt-4">
     <div class="col-lg-12 col-12">
@@ -27,6 +32,14 @@ display: inline-block;
             </div>
           </div>
           {% include 'filter.html' %}
+          <div class="row mt-4">
+            <div class="col-md-6"></div>
+          <div class="col-3"></div>
+          <div class="col-xs-12 col-sm-12 col-lg-3 col-md-3  text-end">
+            <div class="search">
+              <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+            </div>
+          </div>
         </div>
         <div class="card-body px-0 pb-0">
           <div class="table-responsive">
@@ -35,9 +48,9 @@ display: inline-block;
                  <tr>
                    <th>Title</th>
                    <th>Module</th>
-                   <th>Assgined To</th>
+                   <th>Assigned To</th>
                    <th>Status</th>
-                   <th>Prioritye</th>
+                   <th>Priority</th>
                    <th>Date</th>
                    <th class="custom-last-column">Actions</th>
                  </tr>
@@ -88,7 +101,87 @@ display: inline-block;
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/daterangepicker.js' %}"></script>
+
 <script>
+// Initialize the Date Range Picker
+document.addEventListener('DOMContentLoaded', function() {
+    let initialStartDate, initialEndDate; // Variables to store the initial dates
+
+    function cb(start, end) {
+        const formattedStartDate = start.format('YYYY-MM-DD');
+        const formattedEndDate = end.format('YYYY-MM-DD');
+        const formattedDateRange = formattedStartDate + '_' + formattedEndDate;
+
+        $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
+
+        applyFilter('dateRange', formattedDateRange);
+    }
+
+    // Initialize the Date Range Picker without setting an initial date range
+    const datePicker = $('#reportrange').daterangepicker({
+        autoUpdateInput: false,
+        autoApply: true,
+        showCustomRangeLabel: true, // Hide the "Custom Range" label
+        format: 'YYYY/MM/DD', 
+        ranges: {
+            'Today': [moment(), moment()],
+            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()]
+        },
+    });
+
+    if (datePicker.data('daterangepicker').showCustomRangeLabel) {
+    datePicker.data('daterangepicker').container.find('.ranges ul').append(
+        $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
+    );
+}
+
+    datePicker.on('apply.daterangepicker', function(ev, picker) {
+        cb(picker.startDate, picker.endDate);
+    });
+
+    datePicker.on('show.daterangepicker', function(ev, picker) {
+        initialStartDate = picker.startDate.clone(); // Store initial start date
+        initialEndDate = picker.endDate.clone();     // Store initial end date
+    });
+
+  
+});
+
+function dateclearFilter(filterType) {
+    if (filterType === 'dateRange') {
+        $('#reportrange').data('daterangepicker').setStartDate(moment());
+        $('#reportrange').data('daterangepicker').setEndDate(moment());
+        $('#reportrange span').html('');
+        clearFilter('dateRange'); // Apply empty filter value
+    }
+}
+
+</script>
+<script>
+  if (document.getElementById('todo-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#todo-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25,
+      perPageSelect: false,
+    });
+
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+}
 const searchInput = document.getElementById('searchAssigned');
 const applySearchButton = document.getElementById('applySearch');
 const searchResults = document.getElementById('searchResults');
@@ -138,12 +231,11 @@ function handleApplyFilter() {
     return response.json();
   })
   .then(data => {
-    console.log(data.data.results, "ashddsa")
     // Update the search results
     updateSearchResults(data.data.results);
 
   })
-  .catch(error => console.error(error, "wdsdsa"));
+  .catch(error => console.error(error, "error"));
 }
 
 // Function to toggle dropdown visibility
@@ -151,12 +243,14 @@ function toggleDropdown() {
   isDropdownOpen = !isDropdownOpen;
 }
 
-// Listen for Apply Filter button click
-applySearchButton.addEventListener('click', event => {
+const inputField = document.getElementById('searchAssigned');
+
+inputField.addEventListener('input', () => {
   handleApplyFilter();
   toggleDropdown();
   event.stopPropagation();
 });
+
 
 // Toggle dropdown visibility when clicking on the assignedToDropdown
 assignedToDropdown.addEventListener('click', event => {
@@ -171,25 +265,15 @@ document.addEventListener('click', () => {
   }
 });
 
-  if (document.getElementById('todo-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#todo-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 25
-    });
 
-  };
 // JavaScript code to apply the filter on each field
 function applyFilter(filterName, filterValue) {
   
   // Handle date range filter
   if (filterName === 'dateRange') {
-    const startDate = filterValue[0];
-    const endDate = filterValue[1];
-    filterValue = `${startDate}_${endDate}`; // Use a custom delimiter to separate start and end dates
+    filterValue = filterValue; // Use a custom delimiter to separate start and end dates
     
   }
-
   const currentUrl = new URL(window.location.href);
   currentUrl.searchParams.set(filterName, filterValue);
   window.location.href = currentUrl.toString();
@@ -210,7 +294,7 @@ function clearAllFilters() {
   filterNames.forEach(filterName => {
     queryParams.delete(filterName);
     if (filterName === 'dateRange') {
-      document.getElementById('dateRangeInput').value = "";
+      document.getElementById('reportrange').value = "";
     }
 
     else{
@@ -236,7 +320,7 @@ window.addEventListener('DOMContentLoaded', function() {
         const formattedDateRange = filterValue.replace('_', ' to ');
         displayedValue = formattedDateRange;
         // Also update the date range input field if needed
-        document.getElementById('dateRangeInput').value = formattedDateRange;
+        document.getElementById('reportrange').value = formattedDateRange;
       } else if (filterValue.length > 9) {
         // Truncate the filter value if it's longer than 5 characters
         displayedValue = filterValue.substring(0, 9) + '..';
@@ -247,40 +331,6 @@ window.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
-
-
-// Initialize Flatpickr with range mode
-if (document.querySelector('.datepicker')) {
-  const dateRangeParam = new URLSearchParams(window.location.search).get('dateRange');
-  let defaultDates = [];
-
-  if (dateRangeParam) {
-    const [startDate, endDate] = dateRangeParam.split('_');
-    defaultDates = [new Date(startDate), new Date(endDate)];
-  }
-
-  flatpickr('.datepicker', {
-    mode: "range", // Enable the range mode to select a date range
-    dateFormat: "Y-m-d", // Set your desired date format
-    defaultDate: defaultDates, // Pre-fill selected date range
-    onClose: function(selectedDates, dateStr, instance) {
-      if (selectedDates.length === 2) {
-        // When the user selects a date range, apply the filter
-        const startDate = selectedDates[0];
-        startDate.setHours(0, 0, 0, 0); // Set time to start of the day
-        const endDate = selectedDates[1];
-        endDate.setHours(23, 59, 59, 999); // Set time to end of the day
-
-        // Manually format the ISO strings without time zone offset
-        const formattedStartDate = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`;
-        const formattedEndDate = `${endDate.getFullYear()}-${(endDate.getMonth() + 1).toString().padStart(2, '0')}-${endDate.getDate().toString().padStart(2, '0')}`;
-
-        applyFilter('dateRange', [formattedStartDate, formattedEndDate]);
-      }
-    }
-  });
-}
-
 
 
 

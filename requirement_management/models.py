@@ -56,7 +56,7 @@ class RequirementAsset(models.Model):
 class RequirementDefect(models.Model):
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
     UPRN = models.CharField(max_length=12, null=True)
-    action = models.TextField(max_length=256)
+    action = models.TextField(max_length=1000)
     description = RichTextField()
     defect_period = models.DateTimeField()
     due_date = models.DateTimeField()

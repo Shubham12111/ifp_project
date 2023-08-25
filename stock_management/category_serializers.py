@@ -57,7 +57,8 @@ class CategorySerializer(serializers.ModelSerializer):
         "autocomplete": "off",
         'base_template': 'custom_file.html',
         'help_text':True,
-        'custom_class': 'col-6'
+        'custom_class': 'col-6',
+        "accept":".png, .jpg, .jpeg",
     },
     validators=[file_extension_validator, validate_file_size],
     )

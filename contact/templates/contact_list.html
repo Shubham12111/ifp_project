@@ -67,7 +67,7 @@
                   <th>First Name</th>
                   <th>Last Name</th>
                   <th>Email</th>
-                  <th>Phone</th>
+                  <th>Company Name</th>
                   <th>Contact Type</th>
                   <th class="custom-last-column">Actions</th>
                 </tr>
@@ -78,7 +78,7 @@
                   <td  class="text-sm">{{contact.first_name|default:''|truncatechars:20|title}}</td>
                   <td  class="text-sm">{{contact.last_name|default:''|truncatechars:20|title}}</td>
                   <td  class="text-sm">{{contact.email}}</td>
-                  <td  class="text-sm">{{contact.phone_number}}</td>
+                  <td  class="text-sm">{{contact.company_name}}</td>
                   <td  class="text-sm">{{contact.contact_type|title}}</td>
                   <td>
                     <div class="dropstart ms-auto pe-0">
@@ -104,13 +104,13 @@
                         {% endif %}
                         {% if request.user|has_view_permission:"contact" %}
                         <li>
-                          <a href="{% url 'contact_conversation' contact.pk %}" class="dropdown-item border-radius-md" >Conversion</a>
+                          <a href="{% url 'contact_conversation' contact.pk %}" class="dropdown-item border-radius-md" >Conversation</a>
                         </li>
                         {% endif %}
                         <li>
                           {% if request.user|has_update_permission:"contact" %}
-                          <a href="#" data-bs-toggle="tooltip" class="dropdown-item border-radius-md"   onclick="showPopupAndRedirect('{% url 'convert_to_custmoer' contact.pk %}')">
-                            Convert TO Customer
+                          <a href="#" data-bs-toggle="tooltip" class="dropdown-item border-radius-md"   onclick="showPopupAndRedirect('{% url 'convert_to_customer' contact.pk  %}')">
+                            Convert To Customer
                           
                           </a>
                         {% endif %}

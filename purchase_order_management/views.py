@@ -67,11 +67,8 @@ def get_paginated_data(request, queryset, serializer_class, search_field=None):
     if status:
         data_queryset = data_queryset.filter(status=status)
     if due_date:
-        due_date = datetime.strptime(due_date, "%d/%m/%Y").strftime("%Y-%m-%d")
         data_queryset = data_queryset.filter(due_date=due_date)  
     if order_date:
-        order_date = datetime.strptime(order_date, "%d/%m/%Y").strftime("%Y-%m-%d")
-
         data_queryset = data_queryset.filter(order_date=order_date) 
 
     if  vendor_query:
@@ -121,7 +118,7 @@ def get_vendor_data(request):
                                  data=serializer.data)
             
         except Vendor.DoesNotExist:
-            return JsonResponse({"error": "Vendor not found"}, status=404)
+            return JsonResponse({"error": "Vendor not found OR You are not authorized to perform this action."}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
@@ -138,7 +135,7 @@ def get_inventory_location_data(request):
                                  data=serializer.data)
             
         except Vendor.DoesNotExist:
-            return JsonResponse({"error": "Vendor not found"}, status=404)
+            return JsonResponse({"error": "Vendor not found OR You are not authorized to perform this action."}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
@@ -487,7 +484,6 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
             messages.success(request, message)
             return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
         else:
-            print(serializer.errors)
             return JsonResponse({'success': False, 'errors': serializer.errors,  
             'status':status.HTTP_400_BAD_REQUEST}) 
 
@@ -544,6 +540,8 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
             for item in purchase_order_items
         ]
         
+        print(purchase_order_items, "purchase_order_items")
+
         all_serializers = [invoice_serializer] + received_inventory_serializers
         all_valid = all(serializer.is_valid() for serializer in all_serializers)
         
@@ -645,36 +643,39 @@ class PurchaseOrderInvoiceView(CustomAuthenticationMixin,generics.RetrieveAPIVie
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "purchase_order", HasViewDataPermission, 'view'
         )
-        # Check if authenticated_user is a redirect response
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
-          # Check if authenticated_user is a redirect response
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
-        base_queryset = PurchaseOrderInvoice.objects.all()
-        purchase_order_invoice = base_queryset.filter(pk=kwargs.get('invoice_id')).first()
+        purchase_order_invoice = PurchaseOrderInvoice.objects.filter(pk=kwargs.get('invoice_id')).first()
         
         purchase_order_items = PurchaseOrderReceivedInventory.objects.filter(purchase_order_invoice_id=purchase_order_invoice)
         
-        # invoice_item_list = PurchaseOrderInvoice.objects.filter(purchase_order_id=purchase_order,
-        #                                                         purchase_order_id__inventory_location_id=purchase_order.inventory_location_id).order_by('-created_at')
         
         presigned_url = ""
         file_name = ''
-        if purchase_order_invoice.invoice_pdf_path:
-            presigned_url = generate_presigned_url(purchase_order_invoice.invoice_pdf_path),
-            file_name =  purchase_order_invoice.invoice_pdf_path.split('/')[-1]
+        comments= ''
+        if purchase_order_invoice:
+            comments = purchase_order_invoice.comments
+            if purchase_order_invoice.invoice_pdf_path:
+                presigned_url = generate_presigned_url(purchase_order_invoice.invoice_pdf_path),
+                file_name =  purchase_order_invoice.invoice_pdf_path.split('/')[-1]
+        
+        # Create a list of dictionaries containing the required attributes from purchase_order_items
+        items_list = []
+        for item in purchase_order_items:
+            items_list.append({
+                'received_inventory': item.received_inventory,
+                'quantity': item.purchase_order_item_id.quantity,
+                'unit_price': item.purchase_order_item_id.unit_price,
+                'item_name': item.purchase_order_item_id.item_name,
+                
+            })
 
+        context = {
+            'purchase_order_items': items_list,
+            'presigned_url': presigned_url,
+            'file_name': file_name,
+            'comments':comments
+        }
 
-        if request.accepted_renderer.format == 'html':
-            context = {'purchase_order':purchase_order_invoice.purchase_order_id,
-                      'purchase_order_items':purchase_order_items,
-                     
-                      'presigned_url':presigned_url,
-                        'file_name':file_name}
-            return render_html_response(context, self.template_name)
+        return create_api_response(status_code=status.HTTP_200_OK, message="Invoice DATA", data=context)
         
         
 

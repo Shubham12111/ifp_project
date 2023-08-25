@@ -45,7 +45,7 @@
                                         <option value="{{vendor.id}}">{{vendor.email}}</option>
                                     {% endfor %}
                                 </select>
-                                <div id ="vendor-card">
+                                <div id ="vendor-card" class="mt-3">
                                     <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0 text-sm"  style="display: none;">
                                     </div>
                                 </div>
@@ -58,7 +58,7 @@
                                         <option value="{{inventory_location.id}}">{{inventory_location.name}}</option>
                                     {% endfor %}
                                 </select>
-                                <div id ="inventorylocation-card">
+                                <div id ="inventorylocation-card" class="mt-3">
                                     <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0 text-sm"  style="display: none;">
                                     </div>
                                 </div>
@@ -92,9 +92,9 @@
                                 <thead>
                                     <tr class="px-0">
                                         <th class="text-start col-6">Item Name</th>
-                                        <th class="text-center col-2">£ Price</th>
+                                        <th class="text-center col-2">Price(£)</th>
                                         <th class="text-center col-2">Quantity </th>
-                                        <th class="text-center col-2">£ Total</th>
+                                        <th class="text-center col-2">Total(£)</th>
                                         <th class="text-center col-2">Action</th>
                                     </tr>
                                 </thead>
@@ -102,6 +102,7 @@
                                     
                                 </tbody>
                             </table>
+                            <div class="error-message text-danger text-sm mb-2" id="rowError"></div>
                             <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
                         </div>
                     </div>
@@ -122,11 +123,12 @@
                         <textarea class="form-control notes" rows="6" name="notes" ></textarea>
                         <div class="form-group mt-4 ">
                             <label>Attach File</label>
-                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept=".jpg, .jpeg, .png">
+                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="images/*">
                             <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png).</small>  
                             {% if presigned_url %}
                             <br><br>
-                            <a href="{{presigned_url}}" class="text-sm">{{file_name}}</a>
+                            
+                            <a href="{{presigned_url.0}}" class="text-sm">{{file_name}}</a>
                             {% endif %}
                         </div>
                         {% endif %}
@@ -140,7 +142,7 @@
                                 <p class="subtotal-label">Sub Total:</p>
                             </div>
                             <div class="col-6 mb-1">
-                                <p class="mb-2 text-end subtotal-value"> £ 00.00</p>
+                                <p class="mb-2 text-end subtotal-value"> £00.00</p>
                             </div>
                             <div class="col-6 mb-1 text-end">
                                 <p class="discount-label">Discount:</p>
@@ -154,7 +156,7 @@
                            
                 
                             <div class="col-6 mb-1 text-end">
-                                <p class="tax-label">Tax:</p>
+                                <p class="tax-label">Tax (%):</p>
                             </div>
                             <div class="col-2 text-end mb-2"></div>
                             <div class="col-1 text-end mb-2"></div>
@@ -165,7 +167,7 @@
                                 <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
                             </div>
                             <div class="col-6 mb-1">
-                                <p class="font-weight-bolder mb-0 text-end grand-total-value">£ 00.00</p>
+                                <p class="font-weight-bolder mb-0 text-end grand-total-value">£00.00</p>
                                 <div class="error-message text-danger text-sm" id="grandTotalError"></div>
 
                             </div>
@@ -180,7 +182,7 @@
                     <button class="btn bg-gradient-primary mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Draft</button>
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
                     {% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "projects_admin_(IT)"  %}
-                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproved" title="Submit">Approved</button>
+                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproved" title="Submit">I Approve this Purchase Order </button>
                     {% endif %}
                     
                 </div>
@@ -192,57 +194,6 @@
       </form>
  
 </div>
-<!-- Bootstrap Modal for Negative Value Error -->
-<div class="modal fade" id="negativeValueModal" tabindex="-1" role="dialog" aria-labelledby="negativeValueModalLabel" aria-hidden="true">
-
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="negativeValueModalLabel">Invalid Input</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Negative values are not allowed. Please enter a valid positive value.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal" id="noItemsModal" tabindex="-1" aria-labelledby="noItemsModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="noItemsModalLabel">No More Items Available</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                All items have been selected. No more items left to add.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<div class="modal" id="emptyRowModal" tabindex="-1" aria-labelledby="emptyRowModalLabel" aria-hidden="true">
-    <div class="modal-dialog  modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-           
-            <div class="modal-body">
-                You must add at least one item before submitting the form.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 </div>
 </div>
 
@@ -269,9 +220,6 @@ const subtotalValue = document.querySelector('.subtotal-value');
 const discountInput = document.querySelector('.discount-input');
 const taxInput = document.querySelector('.tax-input');
 const grandTotalValue = document.querySelector('.grand-total-value');
-const noItemsModal = new bootstrap.Modal(document.getElementById('noItemsModal'));
-const negativeValueModal = new bootstrap.Modal(document.getElementById('negativeValueModal'));
-const emptyRowModal = new bootstrap.Modal(document.getElementById('emptyRowModal'));
 const itemTableBody = document.getElementById('itemTableBody');
 
 
@@ -279,8 +227,6 @@ const itemTableBody = document.getElementById('itemTableBody');
 // Assume you have retrieved existingPurchaseOrderData from the backend
 if (document.getElementById('existingPurchaseOrderData')) {
     const existingPurchaseOrderData = JSON.parse(document.getElementById('existingPurchaseOrderData').textContent);
-
-    
     if (existingPurchaseOrderData) {
     // Function to safely access nested properties
     function safeGetProperty(obj, prop) {
@@ -293,7 +239,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
         document.querySelector('.po_date').value = safeGetProperty(existingPurchaseOrderData, 'order_date');
         document.querySelector('.po_due_date').value = safeGetProperty(existingPurchaseOrderData, 'due_date');
         document.querySelector('.tax-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'tax')).toFixed(2);
-        document.querySelector('.subtotal-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
+        document.querySelector('.subtotal-value').textContent = `£${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
         document.querySelector('.discount-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'discount')).toFixed(2);
         if ("{{ purchase_order.status }}" === "sent_for_approval") {
                 const notesValue = "{{ existingPurchaseOrderData.notes }}";
@@ -328,7 +274,6 @@ if (document.getElementById('existingPurchaseOrderData')) {
             populateInventoryLocationData(existingInventoryLocationId);
         }
     });
-
 
     itemTableBody.innerHTML = ''; // Clear existing rows
     existingPurchaseOrderData.items.forEach(item => {
@@ -365,37 +310,41 @@ if (document.getElementById('existingPurchaseOrderData')) {
         }
         }
     }
-
     preselectDropdownOption('vendor-choices', existingPurchaseOrderData.vendor_id);
     preselectDropdownOption('inventory_location-choices', existingPurchaseOrderData.inventory_location_id);
     }
 }
     
-
-
-addItemBtn.addEventListener('click', () => {
-    const unselectedOptionsHtml = getUnselectedOptions();
-        if (unselectedOptionsHtml === '') {
-            noItemsModal.show(); // Show the modal
-            return; // Exit the function to prevent adding new rows
-        }
-const newRow = document.createElement('tr');
-newRow.innerHTML = `
-    <td>
-        <select id="itemSelect" class="form-select item-dropdown" onchange="updatePrice(this)">
-                <option value="">Select Item</option>
-                ${unselectedOptionsHtml}
-            </select>
-    </td>
-    <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
-    <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
-    <td class="text-center total">00.00</td>
-    <td class="text-center">
-        <a class="remove-row-btn" onclick="removeRow(this)">
-            <i class="fas fa-times"></i>
-        </a>
-    </td>
-`;
+    addItemBtn.addEventListener('click', () => {
+        const unselectedOptionsHtml = getUnselectedOptions();
+            if (unselectedOptionsHtml === '') {
+                const rowErrorElement = document.getElementById('rowError');
+                if (rowErrorElement) {
+                    rowErrorElement.textContent = "All items have been selected. No more items left to add.";
+                    // Clear the error message after 1 second
+                    setTimeout(() => {
+                        rowErrorElement.textContent = "";
+                    }, 3000); // 1000 milliseconds = 1 second
+                        }
+                return; // Exit the function to prevent adding new rows
+            }
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+        <td>
+            <select id="itemSelect" class="form-select item-dropdown" onchange="updatePrice(this)">
+                    <option value="">Select Item</option>
+                    ${unselectedOptionsHtml}
+                </select>
+        </td>
+        <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
+        <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
+        <td class="text-center total">00.00</td>
+        <td class="text-center">
+            <a class="remove-row-btn" onclick="removeRow(this)">
+                <i class="fas fa-times"></i>
+            </a>
+        </td>
+    `;
 
 
 itemTableBody.appendChild(newRow);
@@ -476,14 +425,22 @@ function recalculateTotal(row) {
 
     if (price >= 0 && quantity >= 0) {
         const total = (price * quantity).toFixed(2);
-        totalCell.textContent = `£${total}`;
+        totalCell.textContent = `${total}`;
         calculateTotal();
-    } else {
-        // Show the negative value error modal
-        negativeValueModal.show();
-        
+    } 
+    else {
+        const rowErrorElement = document.getElementById('rowError');
+        if (rowErrorElement) {
+            rowErrorElement.textContent = "Negative values are not allowed. Please enter a valid positive value.";
+
+            // Clear the error message after 1 second
+            setTimeout(() => {
+                rowErrorElement.textContent = "";
+            }, 3000); // 1000 milliseconds = 1 second
+        }
+
         // Reset the input fields to a valid state
-        priceInput.value = '0';
+        priceInput.value = price;
         quantityInput.value = '1';
 
         // Update the total cell to show the reset value
@@ -497,11 +454,11 @@ function recalculateTotal(row) {
 function calculateTotal() {
     let subtotal = 0;
     const rows = itemTableBody.querySelectorAll('tr');
+    
     rows.forEach(row => {
-        const total = parseFloat(row.querySelector('.total').textContent.slice(1));
+        const total = parseFloat(row.querySelector('.total').textContent);
         subtotal += total;
     });
-
     // Get discount and tax values (if they exist)
     const discountInput = document.getElementById('discount');
     const discount = parseFloat(discountInput.value) || 0; // Use 0 if parsing fails
@@ -512,27 +469,76 @@ function calculateTotal() {
     // Clear previous error messages
     document.getElementById('discountError').textContent = '';
     document.getElementById('grandTotalError').textContent = '';
+   
+    
+    
+    if (subtotal > 0) 
+    {
+        
+        if (isNaN(discount) || discount > subtotal) {
+            document.getElementById('discountError').textContent = "Discount is invalid or greater than subtotal.";
+            const discount = 0
+            discountInput.value = 0.00
+            taxInput.value= 0.00
+             // Calculate amounts
+            const discountedSubtotal = subtotal - discount;
+            const taxAmount = discountedSubtotal * (tax / 100); // Calculate tax as a percentage of discountedSubtotal
+            const grandTotal = discountedSubtotal + taxAmount;
+            // Update display values
+            grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
+            subtotalValue.textContent = `£${subtotal.toFixed(2)}`;
 
-    if (isNaN(discount) || discount > subtotal) {
-        document.getElementById('discountError').textContent = "Discount is invalid or greater than subtotal.";
-        return; // Stop further processing
+            // Update hidden input values
+            const subtotalInput = document.getElementById('subtotalInput');
+            const grandTotalInput = document.getElementById('grandTotalInput');
+            subtotalInput.value = subtotal.toFixed(2);
+            grandTotalInput.value = grandTotal.toFixed(2);
+
+
+            
+        }
+        else
+        {
+            // Calculate amounts
+        const discountedSubtotal = subtotal - discount;
+        const taxAmount = discountedSubtotal * (tax / 100); // Calculate tax as a percentage of discountedSubtotal
+        const grandTotal = discountedSubtotal + taxAmount;
+        
+
+        // Update display values
+        grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
+        subtotalValue.textContent = `£${subtotal.toFixed(2)}`;
+
+        // Update hidden input values
+        const subtotalInput = document.getElementById('subtotalInput');
+        const grandTotalInput = document.getElementById('grandTotalInput');
+        subtotalInput.value = subtotal.toFixed(2);
+        grandTotalInput.value = grandTotal.toFixed(2);
+        }
+        
+        
     }
-  
+    else
+    {
+        // Get discount and tax values (if they exist)
+        const discountInput =document.getElementById('discount');
+        const taxInput = document.getElementById('tax');
+        const grandTotal= 0
+        discountInput.value = 0.00
+        taxInput.value= 0.00
+        
+        // Update display values
+        grandTotalValue.textContent =  0.00;
+        subtotalValue.textContent =  0.00;
 
-    // Calculate amounts
-    const discountedSubtotal = subtotal - discount;
-    const taxedAmount = discountedSubtotal * tax;
-    const grandTotal = discountedSubtotal + taxedAmount;
-
-    // Update display values
-    grandTotalValue.textContent = `£${grandTotal.toFixed(2)}`;
-    subtotalValue.textContent = `£${discountedSubtotal.toFixed(2)}`;
-
-    // Update hidden input values
-    const subtotalInput = document.getElementById('subtotalInput');
-    const grandTotalInput = document.getElementById('grandTotalInput');
-    subtotalInput.value = discountedSubtotal.toFixed(2);
-    grandTotalInput.value = grandTotal.toFixed(2);
+        // Update hidden input values
+        const subtotalInput = document.getElementById('subtotalInput');
+        const grandTotalInput = document.getElementById('grandTotalInput');
+        subtotalInput.value = subtotal.toFixed(2);
+        grandTotalInput.value = grandTotal.toFixed(2);
+    }
+    
+    
 
 }
 
@@ -713,7 +719,7 @@ function submitForm(status) {
     formData.append('status', status);
     
     // Get the subtotal, discount, and tax values
-    const subtotal = parseFloat(subtotalValue.textContent.slice(1));
+    const subtotal = parseFloat(subtotalValue.textContent);
      // Add the calculated values to the form data
     formData.append('subtotal', subtotal.toFixed(2));
     // Get and validate the discount value
@@ -744,12 +750,18 @@ function submitForm(status) {
         const itemId = selectedOption.value;
         const itemPrice = parseFloat(row.querySelector('.item-price').value);
         const quantity = parseFloat(row.querySelector('.quantity-input').value);
-        const rowTotal = parseFloat(row.querySelector('.total').textContent.slice(1)); // Get the row total
+        const rowTotal = parseFloat(row.querySelector('.total').textContent); // Get the row total
         
         // Check if any of the required fields are empty
         if (!itemId || isNaN(itemPrice) || isNaN(quantity) || isNaN(rowTotal)) {
-            // Display the emptyRowModal
-            emptyRowModal.show();
+            const rowErrorElement = document.getElementById('rowError');
+                if (rowErrorElement) {
+                    rowErrorElement.textContent = "You must add at least one item before submitting the form.";
+                    // Clear the error message after 1 second
+                    setTimeout(() => {
+                        rowErrorElement.textContent = "";
+                    }, 3000); // 1000 milliseconds = 1 second
+                }
             return; // Stop further processing
         }
         
@@ -762,9 +774,15 @@ function submitForm(status) {
     });
 
     if (!hasNonEmptyRow) {
-        // Display the emptyRowModal
-        emptyRowModal.show();
-    } 
+    const rowErrorElement = document.getElementById('rowError');
+    if (rowErrorElement) {
+        rowErrorElement.textContent = "You must add at least one item before submitting the form.";
+        // Clear the error message after 1 second
+        setTimeout(() => {
+                rowErrorElement.textContent = "";
+            }, 2000); // 1000 milliseconds = 1 second
+    }
+}
 
     
     if (hasNonEmptyRow) {

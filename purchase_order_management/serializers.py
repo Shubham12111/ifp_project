@@ -99,7 +99,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "Order date is required.",
             "blank": "Order date is required.",
-            "invalid": "Invalid order date format. Use one of these formats instead: DD-MM-YYYY",
+            "invalid": "Invalid order date format. Use one of these formats instead: YYYY-MM-DD",
             # You can add more error messages as needed
         }
     )
@@ -109,7 +109,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "Due date is required.",
             "blank": "Due date is required.",
-            "invalid": "Invalid due date format. Use one of these formats instead: DD-MM-YYYY",
+            "invalid": "Invalid due date format. Use one of these formats instead: YYYY-MM-DD",
             # You can add more error messages as needed
         }
     )
@@ -217,7 +217,7 @@ class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
         error_messages={
             "required": "Invoice date is required.",
             "blank": "Invoice date is required.",
-            "invalid": "Invalid due date format. Use one of these formats instead: DD-MM-YYYY",
+            "invalid": "Invalid due date format. Use one of these formats instead: YYYY-MM-DD",
             # You can add more error messages as needed
         }
     )

@@ -129,11 +129,12 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a requirement.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
-        data = request.data.copy()
+        data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
         if file_list is not None and not any(file_list):
+            data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
             serializer = self.serializer_class(data = data)
         else:
@@ -357,11 +358,12 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         """
         instance = self.get_queryset()
         if instance:
-            data = request.data.copy()
+            data = request.data
             # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
             file_list = data.get('file_list', None)
 
             if file_list is not None and not any(file_list):
+                data = data.copy()
                 del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
                 serializer = self.serializer_class(data = data)
             else:
@@ -416,7 +418,7 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Requirement not found.",
+                message = "Requirement not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -449,9 +451,9 @@ class RequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your requirement has been deleted successfully!", )
         else:
-            messages.error(request, "Requirement not found")
+            messages.error(request, "Requirement not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Requirement not found", )
+                                        message="Requirement not found OR You are not authorized to perform this action.", )
     
 class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -516,7 +518,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
         
-        data = request.data.copy()
+        data = request.data
         
         file_list = data.get('file_list', [])
         
@@ -524,6 +526,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
         
         if not any(file_list):
+            data = data.copy()      # make a mutable copy of data before performing delete.
             del data['file_list']
         
         serializer_data = request.data if any(file_list) else data
@@ -556,7 +559,6 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     data=serializer.data
                                     )
         else:
-            print(serializer.errors)
             # Invalid serializer data.
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template with invalid serializer data.
@@ -660,7 +662,6 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
             messages.warning(request, "You are not authorized to perform this action")
             return redirect(reverse('requirement_list'))
 
-         
         # Defect response doesn't exist, prepare context for displaying form
         context = {
             'defect_instance': defect_instance,
@@ -676,7 +677,7 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         """
         Handle POST request to add a requirement.
         """
-        data = request.data.copy()
+        data = request.data
         
         file_list = data.get('file_list', [])
         
@@ -685,10 +686,10 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         defect_response_instance = self.get_queryset_response()
         
         if not any(file_list):
+            data = data.copy()        # make a mutable copy of data before performing delete.
             del data['file_list']
         
         serializer_data = request.data if any(file_list) else data
-        
         
         if defect_response_instance:
             serializer = self.serializer_class(data=serializer_data, instance=defect_response_instance)  
@@ -704,7 +705,8 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
             
             submit_type = request.POST.get('submit_type')
             serializer.validated_data['status'] = submit_type
-            instance = serializer.save()
+            
+            serializer.save()
             
             
             if request.accepted_renderer.format == 'html':
@@ -756,9 +758,9 @@ class RequirementDefectResponseDeleteView(CustomAuthenticationMixin, generics.De
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your requirement resposne has been deleted successfully!", )
         else:
-            messages.error(request, "Resposne defect not found")
+            messages.error(request, "Resposne defect not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Resposne defect not found", )
+                                        message="Resposne defect not found OR You are not authorized to perform this action.", )
                   
 
 class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
@@ -804,9 +806,9 @@ class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your requirement defect has been deleted successfully!", )
         else:
-            messages.error(request, "requirement defect not found")
+            messages.error(request, "requirement defect not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="requirement defect not found", )
+                                        message="requirement defect not found OR You are not authorized to perform this action.", )
             
 
 class RequirementRemoveDocumentView(generics.DestroyAPIView):
@@ -832,7 +834,7 @@ class RequirementRemoveDocumentView(generics.DestroyAPIView):
             )
         else:
             return Response(
-                {"message": "Requirement not found or you don't have permission to delete."},
+                {"message": "Requirement not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
                   
@@ -859,6 +861,6 @@ class RequirementDefectRemoveDocumentView(generics.DestroyAPIView):
             )
         else:
             return Response(
-                {"message": "Requirement Defect not found or you don't have permission to delete."},
+                {"message": "Requirement Defect not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )

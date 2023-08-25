@@ -23,7 +23,29 @@ from .serializers import *
 
 from .serializers import VendorSerializer,BillingDetailSerializer
 
-# Create your views here.
+class VendorSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+    template_name = 'vendor.html'
+
+    def get(self, request, *args, **kwargs):
+        search_term = request.GET.get('term')
+        data = {}
+        if search_term:
+            vendor_list = Vendor.objects.filter(
+                            Q(first_name__icontains=search_term) |
+                            Q(last_name__icontains=search_term) |
+                            Q(email__icontains=search_term)
+                        )
+            
+            # Get the email from the vendor_list
+            results = [user.email for user in vendor_list]
+            
+            data = {'results': results}
+        return create_api_response(status_code=status.HTTP_200_OK,
+                                message="Vendor data",
+                                data=data)
+
 
 class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -346,7 +368,7 @@ class VendorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             else:
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'instance': instance}
+                    context = {'serializer': serializer, 'vendor_instance': instance}
                     return render(request, self.template_name, context)
                 else:
                     # For API requests with invalid data, return an error response with serializer errors.
@@ -385,7 +407,7 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Vendor not found",
+                message = "Vendor not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -429,9 +451,9 @@ class VendorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Vendor has been deleted successfully!", )
         else:
-            messages.error(request, "Vendor not found")
+            messages.error(request, "Vendor not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Vendor not found", )
+                                        message="Vendor not found OR You are not authorized to perform this action.", )
        
 class VendorBillingDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -502,7 +524,7 @@ class VendorBillingDetailView(CustomAuthenticationMixin, generics.CreateAPIView)
             if vendor_instance:
                 return render_html_response(context, self.template_name)
             else:
-                messages.error(request, "Vendor not found.")
+                messages.error(request, "Vendor not found OR You are not authorized to perform this action.")
                 return redirect(reverse('vendor_list'))
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Alloweded")
@@ -634,7 +656,7 @@ class VendorRemarkView(CustomAuthenticationMixin, generics.CreateAPIView):
             if vendor_instance:
                 return render_html_response(context, self.template_name)
             else:
-                messages.error(request, "Vendor not found.")
+                messages.error(request, "Vendor not found OR You are not authorized to perform this action.")
                 return redirect(reverse('vendor_list'))
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Alloweded")

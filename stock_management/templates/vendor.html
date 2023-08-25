@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %}Add Vendor {{ block.super }}{% endblock %}
+{% block title %}{% if vendor_instance %}Edit {% else %} Add {% endif %} Vendor {{ block.super }}{% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
 {% include 'stock_management/stock_actions.html' %}

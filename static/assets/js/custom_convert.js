@@ -8,9 +8,8 @@ function Customconfirm(itemId, confirmMessage, yesRedirectUrl, noStayUrl) {
     const csrfToken = getCookie('csrftoken');
 
     Swal.fire({
-        title: 'Confirmation',
-        text: confirmMessage,
-        icon: 'question',
+        title: '<h4 class="mb-0">Confirmation</h4>',
+        html: '<div class="custom-content text-sm">' + confirmMessage + '</div>', // Use a custom class for the content
         showCancelButton: true,
         confirmButtonText: 'Yes',
         cancelButtonText: 'No',
@@ -47,9 +46,8 @@ function Customconfirm(itemId, confirmMessage, yesRedirectUrl, noStayUrl) {
 
 function showPopupAndRedirect(url) {
     Swal.fire({
-        title: 'Confirmation',
+        title: '<h4 class="mb-0">Confirmation</h4>',
         text: 'Are you sure you want to convert this contact into customer?',
-        icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Yes',
         cancelButtonText: 'No',

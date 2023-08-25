@@ -305,10 +305,15 @@
 }
 .ecomm-prod-slider .carousel-inner,
 .ecomm-prod-slider .carousel-inner img,
-.ecomm-prod-slider .carousel-inner video,
-.ecomm-prod-slider .product-carousel-indicators {
+.ecomm-prod-slider .carousel-inner video
+{
   height: 100% !important;
 }
+
+.ecomm-prod-slider .product-carousel-indicators {
+  height: 350px !important;
+}
+
 @media (max-width: 575.98px) {
   .ecomm-prod-slider .carousel-inner,
 .ecomm-prod-slider .carousel-inner img,

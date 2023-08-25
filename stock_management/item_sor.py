@@ -122,11 +122,12 @@ class ItemSorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         message = "Congratulations! sor has been added successfully."
         
-        data = request.data.copy()
+        data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
         if file_list is not None and not any(file_list):
+            data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
         
 
@@ -260,11 +261,12 @@ class ItemSorUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If unsuccessful, an error response is returned.
         """
 
-        data = request.data.copy()
+        data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
         if file_list is not None and not any(file_list):
+            data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
 
         data['item_type'] = 'sor'
@@ -324,7 +326,7 @@ class ItemSorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "SOR not found",
+                message = "SOR not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -368,6 +370,6 @@ class ItemSorDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="SOR has been deleted successfully!", )
         else:
-            messages.error(request, "SOR not found")
+            messages.error(request, "SOR not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="SOR not found", )
+                                        message="SOR not found OR You are not authorized to perform this action.", )

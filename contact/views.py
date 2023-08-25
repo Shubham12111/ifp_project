@@ -602,6 +602,6 @@ class ConversationCommentView(generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your Conversation has been deleted successfully!", )
         else:
-            messages.error(request, "Conversation not found")
+            messages.error(request, "Conversation not found OR You are not authorized to perform this action. ")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Conversation not found", )
+                                        message="Conversation not found OR You are not authorized to perform this action. ", )

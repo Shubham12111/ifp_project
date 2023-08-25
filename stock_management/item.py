@@ -121,11 +121,12 @@ class ItemAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         message = "Congratulations! item has been added successfully."
         
-        data = request.data.copy()
+        data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
         if file_list is not None and not any(file_list):
+            data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
         
         data['item_type'] = 'item'
@@ -256,22 +257,24 @@ class ItemUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If unsuccessful, an error response is returned.
         """
 
-        data = request.data.copy()
+        data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
         file_list = data.get('file_list', None)
 
         if file_list is not None and not any(file_list):
+            data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
 
         data['item_type'] = 'item'
         
         instance = self.get_queryset()
         if instance:
-            data = request.data.copy()
+            data = request.data
             # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
             file_list = data.get('file_list', None)
 
             if file_list is not None and not any(file_list):
+                data = data.copy()
                 del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
                 serializer = self.serializer_class(data = data)
             else:
@@ -327,7 +330,7 @@ class ItemDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_404_NOT_FOUND,
                 serializer_class=serializer_class,
-                message = "Item not found",
+                message = "Item not found OR You are not authorized to perform this action.",
                 ),
 
     }
@@ -371,9 +374,9 @@ class ItemDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Item has been deleted successfully!", )
         else:
-            messages.error(request, "Item not found")
+            messages.error(request, "Item not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Item not found", )
+                                        message="Item not found OR You are not authorized to perform this action.", )
 
 class ItemRemoveImageView(generics.DestroyAPIView):
     """
