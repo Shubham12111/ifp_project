@@ -556,7 +556,6 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     data=serializer.data
                                     )
         else:
-            print(serializer.errors)
             # Invalid serializer data.
             if request.accepted_renderer.format == 'html':
                 # Render the HTML template with invalid serializer data.
@@ -660,7 +659,6 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
             messages.warning(request, "You are not authorized to perform this action")
             return redirect(reverse('requirement_list'))
 
-         
         # Defect response doesn't exist, prepare context for displaying form
         context = {
             'defect_instance': defect_instance,
@@ -689,7 +687,6 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         
         serializer_data = request.data if any(file_list) else data
         
-        
         if defect_response_instance:
             serializer = self.serializer_class(data=serializer_data, instance=defect_response_instance)  
             message = "Congratulations! Your response has been updated successfully."
@@ -704,7 +701,8 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
             
             submit_type = request.POST.get('submit_type')
             serializer.validated_data['status'] = submit_type
-            instance = serializer.save()
+            
+            serializer.save()
             
             
             if request.accepted_renderer.format == 'html':

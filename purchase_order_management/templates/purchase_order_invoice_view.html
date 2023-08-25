@@ -23,34 +23,34 @@
 </style>
 <div class="container-fluid py-4">
     <div class="card">
-        <div class="card-body px-3 pb-3 pt-3">
+        <div class="card-body px-4 pb-0 mb-10">
             <div class="row">
-                <div class="col-lg-3 col-md-3 col-12">
+                <div class="col-lg-4 col-md-4 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Vendor Information </h6>
-                            <span class="mb-2 text-xs">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
-                            <span class="mb-2 text-xs">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
-                            <span class="mb-2 text-xs">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
+                            <span class="mb-2 text-sm">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
+                            <span class="mb-2 text-sm">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
+                            <span class="mb-2 text-sm">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
                             </div>
                         </li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-md-3 col-12">
+                <div class="col-lg-4 col-md-4 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Inventory Location Information</h6>
-                            <span class="mb-2 text-xs">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
-                            <span class="mb-2 text-xs">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
                             </div>
                         </li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-12 ms-auto">
+                <div class="col-lg-3 col-12 ms-auto text-sm">
                    <div class="d-flex justify-content-between">
                         <span class="mb-2 font-weight-bold">PO Number :</span>
                         <span class="text-dark ms-2">{{purchase_order.po_number}}</span>
@@ -75,22 +75,23 @@
                 <div class="col-md-12">
                     <table class="table-responsive custom-table mb-3 " style="width:100%">
                             <thead>
-                                <tr class="px-0">
-                                    <th class="text-start col-6 text-sm">Item Name</th>
-                                    <th class="text-center col-2 text-sm">Price</th>
+                                <tr class="px-0 text-sm">
+                                    <th class="text-start col-4 text-sm">Item Name</th>
+                                    <th class="text-center col-2 text-sm">Price(£)</th>
                                     <th class="text-center col-2 text-sm">Quantity </th>
-                                    <th class="text-center col-2 text-sm">Recived Quantity </th>
-                                    <th class="text-center col-2 text-sm">Total</th>
+                                    <th class="text-center col-2 text-sm">Received Quantity </th>
+                                    <th class="text-center col-2 text-sm">Totale(£)</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                
                                 {% for item in purchase_order_items %}
                                 <tr class="">
                                     <td class="text-sm">{{item.purchase_order_item_id.item_name}} </td>
                                     <td class="text-sm text-center">£ {{item.purchase_order_item_id.unit_price}} </td>
                                     <td class="text-sm text-center">{{item.purchase_order_item_id.quantity}} </td>
                                     <td class="text-sm text-center">{{item.received_inventory}} </td>
-                                    <td class="text-sm text-center">£ {{item.row_total}} </td>
+                                    <td class="text-sm text-center">£ {{item.purchase_order_item_id.row_total}} </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -110,7 +111,7 @@
                         {% endif %}
                         {% if presigned_url %}
                             <br><br>
-                            <a href="{{presigned_url}}" class="text-sm">{{file_name}}</a>
+                            <a href="{{presigned_url.o}}" class="text-sm">{{file_name}}</a>
                             {% endif %}
                     </div>
                     <div class="col-lg-3 col-12 ms-auto">

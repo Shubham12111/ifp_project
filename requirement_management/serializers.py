@@ -492,7 +492,7 @@ class RequirementDefectResponseAddSerializer(serializers.ModelSerializer):
         style={'base_template': 'rich_textarea.html'},
         error_messages={
             "required": "This field is required.",
-            "blank": "Description is required.",
+            "blank": "Rectification is required.",
         },
         validators=[validate_description],
     )

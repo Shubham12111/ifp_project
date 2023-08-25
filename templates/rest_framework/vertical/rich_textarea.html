@@ -45,9 +45,15 @@
 
     // Add an event listener to capture the content when the form is submitted
     var form = document.querySelector('form');
+    
     form.addEventListener('submit', function (event) {
-      var quillContent = quill.root.innerHTML;
-      document.getElementById('quill-{{ field.name }}').value = quillContent;
+      
+      var quillContent = document.getElementById('edit-{{ field.name }}').textContent;
+       document.getElementById('quill-{{ field.name }}').value = quillContent;
+
+      
+
+
     });
   }
 </script>

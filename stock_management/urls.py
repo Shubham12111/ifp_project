@@ -10,6 +10,7 @@ from .item_sor import *
 
 
 urlpatterns = [
+   path('vendor/serach/', VendorSearchAPIView.as_view(), name='vendor_search'),
    path('vendor/list/', VendorListView.as_view(), name='vendor_list'),
    path('vendor/add/', VendorAddView.as_view(), name='vendor_add'),
    path('vendor/edit/<int:vendor_id>/', VendorUpdateView.as_view(), name='vendor_edit'),
@@ -37,6 +38,7 @@ urlpatterns = [
    path('item/remove/image/<int:item_id>/<int:pk>/', ItemRemoveImageView.as_view(), name='item_image_remove'),
 
    
+   path('inventory_location/serach/', InventoryLocationSearchAPIView.as_view(), name='inventory_location_search'),
    path('inventory_location/list/', InventoryLocationListView.as_view(), name='inventory_location_list'),
    path('inventory_location/add/', InventoryLocationAddView.as_view(), name='inventory_location_add'),
    path('inventory_location/edit/<int:inventory_location_id>/', InventoryLocationUpdateView.as_view(), name='inventory_location_edit'),

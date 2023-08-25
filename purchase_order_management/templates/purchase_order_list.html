@@ -4,6 +4,19 @@
  {% load custom_tags %}
  {% block title %} Purchase Order{{ block.super }}{% endblock %}
  {% block content %}
+ <style>
+  ul li input[type=text] {
+  display: inline-block;
+  
+  }
+  .input-container {
+    display: inline-block;
+    margin-right: 10px; /* Adjust the spacing as needed */
+}
+.custom-date-search {
+  width: 120px !important;
+}
+  </style>
  {% include 'components/alert.html' %}
  <div class="container-fluid py-4">
    <div class="row">
@@ -27,30 +40,11 @@
                   </div>
                 </div>
               </div>
-              <label class="mt-2 text-muted">Filters:</label>
-                <div class="d-flex flex-wrap ">
-
-                <label>Search Vendor <input type="text" class="form-control" placeholder="Search Vendor" name="vendor" id="vendor-filter"></label>
-                <label>Search Location <input type="text" placeholder="Search Loaction" class="form-control " name="location"  id="location-filter"></label>
-                <div class="form-group">
-                  <label>Status
-                   
-                    <select id="status-filter" name="status" class="form-select" > 
-                      
-                        <option value="">All</option>
-                        {% for status in  status_list %}
-                          <option value="{{status.0}}">{{status.1}}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                </div>
-               
-                <label>Due Date <input type="date" name="due_date" placeholder="Due Date"  class="form-control due-date-filter" id="due-date-filter"></label>
-                <label>Order Date <input type="date" name="order_date"  placeholder="Order Date"  class="form-control order-date-filter" id="order-date-filter"></label>
-                <button id="search-button" class="btn bg-gradient-primary btn-sm mb-0 mt-3 mx-3" style="height: 41px;">Search</button>
-                <button id="clear-button" class="btn btn-secondary" style="display: none;">Clear Filters</button>
+              <label class="mt-4 text-muted">Filters:</label>
+              {% include 'purchase_order_filter.html' %}
+             
             </div>
-             </div>
+            
               <div class="card-body px-0 pb-0 pt-0">
                 <div class="table-responsive">
                   <table class="table table-flush text-dark " id="purchase-order-list">
@@ -87,6 +81,267 @@
 <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
 <script>
 
+// filter vendor
+const searchInput = document.getElementById('searchVendor');
+const applySearchButton = document.getElementById('applySearch');
+const searchResults = document.getElementById('searchResults');
+const vendorDropdown = document.getElementById('vendorDropdown'); // Assigned To dropdown element
+
+let currentSearchResults = []; // Store the current search results
+let isDropdownOpen = false; // Variable to track dropdown open state
+
+// Function to update search results
+function updateSearchResults(results) {
+  currentSearchResults = results; // Store the results
+  searchResults.innerHTML = '';
+
+  if (results.length > 0) {
+    results.forEach(result => {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.classList.add('dropdown-item', 'border-radius-md');
+      link.href = '#';
+      link.textContent = result;
+      // Add the click event to apply the filter
+      link.onclick = function () {
+        applyFilter('vendor', result);
+      };
+      li.appendChild(link);
+      searchResults.appendChild(li);
+    });
+  } else {
+    const li = document.createElement('li');
+    li.classList.add('dropdown-item', 'text-muted');
+    li.textContent = 'No results found.';
+    searchResults.appendChild(li);
+  }
+}
+
+// Function to handle Apply Filter button click
+function handleApplyFilter() {
+  const searchTerm = searchInput.value;
+
+  // Make a request to your backend API with the searchTerm
+  // Example using fetch:
+  fetch(`/stock/vendor/serach/?term=${searchTerm}`)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    // Update the search results
+    updateSearchResults(data.data.results);
+
+  })
+  .catch(error => console.error(error, "error"));
+}
+
+// Function to toggle dropdown visibility
+function toggleDropdown() {
+  isDropdownOpen = !isDropdownOpen;
+}
+
+const inputField = document.getElementById('searchVendor');
+
+inputField.addEventListener('input', () => {
+  handleApplyFilter();
+  toggleDropdown();
+  event.stopPropagation();
+});
+
+
+
+// Loaction search
+const locationsearchInput = document.getElementById('searchLocation');
+const locationsearchResults = document.getElementById('locationsearchResults');
+const locationDropdown = document.getElementById('locationDropdown'); 
+
+let locationcurrentSearchResults = []; // Store the current search results
+let locationisDropdownOpen = false; // Variable to track dropdown open state
+
+// Function to update search results
+function updateLocationSearchResults(results) {
+  locationcurrentSearchResults = results; 
+  locationsearchResults.innerHTML = '';
+  console.log(results)
+  if (results.length > 0) {
+    results.forEach(result => {
+      const li = document.createElement('li');
+      const link = document.createElement('a');
+      link.classList.add('dropdown-item', 'border-radius-md');
+      link.href = '#';
+      link.textContent = result;
+      // Add the click event to apply the filter
+      link.onclick = function () {
+        applyFilter('location', result);
+      };
+      li.appendChild(link);
+      locationsearchResults.appendChild(li);
+    });
+  } else {
+    const li = document.createElement('li');
+    li.classList.add('dropdown-item', 'text-muted');
+    li.textContent = 'No results found.';
+    locationsearchResults.appendChild(li);
+  }
+}
+
+// Function to handle Apply Filter button click
+function handlelocationApplyFilter() {
+  const searchTerm = locationsearchInput.value;
+
+  // Make a request to your backend API with the searchTerm
+  // Example using fetch:
+  fetch(`/stock/inventory_location/serach/?term=${searchTerm}`)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    // Update the search results
+    updateLocationSearchResults(data.data.results);
+
+  })
+  .catch(error => console.error(error, "error"));
+}
+
+// Function to toggle dropdown visibility
+function toggleDropdown() {
+  locationisDropdownOpen = !locationisDropdownOpen;
+}
+
+const locationinputField = document.getElementById('searchLocation');
+
+locationinputField.addEventListener('input', () => {
+  handlelocationApplyFilter();
+  toggleDropdown();
+  event.stopPropagation();
+});
+
+
+// JavaScript code to apply the filter on each field
+function applyFilter(filterName, filterValue) {
+  
+  // Handle date range filter
+  if (filterName === 'order_date') {
+    filterValue = filterValue; // Use a custom delimiter to separate start and end dates
+    
+  }
+  else if (filterName === 'due_date') {
+    filterValue = filterValue; // Use a custom delimiter to separate start and end dates
+    
+  }
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set(filterName, filterValue);
+  window.location.href = currentUrl.toString();
+}
+
+
+
+if (document.querySelector('.order-date-filter')) {
+  flatpickr('.order-date-filter', {
+    mode: "range",
+    dateFormat: "Y-m-d",
+  });
+  
+  
+}
+ // Adding an input event listener to detect changes in the input field
+ const orderDateFilter = document.querySelector('.order-date-filter');
+    orderDateFilter.addEventListener('input', function() {
+      // Get the current value of the input field
+      const inputValue = orderDateFilter.value;
+      // Call your applyFilter function here with the input value
+      applyFilter('order_date', [inputValue]);
+    });
+  
+
+
+if (document.querySelector('.due-date-filter')) {
+  flatpickr('.due-date-filter', {
+    mode: "range",
+    dateFormat: "Y-m-d",
+  });
+  
+  
+}
+ // Adding an input event listener to detect changes in the input field
+ const dueDateFilter = document.querySelector('.due-date-filter');
+ dueDateFilter.addEventListener('input', function() {
+      // Get the current value of the input field
+      const inputValue = dueDateFilter.value;
+      // Call your applyFilter function here with the input value
+      applyFilter('due_date', [inputValue]);
+    });
+  
+
+// Check URL parameters on page load and update search and filter selections
+window.addEventListener('DOMContentLoaded', function() {
+  const filterNames = ['vendor', 'location', 'status', 'order_date','due_date'];
+  filterNames.forEach(filterName => {
+    const filterValue = new URLSearchParams(window.location.search).get(filterName);
+    
+    if (filterValue) {
+      let displayedValue = filterValue; // Default displayed value is the filter value itself
+
+
+      if (filterName === 'order_date') {
+        // Also update the date range input field if needed
+        document.getElementById('order-date-filter').value = filterValue;
+      } 
+      
+      else if (filterName === 'due_date') {
+        // Also update the date range input field if needed
+        document.getElementById('due-date-filter').value = filterValue;
+      } 
+      
+      
+      else if (filterValue.length > 9) {
+        // Truncate the filter value if it's longer than 5 characters
+        displayedValue = filterValue.substring(0, 9) + '..';
+        // Update the dropdown element with the displayed value
+        document.getElementById(`${filterName}Dropdown`).textContent = displayedValue.replace(/_/g, ' ');
+      }
+
+      
+
+    }
+  });
+});
+
+
+  // JavaScript code to clear all the filters
+  function clearAllFilters() {
+  const currentUrl = new URL(window.location.href);
+  const queryParams = new URLSearchParams(currentUrl.search);
+  const filterNames = ['vendor', 'location', 'status', 'order_date','due_date']; // Add dateRange to the filterNames array
+
+  filterNames.forEach(filterName => {
+    queryParams.delete(filterName);
+
+    if (filterName === 'order_date') {
+      document.getElementById('order-date-filter').value = "";
+    }
+    else if (filterName === 'due_date') {
+      document.getElementById('due-date-filter').value = "";
+    }
+
+    else{
+      document.getElementById(`${filterName}Dropdown`).textContent = filterName;
+    }
+   
+    
+  });
+
+  window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+  window.location.reload(); // Reload the page after clearing all filters
+}
+
+
  // Check if the datetimepicker element exists
  if (document.querySelector('.due-date-filter')) {
   // Get the default value for the datetime picker
@@ -98,7 +353,7 @@
   flatpickr('.due-date-filter', {
     allowInput: false,
     defaultDate: defaultDate,
-    dateFormat: "d/m/Y" 
+    dateFormat: "Y-m-d" 
   });
  }
 
@@ -114,11 +369,17 @@
   flatpickr('.order-date-filter', {
     allowInput: false,
     defaultDate: defaultDate,
-    dateFormat: "d/m/Y" 
+    dateFormat: "Y-m-d"  
   });
  }
 
-var searchUrl = '/purchase_order/list/';
+
+
+
+
+
+var searchUrl = window.location.href;
+
 var dataTable;
 // Config for the first table
 var columnsConfig1 = [
@@ -157,34 +418,6 @@ function hasFilters() {
     return (vendor || location || status || dueDate || orderDate);
 }
 
-// Show or hide the "Clear Filters" button based on filters
-function updateClearButton() {
-    var clearButton = document.getElementById("clear-button");
-    
-    if (hasFilters()) {
-        clearButton.style.display = "inline-block";
-    } else {
-        clearButton.style.display = "none";
-    }
-}
-
-
-// Initial check when the page loads
-updateClearButton();
-
-document.getElementById("search-button").addEventListener("click", function() {
-  searchUrl  ='/purchase_order/list/?vendor=' + document.getElementById('vendor-filter').value +
-              '&location=' + document.getElementById('location-filter').value +
-              '&status=' + document.getElementById('status-filter').value +
-              '&due_date=' + document.getElementById('due-date-filter').value +
-              '&order_date=' + document.getElementById('order-date-filter').value;
-    initializeDataTable("purchase-order-list", searchUrl, columnsConfig1);
-    updateClearButton(); // Update the "Clear Filters" button visibility
-});
-
-document.getElementById("clear-button").addEventListener("click", function() {
-  window.location.reload();
-});
 
 
 function initializeDataTable(tableId, dataUrl, columnsConfig) {
@@ -206,6 +439,7 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
             }).then(function (data) {
                 // Parse the received data
                 const responseData = data.data;
+
                 if (responseData.length > 0) {
                 // Format the data for DataTable consumption
                   var formattedData = {
@@ -292,6 +526,10 @@ function getStatusCellContent(status) {
 // Function to generate link action HTML
 function generateLinkAction(item, action) {
     var url = action.urlField;
+    if (item.status == "sent_for_approval")
+    {
+      return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">Approve </a></li>';
+    }
     return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">' + action.label + '</a></li>';
 }
 
@@ -299,6 +537,8 @@ function generateLinkAction(item, action) {
 function generateActionButtons(item, columnConfig) {
     var status = item['status'];
     var conditionalActionsHTML = '';
+
+
     {% if request.user|has_update_permission:'purchase_order'%}
     
     if ((status === "pending")) {
@@ -312,7 +552,6 @@ function generateActionButtons(item, columnConfig) {
             }
         
     } 
-
 
     else if ((status === "sent_for_approval")) {
         var actionsHTML = columnConfig.linkActions.map(function(action) {
@@ -331,10 +570,14 @@ function generateActionButtons(item, columnConfig) {
     
     {% endif %}
 
-    else if (status === "approved" || status == "partially_completed") {
-        conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/'+ item['id'] + '/">Invoice</a></li>';
-    }
 
+
+
+    {% if request.user.roles.name == "projects_admin_(IT)" %}
+      else if (status === "approved" || status == "partially_completed") {
+          conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/'+ item['id'] + '/">Invoice</a></li>';
+      }
+      {% endif %}  
   
     var dropdownHTML = '<div class="dropstart ms-auto pe-0">' +
     '<a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">' +

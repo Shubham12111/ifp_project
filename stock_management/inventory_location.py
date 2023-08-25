@@ -12,9 +12,33 @@ from django.core.serializers import serialize
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
+class InventoryLocationSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+    template_name = 'inventory_location_list.html'
+
+    def get(self, request, *args, **kwargs):
+        search_term = request.GET.get('term')
+        data = {}
+        if search_term:
+            inventory_location_list = InventoryLocation.objects.filter(
+                            Q(name__icontains=search_term) |
+                            Q(address__icontains=search_term) 
+                        )
+            
+            print(inventory_location_list,"search_term")
+            # Get the name from the inventory_location_list
+            results = [location.name for location in inventory_location_list]
+            print(results)
+            data = {'results': results}
+        return create_api_response(status_code=status.HTTP_200_OK,
+                                message="inventory location data",
+                                data=data)
+
+
 class InventoryLocationListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
-    View to get the listing of all contacts.
+    View to get the listing of all location.
     Supports both HTML and JSON response formats.
     """
     serializer_class = InventoryLocationSerializer

@@ -28,15 +28,18 @@ class ToDoUserSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
     def get(self, request, *args, **kwargs):
         search_term = request.GET.get('term')
-        user_list = User.objects.filter(email__icontains=search_term)  # Adjust your filter logic
-        
-        # Get the usernames from the user_list
-        results = [user.email for user in user_list]
-        
-        data = {'results': results}
-        return create_api_response(status_code=status.HTTP_200_OK,
-                                message="user data",
-                                data=data)
+        data = {}
+        if search_term:
+            user_list = User.objects.filter(email__icontains=search_term)  # Adjust your filter logic
+            
+            # Get the usernames from the user_list
+            results = [user.email for user in user_list]
+            
+            data = {'results': results}
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="user data",
+                                    data=data)
+
 
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
