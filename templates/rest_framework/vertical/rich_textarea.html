@@ -13,7 +13,7 @@
       {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
     </label>
   {% endif %}
-  <div id="edit-{{ field.name }}" class="quill-editor">
+  <div id="edit-{{ field.name }}" class="quill-editor text-xs">
     {{ field.value|safe }} <!-- Render the initial content here if available -->
   </div>
   <input
