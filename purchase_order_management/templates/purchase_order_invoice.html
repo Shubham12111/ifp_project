@@ -239,33 +239,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
         quantityInputs.forEach(input => {
             const purchase_order_item_id = input.getAttribute('data-item-id');
-            const received_inventory = input.value;
+            const received_inventory = parseFloat(input.value); // Parse the value as a float
             Quantities.push({ purchase_order_item_id, received_inventory });
 
-            if (received_inventory !== "0") {
+            if (received_inventory !== 0 && received_inventory !== -1) { // Check for non-zero and non-negative values
                 hasReceivedInventory = true;
-                 }
-             });
-
-            if (hasReceivedInventory) {
-                // If at least one row has received_inventory, proceed to form submission
-                formData.append('purchase_order_items', JSON.stringify(Quantities));
-                // ... Code to submit the form or further processing
-            } else {
-                // Display an error message if all rows have zero received_inventory
-                const rowErrorElement = document.getElementById('rowError');
-                if (rowErrorElement) {
-                    rowErrorElement.textContent = "Add received inventory to at least one item.";
-
-                    // Clear the error message after 3 seconds
-                    setTimeout(() => {
-                        rowErrorElement.textContent = "";
-                    }, 3000); // 3000 milliseconds = 3 seconds
-                }
             }
+        });
 
+        if (hasReceivedInventory) {
+            // If at least one row has received_inventory, proceed to form submission
+            formData.append('purchase_order_items', JSON.stringify(Quantities));
+            // ... Code to submit the form or further processing
+        } else {
+            // Display an error message if all rows have zero or -1 received_inventory
+            const rowErrorElement = document.getElementById('rowError');
+            if (rowErrorElement) {
+                rowErrorElement.textContent = "Add valid received inventory quantities to at least one item. Negative values and zero are not allowed.";
 
-        console.log(hasReceivedInventory, Quantities, formData)
+                // Clear the error message after 3 seconds
+                setTimeout(() => {
+                    rowErrorElement.textContent = "";
+                }, 3000); // 3000 milliseconds = 3 seconds
+            }
+        }
+
         
         if (hasReceivedInventory)
         {
