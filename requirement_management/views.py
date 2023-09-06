@@ -13,6 +13,11 @@ from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 
+def get_customer_data(customer_id):
+    customer_data = User.objects.filter(id=customer_id).first()
+    
+    return customer_data
+        
 def filter_requirements(data_access_value, user, customer=None):
     # Define a mapping of data access values to corresponding filters.
     filter_mapping = {
@@ -106,30 +111,37 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         customer_id = kwargs.get('customer_id', None)
         
-        customer = User.objects.filter(id=customer_id).first()
+        customer_data = User.objects.filter(id=customer_id).first()
         
-        
-        # Call the handle_unauthenticated method to handle unauthenticated access.
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"fire_risk_assessment", HasListDataPermission, 'list'
-        )
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        if customer_data:
+            # Call the handle_unauthenticated method to handle unauthenticated access.
+            authenticated_user, data_access_value = check_authentication_and_permissions(
+                self,"fire_risk_assessment", HasListDataPermission, 'list'
+            )
+            if isinstance(authenticated_user, HttpResponseRedirect):
+                return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        queryset = filter_requirements(data_access_value, self.request.user, customer)
-        qs_role = UserRole.objects.filter(name='quantity_surveyor')
-        quantity_sureveyors = User.objects.filter(roles__in=qs_role)
-        
+            queryset = filter_requirements(data_access_value, self.request.user, customer_data)
+            qs_role = UserRole.objects.filter(name='quantity_surveyor')
+            quantity_sureveyors = User.objects.filter(roles__in=qs_role)
+            
 
-        if request.accepted_renderer.format == 'html':
-            context = {'requirements':queryset, 'customer_id':customer_id, 'quantity_sureveyors': quantity_sureveyors}
-            return render_html_response(context,self.template_name)
+            if request.accepted_renderer.format == 'html':
+                context = {'requirements':queryset, 'customer_id':customer_id,
+                        'quantity_sureveyors': quantity_sureveyors,
+                        'customer_data':customer_data}
+                return render_html_response(context,self.template_name)
+            else:
+                serializer = self.serializer_class(queryset, many=True)
+                return create_api_response(status_code=status.HTTP_200_OK,
+                                                message="Data retrieved",
+                                                data=serializer.data)
         else:
-            serializer = self.serializer_class(queryset, many=True)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                            message="Data retrieved",
-                                            data=serializer.data)
-
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list'))
+        
+        
+        
 class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
     View for adding  a requirement.
@@ -146,20 +158,30 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         If the requirement exists, retrieve the serialized data and render the HTML template.
         If the requirement does not exist, render the HTML template with an empty serializer.
         """
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'add'
-        )
+        customer_id = kwargs.get('customer_id', None)
+        
+        customer_data = User.objects.filter(id=customer_id).first()
+        
+        if customer_data:
+            # Call the handle_unauthenticated method to handle unauthenticated access
+            authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"fire_risk_assessment", HasCreateDataPermission, 'add'
+            )
 
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+            if isinstance(authenticated_user, HttpResponseRedirect):
+                return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        if request.accepted_renderer.format == 'html':
-            context = {'serializer':self.serializer_class(), 'customer_id': kwargs.get('customer_id')}
-            return render_html_response(context,self.template_name)
+            if request.accepted_renderer.format == 'html':
+                context = {'serializer':self.serializer_class(), 
+                           'customer_id': kwargs.get('customer_id'),
+                           'customer_data':customer_data}
+                return render_html_response(context,self.template_name)
+            else:
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message="GET Method Not Alloweded",)
         else:
-            return create_api_response(status_code=status.HTTP_201_CREATED,
-                                message="GET Method Not Alloweded",)
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
 
     common_post_response = {
         status.HTTP_201_CREATED: 
@@ -184,47 +206,53 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         customer_id = kwargs.get('customer_id', None)
         
-        customer = User.objects.filter(id=customer_id).first()
+        customer_data = User.objects.filter(id=customer_id).first()
         
-        # Call the handle_unauthenticated method to handle unauthenticated access.
-        data = request.data
-        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
-        file_list = data.get('file_list', None)
+        if customer_data:
+            # Call the handle_unauthenticated method to handle unauthenticated access.
+            data = request.data
+            # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+            file_list = data.get('file_list', None)
 
-        if file_list is not None and not any(file_list):
-            data = data.copy()
-            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-            serializer = self.serializer_class(data = data)
-        else:
-            serializer = self.serializer_class(data = request.data)
-
-        message = "Congratulations! your requirement has been added successfully."
-        if serializer.is_valid():
-            serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
-            serializer.validated_data['customer_id'] = customer
-            serializer.save()
-
-            if request.accepted_renderer.format == 'html':
-                messages.success(request, message)
-                return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
-
+            if file_list is not None and not any(file_list):
+                data = data.copy()
+                del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+                serializer = self.serializer_class(data = data)
             else:
-                # Return JSON response with success message and serialized data.
-                return create_api_response(status_code=status.HTTP_201_CREATED,
-                                    message=message,
-                                    data=serializer.data
-                                    )
+                serializer = self.serializer_class(data = request.data)
+
+            message = "Congratulations! your requirement has been added successfully."
+            if serializer.is_valid():
+                serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
+                serializer.validated_data['customer_id'] = customer_data
+                serializer.save()
+
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+
+                else:
+                    # Return JSON response with success message and serialized data.
+                    return create_api_response(status_code=status.HTTP_201_CREATED,
+                                        message=message,
+                                        data=serializer.data
+                                        )
+            else:
+                # Invalid serializer data.
+                if request.accepted_renderer.format == 'html':
+                    # Render the HTML template with invalid serializer data.
+                    context = {'serializer':serializer, 
+                           'customer_id': kwargs.get('customer_id'),
+                           'customer_data':customer_data}
+                    return render_html_response(context,self.template_name)
+                else:   
+                    # Return JSON response with error message.
+                    return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                        message="We apologize for the inconvenience, but please review the below information.",
+                                        data=convert_serializer_errors(serializer.errors))
         else:
-            # Invalid serializer data.
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data.
-                context = {'serializer':serializer}
-                return render_html_response(context,self.template_name)
-            else:   
-                # Return JSON response with error message.
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                    message="We apologize for the inconvenience, but please review the below information.",
-                                    data=convert_serializer_errors(serializer.errors))
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list'))
 
 class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
@@ -798,28 +826,33 @@ import ast
 class RequirementQSAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
-        customer_id = None
+        customer_id = kwargs.get('customer_id', None)
+            
         try:
-            requirement_ids = request.data.get('selectedReqIds')
-            if requirement_ids: requirement_ids = requirement_ids.split(',')
-            quantity_sureveyor_id = request.data.get('qsSelect')
-            
-            requirments = Requirement.objects.filter(id__in=requirement_ids)
-            quantity_sureveyor = User.objects.filter(id=quantity_sureveyor_id).first()
+            customer_data = get_customer_data(customer_id)
+            if customer_data:
+                requirement_ids = request.data.get('selectedReqIds')
+                quantity_sureveyor_id = request.data.get('qsSelect')
+                
+                
+                requirments = Requirement.objects.filter(pk__in=ast.literal_eval(requirement_ids))
+                quantity_sureveyor = User.objects.filter(pk=quantity_sureveyor_id).first()
 
-            for requirement in requirments:
-                requirement.quantity_surveyor = quantity_sureveyor
-
-                if not customer_id:
-                    customer_id = requirement.customer_id
-
-                requirement.save()
-            
-            messages.success(request, "Updated Quantity Surveyour successfully")        
-            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id.id}))    
+                for requirement in requirments:
+                    requirement.quantity_surveyor = quantity_sureveyor
+                    requirement.status = "to-surveyor"
+                    requirement.save()
+                
+                messages.success(request, "Updated Quantity Surveyour successfully")        
+                return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
+        
         except Exception as e:
             print(e)
             messages.error(request, "Something went wrong !")
-            return redirect(reverse('customers_list'))
-            
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
+
+                
         

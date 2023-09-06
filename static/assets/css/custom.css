@@ -282,3 +282,7 @@ color: #344767;
 {
     background: #d53436 !important;
 }
+textarea.form-control {
+    height: 200px !important;
+    resize: none !important;
+  }

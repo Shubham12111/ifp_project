@@ -4,7 +4,6 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
-
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-12">
@@ -13,42 +12,37 @@
         <div class="card-header pb-0">
           <div class="d-lg-flex">
             <div>
-              <h4 class="mb-0">Customer List</h4>
+              <h4 class="mb-0">FRA Customer List</h4>
             </div>
           </div>
           {% include 'components/table_search.html' %}
         </div>
         <div class="card-body px-0 pb-0">
           <div class="table-responsive">
-            <table class="table table-flush text-dark" id="item-list">
+            <table class="table table-flush text-dark" id="requirement-customer-list">
               <thead class="thead-light">
                 <tr>
                   <th>Customer Name</th>
                   <th>Company Name</th>
                   <th>Customer Email</th>
                   <th>Phone Number</th>
-                  <th>FRA Counts</th>
-                  <th class="custom-last-column">Actions</th>
+                  <th class="custom-last-column">FRA Counts</th>
                 </tr>
               </thead>
               <tbody class="ml-4"> 
                 {% for query_obj  in customers_with_counts %}
                     <tr class="text-sm">
-                      <td>{{query_obj.customer.first_name|title}} {{query_obj.customer.last_name|lower}}</td>
-                        {% comment %} <a href="{% url 'customer_requirement_list' query_obj.customer.id %}"> {% endcomment %}
-                      <td>{{query_obj.customer.company_name|title}}</td>
-                      <td>{{query_obj.customer.email}}</td>
-                      <td >{{query_obj.customer.phone_number}}</td>
-                      <td >{{query_obj.fra_counts}}</td>
-                      <td class="text-center">
-                        <div class="ms-auto pe-0">
-                          {% if request.user|has_view_permission:"fire_risk_assessment" %}
-                            <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="cursor-pointer" aria-label="FRA Action">
-                              <i class="fas fa-eye text-secondary" aria-hidden="true"></i>
-                            </a>
-                          {% endif %}
-                        </div>
+                      <td>
+                        <a href="{% url 'customer_requirement_list' query_obj.customer.id %}"> 
+                          {{query_obj.customer.first_name|truncatechars:20|title}} {{query_obj.customer.last_name|truncatechars:20|lower}}
+                        </a>
                       </td>
+                         
+                      <td>{{query_obj.customer.company_name|default:''|title}}</td>
+                      <td>{{query_obj.customer.email}}</td>
+                      <td >{{query_obj.customer.phone_number|default:''}}</td>
+                      <td >{{query_obj.fra_counts}}</td>
+                     
                       
                     </tr>
                 {% endfor %}
@@ -66,4 +60,27 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+if (document.getElementById('requirement-customer-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#requirement-customer-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25,
+      perPageSelect: false,
+    });
+
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+  }
+
+
+
+</script>
 {% endblock %}

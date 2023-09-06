@@ -19,5 +19,5 @@ urlpatterns = [
     path('defects/delete/<int:pk>/', RequirementDefectDeleteView.as_view(), name='requirement_defect_delete'),
     path('defects/delete/document/<int:defect_id>/<int:pk>/', login_required(RequirementDefectRemoveDocumentView.as_view()), name='remove_requirement_defect_document'),
 
-    path('quantity_surveyor/add/',RequirementQSAddView.as_view() , name='add_quantity_surveyor')
+    path('quantity_surveyor/add/<int:customer_id>/',RequirementQSAddView.as_view() , name='add_quantity_surveyor')
 ]

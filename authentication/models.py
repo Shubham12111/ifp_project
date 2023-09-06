@@ -15,6 +15,7 @@ MODULE_CHOICES = [
     ('contact', 'Contacts'),
     ('todo', 'ToDo'),
     ('customer', 'Customer'),
+    ('estimation', 'Estimation'),
     ('fire_risk_assessment', 'Fire Risk Assessment'),
     ('survey', 'Survey (Scheduling)'),
     ('stock_management', 'Stock Management'),

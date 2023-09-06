@@ -12,25 +12,31 @@
         <!-- Card header -->
         <div class="card-header pb-0">
           <div class="row">
-            <div class="col-lg-6 col-12 mb-lg-0 mb-3">
+            <div class="col-lg-5 col-12 mb-lg-0 mb-3">
               <h4 class="mb-0">FRA Actions</h4>
+              {% include 'customer_info.html' %}
             </div>
-            <div class="col-lg-6 col-12">
+            <div class="col-lg-7 col-12">
               <div class="row justify-content-end">
-                <div class="col-lg-4 col-12 mb-lg-0 mb-2"></div>
-                <div class="col-lg-4 col-12 text-lg-end text-start mb-lg-0 mb-2">
+                <div class="col-lg-3 col-12  text-end mb-2 ">
                   {% if request.user|has_add_permission:"requirement" %}
                   <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
                     <a href="{% url 'customer_requirement_add'  customer_id %}" class="btn bg-gradient-primary btn-sm mb-0 me-0">+&nbsp; Add FRA Actions</a>
                   {% endif %}
                 </div>
-                <div class="col-lg-4 col-12 p-lg-0 mb-lg-0 mb-2">
-                  <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2" disabled>Assign Quality Surveyor</button>
+                
+                <div class="col-lg-3 col-12 mb-2 text-end" >
+                   <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2" disabled>Assign Surveyor</button></div>
+                <div class="col-lg-4 col-12  text-end">
+                  <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2" disabled>Assign Quantity Surveyor</button>
                 </div>
+                
               </div>
+              {% include 'components/table_search.html' %}
             </div>
+            
           </div>
-          {% include 'components/table_search.html' %}
+         
         </div>
         <div class="card-body px-0 pb-0">
 
@@ -40,12 +46,12 @@
               <div class="modal-dialog">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h5 class="modal-title" id="addQsModalLabel">Select a Quantity Surveyor</h5>
+                    <h5 class="modal-title" id="addQsModalLabel">Assign Quantity Surveyor</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
                   <div class="modal-body">
                     <!-- Form to select a QS -->
-                    <form id="selectQsForm" method="POST" action="{% url 'add_quantity_surveyor' %}">
+                    <form id="selectQsForm" method="POST" action="{% url 'add_quantity_surveyor' customer_id %}">
                       {% csrf_token %}
                       <input type="hidden" id="selectedReqIds" name="selectedReqIds" value="">
                       <div class="form-group">
@@ -60,14 +66,12 @@
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="submitQsForm" class="btn btn-primary">Submit</button>
+                    <button type="button" id="submitQsForm" class="btn bg-gradient-primary">Submit</button>
                   </div>
                 </div>
               </div>
             </div>
-
-
-            <table class="table table-flush text-dark" id="requirement-list">
+           <table class="table table-flush text-dark" id="requirement-list">
               <thead class="thead-light">
                   <tr>
                     <th></th><!-- Add an empty th for the checkbox column -->
@@ -75,8 +79,8 @@
                     <th>Description</th>
                     <th>Site Address</th>
                     <th>Quantity Surveyor</th>
-                    <th>Date</th>
-                    <th>UPRN</th>
+                    <th>Status</th>
+                    <th>Created At</th>
                     <th class="custom-last-column">Actions</th>
                   </tr>
                 </thead>
@@ -84,7 +88,7 @@
                       {% for requirement in requirements %}
                       <tr>
                         <td class="text-sm">
-                          <input type="checkbox" name="requirement_checkbox" value="{{ requirement.id }}" {% if requirement.quantity_surveyor %}disabled title="Assigned to : {{requirement.quantity_surveyor}}"{% endif %}>
+                          <input type="checkbox" name="requirement_checkbox" value="{{ requirement.id }}">
                         </td>
                         <td class="text-sm">{{requirement.action|truncatechars:20|title}}<br>
                         </td>
@@ -92,9 +96,9 @@
                         </td>
                         <td class="text-sm">{{requirement.site_address|truncatechars:20|title}}<br>
                         </td>
-                        <td class="text-sm">{{requirement.quantity_surveyor}}</td>
-                        <td class="text-sm">{{requirement.created_at|date:"M d, Y  H:i"}}</td>
-                        <td class="text-sm">{{requirement.uprn}}</td>
+                        <td class="text-sm">{{requirement.quantity_surveyor|default:''}}</td>
+                        <td class="text-sm">{{requirement.get_status_display|default:''|title}}</td>
+                        <td class="text-sm">{{requirement.created_at|date:"M d, Y"}}</td>
                         <td class="text-sm">
                           <div class="dropstart ms-auto pe-0">
                             <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -141,29 +145,28 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script>
-  if (document.getElementById('requirement-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 25,
-      perPageSelect: false,
-    });
+  // Initialize Choices.js
+if (document.getElementById('qsSelect')) {
+  var element = document.getElementById('qsSelect');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Quantity Surveyor", 
+  });
 
-    const dataTableTop = document.querySelector('.dataTable-top');
-    if (dataTableTop) {
-      dataTableTop.parentNode.removeChild(dataTableTop);
-    }
-    const searchInput = document.getElementById('searchInput');
-      searchInput.addEventListener('input', function() {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
-      });
-  }
+}
 
-</script>
-
-<script>
   if (document.getElementById('requirement-list')) {
       const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
           searchable: true,

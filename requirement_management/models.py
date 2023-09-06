@@ -7,9 +7,9 @@ from django.core.validators import MaxValueValidator
 from customer_management.models import SiteAddress
 
 REQUIREMENT_CHOICES = (
-      ('pending', 'Pending'),
-    ('in-progress', 'In Progress'),
-    ('executed', 'Executed')
+    ('active', 'Active'),
+    ('to-surveyor', 'To Surveyor'),
+    ('assigned-to-surveyor ', 'Assigned To Surveyor')
 )
 
 
@@ -32,7 +32,7 @@ class Requirement(models.Model):
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
     quantity_surveyor = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='surveyor_requirement')
     surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor', null=True, blank=False)
-    status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='pending')
+    status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

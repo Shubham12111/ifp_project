@@ -84,11 +84,11 @@ class RequirementSerializer(serializers.ModelSerializer):
         return data
 
 class RequirementAddSerializer(serializers.ModelSerializer):
-
+    
     action = serializers.CharField(
         max_length=1024, 
         required=True, 
-        style={'base_template': 'rich_textarea.html'},
+        style={'base_template': 'textarea.html'},
         error_messages={
             "required": "This field is required.",
             "blank": "Action is required.",
@@ -101,7 +101,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     description = serializers.CharField(
         max_length=1024, 
         required=True, 
-        style={'base_template': 'rich_textarea.html'},
+        style={'base_template': 'textarea.html'},
         error_messages={
             "required": "This field is required.",
             "blank": "Description is required.",
@@ -113,10 +113,10 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     
     site_address = serializers.PrimaryKeyRelatedField(
         label=('Site Address'),
-        required=True,
-        queryset=SiteAddress.objects.all(),
+        required = True,
+        queryset = SiteAddress.objects.all(),
         style={
-            # 'base_template': 'custom_site_address_select.html',
+            'base_template': 'custom_select.html',
             'custom_class':'col-6'
         },
         error_messages={
@@ -146,6 +146,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             'multiple': True,
             'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),
             'allow_null': True,
+             'custom_class':'col-6'
         },
         help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
@@ -178,6 +179,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             for field in fields.values()
             if not field.read_only
         ])
+    
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
