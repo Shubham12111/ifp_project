@@ -74,13 +74,14 @@
            <table class="table table-flush text-dark" id="requirement-list">
               <thead class="thead-light">
                   <tr>
-                    <th></th><!-- Add an empty th for the checkbox column -->
+                    <th class="custom-last-column"></th><!-- Add an empty th for the checkbox column -->
                     <th>FRA Action</th>
                     <th>Description</th>
                     <th>Site Address</th>
                     <th>Quantity Surveyor</th>
+                    <th>Surveyor</th>
                     <th>Status</th>
-                    <th>Created At</th>
+                    <th class="custom-last-column">Created At</th>
                     <th class="custom-last-column">Actions</th>
                   </tr>
                 </thead>
@@ -97,6 +98,7 @@
                         <td class="text-sm">{{requirement.site_address|truncatechars:20|title}}<br>
                         </td>
                         <td class="text-sm">{{requirement.quantity_surveyor|default:''}}</td>
+                        <td class="text-sm">{{requirement.surveyor|default:''}}</td>
                         <td class="text-sm">{{requirement.get_status_display|default:''|title}}</td>
                         <td class="text-sm">{{requirement.created_at|date:"M d, Y"}}</td>
                         <td class="text-sm">

@@ -58,19 +58,13 @@ def get_paginated_data(request, queryset, serializer_class, search_field=None):
 
     location = request.GET.get('location')
     status = request.GET.get('status')
-    due_date = request.GET.get('due_date')
-    order_date = request.GET.get('order_date')
-
+    
     # Apply filters to the queryset based on filter parameters
     if location:
         data_queryset = data_queryset.filter(inventory_location_id__name__icontains=location)
     if status:
         data_queryset = data_queryset.filter(status=status)
-    if due_date:
-        data_queryset = data_queryset.filter(due_date=due_date)  
-    if order_date:
-        data_queryset = data_queryset.filter(order_date=order_date) 
-
+   
     if  vendor_query:
         data_queryset = data_queryset.filter(vendor_query)
             
@@ -408,8 +402,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                     'vendor_id': purchase_order_data.vendor_id.id,
                     'inventory_location_id': purchase_order_data.inventory_location_id.id,
                     'po_number': purchase_order_data.po_number,
-                    'order_date': purchase_order_data.order_date.strftime('%Y-%m-%d'),  # Convert date to string
-                    'due_date': purchase_order_data.due_date.strftime('%Y-%m-%d'),  # Convert date to string
+                    'created_at': purchase_order_data.created_at.strftime('%Y-%m-%d'),  # Convert date to string
                     'tax': purchase_order_data.tax,
                     'sub_total': purchase_order_data.sub_total,
                     'discount': purchase_order_data.discount,

@@ -286,24 +286,6 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         },
         validators=[validate_rectification_description],
     )
-
-    defect_period = serializers.DateTimeField(
-        label='Defect Period',
-        required=True,
-        style={
-            'base_template': 'custom_date_time.html',
-            'custom_class': 'col-6'
-        },
-    )
-
-    due_date = serializers.DateTimeField(
-        label='Due Date',
-        required=True,
-        style={
-            'base_template': 'custom_date_time.html',
-            'custom_class': 'col-6'
-        },
-    )
     
     file_list = serializers.ListField(
         child=serializers.FileField(
@@ -328,21 +310,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
 
-    UPRN = serializers.CharField(
-    max_length=12, 
-    label=('UPRN'),
-    required=False,  # Make it optional
-    style={
-        "autocomplete": "off",
-        "required": False,  # Adjust as needed
-        'base_template': 'custom_input.html',
-        'custom_class': 'col-6'
-    },
-    error_messages={
-            "blank": "UPRN Name is required.",
-            "invalid": "It must contain a 12-digit number.",
-        },
-    )
+   
     
 
     def get_initial(self):
@@ -369,38 +337,10 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
             if not field.read_only
         ])
 
-    
-    def validate_UPRN(self, value):
-        cleaned_value = str(value).replace(" ", "")  # Remove spaces
-
-        if not cleaned_value.isdigit() or len(cleaned_value) != 12:
-            raise serializers.ValidationError("UPRN must be a 12-digit number.")
-
-        if self.instance:
-            queryset = RequirementDefect.objects.all().exclude(id=self.instance.id)
-        else:
-            queryset = RequirementDefect.objects.filter(UPRN=value)
-        if queryset.filter(UPRN=cleaned_value).exists():
-            raise serializers.ValidationError("A record with UPRN '{}' already exists.".format(cleaned_value))
-
-        
-        return value
-    
-    def validate(self, data):
-        """
-        Check that due_date is greater than defect_period.
-        """
-        defect_period = data.get('defect_period')
-        due_date = data.get('due_date')
-
-        if defect_period and due_date and defect_period >= due_date:
-            raise serializers.ValidationError({"due_date": "Due date must be greater than defect period."})
-
-        return data
         
     class Meta:
         model = RequirementDefect
-        fields = ('action',  'description', 'rectification_description', 'defect_period', 'due_date', 'UPRN','file_list')
+        fields = ('action',  'description', 'rectification_description', 'file_list')
 
     
     def create(self, validated_data):
@@ -467,4 +407,6 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         representation['document_paths'] = document_paths
 
         return representation
+
+
 

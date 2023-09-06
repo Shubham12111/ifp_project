@@ -17,6 +17,14 @@ urlpatterns = [
    path('vendor/delete/<int:pk>/',VendorDeleteView.as_view(),name='delete_vendor'),
    path('vendor/billing/<int:vendor_id>/', VendorBillingDetailView.as_view(), name='vendor_billing_detail'),
    
+   path('vendor/item/<int:vendor_id>/', ItemListView.as_view(), name='item_list'),
+   path('vendor/item/edit/<int:vendor_id>/<int:item_id>/', ItemListView.as_view(), name='item_list'),
+
+   path('item/delete/<int:item_id>/', ItemDeleteView.as_view(), name='item_delete'),
+   path('inventory/<int:item_id>/', InventoryView.as_view(), name='inventory_view'),
+   path('item/remove/image/<int:item_id>/<int:pk>/', ItemRemoveImageView.as_view(), name='item_image_remove'),
+
+
    path('category/list/', CategoryListView.as_view(), name='category_list'),
    path('category/add/', CategoryAddView.as_view(), name='category_add'),
    path('category/edit/<int:category_id>/', CategoryUpdateView.as_view(), name='category_edit'),
@@ -30,13 +38,7 @@ urlpatterns = [
 
    path('vendor/remarks/<int:vendor_id>/',VendorRemarkView.as_view(), name='vendor_remarks'),
    
-   path('item/list/', ItemListView.as_view(), name='item_list'),
-   path('item/add/', ItemAddView.as_view(), name='item_add'),
-   path('item/edit/<int:item_id>/', ItemUpdateView.as_view(), name='item_edit'),
-   path('item/delete/<int:item_id>/', ItemDeleteView.as_view(), name='item_delete'),
-   path('inventory/<int:item_id>/', InventoryView.as_view(), name='inventory_view'),
-   path('item/remove/image/<int:item_id>/<int:pk>/', ItemRemoveImageView.as_view(), name='item_image_remove'),
-
+   
    
    path('inventory_location/serach/', InventoryLocationSearchAPIView.as_view(), name='inventory_location_search'),
    path('inventory_location/list/', InventoryLocationListView.as_view(), name='inventory_location_list'),

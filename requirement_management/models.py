@@ -58,8 +58,6 @@ class RequirementDefect(models.Model):
     UPRN = models.CharField(max_length=12, null=True)
     action = models.TextField(max_length=1000)
     description = RichTextField()
-    defect_period = models.DateTimeField()
-    due_date = models.DateTimeField()
     reference_number = models.CharField(max_length=50, null=True)
     rectification_description = models.TextField()
     status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='pending')
