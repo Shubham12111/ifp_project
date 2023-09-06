@@ -27,10 +27,10 @@ STATUS_CHOICES = (
 class Requirement(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_requirement')
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_requirement')
-    description = RichTextField()
+    description = models.TextField()
+    action = models.TextField()
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
-    requirement_date_time = models.DateTimeField()
-    quantity_surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor_requirement')
+    quantity_surveyor = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='surveyor_requirement')
     surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor', null=True, blank=False)
     status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -61,6 +61,7 @@ class RequirementDefect(models.Model):
     defect_period = models.DateTimeField()
     due_date = models.DateTimeField()
     reference_number = models.CharField(max_length=50, null=True)
+    rectification_description = models.TextField()
     status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -71,7 +72,7 @@ class RequirementDefect(models.Model):
         verbose_name = _('Fire Risk Assessment Defect')
         verbose_name_plural = _('Fire Risk Assessment Defect')
 
-class RequirementDocument(models.Model):
+class RequirementDefectDocument(models.Model):
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
     defect_id = models.ForeignKey(RequirementDefect, on_delete=models.CASCADE)
     document_path = models.CharField(max_length=256)
@@ -82,17 +83,3 @@ class RequirementDocument(models.Model):
         verbose_name = _('Fire Risk Assessment Defect Document')
         verbose_name_plural = _('Fire Risk Assessment Defect Document')
 
-class RequirementDefectResponse(models.Model):
-    defect_id = models.ForeignKey(RequirementDefect, on_delete=models.CASCADE)
-    surveyor = models.ForeignKey(User, on_delete=models.CASCADE)
-    rectification_description = models.TextField()
-    remedial_work = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-class RequirementDefectResponseImage(models.Model):
-    defect_response = models.ForeignKey(RequirementDefectResponse, on_delete=models.CASCADE)
-    document_path = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
