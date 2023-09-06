@@ -68,6 +68,12 @@
                     <hr class="horizontal gray-light my-4">
                     <div class="row text-sm">
                       <div class="row mb-2">
+                        <div class="col-6"><strong class="text-dark">Rectification Description:</strong></div>
+                    </div>
+                    <div class="row mb-4">
+                      <div class="col-9">{{ defect_instance.rectification_description | safe}}</div>
+                  </div>
+                      <div class="row mb-2">
                           <div class="col-3"><strong class="text-dark">Defect Period Date:</strong></div>
                           <div class="col-9">{{ defect_instance.defect_period|date:"M d, Y  H:i" }}</div>
                       </div>
@@ -96,109 +102,43 @@
           {% if request.user.roles.name == "surveyor" and defect_instance.requirement_id.surveyor ==  request.user %}
          
          
-          {% if not defect_response_instance.status == "submitted" %}
-              <div class="card mt-4" id="basic-info">
-                  <div class="card-header  pb-0">
-                    <h5> Surveyor Response</h5>
-                  </div>
-                  <div class="card-body">
-                   <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()">
-                        <div class='row'>
-                            <input type="hidden" name="defect_id" value="{{ defect_instance.id }}">
-                            {% csrf_token %}
-                            {% render_form defect_response_serializer %}
-                        </div>
-                      
-                        {% if defect_response_serializer.data.document_paths and  defect_response_instance %}
-                            {% for document in defect_response_serializer.data.document_paths %}
-                                <div class="col-lg-12">
-                                    <div style="position: relative;">
-                                    <a href="{{ document.presigned_url }}" download>
-                                        <span class="text-sm me-2">{{ document.filename }}</span>
-                                    </a>
-                                    
-                                    </div>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                        <button type="submit" name="submit_type" value="submitted" class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0 mx-4">Submit</button>
-
-                        <button type="submit" name="submit_type" value="draft" class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0">Save As Draft</button>
-                        
-                      </form>
- {% include 'components/loader.html' %}
-                    
-                  </div>
-                </div>
-              {% endif %}
-              {% endif %}
-              {% if defect_response_instance %}
-              <div class="card mt-4">
-                <div class="card-header  pb-0">
-                  <h5> Surveyor Response</h5>
-                </div>
-                <div class="card-body pt-3">
-                  <div class="row gap-2">
-                    <div class="col-md-5">
-                      <div class="sticky-md-top product-sticky">
-                        <div id="carouselExampleCaptionsresposne" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
-                          <div class="carousel-inner bg-light rounded">
-                              {% for response_item in response_document_paths %}
-                              <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                  <div class="zoomable-media">
-                                      {% if response_item.is_image %}
-                                      <img src="{{ response_item.presigned_url }}" class="d-block zoomable-image" alt="Product Image">
-                                      <div class="zoom-controls">
-                                          <i class="fas fa-plus zoom-in-button m-2"></i>
-                                          <i class="fas fa-minus zoom-out-button  mx-2"></i>
-                                          <i class="fas  fa-sync-alt reset-button  mx-2"></i>
-                                          
-                                      </div>
-                                      {% endif %}
-                                      {% if response_item.is_video %}
-                                      <video controls class="d-block zoomable-video">
-                                          <source src="{{ response_item.presigned_url }}" type="video/mp4">
-                                      </video>
-                                      {% endif %}
-                                  </div>
-                              </div>
-                              {% endfor %}
+            {% if not defect_response_instance.status == "submitted" %}
+                <div class="card mt-4" id="basic-info">
+                    <div class="card-header  pb-0">
+                      <h5> Surveyor Response</h5>
+                    </div>
+                    <div class="card-body">
+                    <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()">
+                          <div class='row'>
+                              <input type="hidden" name="defect_id" value="{{ defect_instance.id }}">
+                              {% csrf_token %}
+                              {% render_form defect_response_serializer %}
                           </div>
-                      <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0">
-                          {% for response_item in response_document_paths %}
+                        
+                          {% if defect_response_serializer.data.document_paths and  defect_response_instance %}
+                              {% for document in defect_response_serializer.data.document_paths %}
+                                  <div class="col-lg-12">
+                                      <div style="position: relative;">
+                                      <a href="{{ document.presigned_url }}" download>
+                                          <span class="text-sm me-2">{{ document.filename }}</span>
+                                      </a>
+                                      
+                                      </div>
+                                  </div>
+                              {% endfor %}
+                          {% endif %}
+                          <button type="submit" name="submit_type" value="submitted" class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0 mx-4">Submit</button>
 
-                          {% if response_item.is_image %}
-                          <li data-bs-target="#carouselExampleCaptionsresposne" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
-                              <img src="{{ response_item.presigned_url }}" class="d-block wid-100 rounded  border me-4" alt="Product media">
-                          </li>
-                          {% endif %}
-                          {% if response_item.is_video %}
-                          <li data-bs-target="#carouselExampleCaptionsresposne" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
-                            <video  class="d-block wid-100 zoomable-video rounded  border p-2" >
-                              <source src="{{ response_item.presigned_url }}" type="video/mp4">
-                          </video>
-                          </li>
-                          {% endif %}
-                          {% endfor %}
-                      </ol>
+                          <button type="submit" name="submit_type" value="draft" class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0">Save As Draft</button>
+                          
+                      </form>
+                      {% include 'components/loader.html' %}
+                      
+                    </div>
                   </div>
-              </div>
-          </div>  
-          <div class="col-lg-6">
-            <div class="card-body p-0">
-                <h5><strong>{{ defect_response_instance.rectification_description|safe }}</strong></h5>
-                <p class="text-sm">
-                  {{ defect_response_instance.remedial_work|safe}}</p>
-                <hr class="horizontal gray-light my-4">
-                <ul class="list-group">
-                    <li class="list-group-item border-0 ps-0 pt-0 text-sm"><strong class="text-dark">Status:</strong> &nbsp;{{ defect_response_instance.status|title }}</li>
-                </ul>
-            </div>
-          </div>
-        </div>
-    </div>
-</div>
-{% endif %}
+            {% endif %}
+          {% endif %}
+
 </div>
 </div>
 </div>

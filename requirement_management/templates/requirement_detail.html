@@ -66,6 +66,8 @@
                 <div class="col-lg-6">
                     <div class="card-body p-0">
                         <p class="text-sm">
+                            {{ requirement_instance.action|safe}}</p>
+                            <p class="text-sm">
                             {{ requirement_instance.description|safe}}</p>
                         <hr class="horizontal gray-light my-4">
                         <div class="row text-sm">
@@ -83,7 +85,7 @@
                             </div>
                             <div class="row mb-2">
                                 <div class="col-3"><strong class="text-dark">Date/Time:</strong></div>
-                                <div class="col-9">{{ requirement_instance.requirement_date_time|date:"M d, Y  H:i" }}</div>
+                                <div class="col-9">{{ requirement_instance.created_at|date:"M d, Y  H:i" }}</div>
                             </div>
                         </div>
                        
@@ -132,6 +134,10 @@
                    
                 </div>
             </div>
+            <div class="ms-auto my-auto">
+                <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
+                <a href="{% url 'customer_requirement_defects' customer_id requirement_instance.id %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Defect</a>
+              </div>
             <div class="row mt-5">
                 <div class="col-lg-12">
                     <h5 class="ms-3">Defects</h5>
@@ -157,7 +163,7 @@
                                         
                                         <td class="text-sm" >{{ defect.status|title }}</td>
                                         <td class="text-sm">
-                                            <a href="{% url 'requirement_defect_detail' defect.id %}">
+                                            <a href="{% url 'customer_requirement_defect_detail' defect.requirement_id.customer_id.id defect.requirement_id.id defect.id %}">
                                                 <i class="fas fa-eye text-secondary mx-4"></i>
                                             </a>
                                         </td>
