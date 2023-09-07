@@ -490,7 +490,8 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
             
             context= {'conversation_list':self.serialized_conversation_list(),
                                                         'serializer':serializer,
-                                                        'contact_data':instance}
+                                                        'contact_data':instance,
+                                                        'is_edit': True if instance else False}
             return render_html_response(context,self.template_name)
         else:
             messages.error(request, " You are not authorized to perform this action.")
