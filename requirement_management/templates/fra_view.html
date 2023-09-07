@@ -1,0 +1,94 @@
+<div class="row align-items-center mb-2">
+    <div class="col-lg-12 col-sm-8">
+        <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_list' customer_id%}">Back</a>
+    </div>
+</div>
+<div class="card h-100">
+    <div class="card-header  pb-0">
+        <h5> FRA Actions </h5>
+        {% include 'customer_info.html' %}
+      </div>
+    <div class="card-body">
+        <div class="row gap-2">
+            <div class="col-md-5">
+                <div class="sticky-md-top product-sticky">
+                  <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
+                    <div class="carousel-inner bg-light rounded">
+                        {% for item in document_paths %}
+                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                            <div class="zoomable-media">
+                                {% if item.is_image %}
+                                <img src="{{ item.presigned_url }}" class="d-block zoomable-image" alt="Product Image">
+                                <div class="zoom-controls">
+                                    <i class="fas fa-plus zoom-in-button m-2"></i>
+                                    <i class="fas fa-minus zoom-out-button  mx-2"></i>
+                                    <i class="fas  fa-sync-alt reset-button  mx-2"></i>
+                                    
+                                </div>
+                                {% endif %}
+                                {% if item.is_video %}
+                                <video controls class="d-block zoomable-video">
+                                    <source src="{{ item.presigned_url }}" type="video/mp4">
+                                </video>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0">
+                        {% for item in document_paths %}
+                        {% if item.is_image %}
+                        <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
+                            <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded  border me-4" alt="Product media">
+                        </li>
+                        {% endif %}
+                        {% if item.is_video %}
+                        <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
+                          <video  class="d-block wid-100 zoomable-video rounded  border p-2" >
+                            <source src="{{ item.presigned_url }}" type="video/mp4">
+                        </video>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ol>
+                </div>
+                
+                </div>
+              </div>
+            <!-- Requirement and Customer Details -->
+            <div class="col-lg-6">
+                <div class="card-body p-0">
+                    <p class="text-sm">
+                        {{ requirement_instance.action|safe}}</p>
+                        <p class="text-sm">
+                        {{ requirement_instance.description|safe}}</p>
+                    <hr class="horizontal gray-light my-4">
+                    <div class="row text-sm">
+                        <div class="row mb-2">
+                            <div class="col-3"><strong class="text-dark">Customer:</strong></div>
+                            <div class="col-9">{{ requirement_instance.customer_id.first_name|title }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-3"><strong class="text-dark">Email:</strong></div>
+                            <div class="col-9">{{ requirement_instance.customer_id.email }}</div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-3"><strong class="text-dark">Site Address:</strong></div>
+                            <div class="col-9">{{ requirement_instance.site_address|title}}</div>
+                        </div>
+                        {% if requirement_instance.surveyor %}
+                            <div class="row mb-2">
+                                <div class="col-3"><strong class="text-dark">Surveyor:</strong></div>
+                                <div class="col-9">{{requirement_instance.surveyor.first_name|title }} {{requirement_instance.surveyor.last_name|title }}</div>
+                            </div>
+                        {% endif %}
+                        
+                    </div>
+                   
+                </div>
+                
+               
+            </div>
+        </div>
+    </div>
+</div>

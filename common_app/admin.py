@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import MenuItem, EmailNotificationTemplate
+from .models import MenuItem, EmailNotificationTemplate,AdminConfiguration
 
 class MenuItemInline(admin.StackedInline):
     model = MenuItem
@@ -24,5 +24,9 @@ class EmailNotificationTemplateAdmin(admin.ModelAdmin):
     list_filter = ('purpose',)
     search_fields = ('subject', 'recipient')
 
+
+@admin.register(AdminConfiguration)
+class AdminConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('tax_rate',)
 
 admin.site.register(MenuItem, MenuItemAdmin)

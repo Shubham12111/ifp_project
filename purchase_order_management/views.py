@@ -11,6 +11,7 @@ from stock_management.models import Vendor, InventoryLocation, Item
 from stock_management.serializers import VendorSerializer
 from .serializers import *
 from .models import *
+from stock_management.models import Item
 from django.http import JsonResponse
 from django.core import serializers
 from django.views import View
@@ -22,6 +23,9 @@ from django.db.models import F
 from stock_management.models import Inventory
 import json
 from rest_framework.response import Response
+from common_app.models import *
+
+
 
 def update_or_create_inventory(purchase_order, item, quantity):
     # Try to retrieve the existing inventory entry or create a new one
@@ -58,19 +62,13 @@ def get_paginated_data(request, queryset, serializer_class, search_field=None):
 
     location = request.GET.get('location')
     status = request.GET.get('status')
-    due_date = request.GET.get('due_date')
-    order_date = request.GET.get('order_date')
-
+    
     # Apply filters to the queryset based on filter parameters
     if location:
         data_queryset = data_queryset.filter(inventory_location_id__name__icontains=location)
     if status:
         data_queryset = data_queryset.filter(status=status)
-    if due_date:
-        data_queryset = data_queryset.filter(due_date=due_date)  
-    if order_date:
-        data_queryset = data_queryset.filter(order_date=order_date) 
-
+   
     if  vendor_query:
         data_queryset = data_queryset.filter(vendor_query)
             
@@ -104,7 +102,8 @@ def get_order_items(data):
     
     return items 
 
-            
+
+
 def get_vendor_data(request):
     if request.method == "GET":
         vendor_id = request.GET.get("id")
@@ -113,9 +112,17 @@ def get_vendor_data(request):
             # Retrieve vendor data using the vendor_id
             vendor_data = Vendor.objects.filter(id=vendor_id).first()
             serializer = VendorSerializer(vendor_data)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                message="Vendor data",
-                                 data=serializer.data)
+
+            item_list = Item.objects.filter(vendor_id=vendor_data)
+            item_serializer = ItemSerializer(item_list, many=True)
+
+
+            response_data = {
+                "vendor_data": serializer.data,
+                "item_list": item_serializer.data
+            }
+
+            return JsonResponse(response_data, status=status.HTTP_200_OK)
             
         except Vendor.DoesNotExist:
             return JsonResponse({"error": "Vendor not found OR You are not authorized to perform this action."}, status=404)
@@ -233,13 +240,16 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
         vendor_list = Vendor.objects.all()
         inventory_location_list = InventoryLocation.objects.all()
-        item_list = Item.objects.filter(item_type='item')
+        tax_rate = AdminConfiguration.objects.all().first()
+
+
         if request.accepted_renderer.format == 'html':
            
             
             context = {'vendor_list':vendor_list, 
                        'inventory_location_list':inventory_location_list,
-                       'item_list':item_list
+                       'tax_rate':tax_rate
+                       
                        }
             return render_html_response(context,self.template_name)
         else:
@@ -385,8 +395,10 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         purchase_order_data = purchase_order.first()
         vendor_list = Vendor.objects.all()
         inventory_location_list = InventoryLocation.objects.all()
-        item_list = Item.objects.filter(item_type='item')
-        
+        item_list = Item.objects.filter(item_type='item', vendor_id=purchase_order_data.vendor_id)
+        tax_rate = AdminConfiguration.objects.all().first()
+
+
         if request.accepted_renderer.format == 'html':
             # Extract the first purchase order object from the queryset
             if purchase_order_data:
@@ -400,6 +412,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                         'price': item.unit_price,
                         'quantity': item.quantity,
                         'row_total': item.row_total,
+                       
                     }
                     for item in purchase_order_items_data
                 ]
@@ -408,14 +421,14 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                     'vendor_id': purchase_order_data.vendor_id.id,
                     'inventory_location_id': purchase_order_data.inventory_location_id.id,
                     'po_number': purchase_order_data.po_number,
-                    'order_date': purchase_order_data.order_date.strftime('%Y-%m-%d'),  # Convert date to string
-                    'due_date': purchase_order_data.due_date.strftime('%Y-%m-%d'),  # Convert date to string
+                    'created_at': purchase_order_data.created_at.strftime('%Y-%m-%d'),  # Convert date to string
                     'tax': purchase_order_data.tax,
                     'sub_total': purchase_order_data.sub_total,
                     'discount': purchase_order_data.discount,
                     'notes': purchase_order_data.notes,
                     'grand_total': purchase_order_data.total_amount,
                     'items': items_data,
+                    
                     # ... other fields
                 }
                 presigned_url = ""
@@ -430,7 +443,8 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                         'purchase_order':purchase_order_data,
                         'existingPurchaseOrderData':existingPurchaseOrderData,
                         'presigned_url':presigned_url,
-                        'file_name':file_name}
+                        'file_name':file_name,
+                         'tax_rate':tax_rate}
                 return render_html_response(context,self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action.")

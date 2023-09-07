@@ -53,7 +53,6 @@ class VendorContactPersonView(CustomAuthenticationMixin, generics.CreateAPIView)
         # or use an empty Q() object if the value is not in the mapping
         queryset = Vendor.objects.filter(filter_mapping.get(data_access_value, Q()))
         queryset = queryset.filter(pk=self.kwargs.get('vendor_id')).first()
-        print("queryset",queryset)
         return queryset
 
     def get_contact_person_instance(self):
