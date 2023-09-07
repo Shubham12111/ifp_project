@@ -4,7 +4,15 @@ from ckeditor.fields import RichTextField
 
 PURPOSE_CHOICES = [
         ('new_user_registration', 'New User Registration'),
- ]    
+ ]   
+
+class AdminConfiguration(models.Model):
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, default=20.00)  # Default tax rate of 20%
+
+    def __str__(self):
+        return f"Tax Rate: {self.tax_rate}%"
+
+
 class MenuItem(models.Model):
     permission_required = models.BooleanField(default=False)
     name = models.CharField(max_length=100)
