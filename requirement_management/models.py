@@ -90,5 +90,6 @@ class Report(models.Model):
     signature_path = models.CharField(max_length=500,null=True)
     pdf_path = models.CharField(max_length=500,null=True)
     comments = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='draft')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

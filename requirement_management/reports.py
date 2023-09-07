@@ -50,7 +50,15 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
                 document_paths = requirement_image(instance)
                 
                 report_list = Report.objects.filter(requirement_id=instance)
-                
+                for report in report_list:
+
+                    if report.pdf_path:
+                        pdf_url =  generate_presigned_url(report.pdf_path)
+                        report.pdf_url = pdf_url
+                    else:
+                        report.pdf_url = None
+
+
                 context = {
                     'requirement_instance': instance,  
                     'document_paths': document_paths,
@@ -63,3 +71,28 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
             else:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+
+class ReportRemoveView(generics.DestroyAPIView):
+    """
+    View to remove a document associated with a requirement defect.
+    """
+    swagger_schema = None
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to remove the document associated with a requirement defect.
+        """
+        report_id = kwargs.get('pk')
+        if report_id:
+            instance = Report.objects.filter(pk=report_id)
+            instance.delete()
+            return Response(
+                {"message": "Your report has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "Requirement Report not found OR you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )

@@ -192,7 +192,7 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
                                                 data=serializer.data)
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_requirement_list'))
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
         
         
         
@@ -294,7 +294,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                                         data=convert_serializer_errors(serializer.errors))
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_requirement_list'))
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
 
 class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
@@ -438,7 +438,8 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 requirement_id=instance,
                 comments=comments,
                 signature_path = signature_path,
-                user_id=request.user
+                user_id=request.user,
+                status=request.POST.get('status')
                 
             )
             
@@ -703,7 +704,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         Get the filtered queryset for requirements based on the authenticated user.
         """
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+           self,"fire_risk_assessment", HasCreateDataPermission, 'view'
         )
         
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
@@ -745,7 +746,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
             return render_html_response(context, self.template_name)
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_requirement_list'))
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
         
     def post(self, request, *args, **kwargs):
         """
@@ -827,6 +828,19 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         queryset = RequirementDefect.objects.filter(pk=self.kwargs.get('defect_id')).order_by('-created_at')
         return queryset
 
+    def get_requirement_instance(self):
+        """
+        Get the filtered queryset for requirements based on the authenticated user.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'view'
+        )
+        
+        queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
+        queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
+        
+        return queryset
+
     def get_documents(self):
         """
         Get the filtered document_paths.
@@ -834,10 +848,6 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         document_paths = []
         
         defect_instance = self.get_queryset().first()
-        
-        
-        
-        
         for document in RequirementDefectDocument.objects.filter(defect_id=defect_instance):
                 extension = document.document_path.split('.')[-1].lower()
 
@@ -857,24 +867,33 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
     
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
-        defect_instance = self.get_queryset().first()
-        
-        defect_response_instance = {}
-        response_document_paths= []
-        
-        if not defect_instance:
+        customer_id = self.kwargs.get('customer_id')
+
+        customer_data = User.objects.filter(id=customer_id).first()
+        if customer_data:
+            defect_instance = self.get_queryset().first()
+            requirement_instance = self.get_requirement_instance()
+            document_paths = requirement_image(requirement_instance)
+            
+            if not defect_instance:
+                messages.warning(request, "You are not authorized to perform this action")
+                return redirect(reverse('customer_requirement_list', kwargs={'customer_id': self.kwargs.get('customer_id')}))  
+            
+            # Defect response doesn't exist, prepare context for displaying form
+            context = {
+                'defect_instance': defect_instance,
+                'defect_document_paths':self.get_documents(),
+                'defect_instance':defect_instance,
+                'document_paths':document_paths,
+                'customer_id':customer_id,
+                'requirement_instance':requirement_instance,
+                'customer_data':customer_data
+            }
+
+            return render_html_response(context, self.template_name)
+        else:
             messages.warning(request, "You are not authorized to perform this action")
-            return redirect(reverse('requirement_list'))
-
-        # Defect response doesn't exist, prepare context for displaying form
-        context = {
-            'defect_instance': defect_instance,
-            'document_paths':self.get_documents(),
-            'defect_response_instance':defect_response_instance,
-            'response_document_paths':response_document_paths
-        }
-
-        return render_html_response(context, self.template_name)
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': self.kwargs.get('customer_id')}))  
 
 class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """

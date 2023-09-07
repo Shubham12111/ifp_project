@@ -16,7 +16,8 @@ urlpatterns = [
     path('<int:customer_id>/view/<int:pk>/', RequirementDetailView.as_view(), name='customer_requirement_view'),
     
     path('<int:customer_id>/view/selecetd_defects/<int:pk>/', get_selected_defect_data, name='get_selected_defect_data'),
-    
+    path('customers/<int:customer_id>/<int:requirement_id>/defect/detail/<int:defect_id>/', RequirementDefectDetailView.as_view(), name='customer_requirement_defect_detail'),
+
     
     
     
@@ -26,11 +27,12 @@ urlpatterns = [
     
     path('customers/<int:customer_id>/<int:requirement_id>/defects/', RequirementDefectView.as_view(), name='customer_requirement_defects'),
     path('customers/<int:customer_id>/defects/edit/<int:requirement_id>/<int:pk>/', RequirementDefectView.as_view(), name='customer_requirement_defect_update'),
-    path('customers/<int:customer_id>/<int:requirement_id>/defect/detail/<int:defect_id>/', RequirementDefectDetailView.as_view(), name='customer_requirement_defect_detail'),
 
     
-    path('customers/<int:customer_id>/<int:requirement_id>/reports/', RequirementReportsListView.as_view(), name='customer_requirement_reports'),
-    
+    path('reports/<int:customer_id>/<int:requirement_id>/', RequirementReportsListView.as_view(), name='customer_requirement_reports'),
+
+    path('report/delete/<int:customer_id>/<int:requirement_id>/<int:pk>/', ReportRemoveView.as_view(), name='requirement_report_delete'),
+
     
     
     

@@ -8,7 +8,8 @@
 {% block content %}
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
-  <div class="card h-100">
+  {% include 'fra_view.html' %}
+  <div class="card h-100 mt-2">
     <div class="card-header  pb-0">
       <h5> Defect </h5>
     </div>
@@ -62,33 +63,19 @@
         
             <div class="col-lg-6">
                 <div class="card-body p-0">
-                    <h5>{{ defect_instance.action }}</h5>
+                    <h5 class="text-sm">{{ defect_instance.action }}</h5>
+                    <strong class="text-dark text-sm mt-2">Description:</strong>
                     <p class="text-sm">
-                      {{ defect_instance.description | safe}}</p>
+                      {{ defect_instance.description}}</p>
                     <hr class="horizontal gray-light my-4">
                     <div class="row text-sm">
                       <div class="row mb-2">
-                        <div class="col-6"><strong class="text-dark">Rectification Description:</strong></div>
+                        <div class="col-6"><strong class="text-dark">Rectification:</strong></div>
                     </div>
                     <div class="row mb-4">
-                      <div class="col-9">{{ defect_instance.rectification_description | safe}}</div>
+                      <div class="col-9">{{ defect_instance.rectification_description}}</div>
                   </div>
-                      <div class="row mb-2">
-                          <div class="col-3"><strong class="text-dark">Defect Period Date:</strong></div>
-                          <div class="col-9">{{ defect_instance.defect_period|date:"M d, Y  H:i" }}</div>
-                      </div>
-                      <div class="row mb-2">
-                          <div class="col-3"><strong class="text-dark">Due Date:</strong></div>
-                          <div class="col-9">{{ defect_instance.due_date|date:"M d, Y  H:i" }}</div>
-                      </div>
-                      <div class="row mb-2">
-                          <div class="col-3"><strong class="text-dark">UPRN:</strong></div>
-                          <div class="col-9">{{ defect_instance.UPRN|default:''  }}</div>
-                      </div>
-                      <div class="row mb-2">
-                          <div class="col-3"><strong class="text-dark">Status:</strong></div>
-                          <div class="col-9">{{ defect_instance.status|title }}</div>
-                      </div>
+                     
                   </div>
                   
                 </div>
@@ -96,53 +83,7 @@
             </div>
           </div>
         </div> 
-        <div class="row">
-          <div class="col-12">
-       
-          {% if request.user.roles.name == "surveyor" and defect_instance.requirement_id.surveyor ==  request.user %}
-         
-         
-            {% if not defect_response_instance.status == "submitted" %}
-                <div class="card mt-4" id="basic-info">
-                    <div class="card-header  pb-0">
-                      <h5> Surveyor Response</h5>
-                    </div>
-                    <div class="card-body">
-                    <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()">
-                          <div class='row'>
-                              <input type="hidden" name="defect_id" value="{{ defect_instance.id }}">
-                              {% csrf_token %}
-                              {% render_form defect_response_serializer %}
-                          </div>
-                        
-                          {% if defect_response_serializer.data.document_paths and  defect_response_instance %}
-                              {% for document in defect_response_serializer.data.document_paths %}
-                                  <div class="col-lg-12">
-                                      <div style="position: relative;">
-                                      <a href="{{ document.presigned_url }}" download>
-                                          <span class="text-sm me-2">{{ document.filename }}</span>
-                                      </a>
-                                      
-                                      </div>
-                                  </div>
-                              {% endfor %}
-                          {% endif %}
-                          <button type="submit" name="submit_type" value="submitted" class="btn bg-gradient-dark btn-sm float-end mt-4 mb-0 mx-4">Submit</button>
-
-                          <button type="submit" name="submit_type" value="draft" class="btn bg-gradient-secondary btn-sm float-end mt-4 mb-0">Save As Draft</button>
-                          
-                      </form>
-                      {% include 'components/loader.html' %}
-                      
-                    </div>
-                  </div>
-            {% endif %}
-          {% endif %}
-
-</div>
-</div>
-</div>
-
+      
 
 {% endblock %}
 
