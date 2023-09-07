@@ -85,7 +85,7 @@
                 <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ conversation_data.created_at|date:"F d, Y" }}</p>
                 <p class="text-xs text-dark mt-3 mb-2">
                   {{ conversation_data.message|safe }}
-             
+                  <br>
                   {% if conversation_data.document_path %}
 
                   <a href="{{ conversation_data.presigned_url }}" download="{{ conversation_data.filename }}">
