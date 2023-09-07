@@ -58,7 +58,7 @@ class PurchaseOrderListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = PurchaseOrder
-        fields = ['id','po_number', 'vendor_id', 'inventory_location_id', 'order_date', 'due_date', 'sub_total', 'discount', 'tax','total_amount','status']
+        fields = ['id','po_number', 'vendor_id', 'inventory_location_id','created_at', 'sub_total', 'discount', 'tax','total_amount','status']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -94,25 +94,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
             "null": "Vendor is required."
         },
     )
-    order_date = serializers.DateField(
-        required=True,
-        error_messages={
-            "required": "Order date is required.",
-            "blank": "Order date is required.",
-            "invalid": "Invalid order date format. Use one of these formats instead: YYYY-MM-DD",
-            # You can add more error messages as needed
-        }
-    )
     
-    due_date = serializers.DateField(
-        required=True,
-        error_messages={
-            "required": "Due date is required.",
-            "blank": "Due date is required.",
-            "invalid": "Invalid due date format. Use one of these formats instead: YYYY-MM-DD",
-            # You can add more error messages as needed
-        }
-    )
     file = serializers.FileField(
     required=False,
     validators=[file_extension_validator, validate_file_size],
@@ -135,7 +117,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PurchaseOrder
-        fields = ['po_number', 'vendor_id', 'inventory_location_id', 'order_date', 'due_date', 'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file']
+        fields = ['po_number', 'vendor_id', 'inventory_location_id',  'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file']
 
 
     def validate_sub_total(self, value):

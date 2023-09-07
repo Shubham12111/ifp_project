@@ -73,16 +73,7 @@
                                 <input type="number" class="form-control" id="po_number" value="8795646525451" name="po_number" >
                             </div>
                         </div>
-                        <div class="row mb-4">
-                           <div class="col-md-6">
-                                <label for="order_date" class="form-label">Date <span class="text-danger">*</span></label>
-                                <input type="text"  class="form-control po_date" id="date" name="order_date" placeholder="YYYY/MM/DD">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="due_date" class="form-label">Due Date <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control po_due_date" id="due_date" name="due_date" placeholder="YYYY/MM/DD">
-                            </div>
-                        </div> 
+                        
                     </div>
                 </div>
 
@@ -102,7 +93,7 @@
                                     
                                 </tbody>
                             </table>
-                            <div class="error-message text-danger text-sm mb-2" id="rowError"></div>
+                            <div class="error-message help-block mt-2 text-danger text-sm mb-2" id="rowError"></div>
                             <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
                         </div>
                     </div>
@@ -152,7 +143,7 @@
                             <div class="col-3 text-end mb-2">
                                 <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()">
                             </div>
-                            <div class="error-message text-danger text-sm text-end mb-2" id="discountError"></div>
+                            <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
                            
                 
                             <div class="col-6 mb-1 text-end">
@@ -168,7 +159,7 @@
                             </div>
                             <div class="col-6 mb-1">
                                 <p class="font-weight-bolder mb-0 text-end grand-total-value">£00.00</p>
-                                <div class="error-message text-danger text-sm" id="grandTotalError"></div>
+                                <div class="error-message help-block mt-2 text-danger text-sm" id="grandTotalError"></div>
 
                             </div>
                         </div>
@@ -285,7 +276,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
             ${getUnselectedOptions(item.item_id)}
             </select>
         </td>
-        <td class="text-center"><input type="number" class="form-control item-price" value="${item.price}" min="0"></td>
+        <td class="text-center item-price">${item.price}</td>
         <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0"></td>
         <td class="text-center total">${item.row_total}</td>
         <td class="text-center">
@@ -336,7 +327,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
                     ${unselectedOptionsHtml}
                 </select>
         </td>
-        <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
+        <td class="text-center item-price">00.00</td>
         <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
         <td class="text-center total">00.00</td>
         <td class="text-center">
@@ -382,14 +373,14 @@ function setInitialPrice(row) {
     }
     
     const priceInput = row.querySelector('.item-price');
-    priceInput.value = selectedOption.dataset.price;
+    priceInput.textContent = selectedOption.dataset.price;
     recalculateTotal(row);
 }
 function updatePrice(selectElement) {
 const selectedOption = selectElement.options[selectElement.selectedIndex];
 const row = selectElement.closest('tr');
 const priceInput = row.querySelector('.item-price');
-priceInput.value = selectedOption.dataset.price;
+priceInput.textContent = selectedOption.dataset.price;
 recalculateTotal(row);
     
 }
@@ -420,7 +411,7 @@ function recalculateTotal(row) {
     const quantityInput = row.querySelector('.quantity-input');
     const totalCell = row.querySelector('.total');
 
-    const price = parseFloat(priceInput.value);
+    const price = parseFloat(priceInput.textContent);
     const quantity = parseFloat(quantityInput.value);
 
     if (price >= 0 && quantity >= 0) {
@@ -440,7 +431,7 @@ function recalculateTotal(row) {
         }
 
         // Reset the input fields to a valid state
-        priceInput.value = price;
+        priceInput.textContent = price;
         quantityInput.value = quantity
 
         // Update the total cell to show the reset value
@@ -619,7 +610,7 @@ async function populateVendorData(selectedVendorId) {
         cardBody.style.display = 'block';  // Show the card body
         cardBody.innerHTML = `
         <h6 class="text-sm mb-1">${selectedVendorData.data.first_name} ${selectedVendorData.data.last_name}</h6>
-        <p class="text-sm mb-1">+${selectedVendorData.data.phone_number}</p>
+        <p class="text-sm mb-1">${selectedVendorData.data.phone_number}</p>
         <p class="text-sm mb-1">${selectedVendorData.data.email}</p>
         `;
     } catch (error) {
@@ -749,7 +740,7 @@ function submitForm(status) {
     rows.forEach(row => {
         const selectedOption = row.querySelector('.item-dropdown option:checked');
         const itemId = selectedOption.value;
-        const itemPrice = parseFloat(row.querySelector('.item-price').value);
+        const itemPrice = parseFloat(row.querySelector('.item-price').textContent);
         const quantity = parseFloat(row.querySelector('.quantity-input').value);
         const rowTotal = parseFloat(row.querySelector('.total').textContent); // Get the row total
         
@@ -764,7 +755,7 @@ function submitForm(status) {
                     // Clear the error message after 1 second
                     setTimeout(() => {
                         rowErrorElement.textContent = "";
-                    }, 6000); // 1000 milliseconds = 1 second
+                    }, 10000); // 1000 milliseconds = 1 second
                 }
             return; // Stop further processing
         }
@@ -789,7 +780,7 @@ function submitForm(status) {
             // Clear the error message after 1 second
             setTimeout(() => {
                     rowErrorElement.textContent = "";
-                }, 3000); // 1000 milliseconds = 1 second
+                }, 10000); // 1000 milliseconds = 1 second
         }
     }
 

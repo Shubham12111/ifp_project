@@ -46,7 +46,7 @@ urlpatterns = [
     path('',include('common_app.urls')),
     path('customer/',include('customer_management.urls')),
     path('stock/',include('stock_management.urls')),
-    path('fire_risk_assessment/',include('requirement_management.urls')),
+    path('fra/',include('requirement_management.urls')),
     path('purchase_order/',include('purchase_order_management.urls')),
 
 

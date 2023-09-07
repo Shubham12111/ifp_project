@@ -13,7 +13,7 @@ from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 
-class ItemListView(CustomAuthenticationMixin,generics.ListAPIView):
+class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
     """
     View to get the listing of all contacts.
     Supports both HTML and JSON response formats.
@@ -34,6 +34,62 @@ class ItemListView(CustomAuthenticationMixin,generics.ListAPIView):
             )
     }
     
+    def get_queryset(self):
+        """
+        Get the queryset for listing vendor items.
+
+        Returns:
+            QuerySet: A queryset of vendor items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "stock_management", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = Vendor.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = queryset.filter(pk=self.kwargs.get('vendor_id')).first()
+        return queryset
+
+    def get_item_queryset(self):
+         # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "stock_management", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        vendor_instance = self.get_queryset()
+        if vendor_instance:
+            # Define a mapping of data access values to corresponding filters
+            filter_mapping = {
+                "self": Q(user_id=self.request.user ),
+                "all": Q(),  # An empty Q() object returns all data
+            }
+
+            # Get the appropriate filter from the mapping based on the data access value,
+            # or use an empty Q() object if the value is not in the mapping
+            queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
+            queryset = queryset.filter(item_type = 'item', vendor_id=vendor_instance )
+
+        return queryset
+
+
+    def get_item_instancee(self):
+        item_data = Item.objects.filter(vendor_id=self.kwargs.get('vendor_id'),
+                                        pk=self.kwargs.get('item_id')).first()
+        return item_data
+
+
     @swagger_auto_schema(operation_id='Item Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         """
@@ -41,30 +97,78 @@ class ItemListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"stock_management", HasListDataPermission, 'list'
+            self, "stock_management", HasUpdateDataPermission, 'change'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(user_id=request.user),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
-        queryset = queryset.filter(item_type = 'item')
-
-        if request.accepted_renderer.format == 'html':
-            context = {'item_list':queryset}
-            return render_html_response(context,self.template_name)
+        vendor_instance = self.get_queryset()
+        if vendor_instance:
+           
+            if request.accepted_renderer.format == 'html':
+                
+                item_instance = self.get_item_instancee()
+                if item_instance:
+                    serializer = self.serializer_class(instance=item_instance)
+                else:
+                    serializer = self.serializer_class()
+                
+                context = {'item_list':self.get_item_queryset(),
+                'vendor_instance':vendor_instance,
+                'serializer':serializer}
+                return render_html_response(context,self.template_name)
         else:
-            serializer = self.serializer_class(queryset, many=True)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                            message="Data retrieved",
-                                            data=serializer.data)
+            messages.error(request, "Item not found OR You are not authorized to perform this action.")
+            return redirect(reverse('vendor_list'))
 
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add a item.
+        """
+        vendor_instance = self.get_queryset()
+        if vendor_instance:
+            item_instance = self.get_item_instancee()
+            data = request.data
+    
+            file_list = data.get('file_list', [])
+            
+            if not any(file_list):
+                data = data.copy()      # make a mutable copy of data before performing delete.
+                del data['file_list']
+            
+            serializer_data = request.data if any(file_list) else data
+            
+            # Check if the site address instance exists for the customer
+            if item_instance:
+                # If the site address instance exists, update it.
+                serializer = self.serializer_class(data=serializer_data, instance=item_instance, context={'request': request})
+                message = "Congratulations! item has been added successfully."
+            else: 
+                # If the site address instance does not exist, create a new one.
+                serializer = self.serializer_class(data=serializer_data, context={'request': request})
+                message = "Congratulations! item has been updated successfully."
+            
+            data['item_type'] = 'item'
+            if serializer.is_valid():
+                if not item_instance:
+                    serializer.validated_data['user_id'] = request.user 
+                    serializer.validated_data['vendor_id'] = vendor_instance # Assign the current user instance.
+                user = serializer.save()
+                user.save()
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
+
+            else:
+                context = {
+                    'item_list':self.get_item_queryset(),
+                    'vendor_instance':vendor_instance,
+                    'serializer':serializer}
+                return render_html_response(context,self.template_name)
+            
+        else:
+            messages.error(request, "Item not found OR You are not authorized to perform this action.")
+            return redirect(reverse('vendor_list'))
 
 class ItemAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -75,6 +179,7 @@ class ItemAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'item_form.html'
 
+    
     @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         """

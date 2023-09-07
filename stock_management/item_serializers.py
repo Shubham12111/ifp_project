@@ -59,11 +59,7 @@ class ItemSerializer(serializers.ModelSerializer):
         },
         validators=[validate_description]
     )
-    status = serializers.ChoiceField(
-        choices=PRODUCT_STATUS_CHOICES,  # Assuming you've defined PRODUCT_STATUS_CHOICES
-        required=True,
-        style={'base_template': 'custom_select.html','custom_class':'col-6'},
-    )
+    
     
     category_id = serializers.PrimaryKeyRelatedField(
         label=('Category'),
@@ -155,14 +151,23 @@ class ItemSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = Item
-        fields = ['item_name','category_id','price', 'description', 'units', 'quantity_per_box','reference_number','status','file_list']
+        fields = ['item_name','category_id','price', 'description', 'units', 'quantity_per_box','reference_number','file_list']
+
+        
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Price cannot be negative.")
+        return value
 
     def validate_item_name(self, value):
         # Check for minimum length of 3 characters
         if len(value) < 3:
             raise serializers.ValidationError("Item Name must be at least 3 characters long.")
+         # Check if the value consists entirely of digits (integers)
+        if value.isdigit():
+            raise serializers.ValidationError("Item Name cannot consist of only integers.")
 
-        # Check for special characters
+        # Check for alphanumeric characters and spaces
         if not re.match(r'^[a-zA-Z0-9\s]*$', value):
             raise serializers.ValidationError("Item Name can only contain alphanumeric characters and spaces.")
 
@@ -173,10 +178,12 @@ class ItemSerializer(serializers.ModelSerializer):
         """
         Validate that the reference number (SKU) is unique.
         """
-        if self.instance and self.instance.reference_number == value:
-            return value  # No need to check for uniqueness if updating the same instance
-
-        if Item.objects.filter(reference_number=value).exists():
+        if self.instance:
+            reference_number = Item.objects.filter(reference_number=value).exclude(id=self.instance.id).exists()
+        else:
+            reference_number = Item.objects.filter(reference_number=value).exists()
+        
+        if reference_number:
             raise serializers.ValidationError("This reference number is already in use.")
         
         return value
