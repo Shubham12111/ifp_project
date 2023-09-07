@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %}{% if contact_data %}Edit {% else %} Add {% endif %} Conversation {{ block.super }}{% endblock %}
+{% block title %}{% if is_edit %}Edit {% else %} Add {% endif %} Conversation {{ block.super }}{% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
@@ -9,7 +9,7 @@
     <div class="col-lg-6">
       <div class="card">
         <div class="card-header pb-0">
-          <h4 class="font-weight-bolder">{% if contact_data %}Edit {% else %} Add {% endif %} Conversation</h4>
+          <h5 class="font-weight-bolder">{% if is_edit %}Edit {% else %} Add {% endif %} Conversation</h5>
         </div>
         <form role="form" method="POST" autocomplete="off" class="multisteps-form__form" enctype="multipart/form-data"  onsubmit="showLoader()">
           <div class="card-body p-3">
@@ -51,7 +51,7 @@
     <div class="col-lg-6">
       <div class="card">
         <div class="card-header pb-0">
-          <h4 class="font-weight-bolder">Conversation History</h4>
+          <h5 class="font-weight-bolder">Conversation History</h5>
          
         </div>
         <div class="card-body p-3">
@@ -85,9 +85,10 @@
                 <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ conversation_data.created_at|date:"F d, Y" }}</p>
                 <p class="text-xs text-dark mt-3 mb-2">
                   {{ conversation_data.message|safe }}
-             
+                </p>
+              
                   {% if conversation_data.document_path %}
-
+                  <p>
                   <a href="{{ conversation_data.presigned_url }}" download="{{ conversation_data.filename }}">
                     <i class="fas fa-paperclip ml-1 text-warning"></i> <span class="text-sm">{{ conversation_data.filename }}</span> </a>
 
