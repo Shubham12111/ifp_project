@@ -1,7 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
+{% block title %}{% if is_edit  %}Edit {% else %} Add {% endif %} Conversation {{ block.super }}{% endblock %}
+
 {% block title %}{% if is_edit %}Edit {% else %} Add {% endif %} Conversation {{ block.super }}{% endblock %}
+
 {% block content %}
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
@@ -9,7 +12,9 @@
     <div class="col-lg-6">
       <div class="card">
         <div class="card-header pb-0">
+
           <h5 class="font-weight-bolder">{% if is_edit %}Edit {% else %} Add {% endif %} Conversation</h5>
+
         </div>
         <form role="form" method="POST" autocomplete="off" class="multisteps-form__form" enctype="multipart/form-data"  onsubmit="showLoader()">
           <div class="card-body p-3">
