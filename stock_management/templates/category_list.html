@@ -40,7 +40,7 @@
                 {% for category in categories %}
                 <tr class="text-sm">
                   <td>{{category.name|default:''|truncatechars:20|title}}</td>
-                  <td>{{category.description|safe|truncatechars:50}}</td>
+                  <td>{{category.description|safe|truncatechars:120}}</td>
                   <td>{{ category.get_status_display|title }} </td>
                   <td>
                     <div class="dropstart ms-auto pe-0">
