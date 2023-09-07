@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="icon" type="image/png" href="https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/infinity-ingrid.png">
+    <title>
+        {% block title %} - FRA REPORT {% endblock %}
+    </title>
+    <!-- Fonts and icons -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <!-- Nucleo Icons -->
+    <link href="{% static 'assets/css/nucleo-icons.css' %}" rel="stylesheet" />
+    <link href="{% static 'assets/css/nucleo-svg.css' %}" rel="stylesheet" />
+    <link href="{% static 'assets/css/nucleo-svg.css' %}" rel="stylesheet" />
+    <!-- CSS Files -->
+    <link id="pagestyle" href="{% static 'assets/css/soft-ui-dashboard.css' %}" rel="stylesheet" /> 
+     <!-- Custom CSS Files -->
+     <link id="pagestyle" href="{% static 'assets/css/custom.css' %}" rel="stylesheet" />
+
+     <style>
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .section-header {
+            color: #0D7BEA;
+        }
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            gap: 10px; /* Adjust the gap as needed */
+        }
+        .image-container .col-4 {
+            flex-basis: calc(33.33% - 10px);
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+        }
+        img {
+            page-break-before: avoid; 
+        }
+    
+    </style>
+</head>
+
+<body class="g-sidenav-show  bg-gray-100 mb-10">
+        <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
+            <!-- Navbar -->
+            <div class="container text-sm">
+                <h1>Fire Risk Assessment Report</h1>
+                <br><br>
+                <h4 class='section-header'>{{ requirement_instance.customer_id.company_name|title}} Survey Form <h5>
+                    <br><br><br>
+                <table class="table table-striped " id="fire_risk_assessment_report">
+                    <tr>
+                        <th>Client:</th>
+                        <td>{{ requirement_instance.customer_id.first_name }} {{ requirement_instance.customer_id.last_name }}</td>
+                    </tr>
+                    {% if requirement_images %}
+                        <tr>
+                            <th>Photos of FRA</th>
+                            <td>
+                                <div class="image-container">
+                                    {% for requirement_image in requirement_images %}
+                                    <div class="col-4 mb-3">
+                                        <img src="{{ requirement_image.document_path.url }}" alt="Requirememt Image" width="100%">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                    <tr>
+                        <th>Site Address:</th>
+                        <td>{{ requirement_instance.site_address }}</td>
+                    </tr>
+                </table>
+                <h4 class='section-header'>Defects</h2>
+                {% for defect in requirement_defects %}
+
+                    
+                <table class="table table-striped " id="fire_risk_assessment_report">
+                    <h5 class='section-header'> Section {{forloop.counter}}</h5>
+                    <tr class=" text-sm">
+                        <th>Action</th>
+                        <td class="text-wrap  text-sm">{{ defect.action }}</td>
+                    </tr>
+                    <tr>
+                        <th>Description of Defect</th>
+                        <td class="text-wrap  text-sm">{{ defect.description }}</td>
+                    </tr>
+                    <tr>
+                        <th>Rectification of Defect</th>
+                        <td class="text-wrap text-sm">{{ defect.rectification_description }}</td>
+                    </tr>
+                    
+                    {% if requirement_defect_images %}
+                        <t r>
+                            <th>Photos of Defect</th>
+                            <td>
+                                <div class="image-container">
+                                    {% for requirement_defect_image in requirement_defect_images %}
+                                        {% if requirement_defect_image.defect_id.id == defect.id %}
+                                            <div class="col-4 mb-3">
+                                                <img src="{{ requirement_defect_image.document_path.url }}" alt="Defect Image" width="100%">
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+
+                </table>
+                {% endfor %}
+                <br><br><br>
+                <h5 class='section-header'>Note**</h5>
+                <table class="table table-striped " id="fire_risk_assessment_report">
+                    <tr>
+                        <th>Comment</th>
+                        <td class="text-wrap">{{ comment }}</td>
+                    </tr>
+                    <tr>
+                        <th>Signature</th>
+                        <td class="text-wrap"><img src="{{signature_data_url}}"></td>
+                    </tr>
+                </table>
+            </div>
+    </body>
+</html>

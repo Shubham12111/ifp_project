@@ -83,10 +83,19 @@ class RequirementSerializer(serializers.ModelSerializer):
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
         return data
 
+class SiteAddressField(serializers.PrimaryKeyRelatedField):
+    def get_queryset(self):
+        # Get the user_id from the request's query parameters
+        user_id = self.context['request'].parser_context['kwargs']['customer_id']
+        # Filter the queryset based on the user_id
+        if user_id:
+            return SiteAddress.objects.filter(user_id=user_id)
+        else:
+            return SiteAddress.objects.none()
+        
 class RequirementAddSerializer(serializers.ModelSerializer):
     
     action = serializers.CharField(
-        max_length=1024, 
         required=True, 
         style={'base_template': 'textarea.html'},
         error_messages={
@@ -99,7 +108,6 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     )
 
     description = serializers.CharField(
-        max_length=1024, 
         required=True, 
         style={'base_template': 'textarea.html'},
         error_messages={
@@ -111,10 +119,9 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         
     )
     
-    site_address = serializers.PrimaryKeyRelatedField(
+    site_address = SiteAddressField(
         label=('Site Address'),
         required = True,
-        queryset = SiteAddress.objects.all(),
         style={
             'base_template': 'custom_select.html',
             'custom_class':'col-6'
@@ -150,12 +157,13 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         },
         help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
-
-
+    
     class Meta:
         model = Requirement
         fields = ('action','description','site_address','file_list')
     
+   
+            
     def get_initial(self):
         
         fields = self.fields
@@ -182,26 +190,22 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     
     
     def create(self, validated_data):
-        # Pop the 'file_list' field from validated_data
         file_list = validated_data.pop('file_list', None)
-        # Create a new instance of Requirement with other fields from validated_data
         instance = Requirement.objects.create(**validated_data)
 
         if file_list and len(file_list) > 0:
-
             for file in file_list:
-                # Generate a unique filename for each file
                 unique_filename = f"{str(uuid.uuid4())}_{file.name}"
-                upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
-                file_path = f'requirement/{instance.id}/{unique_filename}'
+                try:
+                    upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
+                    file_path = f'requirement/{instance.id}/{unique_filename}'
+                    
+                    document = RequirementAsset.objects.create(requirement_id=instance, document_path=file_path)
                 
-                RequirementAsset.objects.create(
-                requirement_id=instance,
-                document_path=file_path,
-                )
-            
+                except Exception as e:
+                    # Handle the exception (e.g., log the error) and decide what to do next
+                    pass
 
-        instance.save()
         return instance
     
     def update(self, instance, validated_data):
@@ -210,20 +214,23 @@ class RequirementAddSerializer(serializers.ModelSerializer):
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+        
         with transaction.atomic():
             instance.save()
             # Update associated documents if file_list is provided
             if file_list and len(file_list) > 0:
                 for file in file_list:
-                    print(file)
-                    unique_filename = f"{str(uuid.uuid4())}_{file.name}"
-                    upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
-                    file_path = f'requirement/{instance.id}/{unique_filename}'
+                    try:
+                        unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                        upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
+                        file_path = f'requirement/{instance.id}/{unique_filename}'
 
-                    RequirementAsset.objects.create(
-                        requirement_id=instance,
-                        document_path=file_path,
-                    )
+                        RequirementAsset.objects.create(
+                            requirement_id=instance,
+                            document_path=file_path,
+                        )
+                    except Exception as e:
+                        print(f"Error uploading file {file.name}: {str(e)}")
         
         return instance
     
@@ -255,9 +262,8 @@ class RequirementAddSerializer(serializers.ModelSerializer):
 class RequirementDefectAddSerializer(serializers.ModelSerializer):
 
     action = serializers.CharField(
-        max_length=1000, 
         required=True, 
-        style={'base_template': 'custom_fullwidth_input.html'},
+        style={'base_template': 'textarea.html'},
         error_messages={
             "required": "This field is required.",
             "blank": "Action is required.",
@@ -266,9 +272,8 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     )
     
     description = serializers.CharField(
-        max_length=1000, 
         required=True, 
-        style={'base_template': 'rich_textarea.html'},
+        style={'base_template': 'textarea.html'},
         error_messages={
             "required": "This field is required.",
             "blank": "Description is required.",
@@ -277,9 +282,8 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     )
     
     rectification_description = serializers.CharField(
-        max_length=1000, 
         required=True, 
-        style={'base_template': 'rich_textarea.html'},
+        style={'base_template': 'textarea.html'},
         error_messages={
             "required": "This field is required.",
             "blank": "Rectification description is required.",
@@ -369,7 +373,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         file_list = validated_data.pop('file_list', None)
-
+        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         
@@ -410,3 +414,39 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
 
 
 
+
+
+
+class RequirementAssetSerializer(serializers.Serializer):
+
+    requirement_id = serializers.PrimaryKeyRelatedField(queryset=Requirement.objects.all())
+
+    class Meta:
+        model = RequirementAsset
+        fields = ('__all__')
+
+    def to_representation(self, instance: RequirementAsset):
+        ret = super().to_representation(instance)
+
+        ret['requirement_id'] = {'id': instance.requirement_id.id, 'name': instance.requirement_id.__str__()}
+
+        ret['document_path'] = {'name': instance.document_path,  'url': generate_presigned_url(instance.document_path) }
+        return ret
+
+class RequirementDefectDocumentSerializer(serializers.Serializer):
+
+    requirement_id = serializers.PrimaryKeyRelatedField(queryset=Requirement.objects.all())
+    defect_id = serializers.PrimaryKeyRelatedField(queryset=RequirementDefect.objects.all())
+
+    class Meta:
+        model = RequirementDefectDocument
+        fields = ('__all__')
+
+    def to_representation(self, instance: RequirementDefectDocument):
+        ret = super().to_representation(instance)
+
+        ret['requirement_id'] = {'id': instance.requirement_id.id, 'name': instance.requirement_id.__str__()}
+        ret['defect_id'] = {'id': instance.defect_id.id, 'name': instance.defect_id.__str__()}
+
+        ret['document_path'] = {'name': instance.document_path,  'url': generate_presigned_url(instance.document_path) }
+        return ret

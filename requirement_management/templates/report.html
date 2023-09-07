@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link id="pagestyle" href="{% static '/assets/css/slider.css' %}" rel="stylesheet" />
+{% endblock %}
+{% load rest_framework %}
+{% block title %}Fire Risk Assessment Defects {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid my-3 py-3">
+    {% include 'fra_view.html' %}
+    <div class="row align-items-center mt-4">
+        <div class="col-lg-12 col-sm-8">
+            <div class="nav-wrapper position-relative end-0">
+              <ul class="nav nav-tabs">
+                <li class="nav-item">
+                   <a class="nav-link active" href="{% url 'customer_requirement_view' customer_id requirement_instance.id %}"> Defects </a>
+                </li>
+                <li class="nav-item">
+                  {% if requirement_instance %}
+                     <a class="nav-link"  href="{% url 'customer_requirement_reports' customer_id requirement_instance.id %}" >Reports</a>
+                  {% else %}
+                  <a class="nav-link">Defects</a>
+                
+                </li>
+                {% endif %}
+              </ul>
+            </div>
+          </div>
+    </div>
+    <div class="col-lg-12 mt-4">
+         <!-- Card Basic Info -->
+        <div class="card" id="basic-info">
+            <div class="card-header">
+                <h5>Reports</h5>
+            </div>
+            <div class="card-body px-0 pb-0">
+                <table class="table table-flush text-dark" id="report-requirement-list">
+                    <thead class="thead-light">
+                        <tr class="text-sm">
+                            <th class="col-3">User</th>
+                            <th>Comments</th>
+                            <th>Created At</th>
+                            <th class="custom-last-column">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="ml-4">
+                        {% for report in report_list %}
+                        <tr class="text-sm">
+                            <td>{{ report.user_id|truncatechars:30}}</td>
+                            <td>{{ report.comments|truncatechars:30}}</td>
+                            <td class="text-truncate">{{ report.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="dropstart ms-auto pe-0">
+                                    <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
+                                      <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
+                                    </a>
+                                    <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
+                                       <li>
+                                          <a href="" class="dropdown-item border-radius-md">
+                                            Edit
+                                          </a>
+                                        </li>
+                                      
+                                  
+                                </ul>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+
+<script>
+     if (document.getElementById('report-requirement-list')) {
+        const dataTableSearch = new simpleDatatables.DataTable("#report-requirement-list", {
+          searchable: true,
+          fixedHeight: false,
+          perPage: 25,
+          perPageSelect: false,
+      });
+
+      const dataTableTop = document.querySelector('.dataTable-top');
+      if (dataTableTop) {
+          dataTableTop.parentNode.removeChild(dataTableTop);
+      }
+
+      
+      const searchInput = document.getElementById('searchInput');
+      const createreportButton = document.getElementById('createreportButton');
+
+      searchInput.addEventListener('input', function () {
+          const searchText = searchInput.value.toLowerCase();
+          dataTableSearch.search(searchText).draw();
+      });
+     }
+</script>
+{% endblock %}

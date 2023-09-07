@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Requirement,RequirementAsset, RequirementDefect, RequirementDefectDocument
+from .models import Requirement,RequirementAsset, RequirementDefect, RequirementDefectDocument,Report
 
 # Register your models here.
 
@@ -19,3 +19,4 @@ admin.site.register(Requirement, RequirementAdmin)
 admin.site.register(RequirementDefect, RequirementDefectAdmin)
 admin.site.register(RequirementDefectDocument, RequirementDefectDocumentAdmin)
 admin.site.register(RequirementAsset)
+admin.site.register(Report)

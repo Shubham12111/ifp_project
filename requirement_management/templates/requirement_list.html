@@ -17,19 +17,16 @@
               {% include 'customer_info.html' %}
             </div>
             <div class="col-lg-7 col-12">
-              <div class="row justify-content-end">
-                <div class="col-lg-3 col-12  text-end mb-2 ">
-                  {% if request.user|has_add_permission:"requirement" %}
+              <div class="ms-auto my-auto mt-lg-0 mt-4 text-end">
+                {% if request.user|has_add_permission:"requirement" %}
                   <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
-                    <a href="{% url 'customer_requirement_add'  customer_id %}" class="btn bg-gradient-primary btn-sm mb-0 me-0">+&nbsp; Add FRA Actions</a>
+                    <a href="{% url 'customer_requirement_add'  customer_id %}" class="btn bg-gradient-primary  btn-sm mb-2 mx-2">+&nbsp; Add FRA Actions</a>
                   {% endif %}
-                </div>
-                
-                <div class="col-lg-3 col-12 mb-2 text-end" >
-                   <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2" disabled>Assign Surveyor</button></div>
-                <div class="col-lg-4 col-12  text-end">
-                  <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2" disabled>Assign Quantity Surveyor</button>
-                </div>
+              
+                  {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor"  %} 
+                    <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>Assign Surveyor</button>
+                    <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>Assign Quantity Surveyor</button>
+                {% endif  %}
                 
               </div>
               {% include 'components/table_search.html' %}
@@ -142,6 +139,38 @@
   </div>
 </div>
 
+<!-- Modal for adding Quantity Surveyor -->
+<div class="modal fade" id="addSurveyorModal" tabindex="-1" aria-labelledby="addSurveyorModal" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addSurveyorModal">Assign Surveyor</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Form to select a QS -->
+        <form id="selectForm" method="POST" action="{% url 'add_surveyor' customer_id %}">
+          {% csrf_token %}
+          <input type="hidden" id="selectedIds" name="selectedIds" value="">
+          <div class="form-group">
+            <label for="qsSelect">Select Surveyor:</label>
+            <select id="sureveyorSelect" name="sureveyorselect" class="form-control">
+              {% for sureveyor in sureveyors %}
+                <option value="{{sureveyor.id}}">{{sureveyor.email}}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" id="submitButton" class="btn bg-gradient-primary">Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 {% endblock %} 
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
@@ -168,6 +197,27 @@ if (document.getElementById('qsSelect')) {
   });
 
 }
+  // Initialize Choices.js
+  if (document.getElementById('sureveyorSelect')) {
+  var element = document.getElementById('sureveyorSelect');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search Surveyor", 
+  });
+
+}
+
+
 
   if (document.getElementById('requirement-list')) {
       const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
@@ -184,8 +234,14 @@ if (document.getElementById('qsSelect')) {
 
       const searchInput = document.getElementById('searchInput');
       const selectedReqIdsInput = document.getElementById('selectedReqIds');
-      const addQuantitySurveyorButton = document.getElementById('addQuantitySurveyorButton');
 
+      const selectedIdsInput = document.getElementById('selectedIds');
+
+
+      const addQuantitySurveyorButton = document.getElementById('addQuantitySurveyorButton');
+      const addSurveyorButton = document.getElementById('addSurveyorButton');
+
+      
       searchInput.addEventListener('input', function () {
           const searchText = searchInput.value.toLowerCase();
           dataTableSearch.search(searchText).draw();
@@ -200,17 +256,30 @@ if (document.getElementById('qsSelect')) {
                   .map(checkbox => checkbox.value);
 
               selectedReqIdsInput.value = selectedReqIds.join(',');
-
+              selectedIdsInput.value = selectedReqIds.join(',');
               // Enable/disable the button based on whether any row is selected
               addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
+              addSurveyorButton.disabled = selectedReqIds.length === 0;
           });
       });
   }
+
 </script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     // Get the "Add Quantity Surveyor" button
+    const addSurveyorButton = document.getElementById("addSurveyorButton");
+
+     // Get the modal
+     const addSurveyorModal = new bootstrap.Modal(document.getElementById("addSurveyorModal"));
+
+    // Add an event listener to show the modal when the button is clicked
+    addSurveyorButton.addEventListener("click", function () {
+      addSurveyorModal.show();
+    });
+
+
     const addQsButton = document.getElementById("addQuantitySurveyorButton");
 
     // Get the modal
@@ -227,6 +296,14 @@ if (document.getElementById('qsSelect')) {
       const selectQsForm = document.getElementById("selectQsForm");
       selectQsForm.submit(); // Submit the form
     });
+
+    // Add an event listener to submit the form when the "Submit" button is clicked
+    const submitButton = document.getElementById("submitButton");
+    submitButton.addEventListener("click", function () {
+      const selectForm = document.getElementById("selectForm");
+      selectForm.submit(); // Submit the form
+    });
+
   });
 </script>
 
@@ -242,6 +319,34 @@ if (document.getElementById('qsSelect')) {
     addQsButton.addEventListener("click", function () {
       addQsModal.show();
     });
+
+    // Add an event listener to submit the form when the "Submit" button is clicked
+    const submitButton = document.getElementById("submitButton");
+
+    submitButton.addEventListener("click", function () {
+      // Get all selected checkboxes
+      const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
+      
+      // Create an array to store the selected IDs
+      const selectedIdsArray = [];
+      
+      // Push the values of selected checkboxes into the array
+      selectedCheckboxes.forEach(function (checkbox) {
+        selectedIdsArray.push(checkbox.value);
+      });
+      
+      // Set the array as the value of the hidden input field
+      document.getElementById("selectedIds").value = JSON.stringify(selectedIdsArray);
+      
+      // Now, submit the form
+      const selectForm = document.getElementById("selectForm");
+      selectForm.submit();
+    });
+
+
+
+
+
 
     // Add an event listener to submit the form when the "Submit" button is clicked
     const submitQsButton = document.getElementById("submitQsForm");
@@ -264,6 +369,8 @@ if (document.getElementById('qsSelect')) {
       const selectQsForm = document.getElementById("selectQsForm");
       selectQsForm.submit();
     });
+
+
   });
 </script>
 

@@ -2,6 +2,12 @@
 {% load static %}
 {% block extra_css %}
 <link id="pagestyle" href="{% static '/assets/css/slider.css' %}" rel="stylesheet" />
+<style>
+  .signature-container {
+  border: 1px solid #ccc; /* Add the border style you want */
+  padding: 10px; /* Optional: Add padding for spacing */
+}
+</style>
 {% endblock %}
 {% block title %} FRA Actions  {{ block.super }}{% endblock %}
 {% block content %}
@@ -24,7 +30,7 @@
                 </li>
                 <li class="nav-item">
                   {% if requirement_instance %}
-                     <a class="nav-link"  href="" >Reports</a>
+                     <a class="nav-link"  href="{% url 'customer_requirement_reports' customer_id requirement_instance.id %}" >Reports</a>
                   {% else %}
                   <a class="nav-link">Defects</a>
                 
@@ -99,24 +105,37 @@
 </div>
 
 <div class="modal fade" id="cretaeReportModal" tabindex="-1" aria-labelledby="cretaeReportModal" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="cretaeReportModal">Create Report</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            
-          <!-- Form to select a QS -->
-          <form id="selectQsForm" method="POST" action="{% url 'add_quantity_surveyor' customer_id %}">
+          <form id="selectForm" method="POST" >
             {% csrf_token %}
-            <input type="hidden" id="selectedReqIds" name="selectedReqIds" value="">
+              <div id="defects-container">
+                <!-- Defects will be displayed here -->
+              </div>
+              <label>Comments</label>
+              <textarea name="comments" class="form-control" required=""></textarea>
+
+              <label class="mt-3">Signature</label>
+            <div class="signature-container">
+              <canvas id="signature-canvas" height="150"></canvas>
+            </div>
+            <input type="hidden" name="selected_defect_ids" id="selected-defect-ids">
+            <input type="hidden" name="signature_data" id="signature-data">
             
+
           </form>
-        </div>
+      </div>
+        
         <div class="modal-footer">
+          <button id="clear-button" class="btn btn-secondary">Clear Signature</button>
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" id="submitQsForm" class="btn bg-gradient-primary">Submit</button>
+          <button type="button" id="submit-darft-button" class="btn bg-gradient-primary">Save As Draft</button>
+          <button type="button" id="submit-button" class="btn bg-gradient-primary">Submit</button>
         </div>
       </div>
     </div>
@@ -129,10 +148,11 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
 
 <script>
 
-    if (document.getElementById('defect-requirement-list')) {
+     if (document.getElementById('defect-requirement-list')) {
         const dataTableSearch = new simpleDatatables.DataTable("#defect-requirement-list", {
           searchable: true,
           fixedHeight: false,
@@ -145,6 +165,7 @@
           dataTableTop.parentNode.removeChild(dataTableTop);
       }
 
+      
       const searchInput = document.getElementById('searchInput');
       const createreportButton = document.getElementById('createreportButton');
 
@@ -163,11 +184,44 @@
                   .map(checkbox => checkbox.value);
 
               
+                
               // Enable/createreportButton the button based on whether any row is selected
               createreportButton.disabled = selectedReqIds.length === 0;
           });
       });
     }
+    
+    
+    const checkboxes = document.querySelectorAll('input[name="defect_checkbox"]'); // Define checkboxes here
+
+    const selectedDefectIds = []; // Initialize an array to store selected defect IDs
+
+    // Listen for checkbox changes and update the selectedDefectIds array
+    checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+            const selectedReqIds = Array.from(checkboxes)
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+
+            // Update the selectedDefectIds array with selectedReqIds
+            selectedDefectIds.length = 0; // Clear the array
+            Array.prototype.push.apply(selectedDefectIds, selectedReqIds);
+             // Update the hidden input field with the selected defect IDs
+            const selectedDefectIdsInput = document.getElementById('selected-defect-ids');
+            selectedDefectIdsInput.value = selectedDefectIds.join(','); // Convert the array to a comma-separated string
+
+
+            // Enable/Disable the createreportButton based on whether any row is selected
+            createreportButton.disabled = selectedDefectIds.length === 0;
+        });
+    });
+
+    // Function to retrieve all selected defect IDs
+    function getAllSelectedDefectIds() {
+        return selectedDefectIds;
+  }
+
+
 
     document.addEventListener("DOMContentLoaded", function () {
     // Get the "Add Quantity Surveyor" button
@@ -178,15 +232,180 @@
     // Add an event listener to show the modal when the button is clicked
     cretaeReportButton.addEventListener("click", function () {
         cretaeReportModal.show();
-    });
+        var canvas = document.getElementById('signature-canvas');
+        var signaturePad = new SignaturePad(canvas);
+        var clearButton = document.getElementById('clear-button');
 
-    // Add an event listener to submit the form when the "Submit" button is clicked
-    const submitQsButton = document.getElementById("submitQsForm");
-    submitQsButton.addEventListener("click", function () {
-      const selectQsForm = document.getElementById("selectQsForm");
-      selectQsForm.submit(); // Submit the form
+        // Add an event listener to detect when the user has drawn something
+      signaturePad.onEnd = function () {
+          const signatureDataURL = signaturePad.toDataURL();
+           // Check if the data URL is valid
+          document.getElementById('signature-data').value = signatureDataURL;
+      };
+
+        clearButton.addEventListener('click', function() {
+          signaturePad.clear();
+        });
+
+        const selectedDefectIds = getAllSelectedDefectIds();
+
+        // Define the URL of your backend endpoint
+        const url = "{% url 'get_selected_defect_data' customer_id requirement_instance.id  %}";
+        // Get the CSRF token from the Django template
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Create a FormData object to send the selectedDefectIds as POST data
+        const formData = new FormData();
+        selectedDefectIds.forEach(id => formData.append('selectedDefectIds', id));
+        
+        
+        // Create the fetch request with the CSRF token in the headers
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken // Include the CSRF token in the request headers
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Handle the response data here (e.g., display the defect data)
+            const defectsContainer = document.getElementById('defects-container'); // Assuming you have a container in your HTML with this ID
+
+            const defects = data.defects;
+
+            // Clear the defectsContainer before adding new elements
+            defectsContainer.innerHTML = '';
+
+            // Function to toggle the visibility of description and rectification
+            function toggleAccordion(titleElement, descriptionDiv, rectificationDiv) {
+              const isHidden = descriptionDiv.style.display === 'none';
+
+              // Close all other accordions
+              const allTitles = document.querySelectorAll('.defect-title');
+              const allDescriptionDivs = document.querySelectorAll('.defect-description');
+              allTitles.forEach((otherTitle, i) => {
+                if (otherTitle !== titleElement) {
+                  otherTitle.classList.remove('active');
+                  allDescriptionDivs[i].style.display = 'none';
+                }
+              });
+
+              // Toggle the clicked accordion
+              descriptionDiv.style.display = isHidden ? 'block' : 'none';
+              titleElement.classList.toggle('active'); // Add or remove an 'active' class for styling
+            }
+
+            // Iterate through each defect in the response
+            defects.forEach((defectData, index) => {
+              const defect = JSON.parse(defectData.defect)[0]; // Parse the JSON defect data
+
+              // Create a div for the "Action" column
+              const actionDiv = document.createElement('div');
+              actionDiv.classList.add('defect-column', 'text-sm');
+              // actionDiv.innerHTML = `<strong>Action:</strong> ${defect.fields.action.substr(0, 100)}`;
+              
+              // Create a div to wrap the content of the defect
+              const defectContent = document.createElement('div');
+
+              // Create a div for the "Description" column
+              const descriptionDiv = document.createElement('div');
+              descriptionDiv.classList.add('defect-column', 'text-sm', 'defect-description');
+              descriptionDiv.style.display = 'none'; // Initially hide description
+              descriptionDiv.innerHTML = `<strong>Description:</strong> ${defect.fields.description}`;
+
+              // Create a div for the "Rectification" column
+              const rectificationDiv = document.createElement('div');
+              rectificationDiv.classList.add('defect-column', 'text-sm', 'defect-description');
+              rectificationDiv.style.display = 'none'; // Initially hide rectification
+              rectificationDiv.innerHTML = `<strong>Rectification:</strong> ${defect.fields.rectification_description}`;
+
+              // Create a heading for the row (e.g., h5) with the action text
+              const titleElement = document.createElement('h5');
+              titleElement.classList.add('defect-title');
+              titleElement.textContent = defect.fields.action.substr(0, 100);
+
+              // Add click event listener to the title to toggle the accordion
+              titleElement.addEventListener('click', () => {
+                toggleAccordion(titleElement, descriptionDiv, rectificationDiv);
+              });
+
+              // Append action, description, and rectification to the defect content
+              defectContent.appendChild(actionDiv);
+              defectContent.appendChild(descriptionDiv);
+              defectContent.appendChild(rectificationDiv);
+
+              // Append title and defect content to the defectsContainer
+              defectsContainer.appendChild(titleElement);
+              defectsContainer.appendChild(defectContent);
+
+              const hrdiv = document.createElement('hr');
+              hrdiv.classList.add('horizontal', 'gray-light', 'my-4');
+              defectsContainer.appendChild(hrdiv);
+         
+
+          });
+        })
+
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
+
+        });
+   
+      });
+
+
+
+
+  // ... Your existing code ...
+
+// Assuming you have a button to submit the form
+const draftButton = document.getElementById("submit-darft-button");
+const submitButton = document.getElementById("submit-button");
+
+
+draftButton.addEventListener("click", function () {
+    // Set the status to "draft"
+    const formData = new FormData(document.getElementById("selectForm"));
+    formData.append("status", "draft"); // Add status field with value "draft"
+    saveFormData(formData);
+});
+
+submitButton.addEventListener("click", function () {
+    // Set the status to "submit"
+    const formData = new FormData(document.getElementById("selectForm"));
+    formData.append("status", "submit"); // Add status field with value "submit"
+    saveFormData(formData);
+});
+
+function saveFormData(formData) {
+    // Define the URL for saving the data
+    const saveUrl = "{% url 'customer_requirement_view' customer_id requirement_instance.id %}";
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    // Send the data to the backend using fetch
+    fetch(saveUrl, {
+        method: "POST",
+        body: formData,
+        headers: {
+            "X-CSRFToken": csrfToken // Include the CSRF token in the request headers
+        }
+    })
+    .then(data => {
+        // Reload the page after processing the response
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
     });
-  });
+}
+
 </script>
 
 {% endblock %}

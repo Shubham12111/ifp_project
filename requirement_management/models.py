@@ -1,3 +1,4 @@
+from rest_framework.relations import PrimaryKeyRelatedField
 from django.db import models
 from authentication.models import User
 from django.core.exceptions import ValidationError
@@ -37,8 +38,8 @@ class Requirement(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = _('Fire Risk Assessment')
-        verbose_name_plural = _('Fire Risk Assessment')
+        verbose_name = _('FRA Action')
+        verbose_name_plural = _('FRA Action')
 
     def __str__(self):
         return f"{self.customer_id.first_name} {self.customer_id.last_name}'s requirement"
@@ -50,14 +51,14 @@ class RequirementAsset(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = _('Fire Risk Assessment Document')
-        verbose_name_plural = _('Fire Risk Assessment Document')
+        verbose_name = _('FRA Action Document')
+        verbose_name_plural = _('FRA Action Document')
         
 class RequirementDefect(models.Model):
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
     UPRN = models.CharField(max_length=12, null=True)
-    action = models.TextField(max_length=1000)
-    description = RichTextField()
+    action = models.TextField()
+    description = models.TextField()
     reference_number = models.CharField(max_length=50, null=True)
     rectification_description = models.TextField()
     status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='pending')
@@ -81,3 +82,13 @@ class RequirementDefectDocument(models.Model):
         verbose_name = _('Fire Risk Assessment Defect Document')
         verbose_name_plural = _('Fire Risk Assessment Defect Document')
 
+
+class Report(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='report_user', null=True)
+    requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
+    defect_id = models.ManyToManyField(RequirementDefect, blank=True)
+    signature_path = models.CharField(max_length=500,null=True)
+    pdf_path = models.CharField(max_length=500,null=True)
+    comments = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
