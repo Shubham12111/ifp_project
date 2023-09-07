@@ -5,6 +5,7 @@ from rest_framework import serializers
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
 from django.conf import settings
+from stock_management.models import Item
 
 
 def validate_non_negative(value):
@@ -219,6 +220,21 @@ class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
         model = PurchaseOrderInvoice
         fields = ['invoice_number', 'invoice_date', 'comments','file']
     
+
+    def validate_invoice_number(self, value):
+        """
+        Validate that the invoice_number is unique.
+        """
+        if self.instance:
+            invoice_number = PurchaseOrderInvoice.objects.filter(invoice_number=value).exclude(id=self.instance.id).exists()
+        else:
+            invoice_number = PurchaseOrderInvoice.objects.filter(invoice_number=value).exists()
+        
+        if invoice_number:
+            raise serializers.ValidationError("This invoice number is already in use.")
+        
+        return value
+
     def create(self, validated_data):
         # Pop the 'file' field from validated_data
         file = validated_data.pop('file', None)
@@ -252,3 +268,9 @@ class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
             instance.save()
 
         return instance
+
+class ItemSerializer(serializers.ModelSerializer):
+     class Meta:
+        model = Item
+        fields = ['id','item_name','category_id','price', 'description', 'units', 'quantity_per_box','reference_number']
+            
