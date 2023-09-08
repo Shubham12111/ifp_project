@@ -333,26 +333,30 @@ class PurchaseOrderView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         base_queryset = PurchaseOrder.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
         purchase_order = base_queryset.filter(pk=kwargs.get('purchase_order_id')).first()
         
-        purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order)
-        
-        invoice_item_list = PurchaseOrderInvoice.objects.filter(purchase_order_id=purchase_order,
-                                                                purchase_order_id__inventory_location_id=purchase_order.inventory_location_id).order_by('-created_at')
-        
-        presigned_url = ""
-        file_name = ''
-        if purchase_order.document:
-            presigned_url = generate_presigned_url(purchase_order.document),
-            file_name =  purchase_order.document.split('/')[-1]
+        if purchase_order:
+            purchase_order_items = PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order)
+            
+            invoice_item_list = PurchaseOrderInvoice.objects.filter(purchase_order_id=purchase_order,
+                                                                    purchase_order_id__inventory_location_id=purchase_order.inventory_location_id).order_by('-created_at')
+            
+            presigned_url = ""
+            file_name = ''
+            if purchase_order.document:
+                presigned_url = generate_presigned_url(purchase_order.document),
+                file_name =  purchase_order.document.split('/')[-1]
 
 
-        if request.accepted_renderer.format == 'html':
-            context = {'purchase_order':purchase_order,
-                      'purchase_order_items':purchase_order_items,
-                      'invoice_item_list':invoice_item_list,
-                      'presigned_url':presigned_url,
-                        'file_name':file_name}
-            return render_html_response(context, self.template_name)
-        
+            if request.accepted_renderer.format == 'html':
+                context = {'purchase_order':purchase_order,
+                        'purchase_order_items':purchase_order_items,
+                        'invoice_item_list':invoice_item_list,
+                        'presigned_url':presigned_url,
+                            'file_name':file_name}
+                return render_html_response(context, self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action.")
+            return redirect(reverse('purchase_order_list'))
+            
       
 class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
@@ -393,15 +397,16 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         """
         purchase_order = self.get_purchase_order().filter(pk = kwargs.get('purchase_order_id'))
         purchase_order_data = purchase_order.first()
-        vendor_list = Vendor.objects.all()
-        inventory_location_list = InventoryLocation.objects.all()
-        item_list = Item.objects.filter(item_type='item', vendor_id=purchase_order_data.vendor_id)
-        tax_rate = AdminConfiguration.objects.all().first()
-
+       
 
         if request.accepted_renderer.format == 'html':
             # Extract the first purchase order object from the queryset
             if purchase_order_data:
+                vendor_list = Vendor.objects.all()
+                inventory_location_list = InventoryLocation.objects.all()
+                item_list = Item.objects.filter(item_type='item', vendor_id=purchase_order_data.vendor_id)
+                tax_rate = AdminConfiguration.objects.all().first()
+
                 existingPurchaseOrderData = {} 
                 
                 purchase_order_items_data = PurchaseOrderItem.objects.filter(purchase_order_id=purchase_order_data)  # Assuming a related name of "items" for the items on the PurchaseOrder model
@@ -438,13 +443,13 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                     file_name =  purchase_order_data.document.split('/')[-1]
 
                 context = {'vendor_list':vendor_list, 
-                        'inventory_location_list':inventory_location_list,
-                        'item_list':item_list,
-                        'purchase_order':purchase_order_data,
-                        'existingPurchaseOrderData':existingPurchaseOrderData,
-                        'presigned_url':presigned_url,
-                        'file_name':file_name,
-                         'tax_rate':tax_rate}
+                            'inventory_location_list':inventory_location_list,
+                            'item_list':item_list,
+                            'purchase_order':purchase_order_data,
+                            'existingPurchaseOrderData':existingPurchaseOrderData,
+                            'presigned_url':presigned_url,
+                            'file_name':file_name,
+                            'tax_rate':tax_rate}
                 return render_html_response(context,self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action.")

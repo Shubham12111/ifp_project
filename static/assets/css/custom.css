@@ -281,7 +281,13 @@ color: #344767;
 {
     background: #d53436 !important;
 }
+
 textarea.form-control {
     height: 200px !important;
     resize: none !important;
   }
+
+  /* Create a CSS class for the background blur effect */
+.blur-background {
+    filter: blur(5px); /* Adjust the blur intensity as needed */
+}

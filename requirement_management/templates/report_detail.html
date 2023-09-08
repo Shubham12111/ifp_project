@@ -19,9 +19,7 @@
     <link id="pagestyle" href="{% static 'assets/css/soft-ui-dashboard.css' %}" rel="stylesheet" /> 
      <!-- Custom CSS Files -->
      <link id="pagestyle" href="{% static 'assets/css/custom.css' %}" rel="stylesheet" />
-
      <style>
-
         body {
             font-family: Arial, sans-serif;
         }
@@ -46,50 +44,64 @@
             height: auto;
         }
         img {
-            page-break-before: avoid; 
+            page-break-before: avoid;
         }
-    
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            border: 1px solid #ddd; /* Add a border to the table */
+        }
+        th, td {
+            border: 1px solid #ddd; /* Add a border to table cells */
+            padding: 8px; /* Adjust cell padding as needed */
+            text-align: left;
+        }
     </style>
+    
 </head>
 
 <body class="g-sidenav-show  bg-gray-100 mb-10">
         <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
             <!-- Navbar -->
             <div class="container text-sm">
-                <h1>Fire Risk Assessment Report</h1>
-                <br><br>
-                <h4 class='section-header'>{{ requirement_instance.customer_id.company_name|title}} Survey Form <h5>
-                    <br><br><br>
+                <h1 class="text-center" style="text-align: center;">Fire Risk Assessment Report</h1>
+                <br>
+                <h4 class='section-header text-center' style="text-align: center;">{{ requirement_instance.customer_id.company_name|title}} Survey Form <h5>
+                <br>
                 <table class="table table-striped " id="fire_risk_assessment_report">
-                    <tr>
-                        <th>Client:</th>
-                        <td>{{ requirement_instance.customer_id.first_name }} {{ requirement_instance.customer_id.last_name }}</td>
-                    </tr>
-                    {% if requirement_images %}
+                    <thead> <!-- Use thead for table headers -->
                         <tr>
-                            <th>Photos of FRA</th>
-                            <td>
-                                <div class="image-container">
-                                    {% for requirement_image in requirement_images %}
-                                    <div class="col-4 mb-3">
-                                        <img src="{{ requirement_image.document_path.url }}" alt="Requirememt Image" width="100%">
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </td>
+                            <th>Client:</th>
+                            <td>{{ requirement_instance.customer_id.first_name }} {{ requirement_instance.customer_id.last_name }}</td>
                         </tr>
-                    {% endif %}
-                    <tr>
-                        <th>Site Address:</th>
-                        <td>{{ requirement_instance.site_address }}</td>
-                    </tr>
+                        <tr>
+                            <th>Site Address:</th>
+                            <td>{{ requirement_instance.site_address }}</td>
+                        </tr>
+                    </thead>
+                    <tbody> <!-- Use tbody for table body -->
+                        {% if requirement_images %}
+                            <tr>
+                                <th>Photos of FRA</th>
+                                <td>
+                                    <div class="image-container">
+                                        {% for requirement_image in requirement_images %}
+                                        <div class="col-4 mb-3">
+                                            <img src="{{ requirement_image.document_path.url }}" alt="Requirememt Image" width="100%" class="img-thumbnail">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
                 </table>
                 <h4 class='section-header'>Defects</h2>
                 {% for defect in requirement_defects %}
 
                     
                 <table class="table table-striped " id="fire_risk_assessment_report">
-                    <h5 class='section-header'> Section {{forloop.counter}}</h5>
+                 
                     <tr class=" text-sm">
                         <th>Action</th>
                         <td class="text-wrap  text-sm">{{ defect.action }}</td>

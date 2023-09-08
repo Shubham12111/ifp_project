@@ -733,6 +733,7 @@ if (submitSaveAsDraftBtn)
 
 });
 
+
 submitBtnApproval.addEventListener('click', function() {
     submitForm('sent_for_approval'); // Call the common function with the status
 
@@ -740,9 +741,13 @@ submitBtnApproval.addEventListener('click', function() {
 
 }
 
+
+if (submitBtnApproved)
+{
 submitBtnApproved.addEventListener('click', function() {
     submitForm('approved'); // Call the common function with the status
 });
+}
 
 function submitForm(status) {
     event.preventDefault(); // Prevent default button behavior
