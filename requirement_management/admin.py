@@ -8,7 +8,7 @@ class RequirementAdmin(admin.ModelAdmin):
 
 
 class RequirementDefectAdmin(admin.ModelAdmin):
-    list_display = ('requirement_id', 'action','UPRN', 'description', )
+    list_display = ('requirement_id', 'action', 'description', )
 
 
 class RequirementDefectDocumentAdmin(admin.ModelAdmin):
