@@ -123,7 +123,7 @@ class ItemImage(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Image for {self.item_id.name}"
+        return f"Image for {self.item_id.item_name}"
 
 class InventoryLocation(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
