@@ -515,7 +515,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'requirement.html'
-    serializer_class = RequirementAddSerializer
+    serializer_class = RequirementUpdateSerializer
     
     def get_queryset(self):
         """
@@ -746,7 +746,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
             return render_html_response(context, self.template_name)
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))  
         
     def post(self, request, *args, **kwargs):
         """
