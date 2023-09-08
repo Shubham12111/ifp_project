@@ -28,6 +28,8 @@ STATUS_CHOICES = (
 class Requirement(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_requirement')
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_requirement')
+    UPRN = models.CharField(max_length=255, null=True)
+    RBNO = models.CharField(max_length=255, null=True)
     description = models.TextField()
     action = models.TextField()
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
@@ -56,7 +58,6 @@ class RequirementAsset(models.Model):
         
 class RequirementDefect(models.Model):
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
-    UPRN = models.CharField(max_length=12, null=True)
     action = models.TextField()
     description = models.TextField()
     reference_number = models.CharField(max_length=50, null=True)

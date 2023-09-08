@@ -41,36 +41,42 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
-        # This method handles GET requests for updating an existing Requirement object.
-        if request.accepted_renderer.format == 'html':
-            instance = self.get_queryset()
-            
-            if instance:
-                document_paths = []
-                document_paths = requirement_image(instance)
+        customer_data = User.objects.filter(id=kwargs.get('customer_id')).first()
+        if customer_data:
+            # This method handles GET requests for updating an existing Requirement object.
+            if request.accepted_renderer.format == 'html':
+                instance = self.get_queryset()
                 
-                report_list = Report.objects.filter(requirement_id=instance)
-                for report in report_list:
+                if instance:
+                    document_paths = []
+                    document_paths = requirement_image(instance)
+                    
+                    report_list = Report.objects.filter(requirement_id=instance)
+                    for report in report_list:
 
-                    if report.pdf_path:
-                        pdf_url =  generate_presigned_url(report.pdf_path)
-                        report.pdf_url = pdf_url
-                    else:
-                        report.pdf_url = None
+                        if report.pdf_path:
+                            pdf_url =  generate_presigned_url(report.pdf_path)
+                            report.pdf_url = pdf_url
+                        else:
+                            report.pdf_url = None
 
 
-                context = {
-                    'requirement_instance': instance,  
-                    'document_paths': document_paths,
-                    'customer_id': kwargs.get('customer_id'),
-                    'report_list':report_list
-                    }
-               
+                    context = {
+                        'requirement_instance': instance,  
+                        'document_paths': document_paths,
+                        'customer_id': kwargs.get('customer_id'),
+                        'report_list':report_list,
+                        'customer_data':customer_data
+                        }
+                
 
-                return render_html_response(context, self.template_name)
-            else:
-                messages.error(request, "You are not authorized to perform this action")
-                return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+                    return render_html_response(context, self.template_name)
+                else:
+                    messages.error(request, "You are not authorized to perform this action")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
 
 
 class ReportRemoveView(generics.DestroyAPIView):
@@ -96,3 +102,67 @@ class ReportRemoveView(generics.DestroyAPIView):
                 {"message": "Requirement Report not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
+    
+    serializer_class = RequirementCustomerSerializer
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    template_name = 'report_view.html'
+    ordering_fields = ['created_at'] 
+
+    def get_queryset(self):
+        """
+        Get the filtered queryset for requirements based on the authenticated user.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+        )
+        
+        queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
+        queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
+        
+        return queryset
+
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        customer_data = User.objects.filter(id=kwargs.get('customer_id')).first()
+        if customer_data:
+            report_id = kwargs.get('pk')
+            # This method handles GET requests for updating an existing Requirement object.
+            if request.accepted_renderer.format == 'html':
+                requirement_instance = self.get_queryset()
+                
+                report_instance = Report.objects.filter(pk=report_id).first()
+                
+                if report_instance:
+                    document_paths = []
+                    document_paths = requirement_image(requirement_instance)
+                    
+                   
+
+                    if report_instance.pdf_path:
+                        pdf_url =  generate_presigned_url(report_instance.pdf_path)
+                        report_instance.pdf_url = pdf_url
+                    else:
+                        report_instance.pdf_url = None
+
+
+                    context = {
+                        'requirement_instance': requirement_instance,  
+                        'report_instance':report_instance,
+                        'document_paths': document_paths,
+                        'customer_id': kwargs.get('customer_id'),
+                        'customer_data':customer_data
+                        }
+                
+
+                    return render_html_response(context, self.template_name)
+                else:
+                    messages.error(request, "You are not authorized to perform this action")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))

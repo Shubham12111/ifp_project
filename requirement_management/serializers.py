@@ -60,7 +60,7 @@ class RequirementDetailSerializer(serializers.ModelSerializer):
     requirementdefect_set = RequirementDefectSerializer(many=True, read_only=True)
     class Meta:
         model = Requirement
-        fields = ('user_id', 'customer_id', 'description', 'UPRN', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
+        fields = ('user_id', 'customer_id', 'description', 'RBNO', 'UPRN', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -92,8 +92,196 @@ class SiteAddressField(serializers.PrimaryKeyRelatedField):
             return SiteAddress.objects.filter(user_id=user_id)
         else:
             return SiteAddress.objects.none()
-        
+
+
+
 class RequirementAddSerializer(serializers.ModelSerializer):
+    
+    action = serializers.CharField(
+        required=True, 
+        style={'base_template': 'textarea.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Action is required.",
+            "null": "Action is required."
+        },
+        validators=[action_description],
+        
+    )
+    
+    RBNO = serializers.CharField(
+        required=True,
+        max_length=12,
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "RBNO is required.",
+        },
+    )
+    
+    UPRN = serializers.CharField(
+        required=True, 
+        max_length=12,
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "UPRN is required.",
+        },
+    )
+
+    description = serializers.CharField(
+        required=True, 
+        style={'base_template': 'textarea.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Description is required.",
+            "null": "Description is required."
+        },
+        validators=[validate_description],
+        
+    )
+    
+    site_address = SiteAddressField(
+        label=('Site Address'),
+        required = True,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Site Address is required.",
+            "incorrect_type":"Site Address is required.",
+            "null": "Site Address is required."
+        },
+    )
+    
+    file_list = serializers.ListField(
+        child=serializers.FileField(
+            allow_empty_file=False,
+            validators=[CustomFileValidator()],
+        ),
+        label=('Documents'),  # Adjust the label as needed
+        required=False,
+        write_only=True,
+        initial=[],
+        style={
+            "input_type": "file",
+            "class": "form-control",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_multiple_file.html',
+            'help_text': True,
+            'multiple': True,
+            'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),
+            'allow_null': True,
+             'custom_class':'col-6'
+        },
+        help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
+    )
+    
+    class Meta:
+        model = Requirement
+        fields = ('RBNO', 'UPRN', 'action','description','site_address','file_list')
+    
+   
+            
+    def get_initial(self):
+        
+        fields = self.fields
+        
+        if hasattr(self, 'initial_data'):
+            # initial_data may not be a valid type
+            if not isinstance(self.initial_data, Mapping):
+                return OrderedDict()
+
+            return OrderedDict([
+                (field_name, field.get_value(self.initial_data))
+                for field_name, field in fields.items()
+                if (field.get_value(self.initial_data) is not empty) and
+                not field.read_only
+            ])
+
+        fields['file_list'].required = True
+        
+        return OrderedDict([
+            (field.field_name, field.get_initial())
+            for field in fields.values()
+            if not field.read_only
+        ])
+    
+    
+    def create(self, validated_data):
+        file_list = validated_data.pop('file_list', None)
+        instance = Requirement.objects.create(**validated_data)
+
+        if file_list and len(file_list) > 0:
+            for file in file_list:
+                unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                try:
+                    upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
+                    file_path = f'requirement/{instance.id}/{unique_filename}'
+                    
+                    document = RequirementAsset.objects.create(requirement_id=instance, document_path=file_path)
+                
+                except Exception as e:
+                    # Handle the exception (e.g., log the error) and decide what to do next
+                    pass
+
+        return instance
+    
+    def update(self, instance, validated_data):
+        
+        file_list = validated_data.pop('file_list', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        with transaction.atomic():
+            instance.save()
+            # Update associated documents if file_list is provided
+            if file_list and len(file_list) > 0:
+                for file in file_list:
+                    try:
+                        unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                        upload_file_to_s3(unique_filename, file, f'requirement/{instance.id}')
+                        file_path = f'requirement/{instance.id}/{unique_filename}'
+
+                        RequirementAsset.objects.create(
+                            requirement_id=instance,
+                            document_path=file_path,
+                        )
+                    except Exception as e:
+                        print(f"Error uploading file {file.name}: {str(e)}")
+        
+        return instance
+    
+    def to_representation(self, instance):
+        """
+        Serialize the Conversation instance.
+
+        Parameters:
+            instance (Conversation): The Conversation instance.
+
+        Returns:
+            dict: The serialized representation of the Conversation.
+        """
+        representation = super().to_representation(instance)
+
+        document_paths = []
+        if hasattr(instance, 'requirementasset_set'):
+            for document in RequirementAsset.objects.filter(requirement_id=instance):
+                document_paths.append({
+                    'presigned_url': generate_presigned_url(document.document_path),
+                    'filename': document.document_path.split('/')[-1],
+                    'id': document.id  #  document ID
+                })
+
+        representation['document_paths'] = document_paths
+
+        return representation
+
+class RequirementUpdateSerializer(serializers.ModelSerializer):
     
     action = serializers.CharField(
         required=True, 
@@ -400,7 +588,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         document_paths = []
-        if hasattr(instance, 'requirementdocument_set'):
+        if hasattr(instance, 'requirementdefectdocument_set'):
             for document in RequirementDefectDocument.objects.filter(defect_id=instance, requirement_id=instance.requirement_id):
                 document_paths.append({
                     'presigned_url': generate_presigned_url(document.document_path),

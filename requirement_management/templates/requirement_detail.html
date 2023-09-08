@@ -18,8 +18,8 @@
 .defect-column-desp {
   padding: 10px;
   margin-top: 1px;
-  
 }
+
 
 </style>
 {% endblock %}
@@ -144,15 +144,16 @@
               <div id="defects-container">
                 <!-- Defects will be displayed here -->
               </div>
-              <div class="row">
-                <div class="col-6">
+              <div class="row mt-4">
+                <div class="col-12">
                   <label>Comments <span class="text-sm text-danger">*</span></label>
                   <textarea name="comments" class="form-control" required></textarea>
                 </div>
-                 <div class="col-6">
+                
+                 <div class="col-4 mt-2">
                   <label class="">Signature</label>
                   <div class="signature-container">
-                    <canvas id="signature-canvas" height="170"></canvas>
+                    <canvas id="signature-canvas" height="80"></canvas>
                   </div>
                 </div>
                  
@@ -167,9 +168,9 @@
       </div>
         
         <div class="modal-footer">
-          
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button id="clear-button" class="btn btn-secondary">Clear Signature</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          
           <button type="button" id="submit-darft-button" class="btn bg-gradient-primary">Save As Draft</button>
           <button type="button" id="submit-button" class="btn bg-gradient-primary">Submit</button>
         </div>
@@ -184,7 +185,7 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
+<script src="{% static 'assets/js/signature_pad.min.js' %}"></script>
 
 <script>
 
@@ -258,157 +259,192 @@
   }
 
 
+const cretaeReportModal = new bootstrap.Modal(document.getElementById("cretaeReportModal"));
+const modalContainer = document.querySelector('.container-fluid.py-4');
+// Function to add the blur class
+function addBlur() {
+    modalContainer.classList.add('blur-background');
+  }
 
-    document.addEventListener("DOMContentLoaded", function () {
-    // Get the "Add Quantity Surveyor" button
-    const cretaeReportButton = document.getElementById("createreportButton");
-
-    // Get the modal
-    const cretaeReportModal = new bootstrap.Modal(document.getElementById("cretaeReportModal"));
-    // Add an event listener to show the modal when the button is clicked
-    cretaeReportButton.addEventListener("click", function () {
-        cretaeReportModal.show();
-        var canvas = document.getElementById('signature-canvas');
-        var signaturePad = new SignaturePad(canvas);
-        var clearButton = document.getElementById('clear-button');
-
-        // Add an event listener to detect when the user has drawn something
-      signaturePad.onEnd = function () {
-          const signatureDataURL = signaturePad.toDataURL();
-           // Check if the data URL is valid
-          document.getElementById('signature-data').value = signatureDataURL;
-      };
-
-        clearButton.addEventListener('click', function() {
-          signaturePad.clear();
-        });
-
-        const selectedDefectIds = getAllSelectedDefectIds();
-
-        // Define the URL of your backend endpoint
-        const url = "{% url 'get_selected_defect_data' customer_id requirement_instance.id  %}";
-        // Get the CSRF token from the Django template
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        // Create a FormData object to send the selectedDefectIds as POST data
-        const formData = new FormData();
-        selectedDefectIds.forEach(id => formData.append('selectedDefectIds', id));
-        
-        
-        // Create the fetch request with the CSRF token in the headers
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken // Include the CSRF token in the request headers
-            },
-            body: formData
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Handle the response data here (e.g., display the defect data)
-            const defectsContainer = document.getElementById('defects-container'); // Assuming you have a container in your HTML with this ID
-
-            const defects = data.defects;
-
-            // Clear the defectsContainer before adding new elements
-            defectsContainer.innerHTML = '';
-
-            // Function to toggle the visibility of description and rectification
-            function toggleAccordion(titleElement, actionDiv,descriptionDiv, rectificationDiv) {
-              const isHidden = descriptionDiv.style.display === 'none';
-
-              // Close all other accordions
-              
-              const allTitles = document.querySelectorAll('.defect-title');
-              const allActionnDivs = document.querySelectorAll('.defect-action');
-              const allDescriptionDivs = document.querySelectorAll('.defect-description');
-              const allrectificationDivs = document.querySelectorAll('.defect-rectification');
-              allTitles.forEach((otherTitle, i) => {
-                if (otherTitle !== titleElement) {
-                  otherTitle.classList.remove('active');
-                  allDescriptionDivs[i].style.display = 'none';
-                  allrectificationDivs[i].style.display = 'none';
-                  allActionnDivs[i].style.display = 'none';
-                }
-              });
-
-              // Toggle the clicked accordion
-              actionDiv.style.display = isHidden ? 'block' : 'none';
-              descriptionDiv.style.display = isHidden ? 'block' : 'none';
-              rectificationDiv.style.display = isHidden ? 'block' : 'none';
-              titleElement.classList.toggle('active'); // Add or remove an 'active' class for styling
-            }
-
-            // Iterate through each defect in the response
-            defects.forEach((defectData, index) => {
-              const defect = JSON.parse(defectData.defect)[0]; // Parse the JSON defect data
-
-              // Create a div for the "Action" column
-              const actionDiv = document.createElement('div');
-              actionDiv.classList.add('defect-action', 'text-sm','mb-2');
-              actionDiv.style.display = 'none'; // Initially hide description
-              actionDiv.innerHTML = `<strong>Action:</strong> ${defect.fields.action}`;
-              
-              // Create a div to wrap the content of the defect
-              const defectContent = document.createElement('div');
-              defectContent.classList.add('defect-column-desp',);
+// Function to remove the blur class
+function removeBlur() {
+    modalContainer.classList.remove('blur-background');
+}
 
 
-              // Create a div for the "Description" column
-              const descriptionDiv = document.createElement('div');
-              descriptionDiv.classList.add('defect-column', 'text-sm', 'defect-description', 'mb-2');
-              descriptionDiv.style.display = 'none'; // Initially hide description
-              descriptionDiv.innerHTML = `<strong>Description:</strong> ${defect.fields.description}`;
 
-              // Create a div for the "Rectification" column
-              const rectificationDiv = document.createElement('div');
-              rectificationDiv.classList.add('defect-column', 'text-sm', 'defect-rectification');
-              rectificationDiv.style.display = 'none'; // Initially hide rectification
-              rectificationDiv.innerHTML = `<strong>Rectification:</strong> ${defect.fields.rectification_description}`;
+document.addEventListener("DOMContentLoaded", function () {
+  // Get the "Add Quantity Surveyor" button
+  const cretaeReportButton = document.getElementById("createreportButton");
 
-              // Create a heading for the row (e.g., h5) with the action text
-              const titleElement = document.createElement('h5');
-              titleElement.classList.add('defect-title','text-sm');
-              titleElement.innerHTML =  `<strong>${index+1}</strong> - ${defect.fields.action.substr(0, 100)} `;
+  // Get the modal
+  
+  // Add an event listener to show the modal when the button is clicked
+cretaeReportButton.addEventListener("click", function () {
+    addBlur(); // Add the blur class
+    cretaeReportModal.show();
+    var canvas = document.getElementById('signature-canvas');
+    var signaturePad = new SignaturePad(canvas);
+    var clearButton = document.getElementById('clear-button');
 
-              // Add click event listener to the title to toggle the accordion
-              titleElement.addEventListener('click', () => {
-                toggleAccordion(titleElement,actionDiv, descriptionDiv, rectificationDiv);
-              });
+    // Add an event listener to detect when the user has drawn something
+    signaturePad.onEnd = function () {
+        const signatureDataURL = signaturePad.toDataURL();
+          // Check if the data URL is valid
+        document.getElementById('signature-data').value = signatureDataURL;
+    };
 
-              // Append action, description, and rectification to the defect content
-              defectContent.appendChild(actionDiv);
-              defectContent.appendChild(descriptionDiv);
-              defectContent.appendChild(rectificationDiv);
-
-              // Append title and defect content to the defectsContainer
-              defectsContainer.appendChild(titleElement);
-              defectsContainer.appendChild(defectContent);
-
-         
-
-          });
-        
-        })
-
-        .catch(error => {
-            console.error('There was a problem with the fetch operation:', error);
-        });
-
-        });
-   
+      clearButton.addEventListener('click', function() {
+        signaturePad.clear();
       });
 
+    const selectedDefectIds = getAllSelectedDefectIds();
+
+    // Define the URL of your backend endpoint
+    const url = "{% url 'get_selected_defect_data' customer_id requirement_instance.id  %}";
+    // Get the CSRF token from the Django template
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    // Create a FormData object to send the selectedDefectIds as POST data
+    const formData = new FormData();
+    selectedDefectIds.forEach(id => formData.append('selectedDefectIds', id));
+    
+    
+    // Create the fetch request with the CSRF token in the headers
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken // Include the CSRF token in the request headers
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Handle the response data here (e.g., display the defect data)
+        const defectsContainer = document.getElementById('defects-container'); // Assuming you have a container in your HTML with this ID
+
+        const defects = data.defects;
+
+        // Clear the defectsContainer before adding new elements
+        defectsContainer.innerHTML = '';
+
+        // Function to toggle the visibility of description and rectification
+        function toggleAccordion(titleElement, actionDiv,descriptionDiv, rectificationDiv) {
+          const isHidden = descriptionDiv.style.display === 'none';
+
+          // Close all other accordions
+          
+          const allTitles = document.querySelectorAll('.defect-title');
+          const allActionnDivs = document.querySelectorAll('.defect-action');
+          const allDescriptionDivs = document.querySelectorAll('.defect-description');
+          const allrectificationDivs = document.querySelectorAll('.defect-rectification');
+          allTitles.forEach((otherTitle, i) => {
+            if (otherTitle !== titleElement) {
+              otherTitle.classList.remove('active');
+              allDescriptionDivs[i].style.display = 'none';
+              allrectificationDivs[i].style.display = 'none';
+              allActionnDivs[i].style.display = 'none';
+            }
+          });
+
+          // Toggle the clicked accordion
+          actionDiv.style.display = isHidden ? 'block' : 'none';
+          descriptionDiv.style.display = isHidden ? 'block' : 'none';
+          rectificationDiv.style.display = isHidden ? 'block' : 'none';
+          titleElement.classList.toggle('active'); // Add or remove an 'active' class for styling
+        }
+
+        // Iterate through each defect in the response
+        defects.forEach((defectData, index) => {
+          const defect = JSON.parse(defectData.defect)[0]; // Parse the JSON defect data
+
+          // Create a div for the "Action" column
+          const actionDiv = document.createElement('div');
+          actionDiv.classList.add('defect-action', 'text-sm','mb-2');
+          actionDiv.style.display = 'none'; // Initially hide description
+          actionDiv.innerHTML = `<strong>Action:</strong> ${defect.fields.action}`;
+          
+          // Create a div to wrap the content of the defect
+          const defectContent = document.createElement('div');
+          defectContent.classList.add('defect-column-desp',);
 
 
+          // Create a div for the "Description" column
+          const descriptionDiv = document.createElement('div');
+          descriptionDiv.classList.add('defect-column', 'text-sm', 'defect-description', 'mb-2');
+          descriptionDiv.style.display = 'none'; // Initially hide description
+          descriptionDiv.innerHTML = `<strong>Description:</strong> ${defect.fields.description}`;
 
-  // ... Your existing code ...
+          // Create a div for the "Rectification" column
+          const rectificationDiv = document.createElement('div');
+          rectificationDiv.classList.add('defect-column', 'text-sm', 'defect-rectification');
+          rectificationDiv.style.display = 'none'; // Initially hide rectification
+          rectificationDiv.innerHTML = `<strong>Rectification:</strong> ${defect.fields.rectification_description}`;
 
+          // Create a heading for the row (e.g., h5) with the action text
+          const titleElement = document.createElement('h5');
+          titleElement.classList.add('defect-title', 'text-sm');
+
+          // Add the action text and a Font Awesome icon at the end
+          titleElement.innerHTML =  `<strong>${index + 1}</strong> - ${defect.fields.action.substr(0, 100)} <i class="fas fa-chevron-down mt-2" aria-hidden="true" style="float: right;"></i>`;
+
+
+          // Add click event listener to the title to toggle the accordion
+          titleElement.addEventListener('click', () => {
+            toggleAccordion(titleElement,actionDiv, descriptionDiv, rectificationDiv);
+          });
+
+          // Append action, description, and rectification to the defect content
+          defectContent.appendChild(actionDiv);
+          defectContent.appendChild(descriptionDiv);
+          defectContent.appendChild(rectificationDiv);
+
+          // Append title and defect content to the defectsContainer
+          defectsContainer.appendChild(titleElement);
+          defectsContainer.appendChild(defectContent);
+
+      
+
+      });
+    
+    })
+
+    .catch(error => {
+        console.error('There was a problem with the fetch operation:', error);
+    });
+
+    });
+
+  });
+
+
+// Add an event listener to remove blur when the modal is hidden
+cretaeReportModal._element.addEventListener('hidden.bs.modal', function () {
+      removeBlur(); // Remove the blur class
+  });
+// Add an event listener to remove blur when the modal is closed via cancel button
+document.addEventListener('DOMContentLoaded', function() {
+    const cancelButton = document.getElementById("cancelButton");
+    if (cancelButton) {
+        cancelButton.addEventListener('click', function () {
+            removeBlur(); // Remove the blur class
+            cretaeReportModal.hide();
+        });
+    }
+});
+// Add an event listener to remove blur when clicking anywhere outside the modal
+cretaeReportModal._element.addEventListener('click', function (event) {
+    if (event.target === cretaeReportModal._element) {
+        removeBlur(); // Remove the blur class
+        cretaeReportModal.hide();
+    }
+});
+  
 // Assuming you have a button to submit the form
 const draftButton = document.getElementById("submit-darft-button");
 const submitButton = document.getElementById("submit-button");
@@ -418,6 +454,7 @@ draftButton.addEventListener("click", function () {
     // Set the status to "draft"
     const formData = new FormData(document.getElementById("selectForm"));
     formData.append("status", "draft"); // Add status field with value "draft"
+    showLoader(); // Show the loader overlay before submitting
     saveFormData(formData);
 });
 
