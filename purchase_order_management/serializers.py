@@ -96,6 +96,15 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         },
     )
     
+    po_number = serializers.CharField(
+        required=True,
+        error_messages={
+            "required": "This field is required.",
+            "blank": "PO Number is required.",
+            "incorrect_type":"PO Number is required.",
+            "null": "PO Number is required."
+        },
+    )
     file = serializers.FileField(
     required=False,
     validators=[file_extension_validator, validate_file_size],
