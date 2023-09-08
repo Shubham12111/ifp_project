@@ -61,14 +61,7 @@
                         <span class="mb-2 font-weight-bold">PO Number :</span>
                         <span class="text-dark ms-2">{{purchase_order.po_number}}</span>
                     </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="mb-2  font-weight-bold" >Date:</span>
-                        <span class="text-dark ms-2 ">{{purchase_order.order_date|date:"M d, Y"}}</span>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="mb-2  font-weight-bold">Order Date:</span>
-                            <span class="text-dark ms-2 ">{{purchase_order.due_date|date:"M d, Y"}}</span>
-                        </div>
+                    
                         <div class="d-flex justify-content-between">
                             <span class="font-weight-bold">Status:</span>
                             <span class="text-dark ms-2 ">{{purchase_order.get_status_display}}</span>
@@ -158,20 +151,20 @@
 
                         <div class="col-lg-3 col-12 ms-auto">
                             <div class="d-flex justify-content-between">
-                                    <span class="mb-2 text-sm">Sub Total</span>
+                                    <span class="mb-2 text-md">Sub Total</span>
                                     <span class="text-dark font-weight-bold ms-2">£ {{ purchase_order.sub_total }}</span>
                                 </div>
                             <div class="d-flex justify-content-between">
-                                <span class="mb-2 text-sm">Discount </span>
+                                <span class="mb-2 text-md">Discount </span>
                                 <span class="text-dark ms-2 font-weight-bold">£ {{ purchase_order.discount}}</span>
                             </div>
                             <div class="d-flex justify-content-between">
-                                <span class="text-sm"> Taxes:</span>
+                                <span class="text-md"> Taxes:</span>
                                 <span class="text-dark ms-2 font-weight-bold">£ {{ purchase_order.tax }}</span>
                             </div>
                             <div class="d-flex justify-content-between mt-4">
-                                <span class="mb-2 text-lg">Total</span>
-                                <span class="text-dark text-lg ms-2 font-weight-bold">£ {{ purchase_order.total_amount }}</span>
+                                <span class="mb-2 text-md font-weight-bolder mb-0 text-end grand-total-value"">Total</span>
+                                <span class="font-weight-bolder mb-0 text-end grand-total-value">£ {{ purchase_order.total_amount }}</span>
                         </div>
                     </div>
                 </div>
