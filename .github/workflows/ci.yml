@@ -51,6 +51,6 @@ jobs:
     - name: Apply Kubernetes manifest
       run: |
         # Delete the existing Kubernetes deployment and apply the new one.
-        #kubectl delete deployment.apps/${{ env.K8S_DEPLOYMENT }} -n ${{ env.K8S_NAMESPACE }}
+        kubectl delete deployment.apps/${{ env.K8S_DEPLOYMENT }} -n ${{ env.K8S_NAMESPACE }}
         kubectl apply -f deployment/deployment.yml
         
