@@ -59,7 +59,7 @@
                                       <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
                                     </a>
                                     <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                                      {% if report.pdf_url %}
+                                      {% if report.pdf_url  and report.status == "submit" %}
                                        <li> <a href="{{report.pdf_url}}" class="dropdown-item border-radius-md" download>
                                         Downlaod
                                         </a>
