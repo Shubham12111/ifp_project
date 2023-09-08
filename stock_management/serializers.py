@@ -329,7 +329,7 @@ class VendorContactPersonSerializer(serializers.ModelSerializer):
 class VendorRemarkSerializer(serializers.ModelSerializer):
 
     remarks = serializers.CharField(
-        label=('Remarks '),
+        label=' ',
         max_length=255,
         required = False,
         allow_blank=True,

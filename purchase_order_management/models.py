@@ -17,8 +17,6 @@ class PurchaseOrder(models.Model):
     po_number = models.CharField(max_length=50, unique=True)
     vendor_id = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     inventory_location_id = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE)
-    order_date = models.DateField()
-    due_date = models.DateField()
     sub_total = models.DecimalField(max_digits=10, decimal_places=2)
     discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     tax = models.DecimalField(max_digits=5, decimal_places=2, default=0)

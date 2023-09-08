@@ -53,9 +53,8 @@
                           <th>PO No.</th>
                           <th>Vendor</th>
                           <th>Location</th>
-                          <th>Total</th>
-                          <th>Date</th>
-                          <th>Due Date</th>
+                          <th>Total(£)</th>
+                          <th>Created At</th>
                           <th>Status</th>
                           <th class="custom-last-column">Actions</th>
                         </tr>
@@ -226,81 +225,23 @@ locationinputField.addEventListener('input', () => {
 // JavaScript code to apply the filter on each field
 function applyFilter(filterName, filterValue) {
   
-  // Handle date range filter
-  if (filterName === 'order_date') {
-    filterValue = filterValue; // Use a custom delimiter to separate start and end dates
-    
-  }
-  else if (filterName === 'due_date') {
-    filterValue = filterValue; // Use a custom delimiter to separate start and end dates
-    
-  }
+ 
   const currentUrl = new URL(window.location.href);
   currentUrl.searchParams.set(filterName, filterValue);
   window.location.href = currentUrl.toString();
 }
 
 
-
-if (document.querySelector('.order-date-filter')) {
-  flatpickr('.order-date-filter', {
-    mode: "range",
-    dateFormat: "Y-m-d",
-  });
-  
-  
-}
- // Adding an input event listener to detect changes in the input field
- const orderDateFilter = document.querySelector('.order-date-filter');
-    orderDateFilter.addEventListener('input', function() {
-      // Get the current value of the input field
-      const inputValue = orderDateFilter.value;
-      // Call your applyFilter function here with the input value
-      applyFilter('order_date', [inputValue]);
-    });
-  
-
-
-if (document.querySelector('.due-date-filter')) {
-  flatpickr('.due-date-filter', {
-    mode: "range",
-    dateFormat: "Y-m-d",
-  });
-  
-  
-}
- // Adding an input event listener to detect changes in the input field
- const dueDateFilter = document.querySelector('.due-date-filter');
- dueDateFilter.addEventListener('input', function() {
-      // Get the current value of the input field
-      const inputValue = dueDateFilter.value;
-      // Call your applyFilter function here with the input value
-      applyFilter('due_date', [inputValue]);
-    });
-  
-
 // Check URL parameters on page load and update search and filter selections
 window.addEventListener('DOMContentLoaded', function() {
-  const filterNames = ['vendor', 'location', 'status', 'order_date','due_date'];
+  const filterNames = ['vendor', 'location', 'status'];
   filterNames.forEach(filterName => {
     const filterValue = new URLSearchParams(window.location.search).get(filterName);
     
     if (filterValue) {
       let displayedValue = filterValue; // Default displayed value is the filter value itself
-
-
-      if (filterName === 'order_date') {
-        // Also update the date range input field if needed
-        document.getElementById('order-date-filter').value = filterValue;
-      } 
       
-      else if (filterName === 'due_date') {
-        // Also update the date range input field if needed
-        document.getElementById('due-date-filter').value = filterValue;
-      } 
-      
-      
-      else if (filterValue.length > 9) {
+      if (filterValue.length > 9) {
         // Truncate the filter value if it's longer than 5 characters
         displayedValue = filterValue.substring(0, 9) + '..';
         // Update the dropdown element with the displayed value
@@ -318,21 +259,11 @@ window.addEventListener('DOMContentLoaded', function() {
   function clearAllFilters() {
   const currentUrl = new URL(window.location.href);
   const queryParams = new URLSearchParams(currentUrl.search);
-  const filterNames = ['vendor', 'location', 'status', 'order_date','due_date']; // Add dateRange to the filterNames array
+  const filterNames = ['vendor', 'location', 'status']; // Add dateRange to the filterNames array
 
   filterNames.forEach(filterName => {
     queryParams.delete(filterName);
-
-    if (filterName === 'order_date') {
-      document.getElementById('order-date-filter').value = "";
-    }
-    else if (filterName === 'due_date') {
-      document.getElementById('due-date-filter').value = "";
-    }
-
-    else{
-      document.getElementById(`${filterName}Dropdown`).textContent = filterName;
-    }
+    document.getElementById(`${filterName}Dropdown`).textContent = filterName;
    
     
   });
@@ -340,43 +271,6 @@ window.addEventListener('DOMContentLoaded', function() {
   window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
   window.location.reload(); // Reload the page after clearing all filters
 }
-
-
- // Check if the datetimepicker element exists
- if (document.querySelector('.due-date-filter')) {
-  // Get the default value for the datetime picker
-  const defaultDateValue = document.getElementById("due-date-filter").value;
-
-  // Convert the default value to a Date object (if available)
-  const defaultDate = defaultDateValue ? new Date(defaultDateValue) : '';
-  // Create the flatpickr date-time picker and set the default date to the default value or current date
-  flatpickr('.due-date-filter', {
-    allowInput: false,
-    defaultDate: defaultDate,
-    dateFormat: "Y-m-d" 
-  });
- }
-
-  // Check if the datetimepicker element exists
-  if (document.querySelector('.order-date-filter')) {
-  // Get the default value for the datetime picker
-  const defaultDateValue = document.getElementById("order-date-filter").value;
-
-  // Convert the default value to a Date object (if available)
-  const defaultDate = defaultDateValue ? new Date(defaultDateValue) : '';
-
-  // Create the flatpickr date-time picker and set the default date to the default value or current date
-  flatpickr('.order-date-filter', {
-    allowInput: false,
-    defaultDate: defaultDate,
-    dateFormat: "Y-m-d"  
-  });
- }
-
-
-
-
-
 
 var searchUrl = window.location.href;
 
@@ -389,8 +283,7 @@ var columnsConfig1 = [
     { fieldName: 'vendor_id' },
     { fieldName: 'inventory_location_id' },
     { fieldName: 'total_amount' },
-    { fieldName: 'order_date' },
-    { fieldName: 'due_date' },
+    { fieldName: 'created_at' },
     {
       fieldName: 'status',
       type: 'status',
@@ -439,7 +332,7 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
             }).then(function (data) {
                 // Parse the received data
                 const responseData = data.data;
-
+                console.log(responseData)
                 if (responseData.length > 0) {
                 // Format the data for DataTable consumption
                   var formattedData = {
@@ -460,7 +353,7 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
                               {
                                   cellContent = generateActionButtons(item, columnConfig);
                               }
-                              else if (columnConfig.fieldName === 'due_date' || columnConfig.fieldName === 'order_date') {
+                              else if (columnConfig.fieldName === 'created_at') {
                                   // Convert date fields from "DD/MM/YYYY" to "dd.mm.yyyy" format
                                   cellContent = formatDate(cellContent);
                               }

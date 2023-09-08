@@ -100,6 +100,7 @@ class Category(models.Model):
         return self.name
 
 class Item(models.Model):
+    vendor_id = models.ForeignKey(Vendor, on_delete=models.CASCADE, null=True ,verbose_name="Vendor")
     category_id = models.ForeignKey(Category, on_delete=models.CASCADE)
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     item_name = models.CharField(max_length=50)

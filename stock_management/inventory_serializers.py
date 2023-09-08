@@ -30,6 +30,10 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_fullwidth_input.html'
         },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Address is required.",
+        },
         
     )
     
@@ -62,6 +66,10 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_input.html'
         },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Post Code is required.",
+        },
         validators=[validate_uk_postcode] 
     )
     description = serializers.CharField(
@@ -70,7 +78,7 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
         style={'base_template': 'rich_textarea.html'},
         error_messages={
             "required": "This field is required.",
-            "blank": "description is required.",
+            "blank": "Description is required.",
         },
         validators=[validate_description],
     )

@@ -66,6 +66,35 @@ def validate_description(value):
 
     return value
 
+def action_description(value):
+    # Custom validation for the message field to treat <p><br></p> as blank
+    soup = BeautifulSoup(value, 'html.parser')
+    cleaned_comment = soup.get_text().strip()
+
+    # Check if the cleaned comment consists only of whitespace characters
+    if not cleaned_comment:
+        raise serializers.ValidationError("Action is required.")
+
+    if all(char.isspace() for char in cleaned_comment):
+        raise serializers.ValidationError("Action cannot consist of only spaces and tabs.")
+
+    return value
+
+def validate_rectification_description(value):
+    # Custom validation for the message field to treat <p><br></p> as blank
+    soup = BeautifulSoup(value, 'html.parser')
+    cleaned_comment = soup.get_text().strip()
+
+    # Check if the cleaned comment consists only of whitespace characters
+    if not cleaned_comment:
+        raise serializers.ValidationError("Rectification description is required.")
+
+    if all(char.isspace() for char in cleaned_comment):
+        raise serializers.ValidationError("Rectification description cannot consist of only spaces and tabs.")
+
+    return value
+
+
 # validate the remarks field in stock/ vendor
 def validate_remarks(value):
    soup = BeautifulSoup(value, 'html.parser')

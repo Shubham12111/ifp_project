@@ -73,16 +73,7 @@
                                 <input type="number" class="form-control" id="po_number" value="8795646525451" name="po_number" >
                             </div>
                         </div>
-                        <div class="row mb-4">
-                           <div class="col-md-6">
-                                <label for="order_date" class="form-label">Date <span class="text-danger">*</span></label>
-                                <input type="text"  class="form-control po_date" id="date" name="order_date" placeholder="YYYY/MM/DD">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="due_date" class="form-label">Due Date <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control po_due_date" id="due_date" name="due_date" placeholder="YYYY/MM/DD">
-                            </div>
-                        </div> 
+                        
                     </div>
                 </div>
 
@@ -102,7 +93,7 @@
                                     
                                 </tbody>
                             </table>
-                            <div class="error-message text-danger text-sm mb-2" id="rowError"></div>
+                            <div class="error-message help-block mt-2 text-danger text-sm mb-2" id="rowError"></div>
                             <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
                         </div>
                     </div>
@@ -152,7 +143,7 @@
                             <div class="col-3 text-end mb-2">
                                 <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()">
                             </div>
-                            <div class="error-message text-danger text-sm text-end mb-2" id="discountError"></div>
+                            <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
                            
                 
                             <div class="col-6 mb-1 text-end">
@@ -160,15 +151,18 @@
                             </div>
                             <div class="col-2 text-end mb-2"></div>
                             <div class="col-1 text-end mb-2"></div>
-                            <div class="col-3 mb-1 ">
-                                <input type="number" class="form-control tax-input" id="tax" name="tax" min="0" placeholder="00.00" onchange="calculateTotal()">
+                            {% if tax_rate.tax_rate  %}
+                            <div class="col-3 mb-1 tax-input text-end" id="tax">
+                                {{tax_rate.tax_rate}}
+                               
                             </div>
+                            {% endif %}
                             <div class="col-6 mb-1 text-end">
                                 <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
                             </div>
                             <div class="col-6 mb-1">
                                 <p class="font-weight-bolder mb-0 text-end grand-total-value">£00.00</p>
-                                <div class="error-message text-danger text-sm" id="grandTotalError"></div>
+                                <div class="error-message help-block mt-2 text-danger text-sm" id="grandTotalError"></div>
 
                             </div>
                         </div>
@@ -203,6 +197,9 @@
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
 <script>
+var item_list ;
+
+
 
 // Get a reference to the input element
 var invoiceInput = document.getElementById('po_number');
@@ -222,7 +219,25 @@ const taxInput = document.querySelector('.tax-input');
 const grandTotalValue = document.querySelector('.grand-total-value');
 const itemTableBody = document.getElementById('itemTableBody');
 
+function getUnselectedOptions() {
+    const selectedOptions = new Set();
+    const allDropdowns = document.querySelectorAll('.item-dropdown');
+    
+    allDropdowns.forEach(dropdown => {
+        const selectedOption = dropdown.options[dropdown.selectedIndex];
+        selectedOptions.add(selectedOption.value);
+    });
 
+    let unselectedOptionsHtml = '';
+
+    {% for item in item_list %}
+        if (!selectedOptions.has('{{ item.id }}')) {
+            unselectedOptionsHtml += `<option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>`;
+        }
+    {% endfor %}
+
+    return unselectedOptionsHtml;
+}
 
 // Assume you have retrieved existingPurchaseOrderData from the backend
 if (document.getElementById('existingPurchaseOrderData')) {
@@ -236,9 +251,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
         document.getElementById('vendor-choices').value = safeGetProperty(existingPurchaseOrderData, 'vendor_id');
         document.getElementById('inventory_location-choices').value = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
         document.getElementById('po_number').value = safeGetProperty(existingPurchaseOrderData, 'po_number');
-        document.querySelector('.po_date').value = safeGetProperty(existingPurchaseOrderData, 'order_date');
-        document.querySelector('.po_due_date').value = safeGetProperty(existingPurchaseOrderData, 'due_date');
-        document.querySelector('.tax-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'tax')).toFixed(2);
+       
         document.querySelector('.subtotal-value').textContent = `£${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
         document.querySelector('.discount-input').value = parseFloat(safeGetProperty(existingPurchaseOrderData, 'discount')).toFixed(2);
         if ("{{ purchase_order.status }}" === "sent_for_approval") {
@@ -277,7 +290,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
 
     itemTableBody.innerHTML = ''; // Clear existing rows
     existingPurchaseOrderData.items.forEach(item => {
-        console.log(item)
+        
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
         <td>
@@ -285,8 +298,8 @@ if (document.getElementById('existingPurchaseOrderData')) {
             ${getUnselectedOptions(item.item_id)}
             </select>
         </td>
-        <td class="text-center"><input type="number" class="form-control item-price" value="${item.price}" min="0"></td>
-        <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0"></td>
+        <td class="text-center item-price">${item.price}</td>
+        <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)"></td>
         <td class="text-center total">${item.row_total}</td>
         <td class="text-center">
             <a class="remove-row-btn" onclick="removeRow(this)">
@@ -315,29 +328,45 @@ if (document.getElementById('existingPurchaseOrderData')) {
     }
 }
     
-    addItemBtn.addEventListener('click', () => {
-        const unselectedOptionsHtml = getUnselectedOptions();
-            if (unselectedOptionsHtml === '') {
-                const rowErrorElement = document.getElementById('rowError');
-                if (rowErrorElement) {
-                    rowErrorElement.textContent = "All items have been selected. No more items left to add.";
-                    // Clear the error message after 1 second
-                    setTimeout(() => {
-                        rowErrorElement.textContent = "";
-                    }, 3000); // 1000 milliseconds = 1 second
-                        }
-                return; // Exit the function to prevent adding new rows
-            }
+let rowsAdded = 0; // Initialize a counter for added rows
+
+addItemBtn.addEventListener('click', () => {
+    const unselectedOptionsHtml = getUnselectedOptionsFromItemList(item_list);
+
+    if (unselectedOptionsHtml === '') {
+        const rowErrorElement = document.getElementById('rowError');
+        if (rowErrorElement) {
+            rowErrorElement.textContent = "All items have been selected. No more items left to add.";
+            // Clear the error message after 1 second
+            setTimeout(() => {
+                rowErrorElement.textContent = "";
+            }, 10000); // 1000 milliseconds = 1 second
+        }
+        return; // Exit the function to prevent adding new rows
+    }
+
+    if (rowsAdded >= item_list.length) {
+        const rowErrorElement = document.getElementById('rowError');
+        if (rowErrorElement) {
+            rowErrorElement.textContent = "You can't add more rows. All items have been added.";
+            // Clear the error message after 1 second
+            setTimeout(() => {
+                rowErrorElement.textContent = "";
+            }, 10000); // 1000 milliseconds = 1 second
+        }
+        return; // Exit the function to prevent adding new rows
+        
+    }
     const newRow = document.createElement('tr');
     newRow.innerHTML = `
         <td>
             <select id="itemSelect" class="form-select item-dropdown" onchange="updatePrice(this)">
-                    <option value="">Select Item</option>
-                    ${unselectedOptionsHtml}
-                </select>
+                <option value="">Select Item</option>
+                ${unselectedOptionsHtml}
+            </select>
         </td>
-        <td class="text-center"><input type="number" class="form-control item-price" value="0" min="0"></td>
-        <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0"></td>
+        <td class="text-center item-price">00.00</td>
+        <td class="text-center"><input type="number" class="form-control quantity-input" value="1" min="0" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)"></td>
         <td class="text-center total">00.00</td>
         <td class="text-center">
             <a class="remove-row-btn" onclick="removeRow(this)">
@@ -346,31 +375,96 @@ if (document.getElementById('existingPurchaseOrderData')) {
         </td>
     `;
 
-
-itemTableBody.appendChild(newRow);
-setInitialPrice(newRow);
+    itemTableBody.appendChild(newRow);
+    setInitialPrice(newRow);
+    
+    rowsAdded++; // Increment the counter for added rows
 });
 
-function getUnselectedOptions() {
-    const selectedOptions = new Set();
-    const allDropdowns = document.querySelectorAll('.item-dropdown');
-    
-    allDropdowns.forEach(dropdown => {
-        const selectedOption = dropdown.options[dropdown.selectedIndex];
-        selectedOptions.add(selectedOption.value);
-    });
 
+
+// Initialize Choices.js
+if (document.getElementById('vendor-choices')) {
+  var element = document.getElementById('vendor-choices');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchFields: ['label'],
+    searchPlaceholderValue: "Search Vendor", 
+    fuseOptions: {
+      includeScore: true,
+      includeMatches: true,
+      threshold: 0, // Set to 0 for exact match
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 1
+    }
+  });
+ }
+
+// Function to populate vendor data in the card
+async function populateVendorData(selectedVendorId) {
+    try {
+        const response = await fetch(`/purchase_order/get_vendor_data/?id=${selectedVendorId}`);
+        const selectedVendorData = await response.json();
+
+        const vendor_data = selectedVendorData.vendor_data
+        item_list = selectedVendorData.item_list
+        // Populate vevendor data in the card
+        const cardBody = document.querySelector('#vendor-card .card-body');
+        cardBody.style.display = 'block';  // Show the card body
+        cardBody.innerHTML = `
+        <h6 class="text-sm mb-1">${vendor_data.first_name} ${vendor_data.last_name}</h6>
+        <p class="text-sm mb-1">${vendor_data.phone_number}</p>
+        <p class="text-sm mb-1">${vendor_data.email}</p>
+        `;
+    } catch (error) {
+        console.error('Error fetching vendor data:', error);
+    }
+}
+
+// Listen for change event on the dropdown
+element.addEventListener('change', async function(event) {
+    const selectedVendorId = event.detail.value;
+    populateVendorData(selectedVendorId);
+    if (selectedVendorId) {
+        // Enable the addItemBtn when a vendor is selected
+        addItemBtn.disabled = false;
+    } else {
+        // Disable the addItemBtn when no vendor is selected
+        addItemBtn.disabled = true;
+    }
+});
+function getUnselectedOptionsFromItemList(itemList) {
+    // Generate HTML options based on your itemList
     let unselectedOptionsHtml = '';
 
-    {% for item in item_list %}
-        if (!selectedOptions.has('{{ item.id }}')) {
-            unselectedOptionsHtml += `<option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>`;
-        }
-    {% endfor %}
+    for (const item of itemList) {
+        unselectedOptionsHtml += `<option value="${item.id}" data-price="${item.price}">${item.item_name}</option>`;
+    }
 
     return unselectedOptionsHtml;
 }
 
+
+
+itemTableBody.addEventListener('change', (event) => {
+    if (event.target.classList.contains('item-price') || event.target.classList.contains('quantity-input')) {
+        recalculateTotal(event.target.closest('tr'));
+    }
+    
+   
+});
 
             
 function setInitialPrice(row) {
@@ -382,32 +476,50 @@ function setInitialPrice(row) {
     }
     
     const priceInput = row.querySelector('.item-price');
-    priceInput.value = selectedOption.dataset.price;
+    priceInput.textContent = selectedOption.dataset.price;
     recalculateTotal(row);
 }
+let selectedValueToBeRemoved = null; // Variable to store the selected value to be removed
+
 function updatePrice(selectElement) {
-const selectedOption = selectElement.options[selectElement.selectedIndex];
-const row = selectElement.closest('tr');
-const priceInput = row.querySelector('.item-price');
-priceInput.value = selectedOption.dataset.price;
-recalculateTotal(row);
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const row = selectElement.closest('tr');
+    const priceInput = row.querySelector('.item-price');
+    priceInput.textContent = selectedOption.dataset.price;
+
+    const selectedValue = selectedOption.value;
     
-}
-       
-
-
-itemTableBody.addEventListener('change', (event) => {
-    if (event.target.classList.contains('item-price') || event.target.classList.contains('quantity-input')) {
-        recalculateTotal(event.target.closest('tr'));
+    if (selectedValueToBeRemoved !== null) {
+        // Remove the item from the item_list with a matching id
+        item_list = item_list.filter(item => item.id.toString() !== selectedValueToBeRemoved);
+        selectedValueToBeRemoved = null; // Reset the selectedValueToBeRemoved
     }
-});
+
+    // Check if item_list is empty
+    if (item_list.length === 0) {
+        const tableBody = document.getElementById('itemTableBody');
+        const rows = tableBody.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            const selectedOption = row.querySelector('select').value;
+            if (!selectedOption) {
+                // Remove the row if no option is selected
+                tableBody.removeChild(row);
+            }
+        });
+    }
+   
+    // Update the selectedValueToBeRemoved with the current selected value
+    selectedValueToBeRemoved = selectedValue;
+    recalculateTotal(row);
+  
+}
 
 function removeRow(buttonElement) {
     const row = buttonElement.closest('tr');
     row.remove();
-    calculateTotal();
+    
 }
-
 function recalculateTotal(row) {
     const dropdown = row.querySelector('.item-dropdown');
     const selectedOption = dropdown.options[dropdown.selectedIndex];
@@ -420,34 +532,33 @@ function recalculateTotal(row) {
     const quantityInput = row.querySelector('.quantity-input');
     const totalCell = row.querySelector('.total');
 
-    const price = parseFloat(priceInput.value);
+    const price = parseFloat(priceInput.textContent);
     const quantity = parseFloat(quantityInput.value);
 
-    if (price >= 0 && quantity >= 0) {
+    if (!isNaN(price) && !isNaN(quantity) && price >= 0 && quantity >= 0) {
         const total = (price * quantity).toFixed(2);
-        totalCell.textContent = `${total}`;
+        totalCell.textContent = total;
         calculateTotal();
     } 
     else {
-        const rowErrorElement = document.getElementById('rowError');
+        const rowErrorElement = row.querySelector('.rowError');
         if (rowErrorElement) {
             rowErrorElement.textContent = "Negative values are not allowed. Please enter a valid positive value.";
 
-            // Clear the error message after 1 second
+            // Clear the error message after 3 seconds
             setTimeout(() => {
                 rowErrorElement.textContent = "";
-            }, 3000); // 1000 milliseconds = 1 second
+            }, 3000); // 3000 milliseconds = 3 seconds
         }
 
-        // Reset the input fields to a valid state
-        priceInput.value = price;
-        quantityInput.value = quantity
+        
+        quantityInput.value = '';
 
         // Update the total cell to show the reset value
         totalCell.textContent = '00.00';
-
     }
 }
+
 
 
 
@@ -465,7 +576,7 @@ function calculateTotal() {
     const discount = parseFloat(discountInput.value) || 0; // Use 0 if parsing fails
 
     const taxInput = document.getElementById('tax');
-    const tax = parseFloat(taxInput.value) || 0; // Use 0 if parsing fails
+    const tax = parseFloat(taxInput.textContent) || 0; // Use 0 if parsing fails
 
     // Clear previous error messages
     document.getElementById('discountError').textContent = '';
@@ -480,7 +591,7 @@ function calculateTotal() {
             document.getElementById('discountError').textContent = "Discount is invalid or greater than subtotal.";
             const discount = 0
             discountInput.value = 0.00
-            taxInput.value= 0.00
+           
              // Calculate amounts
             const discountedSubtotal = subtotal - discount;
             const taxAmount = discountedSubtotal * (tax / 100); // Calculate tax as a percentage of discountedSubtotal
@@ -526,7 +637,7 @@ function calculateTotal() {
         const taxInput = document.getElementById('tax');
         const grandTotal= 0
         discountInput.value = 0.00
-        taxInput.value= 0.00
+        
         
         // Update display values
         grandTotalValue.textContent =  0.00;
@@ -550,88 +661,10 @@ window.addEventListener('load', function() {
 const selectElement = document.getElementById('itemSelect');
 updatePrice(selectElement);
 });
-  // Check if the datetimepicker element exists
-  if (document.querySelector('.po_date')) {
-    // Get the default value for the datetime picker
-    const defaultDateValue = 'po_date';
-
-    // Convert the default value to a Date object (if available)
-    const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
-
-    // Create the flatpickr date-time picker and set the default date to the default value or current date
-    flatpickr('.po_date', {
-      allowInput: false,
-      defaultDate: defaultDate
-    });
-  }
-
-  if (document.querySelector('.po_due_date')) {
-    // Get the default value for the datetime picker
-    const defaultDateValue = 'po_due_date';
-
-    // Convert the default value to a Date object (if available)
-    const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
-
-    // Create the flatpickr date-time picker and set the default date to the default value or current date
-    flatpickr('.po_due_date', {
-      allowInput: false,
-      defaultDate: defaultDate
-    });
-  }
+ 
 
 
-// Initialize Choices.js
-if (document.getElementById('vendor-choices')) {
-  var element = document.getElementById('vendor-choices');
-  const vendor_choices = new Choices(element, {
-    default: false,
-    items: [],
-    choices: [],
-    renderChoiceLimit: 1,
-    searchEnabled: true,
-    searchChoices: true,
-    searchFloor: 1,
-    searchResultLimit: 10,
-    resetScrollPosition: true,
-    shouldSort: true,
-    shouldSortItems: false,
-    searchFields: ['label'],
-    searchPlaceholderValue: "Search Vendor", 
-    fuseOptions: {
-      includeScore: true,
-      includeMatches: true,
-      threshold: 0, // Set to 0 for exact match
-      location: 0,
-      distance: 100,
-      maxPatternLength: 32,
-      minMatchCharLength: 1
-    }
-  });
- }
 
-// Function to populate vendor data in the card
-async function populateVendorData(selectedVendorId) {
-    try {
-        const response = await fetch(`/purchase_order/get_vendor_data/?id=${selectedVendorId}`);
-        const selectedVendorData = await response.json();
-        // Populate vendor data in the card
-        const cardBody = document.querySelector('#vendor-card .card-body');
-        cardBody.style.display = 'block';  // Show the card body
-        cardBody.innerHTML = `
-        <h6 class="text-sm mb-1">${selectedVendorData.data.first_name} ${selectedVendorData.data.last_name}</h6>
-        <p class="text-sm mb-1">+${selectedVendorData.data.phone_number}</p>
-        <p class="text-sm mb-1">${selectedVendorData.data.email}</p>
-        `;
-    } catch (error) {
-        console.error('Error fetching vendor data:', error);
-    }
-}
-
-// Listen for change event on the dropdown
-element.addEventListener('change', async function(event) {
-    const selectedVendorId = event.detail.value;
-    populateVendorData(selectedVendorId);
-});
 
 if (document.getElementById('inventory_location-choices')) {
   var element = document.getElementById('inventory_location-choices');
@@ -749,7 +782,7 @@ function submitForm(status) {
     rows.forEach(row => {
         const selectedOption = row.querySelector('.item-dropdown option:checked');
         const itemId = selectedOption.value;
-        const itemPrice = parseFloat(row.querySelector('.item-price').value);
+        const itemPrice = parseFloat(row.querySelector('.item-price').textContent);
         const quantity = parseFloat(row.querySelector('.quantity-input').value);
         const rowTotal = parseFloat(row.querySelector('.total').textContent); // Get the row total
         
@@ -764,7 +797,7 @@ function submitForm(status) {
                     // Clear the error message after 1 second
                     setTimeout(() => {
                         rowErrorElement.textContent = "";
-                    }, 6000); // 1000 milliseconds = 1 second
+                    }, 10000); // 1000 milliseconds = 1 second
                 }
             return; // Stop further processing
         }
@@ -789,7 +822,7 @@ function submitForm(status) {
             // Clear the error message after 1 second
             setTimeout(() => {
                     rowErrorElement.textContent = "";
-                }, 3000); // 1000 milliseconds = 1 second
+                }, 10000); // 1000 milliseconds = 1 second
         }
     }
 

@@ -5,6 +5,19 @@ from django.conf import settings
 # Set up the S3 client with your AWS credentials and region
 s3_client = boto3.client('s3', region_name='eu-west-2')
 
+# Function to upload a file to Amazon S3
+def upload_signature_to_s3(file_name, file_path, s3_folder=''):
+    try:
+        s3_key = f"{s3_folder}/{file_name}"
+        s3_client.upload_file(file_path, settings.AWS_BUCKET_NAME, s3_key)
+        return True
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        return False
+
+
+
+
 def upload_file_to_s3(unique_filename, file_path, s3_folder=''):
     """
     Uploads a file to Amazon S3.
@@ -18,6 +31,7 @@ def upload_file_to_s3(unique_filename, file_path, s3_folder=''):
         str: The URL of the uploaded file on S3.
     """
     # Upload the file to S3
+    
     s3_key = f"{s3_folder}/{unique_filename}"
     s3_client.upload_fileobj(file_path, settings.AWS_BUCKET_NAME, s3_key)
 
