@@ -3,8 +3,6 @@
 {% load rest_framework %}
 {% block title %}{% if is_edit  %}Edit {% else %} Add {% endif %} Conversation {{ block.super }}{% endblock %}
 
-{% block title %}{% if is_edit %}Edit {% else %} Add {% endif %} Conversation {{ block.super }}{% endblock %}
-
 {% block content %}
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
