@@ -18,8 +18,8 @@
 .defect-column-desp {
   padding: 10px;
   margin-top: 1px;
-  
 }
+
 
 </style>
 {% endblock %}
@@ -144,7 +144,7 @@
               <div id="defects-container">
                 <!-- Defects will be displayed here -->
               </div>
-              <div class="row">
+              <div class="row mt-4">
                 <div class="col-12">
                   <label>Comments <span class="text-sm text-danger">*</span></label>
                   <textarea name="comments" class="form-control" required></textarea>
@@ -168,9 +168,9 @@
       </div>
         
         <div class="modal-footer">
-          
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button id="clear-button" class="btn btn-secondary">Clear Signature</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          
           <button type="button" id="submit-darft-button" class="btn bg-gradient-primary">Save As Draft</button>
           <button type="button" id="submit-button" class="btn bg-gradient-primary">Submit</button>
         </div>

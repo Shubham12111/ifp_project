@@ -68,7 +68,7 @@
                 <br>
                 <h4 class='section-header text-center' style="text-align: center;">{{ requirement_instance.customer_id.company_name|title}} Survey Form <h5>
                 <br>
-                <table class="table table-striped " id="fire_risk_assessment_report">
+                <table class="table table-striped  text-sm " id="fire_risk_assessment_report">
                     <thead> <!-- Use thead for table headers -->
                         <tr>
                             <th>Client:</th>
@@ -80,14 +80,23 @@
                         </tr>
                     </thead>
                     <tbody> <!-- Use tbody for table body -->
-                        {% if requirement_images %}
+                        {% if requirement_instance %}
+                            <tr>
+                                <th>FRA Action </th>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.action }}</td>
+                            </tr>
+                            <tr>
+                                <th>FRA Description </th>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.description }}</td>
+                            </tr>
+
                             <tr>
                                 <th>Photos of FRA</th>
                                 <td>
                                     <div class="image-container">
                                         {% for requirement_image in requirement_images %}
                                         <div class="col-4 mb-3">
-                                            <img src="{{ requirement_image.document_path.url }}" alt="Requirememt Image" width="100%" class="img-thumbnail">
+                                            <img src="{{ requirement_image.document_path.url }}" alt="Requirememt Image" width="90%" class="img-thumbnail">
                                         </div>
                                         {% endfor %}
                                     </div>
@@ -101,37 +110,37 @@
 
                     
                 <table class="table table-striped " id="fire_risk_assessment_report">
-                 
-                    <tr class=" text-sm">
-                        <th>Action</th>
-                        <td class="text-wrap  text-sm">{{ defect.action }}</td>
-                    </tr>
-                    <tr>
-                        <th>Description of Defect</th>
-                        <td class="text-wrap  text-sm">{{ defect.description }}</td>
-                    </tr>
-                    <tr>
-                        <th>Rectification of Defect</th>
-                        <td class="text-wrap text-sm">{{ defect.rectification_description }}</td>
-                    </tr>
-                    
-                    {% if requirement_defect_images %}
-                        <t r>
-                            <th>Photos of Defect</th>
-                            <td>
-                                <div class="image-container">
-                                    {% for requirement_defect_image in requirement_defect_images %}
-                                        {% if requirement_defect_image.defect_id.id == defect.id %}
-                                            <div class="col-4 mb-3">
-                                                <img src="{{ requirement_defect_image.document_path.url }}" alt="Defect Image" width="100%">
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                            </td>
+                    <tbody> <!-- Use tbody for table body -->
+                        <tr class=" text-sm">
+                            <th>Action</th>
+                            <td class="text-wrap  text-sm">{{ defect.action }}</td>
                         </tr>
-                    {% endif %}
-
+                        <tr>
+                            <th>Description of Defect</th>
+                            <td class="text-wrap  text-sm">{{ defect.description }}</td>
+                        </tr>
+                        <tr>
+                            <th>Rectification of Defect</th>
+                            <td class="text-wrap text-sm">{{ defect.rectification_description }}</td>
+                        </tr>
+                        
+                        {% if requirement_defect_images %}
+                            <tr>
+                                <th>Photos of Defect</th>
+                                <td>
+                                    <div class="image-container">
+                                        {% for requirement_defect_image in requirement_defect_images %}
+                                            {% if requirement_defect_image.defect_id.id == defect.id %}
+                                                <div class="col-4 mb-3">
+                                                    <img src="{{ requirement_defect_image.document_path.url }}" alt="Defect Image" width="900%" class="img-thumbnail">
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                        <tbody>
                 </table>
                 {% endfor %}
                 <br><br><br>
