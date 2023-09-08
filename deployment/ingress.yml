@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  namespace: infinity-fire-systems-namespace-dev
-  name: infinity-fire-systems-ingress-dev
+  namespace: infinity-fire-systems-namespace-uat
+  name: infinity-fire-systems-ingress-uat
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
