@@ -50,5 +50,30 @@
 <script src="{% static 'assets/js/custom_country.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+{% if requirement_instance %}
+<script>
+  // Get the input element with the name attribute "RBNO"
+  var rbnoInput = document.querySelector('input[name="RBNO"]');
+  // Check if the input value is not empty
+  if (rbnoInput.value) {
+    // If it's not empty, disable the input
+    rbnoInput.disabled = true;
+  } else {
+    // If it's empty, enable the input
+    rbnoInput.disabled = false;
+  }
+  // Get the input element with the name attribute "RBNO"
+  var UPRNInput = document.querySelector('input[name="UPRN"]');
+  // Check if the input value is not empty
+  if (UPRNInput.value) {
+    // If it's not empty, disable the input
+    UPRNInput.disabled = true;
+  } else {
+    // If it's empty, enable the input
+    UPRNInput.disabled = false;
+  }
+
+</script>
+{% endif %}
 
 {% endblock %}

@@ -78,7 +78,8 @@
                         <div class="row mb-4">
                            <div class="col-md-12">
                                 <label for="po_number" class="form-label">PO Number <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="po_number" value="8795646525451" name="po_number" >
+                                <input  class="form-control" id="po_number" value="{{new_po_number}}" 
+                                name="po_number"  disabled> 
                             </div>
                         </div>
                         
@@ -209,16 +210,6 @@ var item_list ;
 
 
 
-// Get a reference to the input element
-var invoiceInput = document.getElementById('po_number');
-
-// Generate a unique number using the current timestamp
-var uniqueNumber = Date.now();
-
-// Set the generated unique number as the value of the input
-invoiceInput.value = uniqueNumber;
-
-
 const addItemBtn = document.getElementById('addItemBtn');
 addItemBtn.disabled = true;
 
@@ -245,7 +236,7 @@ function getUnselectedOptions() {
             unselectedOptionsHtml += `<option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>`;
         }
     {% endfor %}
-
+    
     return unselectedOptionsHtml;
 }
 
@@ -339,7 +330,6 @@ if (document.getElementById('existingPurchaseOrderData')) {
 let rowsAdded = 0; // Initialize a counter for added rows
 
 addItemBtn.addEventListener('click', () => {
-     console.log(rowsAdded)
     const unselectedOptionsHtml = getUnselectedOptionsFromItemList(item_list);
 
     if (unselectedOptionsHtml === '') {
@@ -427,7 +417,7 @@ async function populateVendorData(selectedVendorId) {
     try {
         const response = await fetch(`/purchase_order/get_vendor_data/?id=${selectedVendorId}`);
         const selectedVendorData = await response.json();
-
+        
         const vendor_data = selectedVendorData.vendor_data
         item_list = selectedVendorData.item_list
         // Populate vevendor data in the card
@@ -509,18 +499,20 @@ function updatePrice(selectElement) {
         if (otherRow !== row) {
             const otherSelectElement = otherRow.querySelector('select');
             if (otherSelectElement) {
-                // Remove the selected option from the other row's select element
-                const optionToRemove = otherSelectElement.querySelector(`option[value="${selectedValue}"]`);
-                if (optionToRemove) {
-                    otherSelectElement.removeChild(optionToRemove);
+                const selectedOptions = Array.from(otherSelectElement.selectedOptions).map(option => option.value);
+                if (selectedOptions.includes(selectedValue)) {
+                    // Remove the entire row if the selected option is already selected in another row
+                    tableBody.removeChild(otherRow);
                 }
             }
         }
     });
 
     // Recalculate the total
+    rowsAdded--; // Increment the counter for added rows
     recalculateTotal(row);
 }
+
 
 
 

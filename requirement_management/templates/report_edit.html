@@ -170,20 +170,29 @@
         <div class="card-body mt-0">
             <table class="table text-sm ">
                 <tbody>
-                    <tr>
-                        <td><strong>Report Comments</strong></td>
-                        <td>{{ report_instance.comments }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if report_instance.comments %}
-                    <tr>
-                        <td><strong>Signature</strong></td>
-                        <td><img src="{{report_instance.signature_path}}"></td>
-                    </tr>
-                    {% endif %}
+                    <form id="selectForm" method="POST" onsubmit="showLoader()">
+                        {% csrf_token %}
+                        <tr>
+                            <td class="col-2"><strong>Report Comments</strong></td>
+                            <td><textarea name="comments" class="form-control" value="{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}" required>{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}
+                            </textarea>
+                            </td>
+                        </tr>
                     
+                        <tr>
+                            <td><strong>Signature</strong></td>
+                            <td><img src="{{report_instance.signature_path}}"></td>
+                        </tr>
+                    </form>
                 </tbody>
             </table>
+            <button  id="submit-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Submit</button>
+            {% if  report_instance.status == 'draft' %}
+            <button  id="submit-darft-button"  class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save As Draft</button>
+            {% endif  %}
+            {% include 'components/loader.html' %}
+        
+          
         </div>
     </div>
 </div>    
@@ -196,5 +205,71 @@
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script>
 
+function showLoader() {
+    loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+}
+
+function hideLoader() {
+    loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+}
+// Assuming you have a button to submit the form
+
+const submitButton = document.getElementById("submit-button");
+const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
+
+{% if  report_instance.status == 'draft' %}
+const draftButton = document.getElementById("submit-darft-button");
+draftButton.addEventListener("click", function () {
+    // Set the status to "draft"
+    const formData = new FormData(document.getElementById("selectForm"));
+    formData.append("status", "draft"); // Add status field with value "draft"
+    showLoader(); // Show the loader overlay before submitting
+    saveFormData(formData);
+});
+{% endif %}
+submitButton.addEventListener("click", function () {
+    // Set the status to "submit"
+    const formData = new FormData(document.getElementById("selectForm"));
+    formData.append("status", "submit"); // Add status field with value "submit"
+    showLoader(); // Show the loader overlay before submitting
+    saveFormData(formData);
+});
+
+function showLoader() {
+    loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+}
+
+function hideLoader() {
+    loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+}
+
+function saveFormData(formData) {
+    // Define the URL for saving the data
+    const saveUrl = "{% url 'requirement_report_edit' customer_id requirement_instance.id report_instance.id %}";
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    // Send the data to the backend using fetch
+    fetch(saveUrl, {
+        method: "POST",
+        body: formData,
+        headers: {
+            "X-CSRFToken": csrfToken // Include the CSRF token in the request headers
+        }
+    })
+        .then(data => {
+            // Hide the loader overlay after processing the response
+            hideLoader();
+            // Reload the page after processing the response
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Hide the loader overlay in case of an error
+            hideLoader();
+        });
+}
+
+
+</script>
 {% endblock %}
