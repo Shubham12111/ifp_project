@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && \
     apt-get install -y python3 python3-pip git&& \
     apt-get install -y  python3-dev default-libmysqlclient-dev && \
-    apt-get install -y build-essential pkg-config libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libffi-dev libjpeg-dev libopenjp2-7-dev && \
+    apt-get install -y build-essential pkg-config libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0 libffi-dev libjpeg-dev libopenjp2-7-dev wkhtmltopdf && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the working directory to /app
