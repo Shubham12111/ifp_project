@@ -31,7 +31,7 @@ def validate_file_size(value):
 
 # Validator for checking the supported file extensions
 file_extension_validator = FileExtensionValidator(
-    allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS,
+    allowed_extensions= ["png", "jpg", "jpeg","pdf"],
     message=('Unsupported file extension. Please upload a valid file.'),
 )
 

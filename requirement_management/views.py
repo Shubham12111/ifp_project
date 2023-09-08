@@ -16,6 +16,9 @@ import ast
 import os
 import pdfkit
 from django.template.loader import render_to_string
+from infinity_fire_solutions.email import *
+
+
 
 def get_customer_data(customer_id):
     customer_data = User.objects.filter(id=customer_id).first()
@@ -483,6 +486,13 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 report.pdf_path = f'requirement/{instance.id}/report/pdf/{unique_pdf_filename}'
                 report.save()
                 
+                # send email to QS
+                if instance.quantity_surveyor and instance.surveyor:
+                    context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
+
+                    email = Email()
+                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report")
+
                 
                 
             messages.success(request, "Congratulations! your requirement has been added successfully. ")

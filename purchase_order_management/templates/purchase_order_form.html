@@ -114,8 +114,8 @@
                         <textarea class="form-control notes" rows="6" name="notes" ></textarea>
                         <div class="form-group mt-4 ">
                             <label>Attach File</label>
-                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="images/*">
-                            <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png).</small>  
+                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="images/*, .pdf">
+                            <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png, pdf).</small>  
                             {% if presigned_url %}
                             <br><br>
                             
@@ -141,7 +141,7 @@
                             <div class="col-2 text-end mb-2"></div>
                             <div class="col-1 text-end mb-2"></div>
                             <div class="col-3 text-end mb-2">
-                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()">
+                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)">
                             </div>
                             <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
                            
@@ -184,7 +184,7 @@
                 
             </div>
         </div>
-      
+        {% include 'components/loader.html' %}
       </form>
  
 </div>
@@ -259,9 +259,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
                 if (notesValue)
                 {
                     document.querySelector('.notes').textContent = notesValue;
-                }   
-                
-                
+                }     
         }
         else
         {
@@ -350,6 +348,7 @@ addItemBtn.addEventListener('click', () => {
         if (rowErrorElement) {
             rowErrorElement.textContent = "You can't add more rows. All items have been added.";
             // Clear the error message after 1 second
+            hideLoader();
             setTimeout(() => {
                 rowErrorElement.textContent = "";
             }, 10000); // 1000 milliseconds = 1 second
@@ -488,32 +487,29 @@ function updatePrice(selectElement) {
     priceInput.textContent = selectedOption.dataset.price;
 
     const selectedValue = selectedOption.value;
-    
-    if (selectedValueToBeRemoved !== null) {
-        // Remove the item from the item_list with a matching id
-        item_list = item_list.filter(item => item.id.toString() !== selectedValueToBeRemoved);
-        selectedValueToBeRemoved = null; // Reset the selectedValueToBeRemoved
-    }
 
-    // Check if item_list is empty
-    if (item_list.length === 0) {
-        const tableBody = document.getElementById('itemTableBody');
-        const rows = tableBody.querySelectorAll('tr');
+    // Iterate through all rows
+    const tableBody = document.getElementById('itemTableBody');
+    const rows = tableBody.querySelectorAll('tr');
 
-        rows.forEach(row => {
-            const selectedOption = row.querySelector('select').value;
-            if (!selectedOption) {
-                // Remove the row if no option is selected
-                tableBody.removeChild(row);
+    rows.forEach(otherRow => {
+        if (otherRow !== row) {
+            const otherSelectElement = otherRow.querySelector('select');
+            if (otherSelectElement) {
+                // Remove the selected option from the other row's select element
+                const optionToRemove = otherSelectElement.querySelector(`option[value="${selectedValue}"]`);
+                if (optionToRemove) {
+                    otherSelectElement.removeChild(optionToRemove);
+                }
             }
-        });
-    }
-   
-    // Update the selectedValueToBeRemoved with the current selected value
-    selectedValueToBeRemoved = selectedValue;
+        }
+    });
+
+    // Recalculate the total
     recalculateTotal(row);
-  
 }
+
+
 
 function removeRow(buttonElement) {
     const row = buttonElement.closest('tr');
@@ -544,7 +540,7 @@ function recalculateTotal(row) {
         const rowErrorElement = row.querySelector('.rowError');
         if (rowErrorElement) {
             rowErrorElement.textContent = "Negative values are not allowed. Please enter a valid positive value.";
-
+            hideLoader();
             // Clear the error message after 3 seconds
             setTimeout(() => {
                 rowErrorElement.textContent = "";
@@ -717,7 +713,15 @@ element.addEventListener('change', async function(event) {
     populateInventoryLocationData(selectedInventoryLocationId);
 });
 
+const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
 
+function showLoader() {
+    loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+}
+
+function hideLoader() {
+    loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+}
 
 // Inside your JavaScript
 // Event listeners for the buttons
@@ -729,25 +733,23 @@ const submitBtnApproved = document.getElementById('submitBtnApproved');
 if (submitSaveAsDraftBtn)
 {
     submitSaveAsDraftBtn.addEventListener('click', function() {
+    showLoader(); // Show the loader overlay before submitting
     submitForm('pending'); // Call the common function with the status
 
 });
 
-
 submitBtnApproval.addEventListener('click', function() {
+    showLoader(); // Show the loader overlay before submitting
     submitForm('sent_for_approval'); // Call the common function with the status
 
 });
 
 }
 
-
-if (submitBtnApproved)
-{
 submitBtnApproved.addEventListener('click', function() {
+    showLoader(); // Show the loader overlay before submitting
     submitForm('approved'); // Call the common function with the status
 });
-}
 
 function submitForm(status) {
     event.preventDefault(); // Prevent default button behavior
@@ -771,7 +773,7 @@ function submitForm(status) {
     }
 
     // Get and validate the tax value
-    const taxInputValue = taxInput.value;
+    const taxInputValue = taxInput.textContent;
     const tax = parseFloat(taxInputValue);
     if (!isNaN(tax) && taxInputValue !== '') {
         formData.append('tax', tax.toFixed(2));
@@ -799,6 +801,7 @@ function submitForm(status) {
             const rowErrorElement = document.getElementById('rowError');
                 if (rowErrorElement) {
                     rowErrorElement.textContent = "Please ensure all fields are filled correctly.";
+                    hideLoader();
                     // Clear the error message after 1 second
                     setTimeout(() => {
                         rowErrorElement.textContent = "";
@@ -825,6 +828,7 @@ function submitForm(status) {
         if (rowErrorElement) {
             rowErrorElement.textContent = "Please ensure all fields are filled correctly.";
             // Clear the error message after 1 second
+            hideLoader();
             setTimeout(() => {
                     rowErrorElement.textContent = "";
                 }, 10000); // 1000 milliseconds = 1 second
@@ -840,6 +844,7 @@ function submitForm(status) {
     }).then(response => {
         response.json().then(data => {
             if (data.errors) {
+                hideLoader();
                 // Remove existing error messages
                 const existingErrorMessages = document.querySelectorAll('.help-block');
                 existingErrorMessages.forEach(errorMessage => errorMessage.remove());
