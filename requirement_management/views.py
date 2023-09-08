@@ -252,8 +252,8 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         if customer_data:
             data = request.data
-    
-            file_list = data.get('file_list', [])
+
+            file_list = data.getlist('file_list', [])
             
             if not any(file_list):
                 data = data.copy()      # make a mutable copy of data before performing delete.
@@ -591,7 +591,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         if instance:
             data = request.data
     
-            file_list = data.get('file_list', [])
+            file_list = data.getlist('file_list', [])
             
             if not any(file_list):
                 data = data.copy()      # make a mutable copy of data before performing delete.
@@ -756,7 +756,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         data = request.data
         
-        file_list = data.get('file_list', [])
+        file_list = data.getlist('file_list', [])
         
         requirement_instance = self.get_queryset()
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
