@@ -105,7 +105,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            queryset = User.objects.filter(is_active=True)
+            queryset = User.objects.filter(is_active=True, roles__name= 'customer').exclude(pk=self.request.user.id)
             return queryset
         
 
@@ -348,7 +348,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         """
         # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "fire_risk_assessment", HasUpdateDataPermission, 'view'
+            self, "fire_risk_assessment", HasViewDataPermission, 'view'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -361,34 +361,36 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        customer_id = kwargs.get('customer_id')
+        customer_data = User.objects.filter(id=customer_id).first()
         
-        
-        
-        # This method handles GET requests for updating an existing Requirement object.
-        if request.accepted_renderer.format == 'html':
-            instance = self.get_queryset()
-            if instance:
-                document_paths = []
-                requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
-                serializer = self.serializer_class(instance=instance, context={'request': request})
-                
-                
-                document_paths = requirement_image(instance)
-                        
-                # Retrieve users associated with these roles
-                users_with_survey_permission = User.objects.filter(roles__name= "surveyor")
-                
-                context = {
-                    'serializer': serializer, 
-                    'requirement_instance': instance, 
-                    'requirement_defect': requirement_defect, 
-                    'document_paths': document_paths,
-                    'surveyers': users_with_survey_permission,
-                    'customer_id': kwargs.get('customer_id')
-                    }
+        if customer_data:
+            # This method handles GET requests for updating an existing Requirement object.
+            if request.accepted_renderer.format == 'html':
+                instance = self.get_queryset()
+                if instance:
+                    document_paths = []
+                    requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
+                    serializer = self.serializer_class(instance=instance, context={'request': request})
+                    
+                    
+                    document_paths = requirement_image(instance)
+                            
+                    # Retrieve users associated with these roles
+                    users_with_survey_permission = User.objects.filter(roles__name= "surveyor")
+                    
+                    context = {
+                        'serializer': serializer, 
+                        'requirement_instance': instance, 
+                        'requirement_defect': requirement_defect, 
+                        'document_paths': document_paths,
+                        'surveyers': users_with_survey_permission,
+                        'customer_id': kwargs.get('customer_id'),
+                        'customer_data':customer_data
+                        }
                
 
-                return render_html_response(context, self.template_name)
+                    return render_html_response(context, self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
@@ -547,12 +549,16 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        customer_id = self.kwargs.get('customer_id')
+        customer_data = User.objects.filter(id=customer_id).first()
         # This method handles GET requests for updating an existing Requirement object.
         if request.accepted_renderer.format == 'html':
             instance = self.get_queryset()
             if instance:
                 serializer = self.serializer_class(instance=instance, context={'request': request})
-                context = {'serializer': serializer, 'requirement_instance': instance, 'customer_id': self.kwargs.get('customer_id')}
+                context = {'serializer': serializer, 'requirement_instance': instance, 
+                           'customer_id': self.kwargs.get('customer_id'),
+                           'customer_data':customer_data}
                 return render_html_response(context, self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action")

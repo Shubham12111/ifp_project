@@ -400,7 +400,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         document_paths = []
-        if hasattr(instance, 'requirementdocument_set'):
+        if hasattr(instance, 'requirementdefectdocument_set'):
             for document in RequirementDefectDocument.objects.filter(defect_id=instance, requirement_id=instance.requirement_id):
                 document_paths.append({
                     'presigned_url': generate_presigned_url(document.document_path),

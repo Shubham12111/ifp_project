@@ -16,6 +16,14 @@
     background-color: transparent;
     color: #000; /* Replace #000 with the desired text color */
 }
+.form-control.discount-input {
+        border-bottom: 1px solid #67758d !important; /* Adjust the margin value as needed */
+        border-top: none !important;
+        border-right: none !important;
+        border-left: none !important;
+        border-radius :unset !important;
+        
+    }
 
 </style>
 {% include 'components/alert.html' %}
@@ -94,7 +102,7 @@
                                 </tbody>
                             </table>
                             <div class="error-message help-block mt-2 text-danger text-sm mb-2" id="rowError"></div>
-                            <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
+                            <button class="btn btn-outline-dotted text-lower" id="addItemBtn" type="button">Add Item</button>
                         </div>
                     </div>
                 
@@ -114,7 +122,7 @@
                         <textarea class="form-control notes" rows="6" name="notes" ></textarea>
                         <div class="form-group mt-4 ">
                             <label>Attach File</label>
-                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="images/*, .pdf">
+                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="images/*, pdf">
                             <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png, pdf).</small>  
                             {% if presigned_url %}
                             <br><br>
@@ -139,8 +147,8 @@
                                 <p class="discount-label">Discount:</p>
                             </div>
                             <div class="col-2 text-end mb-2"></div>
-                            <div class="col-1 text-end mb-2"></div>
-                            <div class="col-3 text-end mb-2">
+                            <div class="col-2 text-end mb-2"></div>
+                            <div class="col-2 text-end mb-2">
                                 <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)">
                             </div>
                             <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
@@ -212,6 +220,8 @@ invoiceInput.value = uniqueNumber;
 
 
 const addItemBtn = document.getElementById('addItemBtn');
+addItemBtn.disabled = true;
+
 
 const subtotalValue = document.querySelector('.subtotal-value');
 const discountInput = document.querySelector('.discount-input');
@@ -329,6 +339,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
 let rowsAdded = 0; // Initialize a counter for added rows
 
 addItemBtn.addEventListener('click', () => {
+     console.log(rowsAdded)
     const unselectedOptionsHtml = getUnselectedOptionsFromItemList(item_list);
 
     if (unselectedOptionsHtml === '') {
@@ -427,6 +438,8 @@ async function populateVendorData(selectedVendorId) {
         <p class="text-sm mb-1">${vendor_data.phone_number}</p>
         <p class="text-sm mb-1">${vendor_data.email}</p>
         `;
+
+        addItemBtn.disabled = false;
     } catch (error) {
         console.error('Error fetching vendor data:', error);
     }
@@ -514,8 +527,10 @@ function updatePrice(selectElement) {
 function removeRow(buttonElement) {
     const row = buttonElement.closest('tr');
     row.remove();
-    
+    rowsAdded--; // Increment the counter for added rows
+    recalculateTotal(row);
 }
+
 function recalculateTotal(row) {
     const dropdown = row.querySelector('.item-dropdown');
     const selectedOption = dropdown.options[dropdown.selectedIndex];
@@ -651,15 +666,11 @@ function calculateTotal() {
 }
 
 
-
     // Trigger the function on page load
 window.addEventListener('load', function() {
 const selectElement = document.getElementById('itemSelect');
 updatePrice(selectElement);
 });
- 
-
-
 
 
 if (document.getElementById('inventory_location-choices')) {

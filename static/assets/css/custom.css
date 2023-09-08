@@ -291,3 +291,8 @@ textarea.form-control {
 .blur-background {
     filter: blur(5px); /* Adjust the blur intensity as needed */
 }
+.dropdown-item:hover, .dropdown-item:focus
+{
+ background-color: var(--bs-dropdown-link-hover-bg) !important;
+
+}
