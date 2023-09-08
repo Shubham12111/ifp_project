@@ -170,12 +170,13 @@
         <div class="card-body mt-0">
             <table class="table text-sm ">
                 <tbody>
+                    {% if report_instance.comments %}
                     <tr>
                         <td><strong>Report Comments</strong></td>
                         <td>{{ report_instance.comments }}</td>
                     </tr>
                     {% endif %}
-                    {% if report_instance.comments %}
+                    {% if report_instance.signature_path %}
                     <tr>
                         <td><strong>Signature</strong></td>
                         <td><img src="{{report_instance.signature_path}}"></td>
