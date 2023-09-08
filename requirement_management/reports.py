@@ -13,7 +13,11 @@ from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 from django.http import JsonResponse
 from .views import filter_requirements,requirement_image
-
+import ast
+import os
+import pdfkit
+from django.template.loader import render_to_string
+from infinity_fire_solutions.email import *
 
 
 class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -140,12 +144,15 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
                 if report_instance:
                     document_paths = []
                     document_paths = requirement_image(requirement_instance)
-                    
-                   
-
                     if report_instance.pdf_path:
                         pdf_url =  generate_presigned_url(report_instance.pdf_path)
                         report_instance.pdf_url = pdf_url
+                    else:
+                        report_instance.pdf_url = None
+
+                    if report_instance.signature_path:
+                        signature_path =  generate_presigned_url(report_instance.signature_path)
+                        report_instance.signature_path = signature_path
                     else:
                         report_instance.pdf_url = None
 
@@ -166,3 +173,166 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
         else:
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+
+class ReportEdit(CustomAuthenticationMixin,generics.ListAPIView):
+    
+    serializer_class = RequirementCustomerSerializer
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    template_name = 'report_edit.html'
+    ordering_fields = ['created_at'] 
+    pdf_options = {
+        'page-size': 'A4',  # You can change this to 'A4' or custom size
+        'margin-top': '10mm',
+        'margin-right': '0mm',
+        'margin-bottom': '0mm',
+        'margin-left': '0mm',
+    }
+    def save_pdf_from_html(self, context, file_name):
+        """
+        Save the PDF file from the HTML content.
+        Args:
+            context (dict): Context data for rendering the HTML template.
+            file_name (str): Name of the PDF file.
+        Returns:
+            Output file path or None.
+        """
+        output_file = None
+        local_folder = '/tmp'
+
+        if local_folder:
+            try:
+                os.makedirs(local_folder, exist_ok=True)
+                output_file = os.path.join(local_folder, file_name)
+
+                # get the html text from the tmplate
+                html_content = render_to_string('report_detail.html', context)
+
+                # create the PDF file for the invoice
+                pdfkit.from_string(html_content, output_file, options=self.pdf_options)
+                
+            except Exception as e:
+                # Handle any exceptions that occur during PDF generation
+                print("error")
+
+        return output_file
+    def get_queryset(self):
+        """
+        Get the filtered queryset for requirements based on the authenticated user.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+        )
+        
+        queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
+        queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
+        
+        return queryset
+
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        customer_data = User.objects.filter(id=kwargs.get('customer_id')).first()
+        if customer_data:
+            report_id = kwargs.get('pk')
+            # This method handles GET requests for updating an existing Requirement object.
+            if request.accepted_renderer.format == 'html':
+                requirement_instance = self.get_queryset()
+                
+                report_instance = Report.objects.filter(pk=report_id).first()
+                
+                if report_instance:
+                    document_paths = []
+                    document_paths = requirement_image(requirement_instance)
+                    if report_instance.pdf_path:
+                        pdf_url =  generate_presigned_url(report_instance.pdf_path)
+                        report_instance.pdf_url = pdf_url
+                    else:
+                        report_instance.pdf_url = None
+
+                    if report_instance.signature_path:
+                        signature_path =  generate_presigned_url(report_instance.signature_path)
+                        report_instance.signature_path = signature_path
+                    else:
+                        report_instance.pdf_url = None
+
+
+                    context = {
+                        'requirement_instance': requirement_instance,  
+                        'report_instance':report_instance,
+                        'document_paths': document_paths,
+                        'customer_id': kwargs.get('customer_id'),
+                        'customer_data':customer_data
+                        }
+                
+
+                    return render_html_response(context, self.template_name)
+                else:
+                    messages.error(request, "You are not authorized to perform this action")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+    
+    @swagger_auto_schema(auto_schema=None)
+    def post(self, request, *args, **kwargs):
+        report_id = kwargs.get('pk')
+        report_instance = Report.objects.filter(pk=report_id).first()
+        report_instance.comments = request.POST.get('comments')
+        report_instance.status =  request.POST.get('status')
+        report_instance.save()
+
+        if report_instance:
+            if report_instance.status == "submit":
+                all_report_defects = report_instance.defect_id.all()
+                
+                requirement_document_images = RequirementAsset.objects.filter(requirement_id=report_instance.requirement_id.id)
+                requirement_document_images_serializer = RequirementAssetSerializer(requirement_document_images, many=True)
+
+                requirement_defect_images = RequirementDefectDocument.objects.filter(defect_id__in=all_report_defects)
+                requirement_defect_images_serializer = RequirementDefectDocumentSerializer(requirement_defect_images, many=True)
+
+                
+                if report_instance.signature_path:
+                    signature_data_url = generate_presigned_url(report_instance.signature_path)
+                else:
+                    signature_data_url = ""
+                    
+                context = {
+                    'requirement_instance': report_instance.requirement_id,
+                    'requirement_defects': all_report_defects,
+                    'requirement_images': requirement_document_images_serializer.data,
+                    'requirement_defect_images': requirement_defect_images_serializer.data,
+                    'comment': report_instance.comments,
+                    'signature_data_url':signature_data_url,
+                }
+                    
+                unique_pdf_filename = f"{str(uuid.uuid4())}_report_{report_instance.id}.pdf"
+                
+                pdf_file = self.save_pdf_from_html(context=context, file_name=unique_pdf_filename)
+                pdf_path = f'requirement/{report_instance.requirement_id.id}/report/pdf'
+                
+                
+                
+                upload_signature_to_s3(unique_pdf_filename, pdf_file, pdf_path)
+                
+                report_instance.pdf_path = f'requirement/{report_instance.requirement_id.id}/report/pdf/{unique_pdf_filename}'
+                report_instance.save()
+                
+                # send email to QS
+                if report_instance.requirement_id.quantity_surveyor and instance.surveyor:
+                    context = {'user': report_instance.requirement_id.quantity_surveyor,'surveyor': report_instance.requirement_id.surveyor,'site_url': get_site_url(request) }
+
+                    email = Email()
+                    email.send_mail(report_instance.requirement_id.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report")
+
+                messages.success(request, "Congratulations! your requirement report has been added successfully. ")
+                return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                            message="Congratulations! your requirement report has been added successfully.", )
+        
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+    

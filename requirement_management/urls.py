@@ -31,6 +31,7 @@ urlpatterns = [
     
     path('reports/<int:customer_id>/<int:requirement_id>/', RequirementReportsListView.as_view(), name='customer_requirement_reports'),
     path('report/view/<int:customer_id>/<int:requirement_id>/<int:pk>/', ReportView.as_view(), name='requirement_report_view'),
+    path('report/edit/<int:customer_id>/<int:requirement_id>/<int:pk>/', ReportEdit.as_view(), name='requirement_report_edit'),
 
 
     path('report/delete/<int:customer_id>/<int:requirement_id>/<int:pk>/', ReportRemoveView.as_view(), name='requirement_report_delete'),

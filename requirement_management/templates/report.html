@@ -63,6 +63,11 @@
                                             View
                                             </a>
                                         </li>
+                                        <li> 
+                                            <a href="{% url 'requirement_report_edit' customer_id requirement_instance.id report.id %}" class="dropdown-item border-radius-md">
+                                            Edit
+                                            </a>
+                                        </li>
 
                                       {% if report.pdf_url  and report.status == "submit" %}
                                        <li> <a href="{{report.pdf_url}}" class="dropdown-item border-radius-md" download>

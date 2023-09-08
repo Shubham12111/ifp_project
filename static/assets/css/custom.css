@@ -289,7 +289,8 @@ textarea.form-control {
 
   /* Create a CSS class for the background blur effect */
 .blur-background {
-    filter: blur(5px); /* Adjust the blur intensity as needed */
+    filter: grayscale(100%);
+    opacity: 0.5; 
 }
 .dropdown-item:hover, .dropdown-item:focus
 {

@@ -105,7 +105,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            queryset = User.objects.filter(is_active=True, roles__name= 'customer').exclude(pk=self.request.user.id)
+            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
         
 
@@ -119,7 +119,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
 
         queryset = self.get_queryset()
         all_fra = Requirement.objects.filter()
-
+        
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
@@ -497,9 +497,9 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
                 
                 
-            messages.success(request, "Congratulations! your requirement has been added successfully. ")
+            messages.success(request, "Congratulations! your requirement report has been added successfully. ")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Congratulations! your requirement has been added successfully.", )
+                                        message="Congratulations! your requirement report has been added successfully.", )
             
         except Exception as e:
             message = "Something went wrong"
@@ -527,7 +527,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'requirement.html'
-    serializer_class = RequirementUpdateSerializer
+    serializer_class = RequirementAddSerializer
     
     def get_queryset(self):
         """
@@ -614,7 +614,8 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 del data['file_list']
             
             serializer_data = request.data if any(file_list) else data
-            
+            serializer_data['RBNO'] = instance.RBNO
+            serializer_data['UPRN'] = instance.UPRN
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
 
@@ -633,7 +634,8 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             else:
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'instance': instance}
+                    context = {'serializer': serializer,
+                     'requirement_instance': instance,'customer_id':kwargs.get('customer_id')}
                     return render(request, self.template_name, context)
                 else:
                     # For API requests with invalid data, return an error response with serializer errors.
@@ -819,7 +821,8 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                 context = {'serializer':serializer, 
                            'requirement_instance': requirement_instance,
                            'defects_list': self.get_queryset_defect(),
-                            'defect_instance':defect_instance
+                        'defect_instance':defect_instance,
+                        'customer_id':self.kwargs.get('customer_id')
                            }
                 return render_html_response(context,self.template_name)
             else:   

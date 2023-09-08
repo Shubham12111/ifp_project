@@ -149,13 +149,17 @@
                   <label>Comments <span class="text-sm text-danger">*</span></label>
                   <textarea name="comments" class="form-control" required></textarea>
                 </div>
+                <div id="error-messages-comment" ></div>
                 
-                 <div class="col-4 mt-2">
-                  <label class="">Signature</label>
+                 <div class="col-4 mt-4">
+                  <label class="">Signature</label> 
+                  <i class="fas fa-sync-alt" id="clear-button" style="float: right;"
+                  data-bs-toggle="tooltip" data-bs-original-title="Clear Signature"> </i>
                   <div class="signature-container">
                     <canvas id="signature-canvas" height="80"></canvas>
                   </div>
                 </div>
+                <div id="error-messages-signature" ></div>
                  
               </div>
               
@@ -163,12 +167,14 @@
             <input type="hidden" name="selected_defect_ids" id="selected-defect-ids">
             <input type="hidden" name="signature_data" id="signature-data">
             
+             <!-- Container for error messages -->
+
             {% include 'components/loader.html' %}
           </form>
       </div>
         
         <div class="modal-footer">
-          <button id="clear-button" class="btn btn-secondary">Clear Signature</button>
+          
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           
           <button type="button" id="submit-darft-button" class="btn bg-gradient-primary">Save As Draft</button>
@@ -176,7 +182,7 @@
         </div>
       </div>
     </div>
-  </div>
+</div>
 
 {% endblock %}
 {% block extra_js %}
@@ -271,14 +277,10 @@ function removeBlur() {
     modalContainer.classList.remove('blur-background');
 }
 
-
-
 document.addEventListener("DOMContentLoaded", function () {
   // Get the "Add Quantity Surveyor" button
   const cretaeReportButton = document.getElementById("createreportButton");
 
-  // Get the modal
-  
   // Add an event listener to show the modal when the button is clicked
 cretaeReportButton.addEventListener("click", function () {
     addBlur(); // Add the blur class
@@ -295,6 +297,7 @@ cretaeReportButton.addEventListener("click", function () {
     };
 
       clearButton.addEventListener('click', function() {
+        document.getElementById('signature-data').value = '';
         signaturePad.clear();
       });
 
@@ -478,7 +481,38 @@ function saveFormData(formData) {
     // Define the URL for saving the data
     const saveUrl = "{% url 'customer_requirement_view' customer_id requirement_instance.id %}";
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const errorMessages = document.getElementById('error-messages-comment');
+    const commentsTextarea = document.querySelector('textarea[name="comments"]');
     
+    const errorMessageSignature = document.getElementById('error-messages-signature');
+    const signatureUrl = document.querySelector('input[name="signature_data"]');
+    
+    // Clear previous error messages
+      errorMessages.innerHTML = '';
+
+      // Flag to track if there are any errors
+      let hasErrors = false;
+
+      // Check if the comments textarea is empty
+      if (!commentsTextarea.value.trim()) {
+          errorMessages.innerHTML += '<p class="help-block text-sm text-dnage mt-2">Comments are requried.</p>';
+          hasErrors = true;
+          hideLoader()
+          return
+      }
+
+      // Clear previous error messages
+      errorMessageSignature.innerHTML = '';
+
+      // Check if the comments textarea is empty
+      if (!signatureUrl.value.trim()) {
+          errorMessageSignature.innerHTML += '<p class="help-block text-sm text-dnage mt-2">Signature are requried.</p>';
+          hasErrors = true;
+          hideLoader()
+          return
+      }
+
+
     // Send the data to the backend using fetch
     fetch(saveUrl, {
         method: "POST",
