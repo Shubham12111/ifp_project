@@ -481,6 +481,7 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         """
         conversation_id = self.kwargs.get('conversation_id')
         instance = self.get_queryset()
+        conversation_data = {}
         if instance:
             if conversation_id:
                 conversation_data = self.get_conversation_queryset().filter(contact_id = instance, pk=conversation_id).first() 
@@ -491,7 +492,8 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
             context= {'conversation_list':self.serialized_conversation_list(),
                                                         'serializer':serializer,
                                                         'contact_data':instance,
-                                                        'is_edit': True if instance else False}
+                                                        'is_edit': True if instance else False,
+                                                        'conversation_data':conversation_data}
             return render_html_response(context,self.template_name)
         else:
             messages.error(request, " You are not authorized to perform this action.")
