@@ -8,13 +8,18 @@
 {% block content %}
 {% include 'components/alert.html' %}
 <div class="container-fluid py-4">
-  {% include 'fra_view.html' %}
-  <div class="card h-100 mt-2">
-    <div class="card-header  pb-0">
+  <div class="row align-items-center mb-2">
+    <div class="col-lg-12 col-sm-8">
+        <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_view' customer_id requirement_instance.id %}">Back</a>
+    </div>
+</div>
+
+  <div class="card h-100 mt-2 mb-3">
+    <div class="card-header pb-0">
       <h5> Defect </h5>
     </div>
       <div class="card-body">
-          <div class="row gap-2">
+          <div class="row">
             <div class="col-md-5">
               <div class="sticky-md-top product-sticky">
                 <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
@@ -61,28 +66,28 @@
               </div>
             </div>
         
-            <div class="col-lg-6">
+            <div class="col-lg-7">
                 <div class="card-body p-0">
-                    <h5 class="text-sm">{{ defect_instance.action }}</h5>
+                    <b>Action</b>
+                    <p class="text-sm mt-2" style="text-align: justify;">{{ defect_instance.action }}</p>
                     <strong class="text-dark text-sm mt-2">Description:</strong>
-                    <p class="text-sm">
-                      {{ defect_instance.description}}</p>
+                    <p class="text-sm mt-2" style="text-align: justify;">
+                      {{ defect_instance.description}}
+                    </p>
+                    <strong class="text-dark text-sm mt-2">Rectification:</strong>
+                    <p class="text-sm mt-2" style="text-align: justify;">
+                      {{ defect_instance.rectification_description}}
+                    </p>
                     <hr class="horizontal gray-light my-4">
-                    <div class="row text-sm">
-                      <div class="row mb-2">
-                        <div class="col-6"><strong class="text-dark">Rectification:</strong></div>
-                    </div>
-                    <div class="row mb-4">
-                      <div class="col-9">{{ defect_instance.rectification_description}}</div>
-                  </div>
-                     
-                  </div>
+                    
                   
                 </div>
               </div>
             </div>
-          </div>
-        </div> 
+        </div>
+  </div> 
+  {% include 'defect_fra.html' %}
+  </div>
       
 
 {% endblock %}

@@ -16,6 +16,14 @@
     background-color: transparent;
     color: #000; /* Replace #000 with the desired text color */
 }
+.form-control.discount-input {
+        border-bottom: 1px solid #67758d !important; /* Adjust the margin value as needed */
+        border-top: none !important;
+        border-right: none !important;
+        border-left: none !important;
+        border-radius :unset !important;
+        
+    }
 
 </style>
 {% include 'components/alert.html' %}
@@ -70,7 +78,8 @@
                         <div class="row mb-4">
                            <div class="col-md-12">
                                 <label for="po_number" class="form-label">PO Number <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control" id="po_number" value="8795646525451" name="po_number" >
+                                <input  class="form-control" id="po_number" value="{{new_po_number}}" 
+                                name="po_number"  disabled> 
                             </div>
                         </div>
                         
@@ -94,7 +103,7 @@
                                 </tbody>
                             </table>
                             <div class="error-message help-block mt-2 text-danger text-sm mb-2" id="rowError"></div>
-                            <button class="btn btn-outline-dotted" id="addItemBtn" type="button">Add Item</button>
+                            <button class="btn btn-outline-dotted text-lower" id="addItemBtn" type="button">Add Item</button>
                         </div>
                     </div>
                 
@@ -114,8 +123,8 @@
                         <textarea class="form-control notes" rows="6" name="notes" ></textarea>
                         <div class="form-group mt-4 ">
                             <label>Attach File</label>
-                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="images/*">
-                            <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png).</small>  
+                            <input name="file" class="form-control" type="file" value="" autocomplete="off" accept="images/*, pdf">
+                            <small class="form-text text-muted">Only image formats are supported (jpg, jpeg, png, pdf).</small>  
                             {% if presigned_url %}
                             <br><br>
                             
@@ -139,9 +148,9 @@
                                 <p class="discount-label">Discount:</p>
                             </div>
                             <div class="col-2 text-end mb-2"></div>
-                            <div class="col-1 text-end mb-2"></div>
-                            <div class="col-3 text-end mb-2">
-                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()">
+                            <div class="col-2 text-end mb-2"></div>
+                            <div class="col-2 text-end mb-2">
+                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)">
                             </div>
                             <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
                            
@@ -184,7 +193,7 @@
                 
             </div>
         </div>
-      
+        {% include 'components/loader.html' %}
       </form>
  
 </div>
@@ -201,17 +210,9 @@ var item_list ;
 
 
 
-// Get a reference to the input element
-var invoiceInput = document.getElementById('po_number');
-
-// Generate a unique number using the current timestamp
-var uniqueNumber = Date.now();
-
-// Set the generated unique number as the value of the input
-invoiceInput.value = uniqueNumber;
-
-
 const addItemBtn = document.getElementById('addItemBtn');
+addItemBtn.disabled = true;
+
 
 const subtotalValue = document.querySelector('.subtotal-value');
 const discountInput = document.querySelector('.discount-input');
@@ -235,7 +236,7 @@ function getUnselectedOptions() {
             unselectedOptionsHtml += `<option value="{{item.id}}" data-price="{{item.price}}">{{item.item_name}}</option>`;
         }
     {% endfor %}
-
+    
     return unselectedOptionsHtml;
 }
 
@@ -259,9 +260,7 @@ if (document.getElementById('existingPurchaseOrderData')) {
                 if (notesValue)
                 {
                     document.querySelector('.notes').textContent = notesValue;
-                }   
-                
-                
+                }     
         }
         else
         {
@@ -350,6 +349,7 @@ addItemBtn.addEventListener('click', () => {
         if (rowErrorElement) {
             rowErrorElement.textContent = "You can't add more rows. All items have been added.";
             // Clear the error message after 1 second
+            hideLoader();
             setTimeout(() => {
                 rowErrorElement.textContent = "";
             }, 10000); // 1000 milliseconds = 1 second
@@ -417,7 +417,7 @@ async function populateVendorData(selectedVendorId) {
     try {
         const response = await fetch(`/purchase_order/get_vendor_data/?id=${selectedVendorId}`);
         const selectedVendorData = await response.json();
-
+        
         const vendor_data = selectedVendorData.vendor_data
         item_list = selectedVendorData.item_list
         // Populate vevendor data in the card
@@ -428,6 +428,8 @@ async function populateVendorData(selectedVendorId) {
         <p class="text-sm mb-1">${vendor_data.phone_number}</p>
         <p class="text-sm mb-1">${vendor_data.email}</p>
         `;
+
+        addItemBtn.disabled = false;
     } catch (error) {
         console.error('Error fetching vendor data:', error);
     }
@@ -488,38 +490,39 @@ function updatePrice(selectElement) {
     priceInput.textContent = selectedOption.dataset.price;
 
     const selectedValue = selectedOption.value;
-    
-    if (selectedValueToBeRemoved !== null) {
-        // Remove the item from the item_list with a matching id
-        item_list = item_list.filter(item => item.id.toString() !== selectedValueToBeRemoved);
-        selectedValueToBeRemoved = null; // Reset the selectedValueToBeRemoved
-    }
 
-    // Check if item_list is empty
-    if (item_list.length === 0) {
-        const tableBody = document.getElementById('itemTableBody');
-        const rows = tableBody.querySelectorAll('tr');
+    // Iterate through all rows
+    const tableBody = document.getElementById('itemTableBody');
+    const rows = tableBody.querySelectorAll('tr');
 
-        rows.forEach(row => {
-            const selectedOption = row.querySelector('select').value;
-            if (!selectedOption) {
-                // Remove the row if no option is selected
-                tableBody.removeChild(row);
+    rows.forEach(otherRow => {
+        if (otherRow !== row) {
+            const otherSelectElement = otherRow.querySelector('select');
+            if (otherSelectElement) {
+                const selectedOptions = Array.from(otherSelectElement.selectedOptions).map(option => option.value);
+                if (selectedOptions.includes(selectedValue)) {
+                    // Remove the entire row if the selected option is already selected in another row
+                    tableBody.removeChild(otherRow);
+                }
             }
-        });
-    }
-   
-    // Update the selectedValueToBeRemoved with the current selected value
-    selectedValueToBeRemoved = selectedValue;
+        }
+    });
+
+    // Recalculate the total
+    rowsAdded--; // Increment the counter for added rows
     recalculateTotal(row);
-  
 }
+
+
+
 
 function removeRow(buttonElement) {
     const row = buttonElement.closest('tr');
     row.remove();
-    
+    rowsAdded--; // Increment the counter for added rows
+    recalculateTotal(row);
 }
+
 function recalculateTotal(row) {
     const dropdown = row.querySelector('.item-dropdown');
     const selectedOption = dropdown.options[dropdown.selectedIndex];
@@ -544,7 +547,7 @@ function recalculateTotal(row) {
         const rowErrorElement = row.querySelector('.rowError');
         if (rowErrorElement) {
             rowErrorElement.textContent = "Negative values are not allowed. Please enter a valid positive value.";
-
+            hideLoader();
             // Clear the error message after 3 seconds
             setTimeout(() => {
                 rowErrorElement.textContent = "";
@@ -655,15 +658,11 @@ function calculateTotal() {
 }
 
 
-
     // Trigger the function on page load
 window.addEventListener('load', function() {
 const selectElement = document.getElementById('itemSelect');
 updatePrice(selectElement);
 });
- 
-
-
 
 
 if (document.getElementById('inventory_location-choices')) {
@@ -717,7 +716,15 @@ element.addEventListener('change', async function(event) {
     populateInventoryLocationData(selectedInventoryLocationId);
 });
 
+const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
 
+function showLoader() {
+    loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+}
+
+function hideLoader() {
+    loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+}
 
 // Inside your JavaScript
 // Event listeners for the buttons
@@ -729,11 +736,13 @@ const submitBtnApproved = document.getElementById('submitBtnApproved');
 if (submitSaveAsDraftBtn)
 {
     submitSaveAsDraftBtn.addEventListener('click', function() {
+    showLoader(); // Show the loader overlay before submitting
     submitForm('pending'); // Call the common function with the status
 
 });
 
 submitBtnApproval.addEventListener('click', function() {
+    showLoader(); // Show the loader overlay before submitting
     submitForm('sent_for_approval'); // Call the common function with the status
 
 });
@@ -741,6 +750,7 @@ submitBtnApproval.addEventListener('click', function() {
 }
 
 submitBtnApproved.addEventListener('click', function() {
+    showLoader(); // Show the loader overlay before submitting
     submitForm('approved'); // Call the common function with the status
 });
 
@@ -766,7 +776,7 @@ function submitForm(status) {
     }
 
     // Get and validate the tax value
-    const taxInputValue = taxInput.value;
+    const taxInputValue = taxInput.textContent;
     const tax = parseFloat(taxInputValue);
     if (!isNaN(tax) && taxInputValue !== '') {
         formData.append('tax', tax.toFixed(2));
@@ -794,6 +804,7 @@ function submitForm(status) {
             const rowErrorElement = document.getElementById('rowError');
                 if (rowErrorElement) {
                     rowErrorElement.textContent = "Please ensure all fields are filled correctly.";
+                    hideLoader();
                     // Clear the error message after 1 second
                     setTimeout(() => {
                         rowErrorElement.textContent = "";
@@ -820,6 +831,7 @@ function submitForm(status) {
         if (rowErrorElement) {
             rowErrorElement.textContent = "Please ensure all fields are filled correctly.";
             // Clear the error message after 1 second
+            hideLoader();
             setTimeout(() => {
                     rowErrorElement.textContent = "";
                 }, 10000); // 1000 milliseconds = 1 second
@@ -835,6 +847,7 @@ function submitForm(status) {
     }).then(response => {
         response.json().then(data => {
             if (data.errors) {
+                hideLoader();
                 // Remove existing error messages
                 const existingErrorMessages = document.querySelectorAll('.help-block');
                 existingErrorMessages.forEach(errorMessage => errorMessage.remove());

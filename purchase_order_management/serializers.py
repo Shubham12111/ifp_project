@@ -31,7 +31,7 @@ def validate_file_size(value):
 
 # Validator for checking the supported file extensions
 file_extension_validator = FileExtensionValidator(
-    allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS,
+    allowed_extensions= ["png", "jpg", "jpeg","pdf"],
     message=('Unsupported file extension. Please upload a valid file.'),
 )
 
@@ -96,15 +96,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         },
     )
     
-    po_number = serializers.CharField(
-        required=True,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "PO Number is required.",
-            "incorrect_type":"PO Number is required.",
-            "null": "PO Number is required."
-        },
-    )
+
     file = serializers.FileField(
     required=False,
     validators=[file_extension_validator, validate_file_size],
@@ -127,7 +119,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PurchaseOrder
-        fields = ['po_number', 'vendor_id', 'inventory_location_id',  'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file']
+        fields = ['vendor_id', 'inventory_location_id',  'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file']
 
 
     def validate_sub_total(self, value):
@@ -235,9 +227,9 @@ class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
         Validate that the invoice_number is unique.
         """
         if self.instance:
-            invoice_number = PurchaseOrderInvoice.objects.filter(invoice_number=value).exclude(id=self.instance.id).exists()
+            invoice_number = PurchaseOrderInvoice.objects.filter(invoice_number__exact=value).exclude(id=self.instance.id).exists()
         else:
-            invoice_number = PurchaseOrderInvoice.objects.filter(invoice_number=value).exists()
+            invoice_number = PurchaseOrderInvoice.objects.filter(invoice_number__exact=value).exists()
         
         if invoice_number:
             raise serializers.ValidationError("This invoice number is already in use.")

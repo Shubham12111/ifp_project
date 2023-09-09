@@ -6,10 +6,9 @@
 <div class="card h-100">
     <div class="card-header  pb-0">
         <h5> FRA Actions </h5>
-        {% include 'customer_info.html' %}
       </div>
     <div class="card-body">
-        <div class="row gap-2">
+        <div class="row">
             <div class="col-md-5">
                 <div class="sticky-md-top product-sticky">
                   <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
@@ -35,7 +34,7 @@
                         </div>
                         {% endfor %}
                     </div>
-                    <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0">
+                    <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0 mt-0">
                         {% for item in document_paths %}
                         {% if item.is_image %}
                         <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
@@ -56,34 +55,56 @@
                 </div>
               </div>
             <!-- Requirement and Customer Details -->
-            <div class="col-lg-6">
+            <div class="col-lg-7">
                 <div class="card-body p-0">
-                    <p class="text-sm">
-                        {{ requirement_instance.action|safe}}</p>
-                        <p class="text-sm">
-                        {{ requirement_instance.description|safe}}</p>
-                    <hr class="horizontal gray-light my-4">
+                    <b>Action</b>
+                    <p class="text-sm mt-2" style="text-align: justify;">
+
+                        {{ requirement_instance.action}}
+                    </p>
+                    <b>Description</b>
+                    <p class="text-sm mt-2" style="text-align: justify;">
+
+                        {{ requirement_instance.description}}
+                    </p>
+                    <hr class="horizontal gray-light">
                     <div class="row text-sm">
-                        <div class="row mb-2">
-                            <div class="col-3"><strong class="text-dark">Customer:</strong></div>
-                            <div class="col-9">{{ requirement_instance.customer_id.first_name|title }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-3"><strong class="text-dark">Email:</strong></div>
-                            <div class="col-9">{{ requirement_instance.customer_id.email }}</div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-3"><strong class="text-dark">Site Address:</strong></div>
-                            <div class="col-9">{{ requirement_instance.site_address|title}}</div>
-                        </div>
-                        {% if requirement_instance.surveyor %}
-                            <div class="row mb-2">
-                                <div class="col-3"><strong class="text-dark">Surveyor:</strong></div>
-                                <div class="col-9">{{requirement_instance.surveyor.first_name|title }} {{requirement_instance.surveyor.last_name|title }}</div>
-                            </div>
-                        {% endif %}
-                        
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td><strong class="text-dark">Customer</strong></td>
+                                    <td>{{ requirement_instance.customer_id.first_name|title }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong class="text-dark">Email</strong></td>
+                                    <td>{{ requirement_instance.customer_id.email }}</td>
+                                </tr>
+                                {% if requirement_instance.UPRN %}
+                                    <tr>
+                                        <td><strong class="text-dark">UPRN</strong></td>
+                                        <td>{{ requirement_instance.UPRN }}</td>
+                                    </tr>
+                                {% endif %}
+                                {% if requirement_instance.RBNO %}
+                                    <tr>
+                                        <td><strong class="text-dark">RBNO</strong></td>
+                                        <td>{{ requirement_instance.RBNO }}</td>
+                                    </tr>
+                                {% endif %}
+                                <tr>
+                                    <td><strong class="text-dark">Site Address</strong></td>
+                                    <td>{{ requirement_instance.site_address|title }}</td>
+                                </tr>
+                                {% if requirement_instance.surveyor %}
+                                    <tr>
+                                        <td><strong class="text-dark">Surveyor</strong></td>
+                                        <td>{{ requirement_instance.surveyor.first_name|title }} {{ requirement_instance.surveyor.last_name|title }}</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
                     </div>
+                    
                    
                 </div>
                 

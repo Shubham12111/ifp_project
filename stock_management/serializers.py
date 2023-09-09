@@ -121,7 +121,7 @@ class VendorSerializer(serializers.ModelSerializer):
 class BillingDetailSerializer(serializers.ModelSerializer):
 
     vat_number = serializers.CharField(
-        label='VAT Number',
+        label='VAT Number (VAT Number must have 9 digits.)',
         max_length=20,
         required=True,
         style={
@@ -188,19 +188,9 @@ class BillingDetailSerializer(serializers.ModelSerializer):
         validators=[validate_uk_postcode] 
     )
     
-    vendor_status = serializers.ChoiceField(
-        label='Vendor Status',
-        choices=VENDOR_STATUS_CHOICES,
-        required=False,
-        style={
-            'base_template': 'custom_select.html',
-            'custom_class': 'col-6'
-        },
-    )
-        
     class Meta:
         model = Vendor 
-        fields = ('vat_number','tax_preference','vendor_status','address','town','county','country','post_code')
+        fields = ('vat_number','tax_preference','address','town','county','country','post_code')
 
     
 

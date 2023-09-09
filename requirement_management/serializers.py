@@ -60,7 +60,7 @@ class RequirementDetailSerializer(serializers.ModelSerializer):
     requirementdefect_set = RequirementDefectSerializer(many=True, read_only=True)
     class Meta:
         model = Requirement
-        fields = ('user_id', 'customer_id', 'description', 'UPRN', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
+        fields = ('user_id', 'customer_id', 'description', 'RBNO', 'UPRN', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -92,7 +92,9 @@ class SiteAddressField(serializers.PrimaryKeyRelatedField):
             return SiteAddress.objects.filter(user_id=user_id)
         else:
             return SiteAddress.objects.none()
-        
+
+
+
 class RequirementAddSerializer(serializers.ModelSerializer):
     
     action = serializers.CharField(
@@ -105,6 +107,26 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         },
         validators=[action_description],
         
+    )
+    
+    RBNO = serializers.CharField(
+        required=True,
+        max_length=12,
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "RBNO is required.",
+        },
+    )
+    
+    UPRN = serializers.CharField(
+        required=True, 
+        max_length=12,
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "UPRN is required.",
+        },
     )
 
     description = serializers.CharField(
@@ -160,9 +182,21 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Requirement
-        fields = ('action','description','site_address','file_list')
+        fields = ('RBNO', 'UPRN', 'action','description','site_address','file_list')
     
-   
+    def validate_RBNO(self, value):
+        if not self.instance:
+            if Requirement.objects.filter(RBNO=value).exists():
+                raise serializers.ValidationError("RBNO already exists.")
+        return value
+
+
+    def validate_UPRN(self, value):
+        if not self.instance:
+            # Check if an object with the same UPRN already exists
+            if Requirement.objects.filter(UPRN=value).exists():
+                raise serializers.ValidationError("UPRN already exists.")
+        return value
             
     def get_initial(self):
         
@@ -259,6 +293,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
 
         return representation
 
+
 class RequirementDefectAddSerializer(serializers.ModelSerializer):
 
     action = serializers.CharField(
@@ -313,9 +348,6 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     },
     help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
-
-   
-    
 
     def get_initial(self):
         
@@ -400,7 +432,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         document_paths = []
-        if hasattr(instance, 'requirementdocument_set'):
+        if hasattr(instance, 'requirementdefectdocument_set'):
             for document in RequirementDefectDocument.objects.filter(defect_id=instance, requirement_id=instance.requirement_id):
                 document_paths.append({
                     'presigned_url': generate_presigned_url(document.document_path),

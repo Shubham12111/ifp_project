@@ -16,6 +16,9 @@ import ast
 import os
 import pdfkit
 from django.template.loader import render_to_string
+from infinity_fire_solutions.email import *
+
+
 
 def get_customer_data(customer_id):
     customer_data = User.objects.filter(id=customer_id).first()
@@ -102,7 +105,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            queryset = User.objects.filter(is_active=True)
+            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
         
 
@@ -116,7 +119,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
 
         queryset = self.get_queryset()
         all_fra = Requirement.objects.filter()
-
+        
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
@@ -252,8 +255,8 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         if customer_data:
             data = request.data
-    
-            file_list = data.get('file_list', [])
+
+            file_list = data.getlist('file_list', [])
             
             if not any(file_list):
                 data = data.copy()      # make a mutable copy of data before performing delete.
@@ -345,7 +348,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         """
         # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "fire_risk_assessment", HasUpdateDataPermission, 'view'
+            self, "fire_risk_assessment", HasViewDataPermission, 'view'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -358,34 +361,36 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        customer_id = kwargs.get('customer_id')
+        customer_data = User.objects.filter(id=customer_id).first()
         
-        
-        
-        # This method handles GET requests for updating an existing Requirement object.
-        if request.accepted_renderer.format == 'html':
-            instance = self.get_queryset()
-            if instance:
-                document_paths = []
-                requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
-                serializer = self.serializer_class(instance=instance, context={'request': request})
-                
-                
-                document_paths = requirement_image(instance)
-                        
-                # Retrieve users associated with these roles
-                users_with_survey_permission = User.objects.filter(roles__name= "surveyor")
-                
-                context = {
-                    'serializer': serializer, 
-                    'requirement_instance': instance, 
-                    'requirement_defect': requirement_defect, 
-                    'document_paths': document_paths,
-                    'surveyers': users_with_survey_permission,
-                    'customer_id': kwargs.get('customer_id')
-                    }
+        if customer_data:
+            # This method handles GET requests for updating an existing Requirement object.
+            if request.accepted_renderer.format == 'html':
+                instance = self.get_queryset()
+                if instance:
+                    document_paths = []
+                    requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
+                    serializer = self.serializer_class(instance=instance, context={'request': request})
+                    
+                    
+                    document_paths = requirement_image(instance)
+                            
+                    # Retrieve users associated with these roles
+                    users_with_survey_permission = User.objects.filter(roles__name= "surveyor")
+                    
+                    context = {
+                        'serializer': serializer, 
+                        'requirement_instance': instance, 
+                        'requirement_defect': requirement_defect, 
+                        'document_paths': document_paths,
+                        'surveyers': users_with_survey_permission,
+                        'customer_id': kwargs.get('customer_id'),
+                        'customer_data':customer_data
+                        }
                
 
-                return render_html_response(context, self.template_name)
+                    return render_html_response(context, self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
@@ -483,11 +488,18 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 report.pdf_path = f'requirement/{instance.id}/report/pdf/{unique_pdf_filename}'
                 report.save()
                 
+                # send email to QS
+                if instance.quantity_surveyor and instance.surveyor:
+                    context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
+
+                    email = Email()
+                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report")
+
                 
                 
-            messages.success(request, "Congratulations! your requirement has been added successfully. ")
+            messages.success(request, "Congratulations! your requirement report has been added successfully. ")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Congratulations! your requirement has been added successfully.", )
+                                        message="Congratulations! your requirement report has been added successfully.", )
             
         except Exception as e:
             message = "Something went wrong"
@@ -537,12 +549,16 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        customer_id = self.kwargs.get('customer_id')
+        customer_data = User.objects.filter(id=customer_id).first()
         # This method handles GET requests for updating an existing Requirement object.
         if request.accepted_renderer.format == 'html':
             instance = self.get_queryset()
             if instance:
                 serializer = self.serializer_class(instance=instance, context={'request': request})
-                context = {'serializer': serializer, 'requirement_instance': instance, 'customer_id': self.kwargs.get('customer_id')}
+                context = {'serializer': serializer, 'requirement_instance': instance, 
+                           'customer_id': self.kwargs.get('customer_id'),
+                           'customer_data':customer_data}
                 return render_html_response(context, self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action")
@@ -591,14 +607,15 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         if instance:
             data = request.data
     
-            file_list = data.get('file_list', [])
+            file_list = data.getlist('file_list', [])
             
             if not any(file_list):
                 data = data.copy()      # make a mutable copy of data before performing delete.
                 del data['file_list']
             
             serializer_data = request.data if any(file_list) else data
-            
+            serializer_data['RBNO'] = instance.RBNO
+            serializer_data['UPRN'] = instance.UPRN
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
 
@@ -617,7 +634,8 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             else:
                 if request.accepted_renderer.format == 'html':
                     # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'instance': instance}
+                    context = {'serializer': serializer,
+                     'requirement_instance': instance,'customer_id':kwargs.get('customer_id')}
                     return render(request, self.template_name, context)
                 else:
                     # For API requests with invalid data, return an error response with serializer errors.
@@ -746,7 +764,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
             return render_html_response(context, self.template_name)
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))  
         
     def post(self, request, *args, **kwargs):
         """
@@ -756,7 +774,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         data = request.data
         
-        file_list = data.get('file_list', [])
+        file_list = data.getlist('file_list', [])
         
         requirement_instance = self.get_queryset()
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
@@ -803,7 +821,8 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                 context = {'serializer':serializer, 
                            'requirement_instance': requirement_instance,
                            'defects_list': self.get_queryset_defect(),
-                            'defect_instance':defect_instance
+                        'defect_instance':defect_instance,
+                        'customer_id':self.kwargs.get('customer_id')
                            }
                 return render_html_response(context,self.template_name)
             else:   
