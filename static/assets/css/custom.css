@@ -294,6 +294,7 @@ textarea.form-control {
 }
 .dropdown-item:hover, .dropdown-item:focus
 {
- background-color: var(--bs-dropdown-link-hover-bg) !important;
+ background-color: unset !important;
 
 }
+
