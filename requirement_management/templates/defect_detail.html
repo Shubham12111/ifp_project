@@ -24,7 +24,7 @@
               <div class="sticky-md-top product-sticky">
                 <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
                   <div class="carousel-inner bg-light rounded">
-                      {% for item in document_paths %}
+                      {% for item in defect_document_paths %}
                       <div class="carousel-item {% if forloop.first %}active{% endif %}">
                           <div class="zoomable-media">
                               {% if item.is_image %}
@@ -46,7 +46,7 @@
                       {% endfor %}
                   </div>
                   <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0">
-                      {% for item in document_paths %}
+                      {% for item in defect_document_paths %}
                       {% if item.is_image %}
                       <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
                           <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded  border me-4" alt="Product media">
