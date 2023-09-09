@@ -120,3 +120,10 @@ def get_active_menu(current_path):
             return active_menu
     
     return active_menu
+
+
+@register.filter
+def capitalize_fra(value):
+    # Split the value by "FRA"
+    parts = value.split(" ")
+    return parts[0].upper() + " "+ parts[1]
