@@ -38,7 +38,7 @@ class InventoryView(CustomAuthenticationMixin, generics.CreateAPIView):
         }
         
         queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q()))
-        item = queryset.filter(pk= self.kwargs.get('item_id'),  item_type = 'item').first()
+        item = queryset.filter(pk= self.kwargs.get('item_id')).first()
         return item
        
     

@@ -3,7 +3,7 @@ from django.urls import path
 from django.contrib.auth.decorators import login_required
 from .views import *
 from .reports import *
-
+from .sor_view import *
 
 urlpatterns = [
     path('quantity_surveyor/add/<int:customer_id>/',RequirementQSAddView.as_view() , name='add_quantity_surveyor'),
@@ -34,13 +34,14 @@ urlpatterns = [
     path('report/delete/<int:customer_id>/<int:requirement_id>/<int:pk>/', ReportRemoveView.as_view(), name='requirement_report_delete'),
 
     
-    
-    
-    
-    
-    
     path('defects/delete/<int:pk>/', RequirementDefectDeleteView.as_view(), name='requirement_defect_delete'),
-    path('defects/delete/document/<int:defect_id>/<int:pk>/', login_required(RequirementDefectRemoveDocumentView.as_view()), name='remove_requirement_defect_document')
+    path('defects/delete/document/<int:defect_id>/<int:pk>/', login_required(RequirementDefectRemoveDocumentView.as_view()), name='remove_requirement_defect_document'),
 
+    path('customers/sor/', SORCustomerListView.as_view(), name='sor_customers_list'),
+    path('sor/<int:customer_id>/list/', SORListView.as_view(), name='customer_sor_list'),
+    path('sor/<int:customer_id>/add/', SORAddView.as_view(), name='add_sor_customer'),
     
-]
+    path('sor/<int:customer_id>/edit/<int:sor_id>/', SORUpdateView.as_view(), name='edit_sor_customer'),
+    path('sor/delete/<int:sor_id>/', SORDeleteView.as_view(), name='delete_sor'),
+    
+]   

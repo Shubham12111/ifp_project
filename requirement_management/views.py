@@ -94,7 +94,7 @@ def filter_requirements(data_access_value, user, customer=None):
 
 class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     
-    serializer_class = RequirementCustomerSerializer
+    serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -1058,5 +1058,3 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
             messages.error(request, "Something went wrong !")
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
 
-                
-        

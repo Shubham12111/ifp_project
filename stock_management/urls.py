@@ -6,7 +6,7 @@ from .contact_person import *
 from .item import *
 from .inventory_location import *
 from .inventory import *
-from .item_sor import *
+
 
 
 urlpatterns = [
@@ -45,12 +45,6 @@ urlpatterns = [
    path('inventory_location/add/', InventoryLocationAddView.as_view(), name='inventory_location_add'),
    path('inventory_location/edit/<int:inventory_location_id>/', InventoryLocationUpdateView.as_view(), name='inventory_location_edit'),
    path('inventory_location/delete/<int:inventory_location_id>/', InventoryLocationDeleteView.as_view(), name='inventory_location_delete'),
-   
-   path('sor/list/', ItemSorListView.as_view(), name='list_sor'),
-   path('sor/add/', ItemSorAddView.as_view(), name='add_sor'),
-   
-   path('sor/edit/<int:item_id>/', ItemSorUpdateView.as_view(), name='edit_sor'),
-   path('sor/delete/<int:item_id>/', ItemSorDeleteView.as_view(), name='delete_sor'),
 
 
 ]
