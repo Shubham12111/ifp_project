@@ -207,13 +207,15 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             if not isinstance(self.initial_data, Mapping):
                 return OrderedDict()
 
+            if not self.instance:
+                fields['file_list'].required = True
+            
             return OrderedDict([
                 (field_name, field.get_value(self.initial_data))
                 for field_name, field in fields.items()
                 if (field.get_value(self.initial_data) is not empty) and
                 not field.read_only
             ])
-
         fields['file_list'].required = True
         
         return OrderedDict([
@@ -357,6 +359,9 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
             # initial_data may not be a valid type
             if not isinstance(self.initial_data, Mapping):
                 return OrderedDict()
+
+            if not self.instance:
+                fields['file_list'].required = True
 
             return OrderedDict([
                 (field_name, field.get_value(self.initial_data))
