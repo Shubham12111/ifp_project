@@ -571,7 +571,7 @@ class SORSerializer(serializers.ModelSerializer):
         file_list = validated_data.pop('file_list', None)
         # Create a new instance of Requirement with other fields from validated_data
         instance = SOR.objects.create(**validated_data)
-        breakpoint()
+
         if file_list and len(file_list) > 0:
 
             for file in file_list:
