@@ -22,7 +22,7 @@ from infinity_fire_solutions.email import *
 
 class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView):
     
-    serializer_class = RequirementCustomerSerializer
+    serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
