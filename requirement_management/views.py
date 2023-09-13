@@ -157,7 +157,8 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
         template_name (str): The template name for HTML rendering.
         ordering_fields (list): The fields for ordering.
     """
-    serializer_class = RequirementCustomerSerializer
+
+    serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -1243,5 +1244,3 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
             messages.error(request, "Something went wrong !")
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
 
-                
-        

@@ -79,7 +79,7 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
             # Get the appropriate filter from the mapping based on the data access value,
             # or use an empty Q() object if the value is not in the mapping
             queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
-            queryset = queryset.filter(item_type = 'item', vendor_id=vendor_instance )
+            queryset = queryset.filter(vendor_id=vendor_instance )
 
         return queryset
 
@@ -147,8 +147,7 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
                 # If the site address instance does not exist, create a new one.
                 serializer = self.serializer_class(data=serializer_data, context={'request': request})
                 message = "Congratulations! item has been updated successfully."
-            
-            data['item_type'] = 'item'
+
             if serializer.is_valid():
                 if not item_instance:
                     serializer.validated_data['user_id'] = request.user 
@@ -233,8 +232,6 @@ class ItemAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if file_list is not None and not any(file_list):
             data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-        
-        data['item_type'] = 'item'
             
         serializer = self.serializer_class(data=data)
 
@@ -369,8 +366,6 @@ class ItemUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         if file_list is not None and not any(file_list):
             data = data.copy()
             del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-
-        data['item_type'] = 'item'
         
         instance = self.get_queryset()
         if instance:
@@ -463,7 +458,7 @@ class ItemDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # or use an empty Q() object if the value is not in the mapping
 
         queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q()))
-        item = queryset.filter(pk= self.kwargs.get('item_id'),  item_type = 'item').first()
+        item = queryset.filter(pk= self.kwargs.get('item_id')).first()
 
         if item:
             images = ItemImage.objects.filter(item_id=item)

@@ -39,7 +39,8 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
         get_queryset: Get the filtered queryset for requirements based on the authenticated user.
         get: Handle GET requests for listing requirement reports and rendering HTML responses.
     """
-    serializer_class = RequirementCustomerSerializer
+
+    serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -144,7 +145,8 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
         get_queryset: Get the filtered queryset for requirements based on the authenticated user.
         get: Handle GET requests for displaying a requirement report and rendering HTML responses.
     """
-    serializer_class = RequirementCustomerSerializer
+    
+    serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -233,7 +235,9 @@ class ReportEdit(CustomAuthenticationMixin,generics.ListAPIView):
         get: Handle GET requests for editing a requirement report and rendering HTML responses.
         post: Handle POST requests for updating a requirement report, generating a PDF, and sending emails.
     """
-    serializer_class = RequirementCustomerSerializer
+
+    
+    serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
