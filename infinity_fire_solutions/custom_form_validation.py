@@ -7,6 +7,15 @@ from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 
 def get_site_url(request):
+    """
+    Get the site URL (protocol + domain) based on the request.
+
+    Args:
+        request: The HTTP request.
+
+    Returns:
+        str: The site URL.
+    """
     current_site = get_current_site(request)
     protocol = 'https' if request.is_secure() else 'http'
     domain = current_site.domain
@@ -14,16 +23,46 @@ def get_site_url(request):
     return site_url
 
 def validate_first_name(value):
+    """
+    Validate the first name field to allow only letters and spaces.
+
+    Args:
+        value (str): The first name to be validated.
+
+    Raises:
+        serializers.ValidationError: If the first name contains invalid characters.
+    """
     # Check if the first name contains only characters or letters with spaces
     if not re.match("^[a-zA-Z ]*$", value):
         raise serializers.ValidationError("First Name can only contain letters and spaces.")
 
 def validate_last_name(value):
+    """
+    Validate the last name field to allow only letters and spaces.
+
+    Args:
+        value (str): The last name to be validated.
+
+    Raises:
+        serializers.ValidationError: If the last name contains invalid characters.
+    """
     # Check if the first name contains only characters
     if not re.match("^[a-zA-Z ]*$", value):
         raise serializers.ValidationError("First Name can only contain letters and spaces.")
 
 def validate_phone_number(value):
+    """
+    Validate the phone number field for a specific format.
+
+    Args:
+        value (str): The phone number to be validated.
+
+    Returns:
+        str: The validated phone number.
+
+    Raises:
+        serializers.ValidationError: If the phone number format is invalid.
+    """
     # Remove any non-digit characters from the input
     cleaned_number = re.sub(r'\D', '', value)
 
@@ -38,6 +77,18 @@ def validate_phone_number(value):
     return value
 
 def validate_uk_postcode(value):
+    """
+    Validate the UK postcode field for a specific format.
+
+    Args:
+        value (str): The UK postcode to be validated.
+
+    Returns:
+        str: The validated UK postcode.
+
+    Raises:
+        serializers.ValidationError: If the postcode format is invalid.
+    """
     # Remove any spaces from the input
     cleaned_postcode = value.replace(' ', '').upper()
 
@@ -53,6 +104,18 @@ def validate_uk_postcode(value):
     return value
 
 def validate_description(value):
+    """
+    Validate the description field to treat <p><br></p> as blank.
+
+    Args:
+        value (str): The description to be validated.
+
+    Returns:
+        str: The validated description.
+
+    Raises:
+        serializers.ValidationError: If the description is invalid.
+    """
     # Custom validation for the message field to treat <p><br></p> as blank
     soup = BeautifulSoup(value, 'html.parser')
     cleaned_comment = soup.get_text().strip()
@@ -67,6 +130,18 @@ def validate_description(value):
     return value
 
 def action_description(value):
+    """
+    Validate the action description field to treat <p><br></p> as blank.
+
+    Args:
+        value (str): The action description to be validated.
+
+    Returns:
+        str: The validated action description.
+
+    Raises:
+        serializers.ValidationError: If the action description is invalid.
+    """
     # Custom validation for the message field to treat <p><br></p> as blank
     soup = BeautifulSoup(value, 'html.parser')
     cleaned_comment = soup.get_text().strip()
@@ -81,6 +156,18 @@ def action_description(value):
     return value
 
 def validate_rectification_description(value):
+    """
+    Validate the rectification description field to treat <p><br></p> as blank.
+
+    Args:
+        value (str): The rectification description to be validated.
+
+    Returns:
+        str: The validated rectification description.
+
+    Raises:
+        serializers.ValidationError: If the rectification description is invalid.
+    """
     # Custom validation for the message field to treat <p><br></p> as blank
     soup = BeautifulSoup(value, 'html.parser')
     cleaned_comment = soup.get_text().strip()
@@ -97,6 +184,15 @@ def validate_rectification_description(value):
 
 # validate the remarks field in stock/ vendor
 def validate_remarks(value):
+   """
+    Validate the remarks field for stock/vendor to ensure it's not only spaces and tabs.
+
+    Args:
+        value (str): The remarks to be validated.
+
+    Raises:
+        serializers.ValidationError: If the remarks consist of only spaces and tabs.
+    """
    soup = BeautifulSoup(value, 'html.parser')
    cleaned_comment = soup.get_text().strip()
    if all(char.isspace() for char in cleaned_comment):
@@ -127,6 +223,15 @@ file_extension_validator = FileExtensionValidator(
 )
 
 def validate_company_name(value):
+    """
+    Validate the company name field.
+
+    Args:
+        value (str): The company name to be validated.
+
+    Raises:
+        serializers.ValidationError: If the company name is invalid.
+    """
     # Check if the company name has more than one character
     if len(value) == 3:
         raise serializers.ValidationError("Company name must have more than three character.")
@@ -150,21 +255,42 @@ def validate_company_name(value):
     return value
 
 def no_spaces_or_tabs_validator(value):
+    """
+    Validate that a string does not consist of only spaces and/or tabs.
+
+    Args:
+        value (str): The string to be validated.
+
+    Raises:
+        ValidationError: If the string consists of only spaces and tabs.
+    """
     if all(char.isspace() for char in value):
         raise ValidationError("Cannot consist of only spaces and/or tabs.")
 
 
 
 def validate_name(value):
-         # Check if the name is a whole number
-         if value.isdigit():
-             raise serializers.ValidationError("Name cannot be a number.")
+    """
+    Validate the name field to ensure it's not a whole number and not only spaces and tabs.
 
-         # Check if the name consists of only spaces and/or tabs
-         if value.strip() == "":
-             raise serializers.ValidationError("Name cannot consist of only spaces and/or tabs.")
+    Args:
+        value (str): The name to be validated.
 
-         # Check if the name consists of only special characters
-         if re.match(r'^[!@#$%^&*()_+\-=\[\]{};:\'",.<>/?]*$', value):
-             raise serializers.ValidationError("Name cannot consist of only special characters.")
-         return value
+    Returns:
+        str: The validated name.
+
+    Raises:
+        serializers.ValidationError: If the name is invalid.
+    """
+    # Check if the name is a whole number
+    if value.isdigit():
+        raise serializers.ValidationError("Name cannot be a number.")
+
+    # Check if the name consists of only spaces and/or tabs
+    if value.strip() == "":
+        raise serializers.ValidationError("Name cannot consist of only spaces and/or tabs.")
+
+    # Check if the name consists of only special characters
+    if re.match(r'^[!@#$%^&*()_+\-=\[\]{};:\'",.<>/?]*$', value):
+        raise serializers.ValidationError("Name cannot consist of only special characters.")
+    return value

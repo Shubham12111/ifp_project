@@ -135,6 +135,9 @@ class LoginView(APIView):
 
 
 class SignupView(APIView):
+    """
+    API view for user Signup
+    """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = SignupSerializer
     template_name = "signup.html"
@@ -289,6 +292,9 @@ class LogoutView(APIView):
 
 
 class ForgotPasswordView(APIView):
+    """
+    API view for forgot password.
+    """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = ForgotPasswordSerializer
     template_name = "forgot.html"
@@ -345,6 +351,9 @@ class ForgotPasswordView(APIView):
 
 
 class ResetPasswordView(APIView):
+    """
+    API view for reset password.
+    """
     
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = "reset_password.html"  # Use your actual template name
@@ -383,6 +392,9 @@ class ResetPasswordView(APIView):
     
 
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST request for reset password page.
+        """
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
@@ -427,6 +439,9 @@ class ResetPasswordView(APIView):
     
 
 class ProfileView(APIView):
+    """
+    API view for profile
+    """
     
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = UserProfileSerializer
@@ -436,7 +451,7 @@ class ProfileView(APIView):
 
     def get(self, request):
         """
-        Handle GET request for login page.
+        Handle GET request for profile page.
         """
         # return redirect(reverse('dashboard'))
         
@@ -446,6 +461,9 @@ class ProfileView(APIView):
         return render_html_response({'serializer': serializer}, self.template_name)
     
     def post(self, request):
+        """
+        Handle POST request for profile page.
+        """
         data = request.data.copy()  # Create a mutable copy of request.data
         data.update({'email': request.user.email})  # Update the copy with the new email value
 
@@ -460,6 +478,9 @@ class ProfileView(APIView):
 
 
 class ChangePasswordView(APIView):
+    """
+    API view for change password page
+    """
     
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = ChangePasswordSerializer
@@ -469,7 +490,7 @@ class ChangePasswordView(APIView):
 
     def get(self, request):
         """
-        Handle GET request for login page.
+        Handle GET request for change password page.
         """
         # return redirect(reverse('dashboard'))
         
@@ -479,6 +500,9 @@ class ChangePasswordView(APIView):
         return render_html_response({'serializer': serializer}, self.template_name)
 
     def post(self, request):
+        """
+        Handle POST request for change password page.
+        """
         data = request.data
         serializer = self.serializer_class(data=data, instance=request.user, context={'request': request})
 
@@ -507,6 +531,9 @@ class ChangePasswordView(APIView):
 
 
 class EnforceChangePasswordView(APIView):
+    """
+    API view for ENFORCE change password page
+    """
     
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = ChangePasswordSerializer
@@ -521,7 +548,7 @@ class EnforceChangePasswordView(APIView):
 
     def get(self, request):
         """
-        Handle GET request for login page.
+        Handle GET request for enforce change password
         """
         # return redirect(reverse('dashboard'))
         
@@ -531,6 +558,9 @@ class EnforceChangePasswordView(APIView):
         return self.render_html_response(serializer)
 
     def post(self, request):
+        """
+        Handle POST request for enforce change password.
+        """
         data = request.data
         serializer = self.serializer_class(data=data, instance=request.user, context={'request': request})
         if serializer.is_valid():

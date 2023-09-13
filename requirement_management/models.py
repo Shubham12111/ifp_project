@@ -26,6 +26,23 @@ STATUS_CHOICES = (
     )
 
 class Requirement(models.Model):
+    """
+    Model for storing requirements.
+
+    Attributes:
+        user_id (ForeignKey): The user who created the requirement.
+        customer_id (ForeignKey): The customer associated with the requirement.
+        UPRN (CharField): UPRN (Unique Property Reference Number) for the requirement.
+        RBNO (CharField): RBNO (Reference Building Number) for the requirement.
+        description (TextField): Description of the requirement.
+        action (TextField): Action for the requirement.
+        site_address (ForeignKey): The site address associated with the requirement.
+        quantity_surveyor (ForeignKey): The quantity surveyor assigned to the requirement.
+        surveyor (ForeignKey): The surveyor associated with the requirement.
+        status (CharField): Status of the requirement (choices defined in REQUIREMENT_CHOICES).
+        created_at (DateTimeField): Date and time when the requirement was created.
+        updated_at (DateTimeField): Date and time when the requirement was last updated.
+    """
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_requirement')
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_requirement')
     UPRN = models.CharField(max_length=255, null=True)
@@ -47,6 +64,15 @@ class Requirement(models.Model):
         return f"{self.customer_id.first_name} {self.customer_id.last_name}'s requirement"
 
 class RequirementAsset(models.Model):
+    """
+    Model for storing requirement assets.
+
+    Attributes:
+        requirement_id (ForeignKey): The requirement associated with the asset.
+        document_path (CharField): Path to the asset document.
+        created_at (DateTimeField): Date and time when the asset was created.
+        updated_at (DateTimeField): Date and time when the asset was last updated.
+    """
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
     document_path = models.CharField(max_length=256)
     create_at = models.DateTimeField(auto_now_add=True)
@@ -57,6 +83,19 @@ class RequirementAsset(models.Model):
         verbose_name_plural = _('FRA Action Document')
         
 class RequirementDefect(models.Model):
+    """
+    Model for storing requirement defects.
+
+    Attributes:
+        requirement_id (ForeignKey): The requirement associated with the defect.
+        action (TextField): Action for the defect.
+        description (TextField): Description of the defect.
+        reference_number (CharField): Reference number for the defect.
+        rectification_description (TextField): Description of rectification for the defect.
+        status (CharField): Status of the defect (choices defined in REQUIREMENT_DEFECT_CHOICES).
+        created_at (DateTimeField): Date and time when the defect was created.
+        updated_at (DateTimeField): Date and time when the defect was last updated.
+    """
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
     action = models.TextField()
     description = models.TextField()
@@ -73,6 +112,16 @@ class RequirementDefect(models.Model):
         verbose_name_plural = _('Fire Risk Assessment Defect')
 
 class RequirementDefectDocument(models.Model):
+    """
+    Model for storing requirement defect documents.
+
+    Attributes:
+        requirement_id (ForeignKey): The requirement associated with the defect document.
+        defect_id (ForeignKey): The defect associated with the defect document.
+        document_path (CharField): Path to the defect document.
+        created_at (DateTimeField): Date and time when the defect document was created.
+        updated_at (DateTimeField): Date and time when the defect document was last updated.
+    """
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
     defect_id = models.ForeignKey(RequirementDefect, on_delete=models.CASCADE)
     document_path = models.CharField(max_length=256)
@@ -85,6 +134,20 @@ class RequirementDefectDocument(models.Model):
 
 
 class Report(models.Model):
+    """
+    Model for storing reports.
+
+    Attributes:
+        user_id (ForeignKey): The user associated with the report.
+        requirement_id (ForeignKey): The requirement associated with the report.
+        defect_id (ManyToManyField): The defects associated with the report.
+        signature_path (CharField): Path to the report's signature.
+        pdf_path (CharField): Path to the report's PDF.
+        comments (TextField): Comments for the report.
+        status (CharField): Status of the report (choices defined in STATUS_CHOICES).
+        created_at (DateTimeField): Date and time when the report was created.
+        updated_at (DateTimeField): Date and time when the report was last updated.
+    """
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='report_user', null=True)
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
     defect_id = models.ManyToManyField(RequirementDefect, blank=True)
