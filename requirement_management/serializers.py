@@ -67,7 +67,7 @@ class RequirementDetailSerializer(serializers.ModelSerializer):
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
         return data
 
-class RequirementCustomerSerializer(serializers.ModelSerializer):
+class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'company_name')
@@ -207,13 +207,15 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             if not isinstance(self.initial_data, Mapping):
                 return OrderedDict()
 
+            if not self.instance:
+                fields['file_list'].required = True
+            
             return OrderedDict([
                 (field_name, field.get_value(self.initial_data))
                 for field_name, field in fields.items()
                 if (field.get_value(self.initial_data) is not empty) and
                 not field.read_only
             ])
-
         fields['file_list'].required = True
         
         return OrderedDict([
@@ -358,6 +360,9 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
             if not isinstance(self.initial_data, Mapping):
                 return OrderedDict()
 
+            if not self.instance:
+                fields['file_list'].required = True
+
             return OrderedDict([
                 (field_name, field.get_value(self.initial_data))
                 for field_name, field in fields.items()
@@ -482,3 +487,182 @@ class RequirementDefectDocumentSerializer(serializers.Serializer):
 
         ret['document_path'] = {'name': instance.document_path,  'url': generate_presigned_url(instance.document_path) }
         return ret
+
+
+class SORSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(
+        label=('Name'),
+        max_length=500, 
+        required=True, 
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class':'col-12'
+        },
+        error_messages={
+            "required": "Item Name is required.",
+            "blank":"Name is required.",
+        },
+    )
+    description = serializers.CharField(
+        max_length=1000, 
+        required=True, 
+        style={'base_template': 'rich_textarea.html', 'rows': 5},
+        error_messages={
+            "required": "Description is required.",
+            "blank":"Description is required.",
+        },
+        validators=[validate_description]
+    )
+    
+    
+    category_id = serializers.PrimaryKeyRelatedField(
+        label=('Category'),
+        required=True,
+        queryset=Category.objects.all(),
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-6'
+        },
+    )
+
+    price = serializers.DecimalField(
+        label=('Price ( £ )'),
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "Price is required.",
+            "invalid": "Price is invalid.",  
+            "blank":"Price is required.", 
+        },
+    )
+    
+    reference_number = serializers.CharField(
+        label=('Reference Number'),
+        max_length=50,
+        required=True,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "Reference Number is required.",
+            "invalid": "Reference Number is invalid.",  
+            "blank":"Reference Number is required.", 
+        },
+    )
+    
+    file_list = serializers.ListField(
+        child=serializers.FileField(
+            allow_empty_file=False,
+            validators=[CustomFileValidator()],
+        ),
+        label=('Documents'),  # Adjust the label as needed
+        required=False,
+        initial=[],
+        style={
+            "input_type": "file",
+            "class": "form-control",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_multiple_file.html',
+            'help_text': True,
+            'multiple': True,
+            'accept': ".png, .jpg, .jpeg",
+            'allow_null': True,  # Allow None values
+        },
+        help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_SUPPORTED_EXTENSIONS))
+        )
+        
+    class Meta:
+        model = SOR
+        fields = ['name','category_id','price', 'description','reference_number','file_list']
+
+        
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Price cannot be negative.")
+        return value
+
+    def validate_sor_name(self, value):
+        # Check for minimum length of 3 characters
+        if len(value) < 3:
+            raise serializers.ValidationError("SOR Name must be at least 3 characters long.")
+         # Check if the value consists entirely of digits (integers)
+        if value.isdigit():
+            raise serializers.ValidationError("SOR Name cannot consist of only integers.")
+
+        # Check for alphanumeric characters and spaces
+        if not re.match(r'^[a-zA-Z0-9\s]*$', value):
+            raise serializers.ValidationError("SOR Name can only contain alphanumeric characters and spaces.")
+
+        return value
+
+    
+    def create(self, validated_data):
+        # Pop the 'file_list' field from validated_data
+        file_list = validated_data.pop('file_list', None)
+        # Create a new instance of Requirement with other fields from validated_data
+        instance = SOR.objects.create(**validated_data)
+
+        if file_list and len(file_list) > 0:
+
+            for file in file_list:
+                # Generate a unique filename for each file
+                unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                upload_file_to_s3(unique_filename, file, f'fra/sor/{instance.id}')
+                file_path = f'fra/sor/{instance.id}/{unique_filename}'
+                
+                # save the Product images
+                SORImage.objects.create(
+                sor_id = instance,
+                image_path=file_path,
+                )
+
+        instance.save()
+        return instance
+    
+    def update(self, instance, validated_data):
+        file_list = validated_data.pop('file_list', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        with transaction.atomic():
+            instance.save()
+
+            # Update associated documents if file_list is provided
+            if file_list and len(file_list) > 0:
+                
+                for file in file_list:
+                    unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                    upload_file_to_s3(unique_filename, file, f'fra/sor/{instance.id}')
+                    file_path = f'fra/sor/{instance.id}/{unique_filename}'
+                
+                    SORImage.objects.create(
+                        sor_id=instance,
+                        image_path=file_path,
+                )
+        
+        return instance
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        document_paths = []
+        if hasattr(instance, 'itemimage_set'):  # Using 'itemimage_set' for images
+
+            for document in SORImage.objects.filter(sor_id=instance):
+                document_paths.append({
+                    'presigned_url': generate_presigned_url(document.image_path),
+                    'filename': document.image_path.split('/')[-1],
+                    'id': document.id  #  document ID
+                })
+
+        
+        representation['document_paths'] = document_paths
+        return representation

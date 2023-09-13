@@ -28,13 +28,7 @@ PRODUCT_STATUS_CHOICES = (
         ('expired', 'Expired'),
 )
 
-# Choices for Item Type
-ITEM_TYPE_CHOICES = (
-        ('item', 'Item'),
-        ('sor', 'SOR'),
-)
 
-# Choices for Salutation
 SALUTATION_CHOICES = [
         ('Mr.', 'Mr.'),
         ('Mrs.', 'Mrs.'),
@@ -119,7 +113,6 @@ class Item(models.Model):
     reference_number = models.CharField(max_length=50)
     units = models.CharField(max_length=10, choices=UNIT_CHOICES, default='single')
     quantity_per_box = models.DecimalField(max_digits=10, default=1.0, decimal_places=2)
-    item_type = models.CharField(max_length=10, choices=ITEM_TYPE_CHOICES, default='item')
     status = models.CharField(max_length=50, choices=PRODUCT_STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
