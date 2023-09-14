@@ -30,20 +30,21 @@
             <table class="table table-flush text-dark" id="item-list">
               <thead class="thead-light">
                 <tr>
+                  <th>SOR Code</th>
                   <th>SOR Name</th>
                   <th>Description</th>
                   <th>Price ( £ )</th>
-                  <th>Reference Number</th>
                   <th class="custom-last-column">Actions</th>
                 </tr>
               </thead>
               <tbody class="ml-4">
                 {% for item in list_sor %}
                 <tr class="text-sm">
+                  <td style="text-transform: uppercase;">{{item.reference_number|default:''|truncatechars:20|title}}</td>
                   <td>{{item.name|title|default:''|truncatechars:20|title}}</td>
                   <td>{{item.description|safe|truncatechars:50}}</td>
                   <td>{{item.price}}</td>
-                  <td>{{item.reference_number}}</td>
+
                   <td>
                     <div class="dropstart ms-auto pe-0">
                       <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">

@@ -7,14 +7,19 @@ from ckeditor.fields import RichTextField
 from stock_management.models import Category
 from customer_management.models import SiteAddress
 
+
+REQUIREMENT_DEFECT_CHOICES = (
+    ('actual_defect', 'Actual Defect'),
+    ('recommended', 'Recommended Defect'),
+)
+
 REQUIREMENT_CHOICES = (
     ('active', 'Active'),
     ('to-surveyor', 'To Surveyor'),
     ('assigned-to-surveyor ', 'Assigned To Surveyor')
 )
 
-
-REQUIREMENT_DEFECT_CHOICES = (
+REQUIREMENT_DEFECT_STATUS_CHOICES = (
     ('pending', 'Pending'),
     ('in-progress', 'In Progress'),
     ('executed', 'Executed')
@@ -67,7 +72,8 @@ class RequirementDefect(models.Model):
     description = models.TextField()
     reference_number = models.CharField(max_length=50, null=True)
     rectification_description = models.TextField()
-    status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='pending')
+    status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_STATUS_CHOICES, default='pending')
+    defect_type = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='actual_defect')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

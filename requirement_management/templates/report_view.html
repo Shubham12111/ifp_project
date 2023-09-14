@@ -144,7 +144,7 @@
     {% for defect in report_instance.defect_id.all %}
     <div class="card mt-4 mx-0">
         <div class="card-header pb-0 mt-0">
-            <h5 class="card-title">Defect - {{ forloop.counter }}</h5>
+            <h5 class="card-title">Defect - {{ forloop.counter }} </h5>
         </div>
         <div class="card-body mt-0">
             <table class="table text-sm ">
@@ -163,6 +163,7 @@
                     </tr>
                 </tbody>
             </table>
+            <span class="badge badge-sm bg-gradient-dark">{{defect.defect_type}} </span>
         </div>
     </div>
     {% endfor %}

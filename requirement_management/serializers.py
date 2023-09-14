@@ -347,9 +347,16 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         'multiple': True,
         'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
         'allow_null': True,  # Allow None values
+        'custom_class': 'col-6'
     },
     help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
+    
+    defect_type = serializers.ChoiceField(
+        label='Defect Type',
+        choices=REQUIREMENT_DEFECT_CHOICES,
+        default='actual_defect',  # Set the default choice here
+        style={'base_template': 'radio.html', 'inline':True, 'custom_class': 'col-6'},)
 
     def get_initial(self):
         
@@ -381,7 +388,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = RequirementDefect
-        fields = ('action',  'description', 'rectification_description', 'file_list')
+        fields = ('action',  'description', 'rectification_description',  'defect_type','file_list')
 
     
     def create(self, validated_data):
@@ -496,7 +503,7 @@ class SORSerializer(serializers.ModelSerializer):
         required=True, 
         style={
             'base_template': 'custom_input.html',
-            'custom_class':'col-12'
+            'custom_class':'col-6'
         },
         error_messages={
             "required": "Item Name is required.",
@@ -542,7 +549,7 @@ class SORSerializer(serializers.ModelSerializer):
     )
     
     reference_number = serializers.CharField(
-        label=('Reference Number'),
+        label=('SOR Code'),
         max_length=50,
         required=True,
         style={
@@ -580,7 +587,7 @@ class SORSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = SORItem
-        fields = ['name','category_id','price', 'description','reference_number','file_list']
+        fields = ['name','reference_number','category_id','price', 'description','file_list']
 
         
     def validate_price(self, value):
@@ -613,7 +620,7 @@ class SORSerializer(serializers.ModelSerializer):
             reference_number = SORItem.objects.filter(reference_number=value).exists()
         
         if reference_number:
-            raise serializers.ValidationError("This reference number is already in use.")
+            raise serializers.ValidationError("This SOR code is already in use.")
         
         return value
 
