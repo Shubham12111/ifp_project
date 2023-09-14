@@ -21,7 +21,8 @@ from infinity_fire_solutions.email import *
 
 
 def get_customer_data(customer_id):
-    customer_data = User.objects.filter(id=customer_id).first()
+    customer_data = User.objects.filter(id=customer_id, is_active=True,
+                                        roles__name__icontains='customer').first()
     
     return customer_data
 

@@ -41,10 +41,10 @@ urlpatterns = [
     path('defects/delete/document/<int:defect_id>/<int:pk>/', login_required(RequirementDefectRemoveDocumentView.as_view()), name='remove_requirement_defect_document'),
 
     path('customers/sor/', SORCustomerListView.as_view(), name='sor_customers_list'),
-    path('sor/<int:customer_id>/list/', SORListView.as_view(), name='customer_sor_list'),
-    path('sor/<int:customer_id>/add/', SORAddView.as_view(), name='add_sor_customer'),
+    path('customer/sor/<int:customer_id>/list/', SORListView.as_view(), name='customer_sor_list'),
+    path('customer/sor/<int:customer_id>/add/', SORAddView.as_view(), name='add_sor_customer'),
     
-    path('sor/<int:customer_id>/edit/<int:sor_id>/', SORUpdateView.as_view(), name='edit_sor_customer'),
-    path('sor/delete/<int:sor_id>/', SORDeleteView.as_view(), name='delete_sor'),
+    path('customer/sor/<int:customer_id>/edit/<int:sor_id>/', SORUpdateView.as_view(), name='edit_sor_customer'),
+    path('customer/sor/delete/<int:sor_id>/', SORDeleteView.as_view(), name='delete_sor'),
     
 ]   

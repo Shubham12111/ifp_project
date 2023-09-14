@@ -25,6 +25,11 @@ STATUS_CHOICES = (
         ('submitted', 'submitted'),
     )
 
+CATEGORY_STATUS_CHOICES = (
+        ('active', 'Active'),
+        ('in-active', 'Inactive'),
+)
+
 class Requirement(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_requirement')
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_requirement')
@@ -95,22 +100,69 @@ class Report(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-class SOR(models.Model):
+class SORCategory(models.Model):
+    """
+        Represents a category for Service Order Requests (SOR).
+
+        Attributes:
+            user_id (ForeignKey): The user who created this category.
+            name (str): The name of the category (limited to 50 characters).
+            description (RichTextField, optional): Description of the category (Rich Text Field).
+            image_path (str): Path to the category's image (limited to 255 characters).
+            status (str): The status of the category (active or inactive).
+            created_at (DateTime): Date and time when the category was created (auto-generated).
+            updated_at (DateTime): Date and time when the category was last updated (auto-generated).
+    """
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sorcategory_user')
+    name = models.CharField(max_length=50)
+    description = RichTextField(null=True)
+    image_path = models.CharField(max_length=255, null=True, blank=True)
+    status = models.CharField(max_length=50, choices=CATEGORY_STATUS_CHOICES, default='active')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        """
+        Returns a string representation of the category, which is its name.
+        """
+        return self.name
+
+class SORItem(models.Model):
+    """
+        Represents an item related to SOR (Service Order Request).
+
+        Attributes:
+            user_id (ForeignKey): The user who created this item.
+            customer_id (ForeignKey): The customer who owns this item.
+            category_id (ForeignKey): The category to which this item belongs.
+            name (str): The name of the item (limited to 50 characters).
+            description (RichTextField, optional): Description of the item (Rich Text Field).
+            price (Decimal): The price of the item (up to 10 digits with 2 decimal places).
+            reference_number (str): A reference number for the item (limited to 50 characters).
+            created_at (DateTime): Date and time when the item was created (auto-generated).
+            updated_at (DateTime): Date and time when the item was last updated (auto-generated).
+    
+    """
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, 
+                                verbose_name="Created By", related_name="sor_user", null=True)
+    
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    category_id = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category_id = models.ForeignKey(SORCategory, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
     description =  RichTextField(null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     reference_number = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     def __str__(self):
+        """
+            Returns a string representation of the item, which is its name.
+        """
         return self.name
 
-
-class SORImage(models.Model):
-    sor_id = models.ForeignKey(SOR, on_delete=models.CASCADE, null=True)
+class SORItemImage(models.Model):
+    sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)
     image_path = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
