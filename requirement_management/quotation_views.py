@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.db.models import F
 from django.http import JsonResponse
 from infinity_fire_solutions.custom_form_validation import *
+from datetime import datetime
 import uuid
 
 
@@ -133,7 +134,12 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
             report_id = kwargs.get('pk')
             # This method handles GET requests for updating an existing Requirement object.
             if request.accepted_renderer.format == 'html':
-                report_instance = self.get_queryset()
+
+                if kwargs.get('quotation_id'):
+                    quotation_data =  Quotation.objects.filter(id=self.kwargs.get('quotation_id')).get()
+                    report_instance = Report.objects.filter(pk=quotation_data.report_id.id).first()
+                else:
+                    report_instance = self.get_queryset()
                 
                 requirement_instance = report_instance.requirement_id
                 requiremnt_defect_instances = report_instance.defect_id.all()
@@ -145,6 +151,7 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
 
                 # Serialize the list to JSON
                 all_sors_json = json.dumps(all_sors_list, cls=DecimalEncoder)
+
                 if report_instance:
 
                     context = {
@@ -154,7 +161,8 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                         'customer_id': kwargs.get('customer_id'),
                         'customer_data':customer_data,
                         'all_sors': all_sors_json,
-                        'customer_address':customer_address
+                        'customer_address':customer_address,
+                        'quotation_data':quotation_data
                         }
             
 
@@ -170,8 +178,16 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
     def post(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id')
         customer_data = get_customer_data(customer_id)
+        quotation_data= {}
+        
         if customer_data:
             report_instance = self.get_queryset()
+            requirement_instance = report_instance.requirement_id
+            customer_address =  BillingAddress.objects.filter(user_id=customer_data).first()
+
+            if kwargs.get('quotation_id'):
+               quotation_data =  Quotation.objects.filter(id=self.kwargs.get('quotation_id')).get()
+            
             data = request.data
 
             sor_id_list = []  # Initialize a list to store 'sor-id' values
@@ -216,23 +232,29 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
             quotation_instance = Quotation.objects.create(
                 user_id=request.user,  # Replace with the actual user instance
                 customer_id=customer_data,  # Replace with the actual customer user instance
-                requirement_id=report_instance.requirement_id,  # Replace with the actual Requirement instance
+                requirement_id=requirement_instance,  # Replace with the actual Requirement instance
                 report_id=report_instance,  # Replace with the actual Report instance
                 status=request.data.get('status'),  # Replace with the desired status
+                total_amount=request.data.get('total_amount'), 
                 quotation_json=json_data  # Use the constructed JSON data
+                
             )
 
             if request.data.get('status') == "submitted":
-                unique_pdf_filename = f"{str(uuid.uuid4())}_quotation_{report_instance.requirement_id.id}.pdf"
-                context= {'quotation_instance':quotation_instance,
-                        'customer_data':customer_data
+                quotation_instance.submitted_at = datetime.now() 
+                unique_pdf_filename = f"{str(uuid.uuid4())}_quotation_{requirement_instance.id}.pdf"
+                context= {'customer_id': customer_id,
+                            'customer_data':customer_data,
+                            'customer_address':customer_address,
+                            'requirement_instance':requirement_instance,
+                            'queryset':quotation_instance
                         }
                 pdf_file = save_pdf_from_html(context=context, file_name=unique_pdf_filename, content_html = 'quote/quotation_pdf.html')
-                pdf_path = f'requirement/{report_instance.requirement_id.id}/quotation/pdf'
+                pdf_path = f'requirement/{requirement_instance.id}/quotation/pdf'
                 
                 upload_signature_to_s3(unique_pdf_filename, pdf_file, pdf_path)
                 
-                quotation_instance.pdf_path = f'requirement/{report_instance.requirement_id.id}/quotation/pdf/{unique_pdf_filename}'
+                quotation_instance.pdf_path = f'requirement/{requirement_instance.id}/quotation/pdf/{unique_pdf_filename}'
                 quotation_instance.save()
 
             message = f"Your quotation has been added successfully!"
@@ -264,6 +286,7 @@ class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         if customer_data:
             queryset = self.get_queryset()
+           
             if request.accepted_renderer.format == 'html':
                 context = {'quotation_list': queryset,
                 'customer_id': customer_id,
@@ -279,7 +302,7 @@ class CustomerQuotationView(CustomAuthenticationMixin,generics.ListAPIView):
     
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    template_name = 'quote/quotation_pdf.html'
+    template_name = 'quote/quotation_view.html'
 
 
     def get_queryset(self):

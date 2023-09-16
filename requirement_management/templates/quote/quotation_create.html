@@ -13,6 +13,9 @@
     padding: 10px; /* Optional: Add padding to the columns for spacing */
     margin-bottom: 10px; /* Optional: Add margin to separate the columns */
   }
+  .read-more {
+        cursor: pointer; /* Add a pointer cursor when hovering */
+    }
 </style>
 {% endblock %}
 {% load rest_framework %}
@@ -26,7 +29,12 @@
       <h4>Add  Quotation</h4>
     </div>
     <div class="col-lg-6 col-sm-12">
+      {% if quotation_data %}
+      <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'view_customer_quotation_list'  customer_id %}">Back</a>
+      {% else %}
         <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'view_customer_fra_list_report'  customer_id %}">Back</a>
+        {% endif %}
+       
     </div>
 </div>
   <div class="row ">
@@ -36,7 +44,7 @@
         <div class="card-header pb-0 mt-0">
             <h5 class="card-title">FRA Details</h5>
         </div>
-        <div class="card-body mt-0 text-xs">
+        <div class="card-body mt-0 text-sm">
           <b>Action</b>
           <p class="text-sm mt-2" style="text-align: justify;">
             <span id="actionText">{{ requirement_instance.action|truncatechars:380 }}</span>
@@ -115,34 +123,34 @@
           <div class="card mt-4 mx-0">
             <div class="card-header pb-0">
               <h5>Defects</h5>
-          </div>
+            </div>
             <div class="card-body mt-0 ">
            {% for defect in requiremnt_defect_instances %}
            <div class="row column-with-border ">
            <h6>Defect {{ forloop.counter }} - <span class="text-sm">({{defect.get_defect_type_display}})</span></h6>
           
              <div class="col-lg-4 col-sm-12 text-sm ">
-               <h6><strong>Action</strong></h6>
+              <b >Action</b>
                <p class="text-sm mt-2" style="text-align: justify;">
-                 <span id="defectActionText{{ forloop.counter }}">{{ defect.action|truncatechars:250 }}</span>
+                 <span id="defectActionText{{ forloop.counter }}">{{ defect.action|truncatechars:150 }}</span>
                  <span id="defectActionMore{{ forloop.counter }}" style="display: none;">{{ defect.action }}</span>
                  <span class="read-more text-primary" id="defectActionToggle{{ forloop.counter }}" onclick="toggleReadMore('defectActionText{{ forloop.counter }}', 'defectActionMore{{ forloop.counter }}','defectActionToggle{{ forloop.counter }}')"> Read More
                  </span>
                </p>
              </div>
              <div class="col-lg-4 col-sm-12 text-sm">
-               <h6><strong>Description</strong></h6>
+               <b>Description</b>
                <p class="text-sm mt-2" style="text-align: justify;">
-                 <span id="defectDescriptionText{{ forloop.counter }}">{{ defect.description|truncatechars:250 }}</span>
+                 <span id="defectDescriptionText{{ forloop.counter }}">{{ defect.description|truncatechars:150 }}</span>
                  <span id="defectDescriptionMore{{ forloop.counter }}" style="display: none;">{{ defect.description }}</span>
                  <span class="read-more text-primary" id="defectDescriptionToggle{{ forloop.counter }}" onclick="toggleReadMore('defectDescriptionText{{ forloop.counter }}', 'defectDescriptionMore{{ forloop.counter }}','defectDescriptionToggle{{ forloop.counter }}')"> Read More
                  </span>
                </p>
              </div>
              <div class="col-lg-4 col-sm-12 text-sm">
-               <h6><strong>Rectification Description</strong></h6>
+               <b>Rectification Description</b>
                <p class="text-sm mt-2" style="text-align: justify;">
-                 <span id="defectRectificationText{{ forloop.counter }}">{{ defect.rectification_description|truncatechars:250 }}</span>
+                 <span id="defectRectificationText{{ forloop.counter }}">{{ defect.rectification_description|truncatechars:150 }}</span>
                  <span id="defectRectificationMore{{ forloop.counter }}" style="display: none;">{{ defect.rectification_description }}</span>
                  <span class="read-more text-primary" id="defectRectificationToggle{{ forloop.counter }}"  onclick="toggleReadMore('defectRectificationText{{ forloop.counter }}', 'defectRectificationMore{{ forloop.counter }}','defectRectificationToggle{{ forloop.counter }}')">Read More
                  </span>
@@ -151,16 +159,40 @@
           
               <div class="col-lg-12 col-sm-12">
                 {% csrf_token %}
+                
                   <!-- Empty table element with a unique ID -->
                   <table id="table-{{ defect.id }}" class="custom-table text-sm" style="width:100%">
                     <!-- Table content will be added dynamically here -->
-                    <tr id="header-{{ defect.id }}" style="display: none;">
+                    <tr id="header-{{ defect.id }}" {% if quotation_data.quotation_json.defectSorValues %}{% else %} style="display: none;"{% endif %}>
                       <th class="col-4">SOR Code</th>
                       <th>Category</th>
                       <th>Price(£)</th>
                       <th class="col-1">Action</th>
                       <!-- Add more headers as needed -->
                     </tr>
+                    {% if quotation_data.quotation_json.defectSorValues %}
+                      {% for defect_key, value in quotation_data.quotation_json.defectSorValues.items %}
+                      {% if defect_key == defect.id|stringformat:"s" %}
+                       
+                          {% for inner_key, inner_value in value.items %}
+                              {% for item in inner_value.sor_items %}
+                                <tr>
+                                  <td>{{ item.reference_number }}</td>
+                                  <td>{{ item.category_id }}</td>
+                                  <td>{{ item.price }}</td>
+                                  <td>
+                                      <span class="text-danger text-center" style="cursor: pointer;" onclick="removeRow('{{ defect.id }}', '{{inner_key}}')">x</span>
+                                  </td>
+                              </tr>
+                            
+                              {% endfor %}
+                          {% endfor %}
+                        {% endif %}
+                      {% endfor %}
+                    {% endif %}
+
+
+
                   </table>
                 </div>
                 <div class="col-lg-12 col-sm-12 mb-0">
@@ -175,7 +207,11 @@
                 </div>
                 <div class="col-lg-6 col-sm-6 mt-4">
                   <h5 class="text-end text-md">
-                    <strong>SOR Total : </strong> <span  id="total-price"></span>
+                    {% if quotation_data.total_amount %}
+                    <strong>SOR Total : </strong> <span id="total-price">{{quotation_data.total_amount}}</span>
+                    {% else %}
+                    <strong>SOR Total : </strong> <span id="total-price"></span>
+                    {% endif %}
                   </h5>
                 </div>
 
@@ -374,7 +410,9 @@ function addTable(button) {
     
   }
 
+
 var totalPriceInput = document.getElementById('total-price');
+
 
 // Function to remove a row from a defect table
 function removeRow(defectId, rowId) {
@@ -424,7 +462,8 @@ function updateTotalPrice() {
 
   // Update the total price input for all defect tables
   var totalPriceInput = document.getElementById('total-price');
-  if (totalPriceInput) {
+  if (totalPriceInput)
+  {
     totalPriceInput.textContent = totalAllDefects.toFixed(2); // Format the total as needed
   }
 }
@@ -450,6 +489,7 @@ function sendDataToServer(status) {
   var dataToSend = {
     // Include your data here
     status: status, // Include the status based on the button clicked
+    total_amount : totalPriceInput.textContent,
     defectSorValues: {}, // Initialize an empty object to store defect-SOR values
   };
     // Loop through each defectId in rowPrices and add the corresponding SOR values with IDs to the data

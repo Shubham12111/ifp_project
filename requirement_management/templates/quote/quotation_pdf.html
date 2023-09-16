@@ -1,3 +1,5 @@
+{% load requirement_tag %}
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -19,14 +21,14 @@
             font-size: 12px;
         }
         .invoice-left {
-            width: 120%;
+            width: 50%;
         }
         .invoice-right {
-            width: 50%;
+            width: 40%;
         }
        
         .invoice-logo {
-            max-width: 100px;
+            max-width: 250px;
         }
         .invoice-header {
             text-align: left;
@@ -45,14 +47,14 @@
         }
         .invoice-total {
             text-align: right;
-            margin-top: 20px;
+            margin-top: 25px !important;
         }
     </style>
 </head>
 <body>
     <div class="invoice">
         <div class="invoice-left">
-            <img src="/static/assets/img/logo2.png" alt="Company Logo" class="invoice-logo">
+            <img src="{% static 'assets/img/logo2.png' %}" alt="Company Logo" class="invoice-logo">
             <div class="company-details">
                 <p>Infinity Fire Prevention Ltd Infinity House</p>
                 <p>38 Riverside,Sir Thomas Longley Road</p>
@@ -105,27 +107,27 @@
         </div>
         
     </div>
-    <div class="invoice-header">
-        <h1>SOR Items</h1>
-    </div>
     <table class="invoice-table">
         <thead style="background-color: #ccc;">
             <tr>
-                <th>SOR Code</th>
-                <th>SOR Description</th>
-                <th>Category</th>
-                <th>Price</th>
+                <th scope="col" class="pe-2 text-start ps-2">SOR Code </th>
+                <th scope="col" class="pe-2 text-start ps-2">Defect Action </th>
+                <th scope="col" class="pe-2 text-start ps-2">Defect Rectification </th>
+                <th scope="col" class="pe-2">SOR Description</th>
+                <th scope="col" class="pe-2">Category</th>
+                <th scope="col" class="pe-2">Price(£)</th>
 
             </tr>
         </thead>
         <tbody id="sor-items-table">
-            {% for key, value in queryset.quotation_json.defectSorValues.items %}
-            
+            {% for defect_key, value in queryset.quotation_json.defectSorValues.items %}
             {% for inner_key, inner_value in value.items %}
                 {% for item in inner_value.sor_items %}
                     <tr>
                         <td>{{ item.reference_number }}</td>
-                        <td>{{ item.name }}</td>
+                        <td>{{defect_key|get_defect_action}}</td>
+                        <td>{{defect_key|get_defect_rectification}}</td>
+                        <td>{{ item.description }}</td>
                         <td>{{ item.category_id }}</td>
                         <td>{{ item.price }}</td>
                     </tr>
@@ -134,8 +136,8 @@
         {% endfor %}
         </tbody>
     </table>
-    <div class="invoice-total">
-        <p><strong>Total:</strong></p>
+    <div class="invoice-total ">
+        <h2 style="text-align: right;">SOR Total (£): {{queryset.total_amount}} </h2>
     </div>
 </body>
 </html>

@@ -28,8 +28,9 @@
             <a class="btn bg-gradient-primary btn-sm float-end mt-2 mb-0 mx-2" 
             href="{{report_instance.pdf_url}}" download="">Download PDF</a>
             {% endif %}
+            {% if '/fra/report/' in request.path %}
             <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_reports' customer_id requirement_instance.id %}">Back</a>
-            
+            {% endif %}
 
         </div>
     </div>
@@ -42,7 +43,7 @@
             <div class="row">
                 <!-- Left Column with Media Carousel -->
                 <div class="col-md-5">
-                    <div class="sticky-md-top product-sticky">
+                    <div class=" product-sticky">
                         <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
                             <div class="carousel-inner bg-light rounded">
                                 {% for item in document_paths %}
@@ -174,8 +175,7 @@
                         {% csrf_token %}
                         <tr>
                             <td class="col-2"><strong>Report Comments</strong></td>
-                            <td><textarea name="comments" class="form-control" value="{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}" required>{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}
-                            </textarea>
+                            <td><textarea name="comments" class="form-control" value="{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}" required>{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}</textarea>
                             </td>
                         </tr>
                     

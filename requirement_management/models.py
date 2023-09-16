@@ -184,6 +184,7 @@ class SORItem(models.Model):
             'category_id': self.category_id.name,
             'name': self.name,
             'price': str(self.price),
+            'description':self.description,
             'reference_number': self.reference_number
         }
 
@@ -207,8 +208,10 @@ class Quotation(models.Model):
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE, related_name="quotations")
     report_id = models.ForeignKey(Report, on_delete=models.CASCADE, related_name="quotations")
     quotation_json = models.JSONField()  # This field stores JSON data
-    
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2,null=True, blank=True)
     status = models.CharField(max_length=30, choices=QUOTATION_STATUS_CHOICES, default='draft')
+    submitted_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    pdf_path = models.CharField(max_length=500,null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
