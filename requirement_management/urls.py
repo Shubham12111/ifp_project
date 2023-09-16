@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from .views import *
 from .reports import *
 from .sor_view import *
+from .quotation_views import QuotationCustomerListView, QuotationCustomerReportListView, QuotationAddView
 
 urlpatterns = [
     path('quantity_surveyor/add/<int:customer_id>/',RequirementQSAddView.as_view() , name='add_quantity_surveyor'),
@@ -46,5 +47,10 @@ urlpatterns = [
     
     path('customer/sor/<int:customer_id>/edit/<int:sor_id>/', SORUpdateView.as_view(), name='edit_sor_customer'),
     path('customer/sor/delete/<int:sor_id>/', SORDeleteView.as_view(), name='delete_sor'),
+    
+    path('quotation/', QuotationCustomerListView.as_view(), name='view_customer_list_quotation'),
+    path('quotation/<int:customer_id>/report/', QuotationCustomerReportListView.as_view(), name='view_customer_fra_list_quotation'),
+    path('quotation/<int:customer_id>/report/<int:report_id>/', QuotationAddView.as_view(), name='add_customer_estimation'),
+    
     
 ]   
