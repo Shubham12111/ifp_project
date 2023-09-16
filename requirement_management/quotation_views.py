@@ -225,7 +225,7 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
             if request.data.get('status') == "submitted":
                 unique_pdf_filename = f"{str(uuid.uuid4())}_quotation_{report_instance.requirement_id.id}.pdf"
                 context= {'quotation_instance':quotation_instance,
-                            'customer_data':customer_data
+                        'customer_data':customer_data
                         }
                 pdf_file = save_pdf_from_html(context=context, file_name=unique_pdf_filename, content_html = 'quote/quotation_pdf.html')
                 pdf_path = f'requirement/{report_instance.requirement_id.id}/quotation/pdf'
@@ -268,6 +268,51 @@ class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
                 context = {'quotation_list': queryset,
                 'customer_id': customer_id,
                 'customer_data':customer_data}  # Pass the list of customers with counts to the template
+                return render_html_response(context, self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('view_customer_list_quotation'))
+
+
+
+class CustomerQuotationView(CustomAuthenticationMixin,generics.ListAPIView):
+    
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    template_name = 'quote/quotation_pdf.html'
+
+
+    def get_queryset(self):
+        queryset = Quotation.objects.filter(requirement_id__customer_id=self.kwargs.get('customer_id'),
+        pk= self.kwargs.get('quotation_id')).first()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = kwargs.get('customer_id')
+        customer_data = get_customer_data(customer_id)
+
+        if customer_data:
+            customer_address = BillingAddress.objects.filter(user_id=customer_data).first()
+            queryset = self.get_queryset()
+            requirement_instance = queryset.requirement_id
+
+            
+
+            if request.accepted_renderer.format == 'html':
+                context = {
+                    'quotation_list': queryset,
+                    'customer_id': customer_id,
+                    'customer_data':customer_data,
+                    'customer_address':customer_address,
+                    'requirement_instance':requirement_instance,
+                    'queryset':queryset
+                    }  # Pass the list of customers with counts to the template
                 return render_html_response(context, self.template_name)
         else:
             messages.error(request, "You are not authorized to perform this action")

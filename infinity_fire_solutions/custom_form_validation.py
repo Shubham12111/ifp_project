@@ -199,12 +199,11 @@ def save_pdf_from_html(context, file_name, content_html):
         try:
             os.makedirs(local_folder, exist_ok=True)
             output_file = os.path.join(local_folder, file_name)
-
             # get the html text from the tmplate
             html_content = render_to_string(content_html, context)
 
             # create the PDF file for the invoice
-            pdfkit.from_string(html_content, output_file, options=self.pdf_options)
+            pdfkit.from_string(html_content, output_file, options=pdf_options)
             
         except Exception as e:
             # Handle any exceptions that occur during PDF generation
