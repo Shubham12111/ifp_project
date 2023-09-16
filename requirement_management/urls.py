@@ -53,6 +53,14 @@ urlpatterns = [
     
     path('quotation/', QuotationCustomerListView.as_view(), name='view_customer_list_quotation'),
     path('quotation/<int:customer_id>/report/', QuotationCustomerReportListView.as_view(), name='view_customer_fra_list_report'),
-    path('quotation/<int:customer_id>/report/<int:report_id>/', QuotationAddView.as_view(), name='add_customer_estimation'),
+
+    path('quotation/add/<int:customer_id>/report/<int:report_id>/', QuotationAddView.as_view(), name='add_customer_estimation'),
+
+    path('quotation/edit/<int:customer_id>/quotation/<int:quotation_id>/', QuotationAddView.as_view(), name='edit_customer_estimation'),
+
     path('quotation/list/<int:customer_id>/', CustomerQuotationListView.as_view(), name='view_customer_quotation_list'),
+
+    path('quotation/view/<int:customer_id>/<int:quotation_id>/', CustomerQuotationView.as_view(), name='customer_quotation_view'),
+
+
 ]   

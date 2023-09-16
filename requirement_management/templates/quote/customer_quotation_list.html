@@ -7,6 +7,7 @@
 {% block title %}FRA Quotation List{{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
+{% load requirement_tag %}
 {% include 'components/alert.html' %}
 <div class="container-fluid mt-2">
     <div class="row align-items-center">
@@ -65,15 +66,24 @@
                                       <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
                                     </a>
                                     <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                                        <li> <a href="{% url 'requirement_report_view' quotation.requirement_id.customer_id.id  quotation.requirement_id.id quotation.id %}" class="dropdown-item border-radius-md">
+                                        {% if quotation.pdf_path and quotation.status == "submitted" %}
+                                        <li> <a href="{{quotation.pdf_path|get_quotation_pdf_path}}" class="dropdown-item border-radius-md" download="">
                                             Download
                                             </a>
                                         </li>
+                                        {% endif %}
                                         <li> 
-                                            <a href="{% url 'add_customer_estimation' quotation.requirement_id.customer_id.id quotation.id %}" class="dropdown-item border-radius-md">
-                                            Edit Quotation
+                                            <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="dropdown-item border-radius-md">
+                                            View 
                                             </a>
                                         </li>
+                                        {% if quotation.status != "submitted" %}
+                                        <li> 
+                                            <a href="{% url 'edit_customer_estimation' quotation.requirement_id.customer_id.id quotation.id %}" class="dropdown-item border-radius-md">
+                                            Edit 
+                                            </a>
+                                        </li>
+                                        {% endif %}
                                 </ul>
                             </td>
                         </tr>

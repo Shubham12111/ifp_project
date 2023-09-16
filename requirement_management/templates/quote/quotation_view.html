@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<style>
+.custom-table th,
+.custom-table td {
+  border: 1px solid #dee2e6;
+  padding: 8px;
+}
+</style>
+{% endblock %}
+{% load rest_framework %}
+{% block title %}Quotation View {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% load requirement_tag %}
+{% include 'components/alert.html' %}
+<div class="container-fluid my-3 py-3">
+  <div class="row align-items-center mb-2">
+    <div class="col-lg-12 col-sm-8">
+        <a class="btn bg-gradient-secondary btn-sm float-end mb-0" href="{% url 'view_customer_quotation_list' customer_id  %}">Back</a>
+      </div>
+  </div>
+    <div class="row">
+      <div class="col-md-12 col-sm-12 mx-auto">
+       <div class="card ">
+            <div class="card-header text-center">
+              <div class="row justify-content-between">
+                <div class="col-md-4 text-start ">
+                  <img class="mb-2 w-60 p-2" src="{% static 'assets/img/logo2.png' %}" alt="Logo">
+                  <h6 class="text-sm">
+                    Infinity Fire Prevention Ltd Infinity House
+                  </h6>
+                  <p class="text-sm text-secondary d-block mt-2 mb-0">38 Riverside,Sir Thomas Longley Road<br>
+                    Medway City Estate,Rochester Kent .ME24D
+                  </p>
+                  <p class="text-sm text-secondary d-block mt-2 mb-0" >Tel:03300102203</p>
+                  <p class="text-sm text-secondary d-block mt-2 mb-0">Fax:03300102204</p>
+                  <p class="text-sm text-secondary d-block mt-2 mb-0">Email: <a href="mailto:customer@example.com">enquiries@infinityfireprevention.com</a></p>
+                </div>
+                <div class="col-lg-3 col-md-7 text-md-end text-start mt-5">
+                  <h6 class="text-sm mt-2 mb-0">Client: {{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</h6>
+                  <p class="text-secondary  mt-2 mb-0 text-sm"><strong>Client Address:</strong> {{ customer_address.address }}
+                    {% if customer_address.town %}
+                        {{ customer_address.town.name }},
+                    {% endif %}
+                    {% if customer_address.county %}
+                        {{ customer_address.county.name }},
+                    {% endif %}
+                    {% if customer_address.country %}
+                        {{ customer_address.country.name }}
+                    {% endif %}
+                    {% if customer_address.country.post_code %}
+                        , {{ customer_address.country.post_code }}
+                    {% endif %}
+                  </p>
+                  <p class="text-secondary mt-2 mb-0 text-sm" ><strong>Job Address:</strong> {{ requirement_instance.site_address }}</p>
+                  <p class="text-secondary mt-2 mb-0 text-sm" ><strong>UPRN:</strong> {{ requirement_instance.UPRN|default:''|title }}</p>
+                  <p class="text-secondary mt-2 mb-0   text-sm" ><strong>RBNO:</strong> {{ requirement_instance.RBNO|default:''|title }}</p>
+
+               
+                </div>
+              </div>
+              
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-12">
+                  <div class="table-responsive">
+                    <table class="custom-table text-right text-sm" style="width: 100%;">
+                      <thead class="bg-default">
+                        <tr class="text-sm">
+                          <th scope="col" class="pe-2 text-start ps-2">SOR Code </th>
+                          <th scope="col" class="pe-2 text-start ps-2">Defect Action </th>
+                          <th scope="col" class="pe-2 text-start ps-2">Defect Rectification </th>
+                          <th scope="col" class="pe-2">SOR Description</th>
+                          <th scope="col" class="pe-2">Category</th>
+                          <th scope="col" class="pe-2">Price(£)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for defect_key, value in queryset.quotation_json.defectSorValues.items %}
+                        {% for inner_key, inner_value in value.items %}
+                            {% for item in inner_value.sor_items %}
+                                <tr>
+                                    <td>{{ item.reference_number }}</td>
+                                    <td>{{defect_key|get_defect_action}}</td>
+                                    <td>{{defect_key|get_defect_rectification}}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.category_id }}</td>
+                                    <td>{{ item.price }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    {% endfor %}
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer  mt-2">
+              <div class="row">
+                <div class="col-lg-12 text-end">
+                  <h5>SOR Total(£): {{queryset.total_amount}}</h5>
+                  
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  
+  </div>
+{% endblock %}
+{% block extra_js %}
+
+{% endblock %}
