@@ -7,14 +7,19 @@ from ckeditor.fields import RichTextField
 from stock_management.models import Category
 from customer_management.models import SiteAddress
 
+
+REQUIREMENT_DEFECT_CHOICES = (
+    ('actual_defect', 'Actual Defect'),
+    ('recommended', 'Recommended Defect'),
+)
+
 REQUIREMENT_CHOICES = (
     ('active', 'Active'),
     ('to-surveyor', 'To Surveyor'),
     ('assigned-to-surveyor ', 'Assigned To Surveyor')
 )
 
-
-REQUIREMENT_DEFECT_CHOICES = (
+REQUIREMENT_DEFECT_STATUS_CHOICES = (
     ('pending', 'Pending'),
     ('in-progress', 'In Progress'),
     ('executed', 'Executed')
@@ -22,13 +27,22 @@ REQUIREMENT_DEFECT_CHOICES = (
 
 STATUS_CHOICES = (
         ('draft', 'Draft'),
-        ('submitted', 'submitted'),
+        ('submit', 'submitted'),
     )
 
 CATEGORY_STATUS_CHOICES = (
         ('active', 'Active'),
         ('in-active', 'Inactive'),
 )
+
+# Define the choices for the status field
+QUOTATION_STATUS_CHOICES = [
+    ('draft', 'Draft'),
+    ('submitted', 'Submitted'),
+    ('accepted', 'Accepted'),
+    ('rejected', 'Rejected'),
+]
+
 
 class Requirement(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_requirement')
@@ -67,7 +81,8 @@ class RequirementDefect(models.Model):
     description = models.TextField()
     reference_number = models.CharField(max_length=50, null=True)
     rectification_description = models.TextField()
-    status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='pending')
+    status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_STATUS_CHOICES, default='pending')
+    defect_type = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='actual_defect')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -148,7 +163,7 @@ class SORItem(models.Model):
     
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE)
     category_id = models.ForeignKey(SORCategory, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=225)
     description =  RichTextField(null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     reference_number = models.CharField(max_length=50)
@@ -161,6 +176,17 @@ class SORItem(models.Model):
         """
         return self.name
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id.id,
+            'customer_id': self.customer_id.id,
+            'category_id': self.category_id.name,
+            'name': self.name,
+            'price': str(self.price),
+            'reference_number': self.reference_number
+        }
+
 class SORItemImage(models.Model):
     sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)
     image_path = models.CharField(max_length=255)
@@ -169,3 +195,20 @@ class SORItemImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.sor_id.name}"
+
+
+
+
+class Quotation(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, 
+                                verbose_name="Created By", related_name="created_quotations", null=True)
+    
+    customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="customer_quotations")
+    requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE, related_name="quotations")
+    report_id = models.ForeignKey(Report, on_delete=models.CASCADE, related_name="quotations")
+    quotation_json = models.JSONField()  # This field stores JSON data
+    
+    status = models.CharField(max_length=30, choices=QUOTATION_STATUS_CHOICES, default='draft')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
