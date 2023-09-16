@@ -140,6 +140,7 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                     report_instance = Report.objects.filter(pk=quotation_data.report_id.id).first()
                 else:
                     report_instance = self.get_queryset()
+                    quotation_data ={}
                 
                 requirement_instance = report_instance.requirement_id
                 requiremnt_defect_instances = report_instance.defect_id.all()
