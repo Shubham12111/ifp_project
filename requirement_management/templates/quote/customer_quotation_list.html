@@ -4,7 +4,7 @@
 <link id="pagestyle" href="{% static '/assets/css/slider.css' %}" rel="stylesheet" />
 {% endblock %}
 {% load rest_framework %}
-{% block title %}FRA Reports{{ block.super }}{% endblock %}
+{% block title %}FRA Quotation List{{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
@@ -14,10 +14,10 @@
             <div class="nav-wrapper position-relative end-0">
               <ul class="nav nav-tabs">
                 <li class="nav-item">
-                    <a class="nav-link active" href="{% url 'view_customer_fra_list_report' customer_id %}">Reports </a>
+                    <a class="nav-link {% if  'fra/quotation/report/' in request.path %}active {% endif %}" href="{% url 'view_customer_fra_list_report' customer_id %}">Reports </a>
                 </li>
                 <li class="nav-item">
-                  <a class="nav-link" href="{% url 'view_customer_quotation_list' customer_id %}">Quotation</a>
+                  <a class="nav-link {% if  'fra/quotation/list/' in request.path %}active {% endif %}" href="{% url 'view_customer_quotation_list' customer_id %}">Quotation</a>
                 
                 </li>
             
@@ -31,7 +31,7 @@
             <div class="card-header pb-0">
                 <div class="row">
                   <div class="col-lg-5 col-12 mb-lg-0 mb-3">
-                    <h4 class="mb-0">Reports</h4>
+                    <h4 class="mb-0">Quotation List</h4>
                     {% include 'customer_info.html' %}
                 </div>
             </div>
@@ -45,34 +45,33 @@
                             <th>Description</th>
                             <th>Quantity Surveyor</th>
                             <th>Surveyor</th>
-                            <th># of Defects</th>
+                            <th>Status</th>
                             <th class="custom-last-column">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="ml-4">
-                        {% for report in report_list %}
+                        {% for quotation in quotation_list %}
                         <tr class="text-sm">
-                            <td>{{ report.requirement_id.action|truncatechars:30}}</td>
-                            <td>{{ report.requirement_id.description|truncatechars:30}}</td>
-                            <td class="text-sm">{{report.requirement_id.quantity_surveyor.first_name|default:''|title}}
-                                {{report.requirement_id.quantity_surveyor.last_name|default:''|title}}
+                            <td>{{ quotation.requirement_id.action|truncatechars:30}}</td>
+                            <td>{{ quotation.requirement_id.description|truncatechars:30}}</td>
+                            <td class="text-sm">{{quotation.requirement_id.quantity_surveyor.first_name|default:''|title}}
+                                {{quotation.requirement_id.quantity_surveyor.last_name|default:''|title}}
                             </td>
-                            <td class="text-sm">{{report.requirement_id.surveyor.first_name|default:''|title}} {{report.requirement_id.surveyor.last_name|default:''|title}}</td>
-                            <td class="text-truncate">{{ report.defect_id.all|length }}</td>
-
+                            <td class="text-sm">{{quotation.requirement_id.surveyor.first_name|default:''|title}} {{quotation.requirement_id.surveyor.last_name|default:''|title}}</td>
+                            <td class="text-sm">{{quotation.get_status_display}}</td>
                             <td>
                                 <div class="dropstart ms-auto pe-0">
                                     <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
                                       <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
                                     </a>
                                     <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                                        <li> <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="dropdown-item border-radius-md">
-                                            View Report
+                                        <li> <a href="{% url 'requirement_report_view' quotation.requirement_id.customer_id.id  quotation.requirement_id.id quotation.id %}" class="dropdown-item border-radius-md">
+                                            Download
                                             </a>
                                         </li>
                                         <li> 
-                                            <a href="{% url 'add_customer_estimation' report.requirement_id.customer_id.id report.id %}" class="dropdown-item border-radius-md">
-                                            Create Quotation
+                                            <a href="{% url 'add_customer_estimation' quotation.requirement_id.customer_id.id quotation.id %}" class="dropdown-item border-radius-md">
+                                            Edit Quotation
                                             </a>
                                         </li>
                                 </ul>

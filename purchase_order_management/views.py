@@ -32,7 +32,6 @@ def po_numbe_generated():
     
     new_po_number = 'IFB0001'
     
-    print(existing_purchases)
     if existing_purchases:
         if existing_purchases.po_number:
             last_po_number = existing_purchases.po_number

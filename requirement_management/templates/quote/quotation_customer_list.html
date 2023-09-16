@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} FRA Actions {{ block.super }}{% endblock %}
+{% block title %} FRA Quotation {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
@@ -12,7 +12,7 @@
         <div class="card-header pb-0">
           <div class="d-lg-flex">
             <div>
-              <h4 class="mb-0">FRA Customer List</h4>
+              <h4 class="mb-0">FRA Quotation Customer List</h4>
             </div>
           </div>
           {% include 'components/table_search.html' %}
@@ -26,26 +26,22 @@
                   <th>Company Name</th>
                   <th>Customer Email</th>
                   <th>Phone Number</th>
-                  <th class="custom-last-column">FRA Counts</th>
                 </tr>
               </thead>
               <tbody class="ml-4"> 
-                {% for query_obj  in customers_with_counts %}
+                {% for query_obj  in queryset %}
                     <tr class="text-sm">
                       <td>
-                        
-                        <a class="font-weight-bolder" href="{% url 'view_customer_fra_list_quotation' query_obj.customer.id %}"  data-bs-toggle="tooltip" data-bs-original-title="Click For View FRA">
-                          {{ query_obj.customer.first_name|truncatechars:20|title }} {{ query_obj.customer.last_name|truncatechars:20|lower }}
+                        <a class="font-weight-bolder" href="{% url 'view_customer_fra_list_report' query_obj.id %}"  data-bs-toggle="tooltip" data-bs-original-title="Click For View Reports">
+                          {{ query_obj.first_name|truncatechars:20|title }} {{ query_obj.last_name|truncatechars:20|lower }}
                         </a> 
+                       
                       </td>
                          
-                      <td>{{query_obj.customer.company_name|default:''|title}}</td>
-                      <td>{{query_obj.customer.email}}</td>
-                      <td >{{query_obj.customer.phone_number|default:''}}</td>
-                      <td >{{query_obj.fra_counts}}</td>
-                     
-                      
-                    </tr>
+                      <td>{{query_obj.company_name|default:''|title}}</td>
+                      <td>{{query_obj.email}}</td>
+                      <td >{{query_obj.phone_number|default:''}}</td>
+                     </tr>
                 {% endfor %}
               </tbody>
             </table>

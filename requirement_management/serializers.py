@@ -499,7 +499,7 @@ class RequirementDefectDocumentSerializer(serializers.Serializer):
 class SORSerializer(serializers.ModelSerializer):
     name = serializers.CharField(
         label=('Name'),
-        max_length=500, 
+        max_length=225, 
         required=True, 
         style={
             'base_template': 'custom_input.html',
