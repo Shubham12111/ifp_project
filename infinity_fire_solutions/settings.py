@@ -85,7 +85,8 @@ TEMPLATES = [
             ],
             'libraries':  {
                 'custom_tags': 'authentication.templatetags.custom_tags',
-                'inventory_tags': 'stock_management.templatetags.inventory_tags'
+                'inventory_tags': 'stock_management.templatetags.inventory_tags',
+                 'requirement_tag': 'requirement_management.templatetags.requirement_tag'
             }
         },
         
