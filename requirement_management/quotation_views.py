@@ -96,6 +96,8 @@ from django.core import serializers
 import json 
 from decimal import Decimal
 
+
+
 # Custom JSON encoder that can handle Decimal instances
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -121,30 +123,61 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
            self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
         )
         
-        queryset = Report.objects.filter(id=self.kwargs.get('report_id')).get()
+        queryset = Report.objects.filter(id=self.kwargs.get('report_id')).first()
         
         return queryset
+
+    def get_quotation_data(self, quotation_id=None):
+        """
+        Retrieve quotation-related data.
+
+        Args:
+            self: The instance of the calling class.
+            quotation_id (int, optional): The ID of the quotation to retrieve. Defaults to None.
+
+        Returns:
+            tuple: A tuple containing the following items:
+                - quotation_data (Quotation or dict): The Quotation instance if found, or an empty dictionary.
+                - report_instance (Report): The associated Report instance.
+                - requirement_instance (Requirement): The associated Requirement instance.
+                - requiremnt_defect_instances (QuerySet): QuerySet of associated Defect instances.
+        """
+        if quotation_id:
+            # Retrieve the Quotation instance if a quotation_id is provided
+            quotation_data = Quotation.objects.filter(id=quotation_id).first()
+        else:
+            # If no quotation_id is provided, set quotation_data as an empty dictionary
+            quotation_data = {}
+
+        # Determine the report_instance based on quotation_data or the queryset
+        report_instance = quotation_data.report_id if quotation_data else self.get_queryset()
+
+        if not report_instance:
+            # If report_instance is not found, set it to None
+            report_instance = None
+
+        # Retrieve the associated Requirement instance
+        requirement_instance = report_instance.requirement_id if report_instance else None
+
+        # Retrieve all associated Defect instances
+        requiremnt_defect_instances = report_instance.defect_id.all() if report_instance else []
+
+        return quotation_data, report_instance, requirement_instance, requiremnt_defect_instances
+
 
 
     def get(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id')
         customer_data = get_customer_data(customer_id)
+        report_instance = {}
         if customer_data:
             customer_address = BillingAddress.objects.filter(user_id=customer_data).first()
             report_id = kwargs.get('pk')
             # This method handles GET requests for updating an existing Requirement object.
             if request.accepted_renderer.format == 'html':
 
-                if kwargs.get('quotation_id'):
-                    quotation_data =  Quotation.objects.filter(id=self.kwargs.get('quotation_id')).get()
-                    report_instance = Report.objects.filter(pk=quotation_data.report_id.id).first()
-                else:
-                    report_instance = self.get_queryset()
-                    quotation_data ={}
-                
-                requirement_instance = report_instance.requirement_id
-                requiremnt_defect_instances = report_instance.defect_id.all()
-
+                quotation_id = self.kwargs.get('quotation_id')
+                quotation_data, report_instance, requirement_instance, requiremnt_defect_instances = self.get_quotation_data(quotation_id)
                 all_sors = SORItem.objects.filter(customer_id=customer_data).values('id','name','reference_number', 'category_id__name', 'price',)
 
                 # Convert the queryset of dictionaries to a list
@@ -153,7 +186,7 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 # Serialize the list to JSON
                 all_sors_json = json.dumps(all_sors_list, cls=DecimalEncoder)
 
-                if report_instance:
+                if report_instance or quotation_data:
 
                     context = {
                         'requirement_instance': requirement_instance,  
@@ -170,31 +203,26 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                     return render_html_response(context, self.template_name)
                 else:
                     messages.error(request, "You are not authorized to perform this action")
-                    return redirect(reverse('view_customer_list_quotation', kwargs={'customer_id': kwargs.get('customer_id')}))
+                    return redirect(reverse('view_customer_quotation_list', kwargs={'customer_id': kwargs.get('customer_id')}))
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('view_customer_list_quotation', kwargs={'customer_id': kwargs.get('customer_id')}))
+            return redirect(reverse('view_customer_quotation_list', kwargs={'customer_id': kwargs.get('customer_id')}))
     
  
     def post(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id')
         customer_data = get_customer_data(customer_id)
         quotation_data= {}
+        message = f"Your quotation has been added successfully!"
         
         if customer_data:
-            if kwargs.get('quotation_id'):
-                quotation_data =  Quotation.objects.filter(id=self.kwargs.get('quotation_id')).get()
-                report_instance = Report.objects.filter(pk=quotation_data.report_id.id).first()
-                message = f"Your quotation has been updated successfully!"
-            else:
-                report_instance = self.get_queryset()
-                quotation_data ={}
-                message = f"Your quotation has been added successfully!"
-
-            requirement_instance = report_instance.requirement_id
+            quotation_id = self.kwargs.get('quotation_id')
+            quotation_data, report_instance, requirement_instance, requiremnt_defect_instances = self.get_quotation_data(quotation_id)
             customer_address =  BillingAddress.objects.filter(user_id=customer_data).first()
 
             data = request.data
+
+            print(data)
 
             sor_id_list = []  # Initialize a list to store 'sor-id' values
             sor_items_dict = {}  # Initialize a dictionary to store SORItem data
@@ -215,7 +243,7 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 sor_items = SORItem.objects.filter(id__in=sor_id_list)
 
                 # Convert SORItem objects to dictionaries
-                sor_items_data = [item.to_dict() for item in sor_items]
+                sor_items_data = {item.id: item.to_dict() for item in sor_items}
 
                 # Populate the 'sor_items' data under each 'sor-id' key
                 for key in defect_sor_values:
@@ -225,14 +253,15 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                             sor_items_dict[key][sub_key] = {
                                 'sor-id': sor_id,
                                 'price': defect_sor_values[key][sub_key].get('price'),
-                                'sor_items': sor_items_data
+                                'sor_items': sor_items_data.get(int(sor_id), [])  # Reference 'sor_items_data' using the 'sor-id'
                             }
-
             # Create a dictionary to store the final JSON data
             json_data = {
                 'status': 'draft',
                 'defectSorValues': sor_items_dict,
             }
+            # The 'json_data' dictionary now contains the desired structure.
+
             if not quotation_data:
                 # Assuming you have a Quotation instance (replace `quotation_instance` with your instance)
                 quotation_instance = Quotation.objects.create(
