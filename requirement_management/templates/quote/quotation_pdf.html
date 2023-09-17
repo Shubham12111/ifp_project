@@ -121,19 +121,17 @@
         </thead>
         <tbody id="sor-items-table">
             {% for defect_key, value in queryset.quotation_json.defectSorValues.items %}
-            {% for inner_key, inner_value in value.items %}
-                {% for item in inner_value.sor_items %}
-                    <tr>
-                        <td>{{ item.reference_number }}</td>
+            {% for inner_key, item in value.items %}
+            <tr>
+                        <td>{{ item.sor_items.reference_number }}</td>
                         <td>{{defect_key|get_defect_action}}</td>
                         <td>{{defect_key|get_defect_rectification}}</td>
-                        <td>{{ item.description }}</td>
-                        <td>{{ item.category_id }}</td>
-                        <td>{{ item.price }}</td>
+                        <td>{{ item.sor_items.description }}</td>
+                        <td>{{ item.sor_items.category_id }}</td>
+                        <td>{{ item.sor_items.price }}</td>
                     </tr>
                 {% endfor %}
             {% endfor %}
-        {% endfor %}
         </tbody>
     </table>
     <div class="invoice-total ">
