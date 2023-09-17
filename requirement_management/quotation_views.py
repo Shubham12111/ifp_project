@@ -182,13 +182,18 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
         quotation_data= {}
         
         if customer_data:
-            report_instance = self.get_queryset()
+            if kwargs.get('quotation_id'):
+                quotation_data =  Quotation.objects.filter(id=self.kwargs.get('quotation_id')).get()
+                report_instance = Report.objects.filter(pk=quotation_data.report_id.id).first()
+                message = f"Your quotation has been updated successfully!"
+            else:
+                report_instance = self.get_queryset()
+                quotation_data ={}
+                message = f"Your quotation has been added successfully!"
+
             requirement_instance = report_instance.requirement_id
             customer_address =  BillingAddress.objects.filter(user_id=customer_data).first()
 
-            if kwargs.get('quotation_id'):
-               quotation_data =  Quotation.objects.filter(id=self.kwargs.get('quotation_id')).get()
-            
             data = request.data
 
             sor_id_list = []  # Initialize a list to store 'sor-id' values
@@ -228,18 +233,29 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 'status': 'draft',
                 'defectSorValues': sor_items_dict,
             }
-            
-            # Assuming you have a Quotation instance (replace `quotation_instance` with your instance)
-            quotation_instance = Quotation.objects.create(
-                user_id=request.user,  # Replace with the actual user instance
-                customer_id=customer_data,  # Replace with the actual customer user instance
-                requirement_id=requirement_instance,  # Replace with the actual Requirement instance
-                report_id=report_instance,  # Replace with the actual Report instance
-                status=request.data.get('status'),  # Replace with the desired status
-                total_amount=request.data.get('total_amount'), 
-                quotation_json=json_data  # Use the constructed JSON data
-                
-            )
+            if not quotation_data:
+                # Assuming you have a Quotation instance (replace `quotation_instance` with your instance)
+                quotation_instance = Quotation.objects.create(
+                    user_id=request.user,  # Replace with the actual user instance
+                    customer_id=customer_data,  # Replace with the actual customer user instance
+                    requirement_id=requirement_instance,  # Replace with the actual Requirement instance
+                    report_id=report_instance,  # Replace with the actual Report instance
+                    status=request.data.get('status'),  # Replace with the desired status
+                    total_amount=request.data.get('total_amount'), 
+                    quotation_json=json_data  # Use the constructed JSON data
+                    
+                )
+            else:
+                quotation_instance = quotation_data
+                # Update the Quotation instance with the values from `updated_quotation_data`
+                quotation_instance.status = request.data.get('status')
+                quotation_instance.total_amount = request.data.get('total_amount')
+                # If you want to update the `quotation_json` field, update it accordingly
+                quotation_instance.quotation_json = json_data
+
+                # Save the updated Quotation instance
+                quotation_instance.save()
+
 
             if request.data.get('status') == "submitted":
                 quotation_instance.submitted_at = datetime.now() 
@@ -257,8 +273,6 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 
                 quotation_instance.pdf_path = f'requirement/{requirement_instance.id}/quotation/pdf/{unique_pdf_filename}'
                 quotation_instance.save()
-
-            message = f"Your quotation has been added successfully!"
             messages.success(request, message)
             return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
 
