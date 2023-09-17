@@ -255,45 +255,39 @@ var sanitizedJsonString = jsonString.replace(/'/g, '"').replace(/\\xa0/g, '\\u00
 var savedData = JSON.parse(sanitizedJsonString);
 
 function populateSavedRows(defectId) {
+  
   if (savedData.defectSorValues[defectId]) {
-    Object.keys(savedData.defectSorValues[defectId]).forEach(function(inner_key) {
 
+    Object.keys(savedData.defectSorValues[defectId]).forEach(function(inner_key) {
+      
       var tableId = "table-" + defectId;
       var headerId = "header-" + defectId;
       
       rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
+
       // Check if the table already exists, and if not, create it
       var existingTable = document.getElementById(tableId);
-  
-
+      
+      
       var savedRow = savedData.defectSorValues[defectId][inner_key];
+      var sorItem = savedRow['sor_items'];
 
-      savedRow['sor_items'].forEach(function(sorItem, index) {
-        var newRow = document.createElement('tr');
-        var rowId = inner_key + '-' + index; // Create a unique ID for each row
-        newRow.id = rowId;
-
+      var newRow = document.createElement('tr');
+      var rowId = inner_key; // Create a unique ID for each row
+      newRow.id = rowId;
         // Create and append the first <td> with the dropdown <select> element
-        var firstCell = document.createElement('td');
-        var select = document.createElement('select');
-        select.className = 'form-control';
-        select.id = 'choices-sor-' + defectId + '-' + rowId;
+      var firstCell = document.createElement('td');
+      var select = document.createElement('select');
+      select.className = 'form-control';
+      select.id = 'choices-sor-' + defectId + '-' + rowId;
 
-        savedRow['sor_items'].forEach(function(sorItem) {
-          var option = document.createElement('option');
-          option.value = sorItem.reference_number;
-          option.textContent = sorItem.reference_number;
-          if (sorItem.reference_number === savedRow['sor-id']) {
-            option.selected = true; // Set the selected option
-            // Update the category and price cells based on the selected value (similar to your change event logic)
-            categoryCell.textContent = sorItem.category_id; // Update category
-            priceCell.textContent = sorItem.price; // Update price
-            sorIdInput.value = savedRow['sor-id']; // Update SOR ID
-          }
-          select.appendChild(option);
-        });
+      // Assuming sorItem has properties like 'id', 'user_id', 'customer_id', 'category_id', etc.
+      var option = document.createElement('option');
+      option.value = sorItem.id; // You can use any property you need here
+      option.textContent = sorItem.reference_number; // You can use any property you need here
 
-        firstCell.appendChild(select);
+      select.appendChild(option);
+      firstCell.appendChild(select);
         newRow.appendChild(firstCell);
 
         // Create and append the second <td> for category
@@ -342,7 +336,8 @@ function populateSavedRows(defectId) {
         updateTotalPrice();
         // Append the new row to the table
         existingTable.appendChild(newRow);
-      });
+      
+     
     });
   }
 }
