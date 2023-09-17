@@ -247,6 +247,7 @@ var totalAllDefects = 0;
 var rowPrices = {};
 var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
+{% if quotation_data %}
 // Assuming you have a JSON string in quotation_data.quotation_json
 var jsonString = '{{ quotation_data.quotation_json|safe|escapejs }}';
 var sanitizedJsonString = jsonString.replace(/'/g, '"');
@@ -351,6 +352,10 @@ function populateSavedRows(defectId) {
 Object.keys(savedData.defectSorValues).forEach(function(defectId) {
   populateSavedRows(defectId);
 });
+{% endif %}
+
+
+
 
 function addTable(button) {
     var defectId = button.getAttribute('data-defect-id');
