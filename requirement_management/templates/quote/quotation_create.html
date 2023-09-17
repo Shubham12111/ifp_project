@@ -250,7 +250,8 @@ var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 {% if quotation_data %}
 // Assuming you have a JSON string in quotation_data.quotation_json
 var jsonString = '{{ quotation_data.quotation_json|safe|escapejs }}';
-var sanitizedJsonString = jsonString.replace(/'/g, '"');
+var sanitizedJsonString = jsonString.replace(/'/g, '"').replace(/\\xa0/g, '\\u0020');
+
 var savedData = JSON.parse(sanitizedJsonString);
 
 function populateSavedRows(defectId) {
