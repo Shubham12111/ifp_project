@@ -77,10 +77,10 @@
                                             View 
                                             </a>
                                         </li>
-                                        {% if quotation.status != "submitted" %}
+                                        {% if quotation.status == "draft" or quotation.status == "send_for_approval" %} 
                                         <li> 
                                             <a href="{% url 'edit_customer_estimation' quotation.requirement_id.customer_id.id quotation.id %}" class="dropdown-item border-radius-md">
-                                            Edit 
+                                                {% if quotation.status == "send_for_approval" %}  Approve {% else %} Edit {% endif %}
                                             </a>
                                         </li>
                                         {% endif %}

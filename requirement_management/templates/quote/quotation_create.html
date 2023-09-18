@@ -8,14 +8,41 @@
       border: 1px solid #dee2e6;
       padding: 8px;
     }
-    .column-with-border {
-    border: 1px solid #ccc; /* Add your desired border style here */
-    padding: 10px; /* Optional: Add padding to the columns for spacing */
-    margin-bottom: 10px; /* Optional: Add margin to separate the columns */
-  }
+   
   .read-more {
         cursor: pointer; /* Add a pointer cursor when hovering */
     }
+
+  /* Custom styles for the accordion header */
+  .accordion-button {
+    background-color: #eff0f18a; /* Set your desired background color */
+    color: #344767; /* Set text color */
+    padding: 10px 20px; /* Adjust padding as needed */
+    border: none; /* Remove border */
+    border: 1px solid #ccc;
+}
+
+/* Custom styles for the active (expanded) header button */
+.accordion-button[aria-expanded="true"] {
+    background-color: #8fa0be66; /* Set a different background color for active state */
+    border: 1px solid #ccc;
+}
+
+/* Custom styles for the accordion body */
+.accordion-body {
+    padding: 20px; /* Adjust padding as needed */
+}
+
+.accordion-item {
+    background-color: #fff;
+    border: 1px solid rgba(0,0,0,.125);
+}
+.btn.btn-outline-dotted {
+    border: 1px dotted #000; /* Replace #000 with the desired color for the border */
+    background-color: transparent;
+    color: #000; /* Replace #000 with the desired text color */
+}
+   
 </style>
 {% endblock %}
 {% load rest_framework %}
@@ -26,7 +53,7 @@
 <div class="container-fluid mt-3">
   <div class="row align-items-center mb-2">
     <div class="col-lg-6 col-sm-12">
-      <h4>Add  Quotation</h4>
+      <h4> {% if quotation_data %} {% else %}Create {% endif %} Quotation</h4>
     </div>
     <div class="col-lg-6 col-sm-12">
       {% if quotation_data %}
@@ -35,35 +62,35 @@
         <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'view_customer_fra_list_report'  customer_id %}">Back</a>
         {% endif %}
     </div>
-</div>
-  <div class="row ">
-    <div class="col-lg-7 col-sm-12">
-      <!-- Works Description and Defects Section -->
-      <div class="card">
-        <div class="card-header pb-0 mt-0">
-            <h5 class="card-title">FRA Details</h5>
-        </div>
-        <div class="card-body mt-0 text-sm">
-          <b>Action</b>
-          <p class="text-sm mt-2" style="text-align: justify;">
-            <span id="actionText">{{ requirement_instance.action|truncatechars:300 }}</span>
-            <span id="actionMore" style="display: none;">{{ requirement_instance.action }}</span>
-            <span class="read-more text-primary" id="actionToggle" onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
-              Read More
-            </span>
-          </p>
-
-          <b>Description</b>
-          <p class="text-sm mt-2" style="text-align: justify;">
-            <span id="descriptionText">{{ requirement_instance.description|truncatechars:300 }}</span>
-            <span id="descriptionMore" style="display: none;">{{ requirement_instance.description }}</span>
-            <span class="read-more text-primary" id="descriptionToggle" onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
-               Read More
-            </span>
-          </p>
-        </div>
-      </div>
   </div>
+    <div class="row ">
+      <div class="col-lg-7 col-sm-12">
+        <!-- Works Description and Defects Section -->
+        <div class="card">
+          <div class="card-header pb-0 mt-0">
+              <h5 class="card-title">FRA Details</h5>
+          </div>
+          <div class="card-body mt-0 text-sm">
+            <b>Action</b>
+            <p class="text-sm mt-2" style="text-align: justify;">
+              <span id="actionText">{{ requirement_instance.action|truncatechars:300 }}</span>
+              <span id="actionMore" style="display: none;">{{ requirement_instance.action }}</span>
+              <span class="read-more text-primary" id="actionToggle" onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
+                Read More
+              </span>
+            </p>
+
+            <b>Description</b>
+            <p class="text-sm mt-2" style="text-align: justify;">
+              <span id="descriptionText">{{ requirement_instance.description|truncatechars:300 }}</span>
+              <span id="descriptionMore" style="display: none;">{{ requirement_instance.description }}</span>
+              <span class="read-more text-primary" id="descriptionToggle" onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
+                Read More
+              </span>
+            </p>
+          </div>
+        </div>
+    </div>
     <div class="col-lg-5 col-sm-12">
         <div class="card">
           <div class="card-header pb-0">
@@ -124,76 +151,73 @@
               <h5>Defects</h5>
             </div>
             <div class="card-body mt-0 ">
-           {% for defect in requiremnt_defect_instances %}
-           <div class="row column-with-border " data-defect-id="{{ defect.id }}">
-           <h6>Defect {{ forloop.counter }} - <span class="text-sm">({{defect.get_defect_type_display}})</span></h6>
-          
-             <div class="col-lg-4 col-sm-12 text-sm ">
-              <b >Action</b>
-               <p class="text-sm mt-2" style="text-align: justify;">
-                 <span id="defectActionText{{ forloop.counter }}">{{ defect.action|truncatechars:150 }}</span>
-                 <span id="defectActionMore{{ forloop.counter }}" style="display: none;">{{ defect.action }}</span>
-                 <span class="read-more text-primary" id="defectActionToggle{{ forloop.counter }}" onclick="toggleReadMore('defectActionText{{ forloop.counter }}', 'defectActionMore{{ forloop.counter }}','defectActionToggle{{ forloop.counter }}')"> Read More
-                 </span>
-               </p>
-             </div>
-             <div class="col-lg-4 col-sm-12 text-sm">
-               <b>Description</b>
-               <p class="text-sm mt-2" style="text-align: justify;">
-                 <span id="defectDescriptionText{{ forloop.counter }}">{{ defect.description|truncatechars:150 }}</span>
-                 <span id="defectDescriptionMore{{ forloop.counter }}" style="display: none;">{{ defect.description }}</span>
-                 <span class="read-more text-primary" id="defectDescriptionToggle{{ forloop.counter }}" onclick="toggleReadMore('defectDescriptionText{{ forloop.counter }}', 'defectDescriptionMore{{ forloop.counter }}','defectDescriptionToggle{{ forloop.counter }}')"> Read More
-                 </span>
-               </p>
-             </div>
-             <div class="col-lg-4 col-sm-12 text-sm">
-               <b>Rectification Description</b>
-               <p class="text-sm mt-2" style="text-align: justify;">
-                 <span id="defectRectificationText{{ forloop.counter }}">{{ defect.rectification_description|truncatechars:150 }}</span>
-                 <span id="defectRectificationMore{{ forloop.counter }}" style="display: none;">{{ defect.rectification_description }}</span>
-                 <span class="read-more text-primary" id="defectRectificationToggle{{ forloop.counter }}"  onclick="toggleReadMore('defectRectificationText{{ forloop.counter }}', 'defectRectificationMore{{ forloop.counter }}','defectRectificationToggle{{ forloop.counter }}')">Read More
-                 </span>
-               </p>
-             </div>
-          
-              <div class="col-lg-12 col-sm-12">
-                {% csrf_token %}
-                
-                  <!-- Empty table element with a unique ID -->
-                  <table id="table-{{ defect.id }}" class="custom-table text-sm" style="width:100%">
-                    <!-- Table content will be added dynamically here -->
-                    <tr id="header-{{ defect.id }}" {% if quotation_data.quotation_json.defectSorValues %}{% else %} style="display: none;"{% endif %}>
-                      <th class="col-4">SOR Code</th>
-                      <th>Category</th>
-                      <th>Price(£)</th>
-                      <th class="col-1">Action</th>
-                      <!-- Add more headers as needed -->
-                    </tr>
-                    </table>
+              <div class="accordion" id="accordionDefect">
+                {% for defect in requiremnt_defect_instances %}
+
+                <div class="accordion-item column-with-border mb-3 " data-defect-id="{{ defect.id }}">
+                  <h5 class="accordion-header text-sm" id="headingOne">
+                    <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
+                      <div class="col-9">
+                              <strong>{{ forloop.counter }} - </strong>{{ defect.action|truncatechars:150 }}
+                          </div>
+                          <div class="col-3 text-end">
+                              <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
+                              <i class="fas fa-chevron-down  mx-2 " aria-hidden="true"></i>
+                          </div>
+                     
+                  </button>
+                  
+                  </h5>
+                  <div id="collapse{{ forloop.counter }}" class="accordion-collapse  collapse {% if forloop.first %}show {% endif %} " aria-labelledby="heading{{ forloop.counter }}">
+                    <div class="accordion-body text-sm">
+                      <p class="text-sm"><strong>Action: </strong>{{ defect.action }}</p>
+                      <p class="text-sm"><strong>Description: </strong>{{ defect.description }}</p>
+                      <p class="text-sm"><strong>Rectification Description: </strong>{{ defect.rectification_description }}</p>
+                      <div class="col-lg-12 col-sm-12">
+                        {% csrf_token %}
+                        
+                          <!-- Empty table element with a unique ID -->
+                          <table id="table-{{ defect.id }}" class="custom-table text-sm" style="width:100%">
+                            <!-- Table content will be added dynamically here -->
+                            <tr id="header-{{ defect.id }}">
+                              <th class="col-4">SOR Code</th>
+                              <th>Category</th>
+                              <th>Price(£)</th>
+                              <th class="col-1">Action</th>
+                              <!-- Add more headers as needed -->
+                            </tr>
+                            </table>
+                        </div>
+                        <div class="col-lg-12 col-sm-12 mb-0">
+                          <button class="btn btn-outline-dotted text-lower btn-sm mt-4" data-defect-id="{{ defect.id }}" onclick="addTable(this)">Add SOR</button>
+                          <button class="btn bg-gradient-secondary btn-sm mt-4" data-defect-id="{{ defect.id }}" onclick="removeDefect(this)">Remove Defect</button>
+
+                        </div>
+                    </div>
+                  </div>
+
                 </div>
-                <div class="col-lg-12 col-sm-12 mb-0">
-                  <button class="btn bg-gradient-primary btn-sm mt-4" data-defect-id="{{ defect.id }}" onclick="addTable(this)">Add SOR</button>
-                  <button class="btn bg-gradient-secondary btn-sm mt-4" data-defect-id="{{ defect.id }}"
-                  onclick="removeDefect(this)">Remove Defect</button>
-                </div>
-                
-              </div>
-              {% endfor %}
-              <div class="row ">
+                {% endfor %}
+                <div class="row ">
                 <div class="col-lg-6 col-sm-6">
 
                 </div>
                 <div class="col-lg-6 col-sm-6 mt-4">
                   <h5 class="text-end text-md">
                     
-                    <strong>SOR Total : </strong> <span id="total-price"></span>
+                    <strong>Total (£) : </strong> <span id="total-price"></span>
                     
                   </h5>
                 </div>
 
                 <div class="col-lg-12 col-sm-12 mt-4">
+                  {% if quotation_data.status == "send_for_approval" %}
+                  <button  id="submit-approved" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">I Approve This Quotation  </button>
+                  {% else %}
                   <button  id="submit-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Send For Approval </button>
                   <button  id="submit-darft-button"  class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save As Draft</button>
+                  {% endif %}
+                  
                   <button id="reset-button" class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0 mx-2" onclick="resetPage()">Reset</button>
 
                   {% include 'components/loader.html' %}
@@ -207,6 +231,28 @@
         
       </div>
     </div>
+</div>
+
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content ">
+          <div class="modal-header">
+              <h5 class="modal-title" id="exampleModalLabel">Confirmation</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+          </div>
+          <div class="modal-body">
+            The customer will receive an email asking for approval for this Quotation. Make sure you've included all the necessary details. This action cannot be undone.
+          </div>
+
+          
+          <div class="modal-footer">
+              <button type="button" class="btn bg-gradient-dark" id="confirmSubmit">I Acknowledge </button>
+          </div>
+      </div>
+  </div>
+</div>
 
 
 {% endblock %}
@@ -255,7 +301,6 @@ function removeDefect(button) {
                 var rowsAfterTbody = Array.from(table.querySelectorAll('tr')).slice(rows.length); // Get rows after tbody
                 rowsAfterTbody.forEach(function (row) {
                     var rowId = row.getAttribute('id');
-                    console.log(rowId, "rowId after tbody")
                     // Remove the price associated with the row after tbody
                     if (rowPrices[defectId] && rowPrices[defectId][rowId]) {
                         delete rowPrices[defectId][rowId];
@@ -471,12 +516,13 @@ function addTable(button) {
     var priceCell = document.createElement('td');
     newRow.appendChild(priceCell);
 
+    
     // Add the fourth <td> with the "x" icon to delete the row
-      var deleteCell = document.createElement('td');
-      var deleteIcon = document.createElement('span');
-      deleteIcon.textContent = 'x';
-      deleteIcon.style.cursor = 'pointer';
-      deleteIcon.classList.add('text-danger', 'text-center'); // Add the classes to the delete icon
+    var deleteCell = document.createElement('td');
+    var deleteIcon = document.createElement('span');
+    deleteIcon.textContent = 'x';
+    deleteIcon.style.cursor = 'pointer';
+    deleteIcon.classList.add('text-danger', 'text-center'); // Add the classes to the delete icon
 
       // Modify your existing deleteIcon.addEventListener as follows:
     deleteIcon.addEventListener('click', function() {
@@ -612,19 +658,75 @@ function updateTotalPrice() {
 // Get references to the "send_for_approval" and "Save As Draft" buttons
 var submitButton = document.getElementById('submit-button');
 var saveDraftButton = document.getElementById('submit-darft-button');
+var submitApproved = document.getElementById('submit-approved');
+const modalContainer = document.querySelector('.container-fluid.mt-3');
 
-// Add click event listeners to the buttons
-submitButton.addEventListener('click', function () {
-  showLoader(); 
-  sendDataToServer('send_for_approval'); // Set the status to "send_for_approval" when "Submit" is clicked
-});
+function addBlur() {
+    modalContainer.classList.add('blur-background');
+  }
 
-saveDraftButton.addEventListener('click', function () {
-  showLoader(); 
-  sendDataToServer('draft'); // Set the status to "draft" when "Save As Draft" is clicked
-});
+// Function to remove the blur class
+function removeBlur() {
+    modalContainer.classList.remove('blur-background');
+}
 
-// Function to send data to the server
+
+// Check if the submitButton exists before adding an event listener
+// Check if the submitButton exists before adding an event listener
+if (submitButton) {
+  submitButton.addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the form from submitting immediately
+
+   
+    addBlur();
+    // Get a reference to the confirmation modal
+    var confirmationModal = document.getElementById('confirmationModal');
+
+    // Show the Bootstrap confirmation modal
+    confirmationModal.classList.add('show');
+    confirmationModal.style.display = 'block';
+
+    // Attach a click event listener to the "OK" button in the modal
+    document.getElementById('confirmSubmit').addEventListener('click', function () {
+      // User clicked OK, so proceed with form submission
+      removeBlur();
+      showLoader();
+      sendDataToServer('send_for_approval'); // Set the status to "send_for_approval" when "Submit" is clicked
+      // You can submit the form here if it's a regular HTML form
+      // e.g., document.getElementById('yourFormId').submit();
+
+      // Close the modal
+      confirmationModal.classList.remove('show');
+      confirmationModal.style.display = 'none';
+    });
+
+    // Attach a click event listener to the "Cancel" button in the modal
+    document.querySelector('[data-dismiss="modal"]').addEventListener('click', function () {
+      // User clicked Cancel, do nothing
+      // Close the modal
+      removeBlur();
+      confirmationModal.classList.remove('show');
+      confirmationModal.style.display = 'none';
+      
+    });
+  });
+}
+
+// Check if the saveDraftButton exists before adding an event listener
+if (saveDraftButton) {
+  saveDraftButton.addEventListener('click', function () {
+    showLoader();
+    sendDataToServer('draft'); // Set the status to "draft" when "Save As Draft" is clicked
+  });
+}
+
+// Check if the submitApproved button exists before adding an event listener
+if (submitApproved) {
+  submitApproved.addEventListener('click', function () {
+    showLoader();
+    sendDataToServer('approved'); // Set the status to "approved" when "Submit Approved" is clicked
+  });
+}
 // Function to send data to the server using fetch
 function sendDataToServer(status) {
   // Collect the data you want to send to the server, including defect-SOR values
@@ -639,28 +741,34 @@ function sendDataToServer(status) {
     for (var defectId in rowPrices) {
       if (rowPrices.hasOwnProperty(defectId)) {
         var defectSorData = {}; // Initialize an empty object for defect-SOR data
+        var hasPrices = false; // Flag to track if prices exist for this defect
+
         for (var rowId in rowPrices[defectId]) {
           if (rowPrices[defectId].hasOwnProperty(rowId)) {
             // Get the price for this row
             var price = rowPrices[defectId][rowId];
             // Fetch the SOR ID from the hidden input field within the row
             var sorIdInput = document.querySelector('#' + 'sor-id-' + defectId + '-' + rowId);
-            
             var sorId = sorIdInput.value; // Fetch the SOR ID from the hidden input
 
             // Add the SOR ID and price to the defect-SOR data
-            defectSorData[rowId] = {'sor-id':sorId,'price':price};
-            
+            defectSorData[rowId] = { 'sor-id': sorId, 'price': price };
+
+            // Check if there is a price, set the flag to true
+            if (price) {
+              hasPrices = true;
+            }
           }
         }
 
-        // Add the defect-SOR data to the main data object
-        dataToSend.defectSorValues[defectId] = defectSorData;
-        dataToSend.defectList.push(defectId);
+        // Check if there are prices for this defect before adding to the list
+        if (hasPrices) {
+          // Add the defect-SOR data to the main data object
+          dataToSend.defectSorValues[defectId] = defectSorData;
+          dataToSend.defectList.push(defectId);
+        }
       }
     }
-
-   
     // Check if dataToSend has some values
     if (Object.keys(dataToSend.defectSorValues).length > 0) {
       // There are values to send, proceed with the fetch request

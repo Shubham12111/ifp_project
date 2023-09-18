@@ -13,11 +13,11 @@ from django.db.models import F
 from django.http import JsonResponse
 from infinity_fire_solutions.custom_form_validation import *
 from datetime import datetime
+from infinity_fire_solutions.email import *
 import uuid
 
 
 class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
-    
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
@@ -296,7 +296,7 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
 
 
 
-            if request.data.get('status') == "send_for_approval":
+            if request.data.get('status') == "send_for_approval" or request.data.get('status') == "approved":
                 quotation_instance.submitted_at = datetime.now() 
                 unique_pdf_filename = f"{str(uuid.uuid4())}_quotation_{requirement_instance.id}.pdf"
                 context= {'customer_id': customer_id,
@@ -306,12 +306,23 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                             'queryset':quotation_instance
                         }
                 pdf_file = save_pdf_from_html(context=context, file_name=unique_pdf_filename, content_html = 'quote/quotation_pdf.html')
+                
                 pdf_path = f'requirement/{requirement_instance.id}/quotation/pdf'
                 
                 upload_signature_to_s3(unique_pdf_filename, pdf_file, pdf_path)
                 
                 quotation_instance.pdf_path = f'requirement/{requirement_instance.id}/quotation/pdf/{unique_pdf_filename}'
                 quotation_instance.save()
+
+            if request.data.get('status') == "send_for_approval":
+                if customer_data.email:
+                    context = {'user': customer_data,'site_url': get_site_url(request) }
+
+                    email = Email()
+                    attachment_path = generate_presigned_url(quotation_instance.pdf_path)
+                    email.send_mail(customer_data.email, 'email_templates/quotation_client.html', context, "Quotation Submission for Review", attachment_path)
+
+
             messages.success(request, message)
             return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
 
