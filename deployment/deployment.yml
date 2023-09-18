@@ -19,7 +19,7 @@ spec:
       labels:
         app.kubernetes.io/name: infinity-fire-systems-app
     spec:
-      nodeName: ip-10-0-138-85.eu-west-2.compute.internal
+      nodeName: ip-10-0-128-81.eu-west-2.compute.internal
       containers:
       - image: 591836277216.dkr.ecr.eu-west-2.amazonaws.com/ifp-ecr-beta:latest
         imagePullPolicy: Always
