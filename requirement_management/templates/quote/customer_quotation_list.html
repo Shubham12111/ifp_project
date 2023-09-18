@@ -66,7 +66,7 @@
                                       <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
                                     </a>
                                     <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                                        {% if quotation.pdf_path and quotation.status == "submitted" %}
+                                        {% if quotation.pdf_path and quotation.status != "draft" %}
                                         <li> <a href="{{quotation.pdf_path|get_quotation_pdf_path}}" class="dropdown-item border-radius-md" download="">
                                             Download
                                             </a>

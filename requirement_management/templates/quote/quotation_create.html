@@ -125,7 +125,7 @@
             </div>
             <div class="card-body mt-0 ">
            {% for defect in requiremnt_defect_instances %}
-           <div class="row column-with-border ">
+           <div class="row column-with-border " data-defect-id="{{ defect.id }}">
            <h6>Defect {{ forloop.counter }} - <span class="text-sm">({{defect.get_defect_type_display}})</span></h6>
           
              <div class="col-lg-4 col-sm-12 text-sm ">
@@ -173,6 +173,8 @@
                 </div>
                 <div class="col-lg-12 col-sm-12 mb-0">
                   <button class="btn bg-gradient-primary btn-sm mt-4" data-defect-id="{{ defect.id }}" onclick="addTable(this)">Add SOR</button>
+                  <button class="btn bg-gradient-secondary btn-sm mt-4" data-defect-id="{{ defect.id }}"
+                  onclick="removeDefect(this)">Remove Defect</button>
                 </div>
                 
               </div>
@@ -190,9 +192,10 @@
                 </div>
 
                 <div class="col-lg-12 col-sm-12 mt-4">
-                  <button  id="submit-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Submit</button>
+                  <button  id="submit-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Send For Approval </button>
                   <button  id="submit-darft-button"  class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save As Draft</button>
-                 
+                  <button id="reset-button" class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0 mx-2" onclick="resetPage()">Reset</button>
+
                   {% include 'components/loader.html' %}
                 </div>
               </div>
@@ -214,6 +217,11 @@
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script>
 
+function resetPage() {
+        // Reload the current page
+        window.location.reload();
+    }
+
 const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
 
 function showLoader() {
@@ -222,6 +230,47 @@ function showLoader() {
 
 function hideLoader() {
     loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+}
+
+
+function removeDefect(button) {
+    // Find the parent div of the button
+    var defectDiv = button.closest('.column-with-border');
+
+    if (defectDiv) {
+        // Extract the defect ID from the data attribute
+        var defectId = defectDiv.getAttribute('data-defect-id');
+
+        // Find the tbody element within the defect table
+        var tbody = document.querySelector('#table-' + defectId + ' tbody');
+
+        if (tbody) {
+            // Find all rows within the tbody element
+            var rows = tbody.querySelectorAll('tr');
+
+
+            // After removing the rows inside tbody, you can remove rows after tbody
+            var table = document.querySelector('#table-' + defectId);
+            if (table) {
+                var rowsAfterTbody = Array.from(table.querySelectorAll('tr')).slice(rows.length); // Get rows after tbody
+                rowsAfterTbody.forEach(function (row) {
+                    var rowId = row.getAttribute('id');
+                    console.log(rowId, "rowId after tbody")
+                    // Remove the price associated with the row after tbody
+                    if (rowPrices[defectId] && rowPrices[defectId][rowId]) {
+                        delete rowPrices[defectId][rowId];
+                    }
+                    // Remove the row
+                    row.remove();
+                });
+            }
+        }
+        // After removing the defect, call updateTotalPrice to update the total prices for all defect tables
+        updateTotalPrice();
+
+        // Finally, remove the entire defect div, including the table
+        defectDiv.remove();
+    }
 }
 
 
@@ -541,6 +590,7 @@ function updateDefectTotal(defectId, total) {
 function updateTotalPrice() {
   // Calculate the total price of all defect tables
   totalAllDefects = Object.keys(rowPrices).reduce(function(sum, defectId) {
+    
     var defectPrices = rowPrices[defectId];
     var defectTotal = Object.values(defectPrices).reduce(function(defectSum, price) {
       return defectSum + (parseFloat(price) || 0);
@@ -557,14 +607,16 @@ function updateTotalPrice() {
 }
 
 
-// Get references to the "Submit" and "Save As Draft" buttons
+
+
+// Get references to the "send_for_approval" and "Save As Draft" buttons
 var submitButton = document.getElementById('submit-button');
 var saveDraftButton = document.getElementById('submit-darft-button');
 
 // Add click event listeners to the buttons
 submitButton.addEventListener('click', function () {
   showLoader(); 
-  sendDataToServer('submitted'); // Set the status to "submitted" when "Submit" is clicked
+  sendDataToServer('send_for_approval'); // Set the status to "send_for_approval" when "Submit" is clicked
 });
 
 saveDraftButton.addEventListener('click', function () {
@@ -579,8 +631,9 @@ function sendDataToServer(status) {
   var dataToSend = {
     // Include your data here
     status: status, // Include the status based on the button clicked
-    total_amount : totalPriceInput.textContent,
+    total_amount: totalPriceInput.textContent,
     defectSorValues: {}, // Initialize an empty object to store defect-SOR values
+    defectList: [] // Initialize an empty array to store the list of defects
   };
     // Loop through each defectId in rowPrices and add the corresponding SOR values with IDs to the data
     for (var defectId in rowPrices) {
@@ -603,6 +656,7 @@ function sendDataToServer(status) {
 
         // Add the defect-SOR data to the main data object
         dataToSend.defectSorValues[defectId] = defectSorData;
+        dataToSend.defectList.push(defectId);
       }
     }
 
