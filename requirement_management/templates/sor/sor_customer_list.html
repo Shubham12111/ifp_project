@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} FRA Actions {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex">
+            <div>
+              <h4 class="mb-0">FRA Customer List</h4>
+            </div>
+          </div>
+          {% include 'components/table_search.html' %}
+        </div>
+        <div class="card-body px-0 pb-0">
+          <div class="table-responsive">
+            <table class="table table-flush text-dark" id="requirement-customer-list">
+              <thead class="thead-light">
+                <tr>
+                  <th class="text-left">Customer Name</th>
+                  <th class="text-left">Company Name</th>
+                  <th class="text-left">Customer Email</th>
+                  <th class="text-left">Phone Number</th>
+                  <th class="text-center custom-last-column">SOR Counts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for query_obj in customers_with_counts %}
+                <tr class="text-sm">
+                  <td>
+                    <a class="font-weight-bolder" href="{% url 'customer_sor_list' query_obj.customer.id %}" data-bs-toggle="tooltip"
+                      data-bs-original-title="Click For View SOR">
+                      {{ query_obj.customer.first_name|truncatechars:20|title }} {{ query_obj.customer.last_name|truncatechars:20|lower }}
+                    </a>
+                  </td>
+                  <td>{{query_obj.customer.company_name|default:''|title}}</td>
+                  <td>{{query_obj.customer.email}}</td>
+                  <td>{{query_obj.customer.phone_number|default:''}}</td>
+                  <td class="text-center">{{query_obj.sor_counts}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %} 
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+if (document.getElementById('requirement-customer-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#requirement-customer-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25,
+      perPageSelect: false,
+    });
+
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+  }
+
+
+
+</script>
+{% endblock %}

@@ -3,12 +3,13 @@ from django.urls import path
 from django.contrib.auth.decorators import login_required
 from .views import *
 from .reports import *
-
+from .sor_view import *
+from .quotation_views import *
 
 urlpatterns = [
     path('quantity_surveyor/add/<int:customer_id>/',RequirementQSAddView.as_view() , name='add_quantity_surveyor'),
     path('surveyor/add/<int:customer_id>/',RequirementSurveyorAddView.as_view() , name='add_surveyor'),
-     
+
     path('customers/', RequirementCustomerListView.as_view(), name='customers_list'),
     path('customers/<int:customer_id>/list/', RequirementListView.as_view(), name='customer_requirement_list'),
     path('customers/<int:customer_id>/add/', RequirementAddView.as_view(), name='customer_requirement_add'),
@@ -37,13 +38,29 @@ urlpatterns = [
     path('report/delete/<int:customer_id>/<int:requirement_id>/<int:pk>/', ReportRemoveView.as_view(), name='requirement_report_delete'),
 
     
-    
-    
-    
-    
-    
     path('defects/delete/<int:pk>/', RequirementDefectDeleteView.as_view(), name='requirement_defect_delete'),
-    path('defects/delete/document/<int:defect_id>/<int:pk>/', login_required(RequirementDefectRemoveDocumentView.as_view()), name='remove_requirement_defect_document')
+    path('defects/delete/document/<int:defect_id>/<int:pk>/', login_required(RequirementDefectRemoveDocumentView.as_view()), name='remove_requirement_defect_document'),
+
+    path('customers/sor/', SORCustomerListView.as_view(), name='sor_customers_list'),
+    path('customer/sor/<int:customer_id>/list/', SORListView.as_view(), name='customer_sor_list'),
+    path('customer/sor/<int:customer_id>/add/', SORAddView.as_view(), name='add_sor_customer'),
+    
+    path('customer/sor/<int:customer_id>/edit/<int:sor_id>/', SORUpdateView.as_view(), name='edit_sor_customer'),
+    path('customer/sor/delete/<int:sor_id>/', SORDeleteView.as_view(), name='delete_sor'),
+
 
     
-]
+    
+    path('quotation/', QuotationCustomerListView.as_view(), name='view_customer_list_quotation'),
+    path('quotation/<int:customer_id>/report/', QuotationCustomerReportListView.as_view(), name='view_customer_fra_list_report'),
+
+    path('quotation/add/<int:customer_id>/report/<int:report_id>/', QuotationAddView.as_view(), name='add_customer_estimation'),
+
+    path('quotation/edit/<int:customer_id>/quotation/<int:quotation_id>/', QuotationAddView.as_view(), name='edit_customer_estimation'),
+
+    path('quotation/list/<int:customer_id>/', CustomerQuotationListView.as_view(), name='view_customer_quotation_list'),
+
+    path('quotation/view/<int:customer_id>/<int:quotation_id>/', CustomerQuotationView.as_view(), name='customer_quotation_view'),
+
+
+]   

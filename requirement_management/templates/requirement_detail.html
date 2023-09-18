@@ -67,6 +67,7 @@
             <thead class="thead-light">
                 <tr class="text-sm">
                     <th></th>
+                    <th class="col-3">Type</th>
                     <th class="col-3">Action</th>
                     <th>Description</th>
                     <th>Rectification</th>
@@ -79,6 +80,7 @@
                     <td class="align-middle">
                         <input type="checkbox" name="defect_checkbox" value="{{ defect.id }}">
                     </td>
+                    <td class="align-middle">{{ defect.get_defect_type_display}}</td>
                     <td class="align-middle">{{ defect.action|truncatechars:30 }}</td>
                     <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.description|safe|truncatechars:50 }}</td>
                     <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.rectification_description|safe|truncatechars:50 }}</td>
@@ -131,7 +133,7 @@
 </div>
 
 <div class="modal fade" id="cretaeReportModal" tabindex="-1" aria-labelledby="cretaeReportModal" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-dialog modal-dialog-centered modal-xl  modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="cretaeReportModal">Create Report</h5>
@@ -394,7 +396,7 @@ cretaeReportButton.addEventListener("click", function () {
           titleElement.classList.add('defect-title', 'text-sm');
 
           // Add the action text and a Font Awesome icon at the end
-          titleElement.innerHTML =  `<strong>${index + 1}</strong> - ${defect.fields.action.substr(0, 100)} <i class="fas fa-chevron-down mt-2" aria-hidden="true" style="float: right;"></i>`;
+          titleElement.innerHTML =  `<strong>${index + 1}</strong> - ${defect.fields.action.substr(0, 100)}   <i class="fas fa-chevron-down mt-2" aria-hidden="true" style="float: right;"></i> <span class="badge badge-sm bg-gradient-dark" style="float: right; margin-top: 5px; margin-right: 7px;">${defect.fields.defect_type} </span>`;
 
 
           // Add click event listener to the title to toggle the accordion

@@ -32,7 +32,6 @@ def po_numbe_generated():
     
     new_po_number = 'IFB0001'
     
-    print(existing_purchases)
     if existing_purchases:
         if existing_purchases.po_number:
             last_po_number = existing_purchases.po_number
@@ -430,7 +429,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
             if purchase_order_data:
                 vendor_list = Vendor.objects.all()
                 inventory_location_list = InventoryLocation.objects.all()
-                item_list = Item.objects.filter(item_type='item', vendor_id=purchase_order_data.vendor_id)
+                item_list = Item.objects.filter(vendor_id=purchase_order_data.vendor_id)
                 tax_rate = AdminConfiguration.objects.all().first()
 
                 existingPurchaseOrderData = {} 
