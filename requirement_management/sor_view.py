@@ -292,6 +292,9 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                     serializer = self.serializer_class(instance=instance, context={'request': request})
                     context = {'serializer': serializer, 'sor_instance': instance, 'customer_id': customer_id}
                     return render_html_response(context, self.template_name)
+                else:
+                    messages.error(request, "You are not authorized to perform this action")
+                    return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
         else:
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))

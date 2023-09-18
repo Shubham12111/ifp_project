@@ -159,8 +159,11 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
         # Retrieve the associated Requirement instance
         requirement_instance = report_instance.requirement_id if report_instance else None
 
-        # Retrieve all associated Defect instances
-        requiremnt_defect_instances = report_instance.defect_id.all() if report_instance else []
+        if quotation_data:
+            requiremnt_defect_instances = quotation_data.defect_id.all()
+        else:
+            # Retrieve all associated Defect instances
+            requiremnt_defect_instances = report_instance.defect_id.all() if report_instance else []
 
         return quotation_data, report_instance, requirement_instance, requiremnt_defect_instances
 
@@ -212,7 +215,8 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
     def post(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id')
         customer_data = get_customer_data(customer_id)
-        quotation_data= {}
+        quotation_data = {}
+        defectList = []
         message = f"Your quotation has been added successfully!"
         
         if customer_data:
@@ -222,8 +226,9 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
 
             data = request.data
 
-            print(data)
-
+            if request.data.get('defectList'):
+                defectList = request.data.get('defectList')
+            
             sor_id_list = []  # Initialize a list to store 'sor-id' values
             sor_items_dict = {}  # Initialize a dictionary to store SORItem data
 
@@ -259,6 +264,7 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
             json_data = {
                 'status': 'draft',
                 'defectSorValues': sor_items_dict,
+                'defectList': defectList,
             }
             # The 'json_data' dictionary now contains the desired structure.
 
@@ -272,8 +278,8 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                     status=request.data.get('status'),  # Replace with the desired status
                     total_amount=request.data.get('total_amount'), 
                     quotation_json=json_data  # Use the constructed JSON data
-                    
                 )
+                
             else:
                 quotation_instance = quotation_data
                 # Update the Quotation instance with the values from `updated_quotation_data`
@@ -285,8 +291,12 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 # Save the updated Quotation instance
                 quotation_instance.save()
 
+            if defectList:
+                quotation_instance.defect_id.set(defectList) 
 
-            if request.data.get('status') == "submitted":
+
+
+            if request.data.get('status') == "send_for_approval":
                 quotation_instance.submitted_at = datetime.now() 
                 unique_pdf_filename = f"{str(uuid.uuid4())}_quotation_{requirement_instance.id}.pdf"
                 context= {'customer_id': customer_id,

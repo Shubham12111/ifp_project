@@ -39,7 +39,8 @@ CATEGORY_STATUS_CHOICES = (
 QUOTATION_STATUS_CHOICES = [
     ('draft', 'Draft'),
     ('submitted', 'Submitted'),
-    ('accepted', 'Accepted'),
+    ('send_for_approval', 'Send For Approval'),
+    ('approved', 'Approved'),
     ('rejected', 'Rejected'),
 ]
 
@@ -207,6 +208,7 @@ class Quotation(models.Model):
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="customer_quotations")
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE, related_name="quotations")
     report_id = models.ForeignKey(Report, on_delete=models.CASCADE, related_name="quotations")
+    defect_id = models.ManyToManyField(RequirementDefect, blank=True)
     quotation_json = models.JSONField()  # This field stores JSON data
     total_amount = models.DecimalField(max_digits=10, decimal_places=2,null=True, blank=True)
     status = models.CharField(max_length=30, choices=QUOTATION_STATUS_CHOICES, default='draft')
