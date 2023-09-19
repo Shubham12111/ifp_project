@@ -110,6 +110,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     )
     
     RBNO = serializers.CharField(
+        Label=('RBNO'),
         required=True,
         max_length=12,
         style={'base_template': 'custom_input.html'},
@@ -120,6 +121,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     )
     
     UPRN = serializers.CharField(
+        label=('UPRN'),
         required=True, 
         max_length=12,
         style={'base_template': 'custom_input.html'},
@@ -612,7 +614,7 @@ class SORSerializer(serializers.ModelSerializer):
     
     def validate_reference_number(self, value):
         """
-        Validate that the reference number (SKU) is unique.
+        Validate that the reference number (SKU) i unique.
         """
         if self.instance:
             reference_number = SORItem.objects.filter(reference_number=value).exclude(id=self.instance.id).exists()
@@ -620,7 +622,7 @@ class SORSerializer(serializers.ModelSerializer):
             reference_number = SORItem.objects.filter(reference_number=value).exists()
         
         if reference_number:
-            raise serializers.ValidationError("This SOR code is already in use.")
+            raise serializers.ValidationError("This SOR code is already in Use.")
         
         return value
 
