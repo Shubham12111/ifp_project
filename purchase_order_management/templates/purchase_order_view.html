@@ -32,32 +32,45 @@
     <div class="card ">
         <div class="card-body px-4 pb-0 mb-10">
             <div class="row">
-                <div class="col-lg-4 col-md-4 col-12">
+                <div class="col-lg-4  col-xs-12 col-sm-12 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-                            <h6 class="mb-3 text-sm">Vendor Information </h6>
-                            <span class="mb-2 text-sm">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
-                            <span class="mb-2 text-sm">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
-                            <span class="mb-2 text-sm">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
+                                <h6 class="mb-3 text-sm">Vendor Information</h6>
+                                <span class="mb-2 text-sm">Vendor Name:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}
+                                    </span>
+                                </span>
+                                <span class="mb-2 text-sm">Phone Number:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.vendor_id.phone_number}}
+                                    </span>
+                                </span>
+                                <span class="mb-2 text-sm">Email Address:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap d-inline-block" style="max-width: 100%;">
+                                        {{purchase_order.vendor_id.email}}
+                                    </span>
+                                </span>
                             </div>
                         </li>
                     </ul>
                 </div>
+                
 
-                <div class="col-lg-4 col-md-4 col-12">
+                <div class="col-lg-4  col-xs-12 col-sm-12 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Inventory Location Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
-                            <span class="mb-2 text-sm">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.name}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.address}}</span></span>
                             </div>
                         </li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-12 ms-auto text-sm">
+                <div class="col-lg-3 col-xs-12 col-sm-12 col-12 ms-auto text-sm">
                    <div class="d-flex justify-content-between">
                         <span class="mb-2 font-weight-bold">PO Number :</span>
                         <span class="text-dark ms-2 ">{{purchase_order.po_number}}</span>

@@ -575,8 +575,12 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
             return render_html_response(context, self.template_name)
     
     def post(self, request, *args, **kwargs):
+
+
         purchase_order = self.get_purchase_order().filter(pk=kwargs.get('purchase_order_id')).first() 
+
         invoice_serializer = PurchaseOrderInvoiceSerializer(data=request.data)
+
         purchase_order_items = json.loads(request.POST.get('purchase_order_items'))
       
         received_inventory_serializers = [
@@ -587,60 +591,71 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
        
 
         all_serializers = [invoice_serializer] + received_inventory_serializers
+
         all_valid = all(serializer.is_valid() for serializer in all_serializers)
         
         if all_valid:
-            invoice_serializer.validated_data['purchase_order_id'] = purchase_order
-            
-            from rest_framework import serializers
-            invoice = invoice_serializer.save()
-            
-            error_messages = []
+            with transaction.atomic():
+                invoice_serializer.validated_data['purchase_order_id'] = purchase_order
+                
+                from rest_framework import serializers
+                
+                
+                error_messages = []
 
-            for serializer in received_inventory_serializers:
-                purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
-                received_inventory = PurchaseOrderReceivedInventory.objects.filter(
-                    purchase_order_item_id=purchase_order_item_id,
-                    purchase_order_item_id__purchase_order_id=purchase_order,
-                    purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
-                ).first()
+                for serializer in received_inventory_serializers:
+                    purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
+                    received_inventory = PurchaseOrderReceivedInventory.objects.filter(
+                        purchase_order_item_id=purchase_order_item_id,
+                        purchase_order_item_id__purchase_order_id=purchase_order,
+                        purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
+                    ).first()
 
-                cumulative_received_quantity = serializer.validated_data['received_inventory']
+                    cumulative_received_quantity = serializer.validated_data.get('received_inventory')
+                    if serializer.validated_data.get('received_inventory') is None:
+                        # Handle the case where received_inventory is None (e.g., return an error)
+                        error_message = f"Received inventory is missing for purchase order item {serializer.validated_data['purchase_order_item_id'].id}."
+                        error_data = {
+                            'purchase_order_item_id': str(serializer.validated_data['purchase_order_item_id'].id),
+                            'error_message': error_message
+                        }
+                        error_messages.append(error_data)
+                    else:
+                        if received_inventory:
+                            cumulative_received_quantity += received_inventory.received_inventory
 
-                if received_inventory:
-                    cumulative_received_quantity += received_inventory.received_inventory
+                        if cumulative_received_quantity is not None and cumulative_received_quantity > serializer.validated_data['purchase_order_item_id'].quantity:
+                            error_message = f"Received quantity exceeds available quantity."
+                            error_data = {
+                                'purchase_order_item_id': str(serializer.validated_data['purchase_order_item_id'].id),
+                                'error_message': error_message
+                            }
+                            error_messages.append(error_data)
+                        else:
+                            serializer.is_valid()
 
-                if cumulative_received_quantity > serializer.validated_data['purchase_order_item_id'].quantity:
-                    error_message = f"Received quantity exceeds available quantity."
-                    error_data = {
-                        'purchase_order_item_id': str(serializer.validated_data['purchase_order_item_id'].id),
-                        'error_message': error_message
-                    }
-                    error_messages.append(error_data)
-                else:
-                    serializer.is_valid()
+                # Check if any errors were encountered
+                if error_messages:
+                    return JsonResponse({'success': False, 'errors': error_messages, 'status': status.HTTP_400_BAD_REQUEST})
 
-            # Check if any errors were encountered
-            if error_messages:
-                return JsonResponse({'success': False, 'errors': error_messages, 'status': status.HTTP_400_BAD_REQUEST})
+                # No errors, proceed with saving
+                invoice = invoice_serializer.save()
+                for serializer in received_inventory_serializers:
+                    purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
+                    received_inventory = PurchaseOrderReceivedInventory.objects.filter(
+                        purchase_order_item_id=purchase_order_item_id,
+                        purchase_order_item_id__purchase_order_id=purchase_order,
+                        purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
+                    ).first()
 
-            # No errors, proceed with saving
-            for serializer in received_inventory_serializers:
-                purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
-                received_inventory = PurchaseOrderReceivedInventory.objects.filter(
-                    purchase_order_item_id=purchase_order_item_id,
-                    purchase_order_item_id__purchase_order_id=purchase_order,
-                    purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
-                ).first()
+                    cumulative_received_quantity = serializer.validated_data['received_inventory']
 
-                cumulative_received_quantity = serializer.validated_data['received_inventory']
+                    if received_inventory:
+                        cumulative_received_quantity += received_inventory.received_inventory
+                    
+                    received_inventory = serializer.save(purchase_order_invoice_id=invoice)
 
-                if received_inventory:
-                    cumulative_received_quantity += received_inventory.received_inventory
-
-                received_inventory = serializer.save(purchase_order_invoice_id=invoice)
-
-                update_or_create_inventory(purchase_order, serializer.validated_data['purchase_order_item_id'], cumulative_received_quantity)
+                    update_or_create_inventory(purchase_order, serializer.validated_data['purchase_order_item_id'], cumulative_received_quantity)
 
             
             

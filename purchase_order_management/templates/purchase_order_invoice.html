@@ -96,7 +96,7 @@
                                         <td class="text-sm text-center">{{item.quantity}} </td>
                                         <td class="text-sm">
                                             <input type="number" class="form-control quantity-input" value="0" data-max="{{item.quantity}}" data-item-id="{{item.id}}" id="" oninput="this.value =!!this.value && Math.abs(this.value) >= 0 ? Math.abs(this.value) : null">
-                                            <p class="error-message text-sm text-danger" style=" display: none;">Exceeds available quantity</p>
+                                            <p class="error-message text-sm text-danger" style=" display: none;">Exceeds available quantity or Received inventory is missing.</p>
                                         </td>
 
                                         <td class="text-sm text-center">{{item.row_total}} </td>
@@ -111,30 +111,27 @@
                     <div class="row mt-2">
                         <div class="col-md-6 ">
                             <div class="row mb-6">
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label for="invoiceNumber">Invoice Number <span class="text-danger">*</span></label>
-                                </div>
-                                <div class="col-md-9 mb-4">
                                     <input type="text" id="invoiceNumber" name="invoice_number" class="form-control" placeholder="Enter Invoice Number" required>
+
                                 </div>
-                                <div class="col-md-3">
+                               
+                                <div class="col-md-6">
                                     <label for="invoiceDate">Invoice Date <span class="text-danger">*</span> </label>
-                                </div>
-                                <div class="col-md-9 mb-4">
                                     <input type="date" id="invoiceDate" name="invoice_date"  class="form-control invoice_date" required>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="invoicePDF">Invoice PDF</label>
-                                </div>
-                                <div class="col-md-9 mb-4">
-                                    <input type="file" name="file" id="invoicePDF"  class="form-control" accept=".pdf">
-                                </div>
-                                <div class="col-md-3">
+                                <div class="col-md-12 mt-4">
                                     <label for="invoicePDF">Coments</label>
-                                </div>
-                                <div class="col-md-9">
                                     <textarea class="form-control comments" rows="6" name="comments" ></textarea>
                                 </div>
+                                <div class="col-md-12 mt-4">
+                                    <label for="invoicePDF">Invoice PDF</label>
+                                    <input type="file" name="file" id="invoicePDF"  class="form-control" accept=".pdf">
+                                    <small class="form-text text-muted">Only pdf formats are supported (pdf).</small> 
+                                </div>
+                               
+                                
                             </div>
     
                             {% if purchase_order.notes %}
@@ -253,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Clear the error message after 3 seconds
                 setTimeout(() => {
                     rowErrorElement.textContent = "";
-                }, 3000); // 3000 milliseconds = 3 seconds
+                }, 9000); // 3000 milliseconds = 3 seconds
             }
         }
 

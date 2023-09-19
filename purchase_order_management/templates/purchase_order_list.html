@@ -164,7 +164,7 @@ let locationisDropdownOpen = false; // Variable to track dropdown open state
 function updateLocationSearchResults(results) {
   locationcurrentSearchResults = results; 
   locationsearchResults.innerHTML = '';
-  console.log(results)
+
   if (results.length > 0) {
     results.forEach(result => {
       const li = document.createElement('li');
@@ -254,7 +254,12 @@ window.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-
+// JavaScript code to clear single filter on onclick event
+function clearFilter(filterName) {
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.delete(filterName);
+  window.location.href = currentUrl.toString();
+}
   // JavaScript code to clear all the filters
   function clearAllFilters() {
   const currentUrl = new URL(window.location.href);
