@@ -44,6 +44,9 @@ class PhoneNumberValidator(RegexValidator):
     message = 'Phone number must contain only digits.'
 
 class ContactSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Contact model.
+    """
     first_name = serializers.CharField(
         max_length=50,
         required= True,
@@ -231,6 +234,19 @@ class ContactSerializer(serializers.ModelSerializer):
         }
 
     def validate_first_name(self, value):
+        """
+    Validate the First Name field.
+    
+    Args:
+        value (str): The value of the First Name field.
+
+    Returns:
+        str: The validated First Name value.
+
+    Raises:
+        serializers.ValidationError: If the First Name is invalid.
+
+    """
         if not re.match(r'^[a-zA-Z\s]+$', value):
             raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
 
@@ -240,6 +256,19 @@ class ContactSerializer(serializers.ModelSerializer):
         return value
 
     def validate_last_name(self, value):
+        """
+    Validate the Last Name field.
+    
+    Args:
+        value (str): The value of the Last Name field.
+
+    Returns:
+        str: The validated Last Name value.
+
+    Raises:
+        serializers.ValidationError: If the Last Name is invalid.
+
+    """
         if not re.match(r'^[a-zA-Z\s]+$', value):
             raise serializers.ValidationError("Invalid Last Name. Only alphabets and spaces are allowed.")
 
@@ -251,6 +280,9 @@ class ContactSerializer(serializers.ModelSerializer):
 
 
 class ConversationViewSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Conversation View.
+    """
     presigned_url = serializers.SerializerMethodField()
     filename = serializers.SerializerMethodField()
 
@@ -308,6 +340,9 @@ class ConversationViewSerializer(serializers.ModelSerializer):
         return representation
 
 class ConversationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Conversation Model.
+    """
     # Custom FileField for handling file uploads
     file = serializers.FileField(
     label=_('Document'),

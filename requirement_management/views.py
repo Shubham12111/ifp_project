@@ -21,12 +21,35 @@ from infinity_fire_solutions.email import *
 
 
 def get_customer_data(customer_id):
+
+    """
+    Get customer data by customer ID.
+
+    Args:
+        customer_id (int): The ID of the customer.
+
+    Returns:
+        User: The customer data if found, otherwise None.
+    """
     customer_data = User.objects.filter(id=customer_id, is_active=True,
                                         roles__name__icontains='customer').first()
     
     return customer_data
 
 def get_selected_defect_data(request, customer_id, pk):
+    """
+    Get selected defect data based on the customer and requirement.
+
+    This function retrieves selected RequirementDefect objects related to the specified customer and requirement.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        customer_id (int): The ID of the customer.
+        pk (int): The ID of the requirement.
+
+    Returns:
+        JsonResponse: A JSON response containing selected defect data.
+    """
     if request.method == 'POST':
         selected_defect_ids = request.POST.getlist('selectedDefectIds')
         # Query RequirementDefect objects related to the customer and requirement
@@ -55,6 +78,17 @@ def get_selected_defect_data(request, customer_id, pk):
 
 
 def requirement_image(requirement_instance):
+    """
+    Get document paths and types (image or video) associated with a requirement.
+
+    This function retrieves document paths and types (image or video) associated with a given requirement.
+
+    Args:
+        requirement_instance (Requirement): The Requirement instance.
+
+    Returns:
+        list: A list of dictionaries containing document paths and types.
+    """
     document_paths = []
     
     for document in RequirementAsset.objects.filter(requirement_id=requirement_instance):
@@ -76,6 +110,20 @@ def requirement_image(requirement_instance):
     
 
 def filter_requirements(data_access_value, user, customer=None):
+    """
+    Filter Requirement objects based on data access and user roles.
+
+    This function filters Requirement objects based on the data access value and user roles.
+    It applies appropriate filters to return a queryset of Requirement objects.
+
+    Args:
+        data_access_value (str): The data access value.
+        user (User): The authenticated user.
+        customer (User, optional): The customer for which to filter Requirements. Defaults to None.
+
+    Returns:
+        QuerySet: A filtered queryset of Requirement objects.
+    """
     # Define a mapping of data access values to corresponding filters.
     filter_mapping = {
         "self": Q(user_id=user),
@@ -99,7 +147,21 @@ def filter_requirements(data_access_value, user, customer=None):
     return queryset 
 
 class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
-    
+    """
+    View for listing Requirement customers.
+
+    This view lists Requirement customers, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class (RequirementCustomerSerializer): The serializer class.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        filter_backends (list): The filter backends, including search filter.
+        search_fields (list): The fields for search.
+        template_name (str): The template name for HTML rendering.
+        ordering_fields (list): The fields for ordering.
+    """
+
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
@@ -108,12 +170,27 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
+            """
+        Get the queryset of Requirement customers.
+
+        Returns:
+            QuerySet: A queryset of Requirement customers.
+        """
             queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
         
 
 
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for listing Requirement customers.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "fire_risk_assessment", HasListDataPermission, 'list'
         )
@@ -303,6 +380,18 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
 
 class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    View for displaying and updating Requirement details.
+
+    This view displays the details of a Requirement and handles the submission of Requirement reports.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+        serializer_class (RequirementAddSerializer): The serializer class for Requirement objects.
+        pdf_options (dict): PDF generation options.
+    """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'requirement_detail.html'
     serializer_class = RequirementAddSerializer
@@ -364,6 +453,15 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for displaying Requirement details.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
         customer_id = kwargs.get('customer_id')
         customer_data = User.objects.filter(id=customer_id).first()
         
@@ -399,6 +497,15 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
             
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests for submitting Requirement reports.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The response, either a success message or an error message.
+        """
         instance = self.get_queryset()
         try:
             import base64
@@ -843,6 +950,17 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
 
   
 class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for displaying and handling Requirement Defect details.
+
+    This view displays the details of a Requirement Defect and handles related documents and actions.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+        swagger_schema: None
+    """
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'defect_detail.html'
@@ -870,7 +988,10 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
 
     def get_documents(self):
         """
-        Get the filtered document_paths.
+        Get the filtered document_paths related to the Requirement Defect.
+
+        Returns:
+            list: A list of document paths with additional information (e.g., video/image flags).
         """
         document_paths = []
         
@@ -894,6 +1015,17 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
     
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for displaying Requirement Defect details.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
         customer_id = self.kwargs.get('customer_id')
 
         customer_data = User.objects.filter(id=customer_id).first()
@@ -1025,8 +1157,26 @@ class RequirementDefectRemoveDocumentView(generics.DestroyAPIView):
 
 
 class RequirementQSAddView(CustomAuthenticationMixin, generics.CreateAPIView):
-    
+    """
+    View for assigning Quantity Surveyor to Requirements.
+
+    This view handles POST requests to assign a Quantity Surveyor to selected Requirements.
+
+    Attributes:
+        serializer_class (Serializer): The serializer class for handling POST request data.
+    """
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests to assign Quantity Surveyor to Requirements.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            HttpResponse: The response, either a success message or an error message.
+        """
         customer_id = kwargs.get('customer_id', None)
             
         try:
@@ -1056,8 +1206,26 @@ class RequirementQSAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
 
 class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
-    
+    """
+    View for assigning Surveyor to Requirements.
+
+    This view handles POST requests to assign a Surveyor to selected Requirements.
+
+    Attributes:
+        serializer_class (Serializer): The serializer class for handling POST request data.
+    """
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests to assign Surveyor to Requirements.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            HttpResponse: The response, either a success message or an error message.
+        """
         customer_id = kwargs.get('customer_id', None)
             
         try:

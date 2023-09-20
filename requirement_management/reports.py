@@ -21,7 +21,25 @@ from infinity_fire_solutions.email import *
 
 
 class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView):
-    
+    """
+    View to list requirement reports.
+
+    This view lists the requirement reports based on the authenticated user's permissions and the specified
+    customer's ID. It allows searching by customer first name or last name and provides sorting options.
+
+    Attributes:
+        serializer_class (serializers.Serializer): The serializer class for the view.
+        renderer_classes (list): The renderer classes used for rendering the view's response.
+        filter_backends (list): The filter backends used for filtering the queryset.
+        search_fields (list): The fields used for searching.
+        template_name (str): The name of the HTML template used for rendering the response.
+        ordering_fields (list): The fields used for ordering the queryset.
+
+    Methods:
+        get_queryset: Get the filtered queryset for requirements based on the authenticated user.
+        get: Handle GET requests for listing requirement reports and rendering HTML responses.
+    """
+
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
@@ -108,6 +126,25 @@ class ReportRemoveView(generics.DestroyAPIView):
             )
 
 class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
+    """
+    View to display a requirement report.
+
+    This view displays a requirement report based on the authenticated user's permissions, the specified
+    customer's ID, and the report ID. It allows searching by customer first name or last name and provides
+    sorting options.
+
+    Attributes:
+        serializer_class (serializers.Serializer): The serializer class for the view.
+        renderer_classes (list): The renderer classes used for rendering the view's response.
+        filter_backends (list): The filter backends used for filtering the queryset.
+        search_fields (list): The fields used for searching.
+        template_name (str): The name of the HTML template used for rendering the response.
+        ordering_fields (list): The fields used for ordering the queryset.
+
+    Methods:
+        get_queryset: Get the filtered queryset for requirements based on the authenticated user.
+        get: Handle GET requests for displaying a requirement report and rendering HTML responses.
+    """
     
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
@@ -176,6 +213,29 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
 
 
 class ReportEdit(CustomAuthenticationMixin,generics.ListAPIView):
+    """
+    View to edit a requirement report.
+
+    This view allows users to edit a requirement report. It provides functionality for updating comments
+    and status of the report, generating a PDF version of the report, and sending an email notification
+    to the quantity surveyor upon report submission.
+
+    Attributes:
+        serializer_class (serializers.Serializer): The serializer class for the view.
+        renderer_classes (list): The renderer classes used for rendering the view's response.
+        filter_backends (list): The filter backends used for filtering the queryset.
+        search_fields (list): The fields used for searching.
+        template_name (str): The name of the HTML template used for rendering the response.
+        ordering_fields (list): The fields used for ordering the queryset.
+        pdf_options (dict): Options for generating the PDF from HTML content.
+
+    Methods:
+        save_pdf_from_html: Save a PDF file from HTML content.
+        get_queryset: Get the filtered queryset for requirements based on the authenticated user.
+        get: Handle GET requests for editing a requirement report and rendering HTML responses.
+        post: Handle POST requests for updating a requirement report, generating a PDF, and sending emails.
+    """
+
     
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]

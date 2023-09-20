@@ -4,14 +4,32 @@ from .models import *
 # Register your models here.
 
 class RequirementAdmin(admin.ModelAdmin):
+    """
+    Admin class for the Requirement model.
+
+    Attributes:
+        list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
+    """
     list_display = ('user_id', 'customer_id', 'description', 'quantity_surveyor', 'status')
 
 
 class RequirementDefectAdmin(admin.ModelAdmin):
+    """
+    Admin class for the RequirementDefect model.
+
+    Attributes:
+        list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
+    """
     list_display = ('requirement_id', 'action', 'description', )
 
 
 class RequirementDefectDocumentAdmin(admin.ModelAdmin):
+    """
+    Admin class for the RequirementDefectDocument model.
+
+    Attributes:
+        list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
+    """
     list_display = ('requirement_id', 'defect_id', 'document_path')
 
 

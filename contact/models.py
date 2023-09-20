@@ -4,6 +4,9 @@ from authentication.models import User
 from ckeditor.fields import RichTextField
 
 class ConversationType(models.Model):
+    """
+    Model to represent types of conversations.
+    """
     name = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -12,6 +15,9 @@ class ConversationType(models.Model):
         return self.name
 
 class ContactType(models.Model):
+    """
+    Model to represent types of contacts.
+    """
     name = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -20,6 +26,9 @@ class ContactType(models.Model):
         return self.name
 
 class Contact(models.Model):
+    """
+    Model to represent a contact.
+    """
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     first_name = models.CharField(max_length=50,null=True)
     last_name = models.CharField(max_length=50,null=True)
@@ -43,6 +52,9 @@ class Contact(models.Model):
     
 
 class Conversation(models.Model):
+    """
+    Model to represent a conversation.
+    """
     user_id = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     contact_id = models.ForeignKey(Contact, on_delete=models.CASCADE)
