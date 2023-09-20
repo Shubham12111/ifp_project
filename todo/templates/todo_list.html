@@ -63,7 +63,7 @@ display: inline-block;
                     <td>{{ todo_data.assigned_to}}</td>
                     <td>{{ todo_data.status|title }}</td>
                     <td>{{ todo_data.priority|title }}</td>
-                    <td>{{ todo_data.start_date|date:"M d, Y" }} - {{ todo_data.end_date|date:"M d, Y" }}</td>
+                    <td>{{ todo_data.start_date|date:"d M, Y" }} - {{ todo_data.end_date|date:"d M, Y" }}</td>
                     <td>
                       <div class="dropstart ms-auto pe-0">
                         <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -106,63 +106,61 @@ display: inline-block;
 <script src="{% static 'assets/js/daterangepicker.js' %}"></script>
 
 <script>
-// Initialize the Date Range Picker
-document.addEventListener('DOMContentLoaded', function() {
-    let initialStartDate, initialEndDate; // Variables to store the initial dates
-
-    function cb(start, end) {
-        const formattedStartDate = start.format('YYYY-MM-DD');
-        const formattedEndDate = end.format('YYYY-MM-DD');
-        const formattedDateRange = formattedStartDate + '_' + formattedEndDate;
-
-        $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
-
-        applyFilter('dateRange', formattedDateRange);
-    }
-
-    // Initialize the Date Range Picker without setting an initial date range
-    const datePicker = $('#reportrange').daterangepicker({
-        autoUpdateInput: false,
-        autoApply: true,
-        showCustomRangeLabel: true, // Hide the "Custom Range" label
-        format: 'YYYY/MM/DD', 
-        ranges: {
-            'Today': [moment(), moment()],
-            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(29, 'days'), moment()]
-        },
-    });
-
-    if (datePicker.data('daterangepicker').showCustomRangeLabel) {
-    datePicker.data('daterangepicker').container.find('.ranges ul').append(
-        $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
-    );
-}
-
-    datePicker.on('apply.daterangepicker', function(ev, picker) {
-        cb(picker.startDate, picker.endDate);
-    });
-
-    datePicker.on('show.daterangepicker', function(ev, picker) {
-        initialStartDate = picker.startDate.clone(); // Store initial start date
-        initialEndDate = picker.endDate.clone();     // Store initial end date
-    });
-
+  // Initialize the Date Range Picker
+  document.addEventListener('DOMContentLoaded', function() {
+      let initialStartDate, initialEndDate; // Variables to store the initial dates
   
-});
-
-function dateclearFilter(filterType) {
-    if (filterType === 'dateRange') {
-        $('#reportrange').data('daterangepicker').setStartDate(moment());
-        $('#reportrange').data('daterangepicker').setEndDate(moment());
-        $('#reportrange span').html('');
-        clearFilter('dateRange'); // Apply empty filter value
-    }
-}
-
-</script>
+      function cb(start, end) {
+          const formattedStartDate = start.format('DD/MM/YYYY');
+          const formattedEndDate = end.format('DD/MM/YYYY');
+          const formattedDateRange = formattedStartDate + ' - ' + formattedEndDate;
+  
+          $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
+  
+          applyFilter('dateRange', formattedDateRange);
+      }
+  
+      // Initialize the Date Range Picker without setting an initial date range
+      const datePicker = $('#reportrange').daterangepicker({
+          autoUpdateInput: false,
+          autoApply: true,
+          showCustomRangeLabel: true, // Hide the "Custom Range" label
+          format: 'DD/MM/YYYY', // Change the format here
+          ranges: {
+              'Today': [moment(), moment()],
+              'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+              'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+              'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+              'Last 30 Days': [moment().subtract(29, 'days'), moment()]
+          },
+      });
+  
+      if (datePicker.data('daterangepicker').showCustomRangeLabel) {
+          datePicker.data('daterangepicker').container.find('.ranges ul').append(
+              $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
+          );
+      }
+  
+      datePicker.on('apply.daterangepicker', function(ev, picker) {
+          cb(picker.startDate, picker.endDate);
+      });
+  
+      datePicker.on('show.daterangepicker', function(ev, picker) {
+          initialStartDate = picker.startDate.clone(); // Store initial start date
+          initialEndDate = picker.endDate.clone();     // Store initial end date
+      });
+  
+      function dateclearFilter(filterType) {
+          if (filterType === 'dateRange') {
+              $('#reportrange').data('daterangepicker').setStartDate(moment());
+              $('#reportrange').data('daterangepicker').setEndDate(moment());
+              $('#reportrange span').html('');
+              clearFilter('dateRange'); // Apply empty filter value
+          }
+      }
+  });
+  </script>
+  
 <script>
   if (document.getElementById('todo-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#todo-list", {
@@ -338,4 +336,5 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {% endblock %}     
+  
   

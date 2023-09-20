@@ -399,12 +399,23 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
         });
     }
 }
-// Function to format date from "YYYY-MM-DD" to "Aug 23, 2023" format
+// Function to format date from "DD-MM-YYYY" to "Aug 23, 2023" format
 function formatDate(dateString) {
-    var options = { year: 'numeric', month: 'short', day: 'numeric' };
+    var options = { day: 'numeric', month: 'long', year: 'numeric' };
     var formattedDate = new Date(dateString).toLocaleDateString('en-US', options);
+    
+    // Extract day, month, and year components
+    var dateComponents = formattedDate.split(' ');
+    var day = dateComponents[1];
+    var month = dateComponents[0];
+    var year = dateComponents[2];
+    
+    // Rearrange the components
+    var formattedDate = day + ' ' + month + ' ' + year;
+    
     return formattedDate;
 }
+
 
 // Function to convert string to title case and replace underscores with spaces
 function formatStatus(status) {
