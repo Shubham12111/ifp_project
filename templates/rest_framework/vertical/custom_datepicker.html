@@ -18,7 +18,7 @@
   </div>
 
   <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
-  <script>
+  <!-- <script>
     // Check if the datetimepicker element exists
     if (document.querySelector('.{{ field.name }}')) {
       // Get the default value for the datetime picker
@@ -33,4 +33,27 @@
         defaultDate: defaultDate
       });
     }
+  </script> -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if the datetimepicker element exists
+      const fieldElement = document.querySelector('.{{ field.name }}');
+  
+      if (fieldElement) {
+        // Get the default value for the datetime picker
+        const defaultDateValue = '{{ field.value }}';
+  
+        // Convert the default value to a Date object (if available)
+        const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
+  
+        // Create the flatpickr date-time picker and set the default date to the default value or current date
+        flatpickr(fieldElement, {
+          allowInput: false,
+          defaultDate: defaultDate,
+          dateFormat: 'd-m-Y ', // Set your desired date format
+          enableTime: true, // Enable time selection if needed
+        });
+      }
+    });
   </script>
+  
