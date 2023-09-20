@@ -19,7 +19,7 @@
               <div class="ms-auto my-auto mt-lg-0 mt-4 text-end">
                 {% if request.user|has_add_permission:"requirement" %}
                   <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
-                    <a href="{% url 'customer_requirement_add'  customer_id %}" class="btn bg-gradient-primary  btn-sm mb-2 mx-2">+&nbsp; Add FRA Actions</a>
+                    <a href="{% url 'customer_requirement_add'  customer_id %}" class="btn bg-gradient-primary  btn-sm mb-2 mx-2">+&nbsp; New FRA Actions</a>
                   {% endif %}
               
                   {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor"  %} 
