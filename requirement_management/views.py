@@ -60,7 +60,9 @@ def requirement_image(requirement_instance):
     for document in RequirementAsset.objects.filter(requirement_id=requirement_instance):
         extension = document.document_path.split('.')[-1].lower()
 
-        is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+        # is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+        # Remove video upload feature for no support in PDF
+        is_video = False
         is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
         document_paths.append({
             'presigned_url': generate_presigned_url(document.document_path),
