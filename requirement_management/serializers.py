@@ -110,7 +110,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     )
     
     RBNO = serializers.CharField(
-        Label=('RBNO'),
+        label=('RBNO'),
         required=True,
         max_length=12,
         style={'base_template': 'custom_input.html'},
