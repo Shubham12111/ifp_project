@@ -619,6 +619,11 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             serializer_data['UPRN'] = instance.UPRN
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
+            if not any(file_list) and not any([i.document_path for i in RequirementAsset.objects.filter(requirement_id=instance)]):
+
+                error_message = "Please provide documents cannot be empty !"
+                messages.error(request, error_message)
+                return redirect(reverse('customer_requirement_edit', kwargs=kwargs))
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated requirement instance.
