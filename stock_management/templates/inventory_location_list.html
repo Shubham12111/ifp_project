@@ -17,7 +17,7 @@
             <div class="ms-auto my-auto mt-lg-0 mt-4">
               {% if request.user|has_add_permission:"stock_management" %}
               <a href="{% url 'inventory_location_add' %}" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
-                +&nbsp; Add Inventory Location
+                +&nbsp; New Inventory Location
               </a>
               {% else %}
               <!-- The user doesn't have the permission, so don't show the "Add" button -->

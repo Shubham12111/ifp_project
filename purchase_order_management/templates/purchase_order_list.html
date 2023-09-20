@@ -33,7 +33,7 @@
                   <div class="ms-auto my-auto">
                     {% if request.user|has_add_permission:"purchase_order" %}
                     <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
-                      <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Purchase Order</a>
+                      <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New Purchase Order</a>
                     {% else %}
                       <!-- The user doesn't have the permission, so don't show the "Add" button -->
                     {% endif %}

@@ -26,7 +26,7 @@ display: inline-block;
             <div class="ms-auto my-auto mt-lg-0 mt-4">
               <div class="ms-auto my-auto">
                 {% if request.user|has_add_permission:"todo" %}
-                  <a href="{% url 'todo_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add To Do</a>
+                  <a href="{% url 'todo_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New Task</a>
                 {% endif %}
               </div>
             </div>
