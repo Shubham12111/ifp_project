@@ -37,28 +37,45 @@
                   <p class="text-sm text-secondary d-block mt-2 mb-0">Fax:03300102204</p>
                   <p class="text-sm text-secondary d-block mt-2 mb-0">Email: <a href="mailto:customer@example.com">enquiries@infinityfireprevention.com</a></p>
                 </div>
-                <div class="col-lg-3 col-md-7 text-md-end text-start">
-                  <h6 class="text-sm mt-2 mb-0">Client: {{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</h6>
-                  <p class="text-secondary  mt-2 mb-0 text-sm"><strong>Client Address:</strong> {{ customer_address.address }}
-                    {% if customer_address.town %}
-                        {{ customer_address.town.name }},
-                    {% endif %}
-                    {% if customer_address.county %}
-                        {{ customer_address.county.name }},
-                    {% endif %}
-                    {% if customer_address.country %}
-                        {{ customer_address.country.name }}
-                    {% endif %}
-                    {% if customer_address.country.post_code %}
-                        , {{ customer_address.country.post_code }}
-                    {% endif %}
-                  </p>
-                  <p class="text-secondary mt-2 mb-0 text-sm" ><strong>Job Address:</strong> {{ requirement_instance.site_address }}</p>
-                  <p class="text-secondary mt-2 mb-0 text-sm" ><strong>UPRN:</strong> {{ requirement_instance.UPRN|default:''|title }}</p>
-                  <p class="text-secondary mt-2 mb-0   text-sm" ><strong>RBNO:</strong> {{ requirement_instance.RBNO|default:''|title }}</p>
+               <div class="col-lg-3 col-md-7 text-md-end text-start">
+    <table>
+        <tr>
+            <td><strong>Client:</strong></td>
+            <td>{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</td>
+        </tr>
+        <tr>
+            <td><strong>Client Address:</strong></td>
+            <td>
+                {{ customer_address.address }}
+                {% if customer_address.town %}
+                    {{ customer_address.town.name }},
+                {% endif %}
+                {% if customer_address.county %}
+                    {{ customer_address.county.name }},
+                {% endif %}
+                {% if customer_address.country %}
+                    {{ customer_address.country.name }}
+                {% endif %}
+                {% if customer_address.country.post_code %}
+                    , {{ customer_address.country.post_code }}
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Job Address:</strong></td>
+            <td>{{ requirement_instance.site_address }}</td>
+        </tr>
+        <tr>
+            <td><strong>UPRN:</strong></td>
+            <td>{{ requirement_instance.UPRN|default:''|title }}</td>
+        </tr>
+        <tr>
+            <td><strong>RBNO:</strong></td>
+            <td>{{ requirement_instance.RBNO|default:''|title }}</td>
+        </tr>
+    </table>
+</div>
 
-               
-                </div>
               </div>
               
             </div>
