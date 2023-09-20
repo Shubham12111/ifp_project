@@ -1,52 +1,83 @@
 from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import render, redirect
-from django.http import Http404, JsonResponse, HttpResponse,HttpResponseRedirect
+from django.http import Http404, JsonResponse, HttpResponse, HttpResponseRedirect
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
 from rest_framework import generics, status, filters
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
-
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
 from infinity_fire_solutions.utils import docs_schema_response_new
-
 from .models import *
-
 from .serializers import *
 
-from .serializers import VendorSerializer,BillingDetailSerializer
 
+# Define a custom API view for vendor search
 class VendorSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    API view for searching vendors based on a search term.
+
+    This view allows searching for vendors by their first name, last name, or email.
+
+    Parameters:
+    - CustomAuthenticationMixin: Custom authentication mixin for handling authentication.
+    - RetrieveAPIView: A generic view for retrieving data.
+
+    Attributes:
+    - renderer_classes: List of renderer classes for rendering the API response.
+    - swagger_schema: Swagger schema for API documentation.
+    - template_name: HTML template for rendering the response.
+
+    Methods:
+    - get: Handles GET requests for searching vendors.
+    """
+
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     swagger_schema = None
     template_name = 'vendor.html'
 
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for searching vendors.
+
+        Args:
+        - request: The HTTP request object.
+        - *args: Additional positional arguments.
+        - **kwargs: Additional keyword arguments.
+
+        Returns:
+        - Response: The API response containing the search results.
+        """
+        # Get the search term from the query parameter
         search_term = request.GET.get('term')
         data = {}
+
         if search_term:
+            # Filter vendors based on the search term
             vendor_list = Vendor.objects.filter(
-                            Q(first_name__icontains=search_term) |
-                            Q(last_name__icontains=search_term) |
-                            Q(email__icontains=search_term)
-                        )
-            
-            # Get the email from the vendor_list
+                Q(first_name__icontains=search_term) |
+                Q(last_name__icontains=search_term) |
+                Q(email__icontains=search_term)
+            )
+
+            # Get the email from the vendor list
             results = [user.email for user in vendor_list]
-            
+
             data = {'results': results}
-        return create_api_response(status_code=status.HTTP_200_OK,
-                                message="Vendor data",
-                                data=data)
 
-
+        # Create an API response
+        return create_api_response(
+            status_code=status.HTTP_200_OK,
+            message="Vendor data",
+            data=data
+        )
+    
 class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
 
