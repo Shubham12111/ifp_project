@@ -621,7 +621,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
             if not any(file_list) and not any([i.document_path for i in RequirementAsset.objects.filter(requirement_id=instance)]):
 
-                error_message = "Please provide documents cannot be empty !"
+                error_message = "Documents cannot be empty, Please upload a document first !"
                 messages.error(request, error_message)
                 return redirect(reverse('customer_requirement_edit', kwargs=kwargs))
 
