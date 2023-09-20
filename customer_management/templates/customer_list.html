@@ -18,7 +18,7 @@
             <div class="ms-auto my-auto mt-lg-0 mt-4">
               {% if request.user|has_add_permission:"customer" %}
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
-                <a href="{% url 'customer_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Customer</a>
+                <a href="{% url 'customer_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New Customer</a>
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
