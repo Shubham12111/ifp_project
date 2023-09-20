@@ -256,8 +256,8 @@ if (document.getElementById('qsSelect')) {
                   .filter(checkbox => checkbox.checked)
                   .map(checkbox => checkbox.value);
 
-              selectedReqIdsInput.value = selectedReqIds.join(',');
-              selectedIdsInput.value = selectedReqIds.join(',');
+              selectedReqIdsInput.value =  JSON.stringify(selectedReqIds);
+              selectedIdsInput.value =  JSON.stringify(selectedReqIds);
               // Enable/disable the button based on whether any row is selected
               addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
               addSurveyorButton.disabled = selectedReqIds.length === 0;
