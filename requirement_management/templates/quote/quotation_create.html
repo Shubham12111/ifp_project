@@ -75,18 +75,22 @@
             <p class="text-sm mt-2" style="text-align: justify;">
               <span id="actionText">{{ requirement_instance.action|truncatechars:300 }}</span>
               <span id="actionMore" style="display: none;">{{ requirement_instance.action }}</span>
-              <span class="read-more text-primary" id="actionToggle" onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
-                Read More
-              </span>
+              {% if requirement_instance.action|length > 300 %}
+                <span class="read-more text-primary" id="actionToggle" onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
+                  Read More
+                </span>
+              {% endif %}
             </p>
-
+            
             <b>Description</b>
             <p class="text-sm mt-2" style="text-align: justify;">
               <span id="descriptionText">{{ requirement_instance.description|truncatechars:300 }}</span>
               <span id="descriptionMore" style="display: none;">{{ requirement_instance.description }}</span>
-              <span class="read-more text-primary" id="descriptionToggle" onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
-                Read More
-              </span>
+              {% if requirement_instance.description|length > 300 %}
+                <span class="read-more text-primary" id="descriptionToggle" onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
+                  Read More
+                </span>
+              {% endif %}
             </p>
           </div>
         </div>
