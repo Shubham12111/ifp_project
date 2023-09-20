@@ -1,5 +1,5 @@
 from django.db import models
-from stock_management.models import Vendor, InventoryLocation,Item
+from stock_management.models import Vendor, InventoryLocation, Item
 from authentication.models import User
 from django.db.models import Sum
 
@@ -12,8 +12,10 @@ STATUS_CHOICES = [
     ('completed', 'Completed'),
 ]
 
-
 class PurchaseOrder(models.Model):
+    """
+    Represents a Purchase Order in the system.
+    """
     po_number = models.CharField(max_length=50, unique=True)
     vendor_id = models.ForeignKey(Vendor, on_delete=models.CASCADE)
     inventory_location_id = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE)
@@ -24,7 +26,7 @@ class PurchaseOrder(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
     notes = models.TextField(null=True, blank=True)
     approval_notes = models.TextField(null=True, blank=True)
-    document = models.CharField(max_length=255,null=True, blank=True)
+    document = models.CharField(max_length=255, null=True, blank=True)
     created_by = models.ForeignKey(User, related_name='created_orders', on_delete=models.CASCADE)
     approved_by = models.ForeignKey(User, related_name='approved_orders', on_delete=models.CASCADE, null=True)
     
@@ -34,9 +36,11 @@ class PurchaseOrder(models.Model):
 
     def __str__(self):
         return self.po_number
-    
 
 class PurchaseOrderItem(models.Model):
+    """
+    Represents an item in a Purchase Order.
+    """
     purchase_order_id = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     item_name = models.CharField(max_length=100)
@@ -51,6 +55,9 @@ class PurchaseOrderItem(models.Model):
         return f"{self.item_name} - {self.purchase_order_id.po_number}"
 
 class PurchaseOrderInvoice(models.Model):
+    """
+    Represents an invoice associated with a Purchase Order.
+    """
     purchase_order_id = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE)
     invoice_number = models.CharField(max_length=50)
     invoice_date = models.DateField()
@@ -60,9 +67,12 @@ class PurchaseOrderInvoice(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.invoice_number  # Display the invoice_id as the string representation
+        return self.invoice_number
 
     def calculate_received_inventory(self):
+        """
+        Calculate the total received inventory for this invoice.
+        """
         received_inventory = PurchaseOrderReceivedInventory.objects.filter(
             purchase_order_invoice_id=self
         ).aggregate(total_received_inventory=Sum('received_inventory'))['total_received_inventory']
@@ -70,6 +80,9 @@ class PurchaseOrderInvoice(models.Model):
         return received_inventory or 0
     
 class PurchaseOrderReceivedInventory(models.Model):
+    """
+    Represents received inventory associated with a Purchase Order Invoice.
+    """
     purchase_order_invoice_id = models.ForeignKey(PurchaseOrderInvoice, on_delete=models.CASCADE)
     purchase_order_item_id = models.ForeignKey(PurchaseOrderItem, on_delete=models.CASCADE)
     received_inventory = models.PositiveIntegerField(null=True)

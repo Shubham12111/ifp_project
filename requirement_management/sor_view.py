@@ -4,6 +4,7 @@ from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from .models import *
 from .serializers import *
+from .views import get_customer_data
 from infinity_fire_solutions.response_schemas import *
 from django.contrib import messages
 from rest_framework import generics, status, filters
@@ -19,14 +20,12 @@ class SORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
-    template_name = 'sor_customer_list.html'
+    template_name = 'sor/sor_customer_list.html'
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            queryset = User.objects.filter(is_active=True)
+            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
-        
-
 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -36,7 +35,7 @@ class SORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = self.get_queryset()
-        all_sor = SOR.objects.filter()
+        all_sor = SORItem.objects.filter()
 
         customers_with_counts = []  # Create a list to store customer objects with counts
 
@@ -53,37 +52,35 @@ class SORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
                                     message="Data retrieved",
                                     data=serializer.data)
 
-
-class SORListView(CustomAuthenticationMixin,generics.ListAPIView):
+class SORListView(CustomAuthenticationMixin, generics.ListAPIView):
     """
-    View to get the listing of all contacts.
+    View to get the listing of Service Order Requests (SOR).
     Supports both HTML and JSON response formats.
     """
     serializer_class = SORSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
-    template_name = 'sor_list.html'
-    ordering_fields = ['created_at'] 
+    template_name = 'sor/sor_list.html'
+    ordering_fields = ['-created_at']
 
     common_get_response = {
-    status.HTTP_200_OK: 
-        docs_schema_response_new(
+        status.HTTP_200_OK: docs_schema_response_new(
             status_code=status.HTTP_200_OK,
             serializer_class=serializer_class,
-            message = "Data retrieved",
-            )
+            message="Data retrieved",
+        )
     }
-    
+
     @swagger_auto_schema(operation_id='SOR Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         """
-        Handle both AJAX (JSON) and HTML requests.
+        Handle both AJAX (JSON) and HTML requests for listing SOR items.
         """
-        # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"fire_risk_assessment", HasListDataPermission, 'list'
+            self, "fire_risk_assessment", HasListDataPermission, 'list'
         )
+
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
@@ -95,20 +92,30 @@ class SORListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = SOR.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('created_at')
+        data_access_filter = filter_mapping.get(data_access_value, Q())
 
         customer_id = kwargs.get('customer_id')
-        
-        queryset = queryset.filter(customer_id = customer_id)
 
-        if request.accepted_renderer.format == 'html':
-            context = {'list_sor':queryset, 'customer_id': customer_id}
-            return render_html_response(context,self.template_name)
+        customer_data = get_customer_data(customer_id)
+
+        if customer_data:
+            # Apply filters and retrieve SOR items for the specified customer
+            sor_queryset = SORItem.objects.filter(data_access_filter, customer_id=customer_id).order_by('-created_at')
+
+            if request.accepted_renderer.format == 'html':
+                context = {'list_sor': sor_queryset, 'customer_id': customer_id}
+                return render_html_response(context, self.template_name)
+            else:
+                serializer = self.serializer_class(sor_queryset, many=True)
+                return create_api_response(
+                    status_code=status.HTTP_200_OK,
+                    message="Data retrieved",
+                    data=serializer.data
+                )
         else:
-            serializer = self.serializer_class(queryset, many=True)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                            message="Data retrieved",
-                                            data=serializer.data)
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('sor_customers_list'))
+
 
 
 class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
@@ -118,7 +125,7 @@ class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
     serializer_class = SORSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'sor_form.html'
+    template_name = 'sor/sor_form.html'
 
     @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
@@ -131,17 +138,26 @@ class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"fire_risk_assessment", HasCreateDataPermission, 'add'
         )
-        customer_id = kwargs.get('customer_id')
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-
-        if request.accepted_renderer.format == 'html':
-            context = {'serializer':self.serializer_class(), 'customer_id': customer_id}
-            return render_html_response(context,self.template_name)
+        customer_id = kwargs.get('customer_id')
+        
+        customer_data = get_customer_data(customer_id)
+        # Apply an additional filter for customer_id
+        if customer_data:
+            
+            if request.accepted_renderer.format == 'html':
+                context = {'serializer':self.serializer_class(), 'customer_id': customer_id}
+                return render_html_response(context,self.template_name)
+            else:
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message="GET Method Not Alloweded",)
+        
         else:
-            return create_api_response(status_code=status.HTTP_201_CREATED,
-                                message="GET Method Not Alloweded",)
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('sor_customers_list', kwargs={'customer_id': customer_id}))
+        
         
     common_post_response = {
         status.HTTP_200_OK: 
@@ -164,48 +180,56 @@ class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         Handle POST request to add a SOR.
         """
-        message = "Congratulations! sor has been added successfully."
+        customer_id = kwargs.get('customer_id')
         
-        data = request.data
-        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
-        file_list = data.getlist('file_list', None)
+        customer_data = get_customer_data(customer_id)
+        # Apply an additional filter for customer_id
+        if customer_data:
+            
+            message = "Congratulations! sor has been added successfully."
+            
+            data = request.data
+            # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+            file_list = data.getlist('file_list', None)
 
-        if file_list is not None and not any(file_list):
-            data = data.copy()
-            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-        
+            if file_list is not None and not any(file_list):
+                data = data.copy()
+                del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+            serializer = self.serializer_class(data=data)
 
-        serializer = self.serializer_class(data=data)
+            if serializer.is_valid():
+                serializer.validated_data['customer_id'] = User.objects.get(pk=kwargs.get('customer_id'))  # Assign the current user instance.
+                serializer.validated_data['user_id'] = request.user
+                sor_data = serializer.save()
 
-        if serializer.is_valid():
-            serializer.validated_data['customer_id'] = User.objects.get(pk=kwargs.get('customer_id'))  # Assign the current user instance.
-            SOR = serializer.save()
+                sor_data.save()
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
 
-            SOR.save()
-            if request.accepted_renderer.format == 'html':
-                messages.success(request, message)
-                return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-
+                else:
+                    # Return JSON response with success message and serialized data
+                    return create_api_response(status_code=status.HTTP_201_CREATED,
+                                        message=message,
+                                        data=serializer.data
+                                        )
             else:
-                # Return JSON response with success message and serialized data
-                return create_api_response(status_code=status.HTTP_201_CREATED,
-                                    message=message,
-                                    data=serializer.data
-                                    )
+
+                # Invalid serializer data
+                if request.accepted_renderer.format == 'html':
+                    # Render the HTML template with invalid serializer data
+                    context = {'serializer':serializer, 'customer_id': customer_id}
+                    return render_html_response(context,self.template_name)
+                else:   
+                    # Return JSON response with error message
+                    return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                        message="We apologize for the inconvenience, but please review the below information.",
+                                        data=convert_serializer_errors(serializer.errors))
         else:
-
-            # Invalid serializer data
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                context = {'serializer':serializer}
-                return render_html_response(context,self.template_name)
-            else:   
-                # Return JSON response with error message
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                    message="We apologize for the inconvenience, but please review the below information.",
-                                    data=convert_serializer_errors(serializer.errors))
-
-
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('sor_customers_list', kwargs={'customer_id': customer_id}))
+        
+        
 class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
     API view for updating a SOR.
@@ -222,7 +246,7 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     
     serializer_class = SORSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'sor_form.html'
+    template_name = 'sor/sor_form.html'
 
 
     
@@ -248,7 +272,7 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             "all": Q(),  # An empty Q() object returns all data
         }
 
-        queryset = SOR.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = SORItem.objects.filter(filter_mapping.get(data_access_value, Q()))
 
         # Filter the queryset based on the provided 'SOR_id'
         instance = queryset.filter(pk= self.kwargs.get('sor_id')).first()
@@ -257,16 +281,23 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id')
-        # This method handles GET requests for updating an existing list_sor object.
-        if request.accepted_renderer.format == 'html':
-            instance = self.get_queryset()
-            if instance:
-                serializer = self.serializer_class(instance=instance, context={'request': request})
-                context = {'serializer': serializer, 'sor_instance': instance, 'customer_id': customer_id}
-                return render_html_response(context, self.template_name)
-            else:
-                messages.error(request, "You are not authorized to perform this action")
-                return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        customer_data = get_customer_data(customer_id)
+        
+        # Apply an additional filter for customer_id
+        if customer_data:
+            # This method handles GET requests for updating an existing list_sor object.
+            if request.accepted_renderer.format == 'html':
+                instance = self.get_queryset()
+                if instance:
+                    serializer = self.serializer_class(instance=instance, context={'request': request})
+                    context = {'serializer': serializer, 'sor_instance': instance, 'customer_id': customer_id}
+                    return render_html_response(context, self.template_name)
+                else:
+                    messages.error(request, "You are not authorized to perform this action")
+                    return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
             
     common_put_response = {
         status.HTTP_200_OK: 
@@ -307,49 +338,53 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If successful, the SOR is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
+        customer_id = kwargs.get('customer_id')
+        customer_data = get_customer_data(customer_id)
+        
+        # Apply an additional filter for customer_id
+        if customer_data:
+            data = request.data
+            # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+            file_list = data.getlist('file_list', None)
 
-        data = request.data
-        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
-        file_list = data.getlist('file_list', None)
+            if file_list is not None and not any(file_list):
+                data = data.copy()
+                del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
 
-        if file_list is not None and not any(file_list):
-            data = data.copy()
-            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+            instance = self.get_queryset()
+            if instance:
+                # If the SOR instance exists, initialize the serializer with instance and provided data.
+                serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
 
-        instance = self.get_queryset()
-        if instance:
-            # If the SOR instance exists, initialize the serializer with instance and provided data.
-            serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
+                if serializer.is_valid():
+                    # If the serializer data is valid, save the updated SOR instance.
+                    serializer.save()
+                    message = "SOR has been updated successfully!"
 
-            if serializer.is_valid():
-                # If the serializer data is valid, save the updated SOR instance.
-                serializer.save()
-                message = "SOR has been updated successfully!"
-
+                    if request.accepted_renderer.format == 'html':
+                        # For HTML requests, display a success message and redirect to list_sor.
+                        messages.success(request, message)
+                        return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+                    else:
+                        # For API requests, return a success response with serialized data.
+                        return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+                else:
+                    if request.accepted_renderer.format == 'html':
+                        # For HTML requests with invalid data, render the template with error messages.
+                        context = {'serializer': serializer, 'sor_instance': instance, 'customer_id': customer_id}
+                        return render(request, self.template_name, context)
+                    else:
+                        # For API requests with invalid data, return an error response with serializer errors.
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                error_message = "You are not authorized to perform this action"
                 if request.accepted_renderer.format == 'html':
-                    # For HTML requests, display a success message and redirect to list_sor.
-                    messages.success(request, message)
+                    # For HTML requests with no instance, display an error message and redirect to list_sor.
+                    messages.error(request, error_message)
                     return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
                 else:
-                    # For API requests, return a success response with serialized data.
-                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
-            else:
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'instance': instance}
-                    return render(request, self.template_name, context)
-                else:
-                    # For API requests with invalid data, return an error response with serializer errors.
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            error_message = "You are not authorized to perform this action"
-            if request.accepted_renderer.format == 'html':
-                # For HTML requests with no instance, display an error message and redirect to list_sor.
-                messages.error(request, error_message)
-                return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-            else:
-                # For API requests with no instance, return an error response with an error message.
-                return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
+                    # For API requests with no instance, return an error response with an error message.
+                    return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
 
         
 class SORDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
@@ -399,11 +434,11 @@ class SORDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
 
-        queryset = SOR.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = SORItem.objects.filter(filter_mapping.get(data_access_value, Q()))
         sor_obj = queryset.filter(pk= self.kwargs.get('sor_id')).first()
 
         if sor_obj:
-            images = SORImage.objects.filter(sor_id=sor_obj)
+            images = SORItemImage.objects.filter(sor_id=sor_obj)
             # Proceed with the deletion
             # check if any image on s3
             for image in images:

@@ -246,6 +246,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     )
     
     RBNO = serializers.CharField(
+        label=('RBNO'),
         required=True,
         max_length=12,
         style={'base_template': 'custom_input.html'},
@@ -256,6 +257,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     )
     
     UPRN = serializers.CharField(
+        label=('UPRN'),
         required=True, 
         max_length=12,
         style={'base_template': 'custom_input.html'},
@@ -545,9 +547,16 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         'multiple': True,
         'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
         'allow_null': True,  # Allow None values
+        'custom_class': 'col-6'
     },
     help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
     )
+    
+    defect_type = serializers.ChoiceField(
+        label='Defect Type',
+        choices=REQUIREMENT_DEFECT_CHOICES,
+        default='actual_defect',  # Set the default choice here
+        style={'base_template': 'radio.html', 'inline':True, 'custom_class': 'col-6'},)
 
     def get_initial(self):
         """
@@ -585,7 +594,7 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = RequirementDefect
-        fields = ('action',  'description', 'rectification_description', 'file_list')
+        fields = ('action',  'description', 'rectification_description',  'defect_type','file_list')
 
     
     def create(self, validated_data):
@@ -775,11 +784,11 @@ class RequirementDefectDocumentSerializer(serializers.Serializer):
 class SORSerializer(serializers.ModelSerializer):
     name = serializers.CharField(
         label=('Name'),
-        max_length=500, 
+        max_length=225, 
         required=True, 
         style={
             'base_template': 'custom_input.html',
-            'custom_class':'col-12'
+            'custom_class':'col-6'
         },
         error_messages={
             "required": "Item Name is required.",
@@ -801,7 +810,7 @@ class SORSerializer(serializers.ModelSerializer):
     category_id = serializers.PrimaryKeyRelatedField(
         label=('Category'),
         required=True,
-        queryset=Category.objects.all(),
+        queryset=SORCategory.objects.all(),
         style={
             'base_template': 'custom_select.html',
             'custom_class':'col-6'
@@ -825,7 +834,7 @@ class SORSerializer(serializers.ModelSerializer):
     )
     
     reference_number = serializers.CharField(
-        label=('Reference Number'),
+        label=('SOR Code'),
         max_length=50,
         required=True,
         style={
@@ -862,8 +871,8 @@ class SORSerializer(serializers.ModelSerializer):
         )
         
     class Meta:
-        model = SOR
-        fields = ['name','category_id','price', 'description','reference_number','file_list']
+        model = SORItem
+        fields = ['name','reference_number','category_id','price', 'description','file_list']
 
         
     def validate_price(self, value):
@@ -871,18 +880,33 @@ class SORSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Price cannot be negative.")
         return value
 
-    def validate_sor_name(self, value):
+    def validate_item_name(self, value):
         # Check for minimum length of 3 characters
         if len(value) < 3:
-            raise serializers.ValidationError("SOR Name must be at least 3 characters long.")
+            raise serializers.ValidationError("Item Name must be at least 3 characters long.")
          # Check if the value consists entirely of digits (integers)
         if value.isdigit():
-            raise serializers.ValidationError("SOR Name cannot consist of only integers.")
+            raise serializers.ValidationError("Item Name cannot consist of only integers.")
 
         # Check for alphanumeric characters and spaces
         if not re.match(r'^[a-zA-Z0-9\s]*$', value):
-            raise serializers.ValidationError("SOR Name can only contain alphanumeric characters and spaces.")
+            raise serializers.ValidationError("Item Name can only contain alphanumeric characters and spaces.")
 
+        return value
+
+    
+    def validate_reference_number(self, value):
+        """
+        Validate that the reference number (SKU) i unique.
+        """
+        if self.instance:
+            reference_number = SORItem.objects.filter(reference_number=value).exclude(id=self.instance.id).exists()
+        else:
+            reference_number = SORItem.objects.filter(reference_number=value).exists()
+        
+        if reference_number:
+            raise serializers.ValidationError("This SOR code is already in Use.")
+        
         return value
 
     
@@ -890,7 +914,7 @@ class SORSerializer(serializers.ModelSerializer):
         # Pop the 'file_list' field from validated_data
         file_list = validated_data.pop('file_list', None)
         # Create a new instance of Requirement with other fields from validated_data
-        instance = SOR.objects.create(**validated_data)
+        instance = SORItem.objects.create(**validated_data)
 
         if file_list and len(file_list) > 0:
 
@@ -901,7 +925,7 @@ class SORSerializer(serializers.ModelSerializer):
                 file_path = f'fra/sor/{instance.id}/{unique_filename}'
                 
                 # save the Product images
-                SORImage.objects.create(
+                SORItemImage.objects.create(
                 sor_id = instance,
                 image_path=file_path,
                 )
@@ -926,7 +950,7 @@ class SORSerializer(serializers.ModelSerializer):
                     upload_file_to_s3(unique_filename, file, f'fra/sor/{instance.id}')
                     file_path = f'fra/sor/{instance.id}/{unique_filename}'
                 
-                    SORImage.objects.create(
+                    SORItemImage.objects.create(
                         sor_id=instance,
                         image_path=file_path,
                 )
@@ -939,7 +963,7 @@ class SORSerializer(serializers.ModelSerializer):
         document_paths = []
         if hasattr(instance, 'itemimage_set'):  # Using 'itemimage_set' for images
 
-            for document in SORImage.objects.filter(sor_id=instance):
+            for document in SORItemImage.objects.filter(sor_id=instance):
                 document_paths.append({
                     'presigned_url': generate_presigned_url(document.image_path),
                     'filename': document.image_path.split('/')[-1],

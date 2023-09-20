@@ -5,6 +5,10 @@ from rest_framework import serializers
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
+import os
+import pdfkit
+from django.template.loader import render_to_string
+
 
 def get_site_url(request):
     """
@@ -294,3 +298,40 @@ def validate_name(value):
     if re.match(r'^[!@#$%^&*()_+\-=\[\]{};:\'",.<>/?]*$', value):
         raise serializers.ValidationError("Name cannot consist of only special characters.")
     return value
+
+# PDF SETTINGS
+pdf_options = {
+        'page-size': 'A4',  # You can change this to 'A4' or custom size
+        'margin-top': '10mm',
+        'margin-right': '0mm',
+        'margin-bottom': '0mm',
+        'margin-left': '0mm',
+    }
+
+def save_pdf_from_html(context, file_name, content_html):
+    """
+    Save the PDF file from the HTML content.
+    Args:
+        context (dict): Context data for rendering the HTML template.
+        file_name (str): Name of the PDF file.
+    Returns:
+        Output file path or None.
+    """
+    output_file = None
+    local_folder = '/tmp'
+
+    if local_folder:
+        try:
+            os.makedirs(local_folder, exist_ok=True)
+            output_file = os.path.join(local_folder, file_name)
+            # get the html text from the tmplate
+            html_content = render_to_string(content_html, context)
+
+            # create the PDF file for the invoice
+            pdfkit.from_string(html_content, output_file, options=pdf_options)
+            
+        except Exception as e:
+            # Handle any exceptions that occur during PDF generation
+            print("error")
+
+    return output_file

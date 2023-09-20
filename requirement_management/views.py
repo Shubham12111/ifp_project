@@ -21,6 +21,7 @@ from infinity_fire_solutions.email import *
 
 
 def get_customer_data(customer_id):
+
     """
     Get customer data by customer ID.
 
@@ -30,7 +31,8 @@ def get_customer_data(customer_id):
     Returns:
         User: The customer data if found, otherwise None.
     """
-    customer_data = User.objects.filter(id=customer_id).first()
+    customer_data = User.objects.filter(id=customer_id, is_active=True,
+                                        roles__name__icontains='customer').first()
     
     return customer_data
 
@@ -92,7 +94,9 @@ def requirement_image(requirement_instance):
     for document in RequirementAsset.objects.filter(requirement_id=requirement_instance):
         extension = document.document_path.split('.')[-1].lower()
 
-        is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+        # is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+        # Remove video upload feature for no support in PDF
+        is_video = False
         is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
         document_paths.append({
             'presigned_url': generate_presigned_url(document.document_path),
@@ -724,6 +728,11 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             serializer_data['UPRN'] = instance.UPRN
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
+            if not any(file_list) and not any([i.document_path for i in RequirementAsset.objects.filter(requirement_id=instance)]):
+
+                error_message = "Documents cannot be empty, Please upload a document first !"
+                messages.error(request, error_message)
+                return redirect(reverse('customer_requirement_edit', kwargs=kwargs))
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated requirement instance.

@@ -69,7 +69,7 @@
                 <h4 class='section-header text-center' style="text-align: center;">{{ requirement_instance.customer_id.company_name|title}} Survey Form <h5>
                 <br>
                 <table class="table table-striped  text-sm " id="fire_risk_assessment_report">
-                    <thead> <!-- Use thead for table headers -->
+                    <tbody> <!-- Use thead for table headers -->
                         <tr>
                             <th>Client:</th>
                             <td>{{ requirement_instance.customer_id.first_name }} {{ requirement_instance.customer_id.last_name }}</td>
@@ -78,7 +78,15 @@
                             <th>Site Address:</th>
                             <td>{{ requirement_instance.site_address }}</td>
                         </tr>
-                    </thead>
+                        <tr>
+                            <th>RBNO</th>
+                            <td>{{ requirement_instance.UPRN|default:''|title }}</td>
+                        </tr>
+                        <tr>
+                            <th>UPRN</th>
+                            <td>{{ requirement_instance.UPRN|default:''|title }}</td>
+                        </tr>
+                    </tbody>
                     <tbody> <!-- Use tbody for table body -->
                         {% if requirement_instance %}
                             <tr>

@@ -28,8 +28,9 @@
             <a class="btn bg-gradient-primary btn-sm float-end mt-2 mb-0 mx-2" 
             href="{{report_instance.pdf_url}}" download="">Download PDF</a>
             {% endif %}
+            {% if '/fra/report/' in request.path %}
             <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_reports' customer_id requirement_instance.id %}">Back</a>
-            
+            {% endif %}
 
         </div>
     </div>
@@ -42,7 +43,7 @@
             <div class="row">
                 <!-- Left Column with Media Carousel -->
                 <div class="col-md-5">
-                    <div class="sticky-md-top product-sticky">
+                    <div class=" product-sticky">
                         <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
                             <div class="carousel-inner bg-light rounded">
                                 {% for item in document_paths %}
@@ -56,11 +57,11 @@
                                             <i class="fas fa-sync-alt reset-button mx-2"></i>
                                         </div>
                                         {% endif %}
-                                        {% if item.is_video %}
+                                        {% comment %} {% if item.is_video %}
                                         <video controls class="d-block zoomable-video">
                                             <source src="{{ item.presigned_url }}" type="video/mp4">
                                         </video>
-                                        {% endif %}
+                                        {% endif %} {% endcomment %}
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -72,13 +73,13 @@
                                     <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded border me-4" alt="Product media">
                                 </li>
                                 {% endif %}
-                                {% if item.is_video %}
+                                {% comment %} {% if item.is_video %}
                                 <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
                                     <video class="d-block wid-100 zoomable-video rounded border p-2">
                                         <source src="{{ item.presigned_url }}" type="video/mp4">
                                     </video>
                                 </li>
-                                {% endif %}
+                                {% endif %} {% endcomment %}
                                 {% endfor %}
                             </ol>
                         </div>
@@ -174,8 +175,7 @@
                         {% csrf_token %}
                         <tr>
                             <td class="col-2"><strong>Report Comments</strong></td>
-                            <td><textarea name="comments" class="form-control" value="{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}" required>{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}
-                            </textarea>
+                            <td><textarea name="comments" class="form-control" value="{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}" required>{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}</textarea>
                             </td>
                         </tr>
                     

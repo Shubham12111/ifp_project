@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Requirement,RequirementAsset, RequirementDefect, RequirementDefectDocument,Report, SOR, SORImage
+from .models import *
 
 # Register your models here.
 
@@ -33,10 +33,31 @@ class RequirementDefectDocumentAdmin(admin.ModelAdmin):
     list_display = ('requirement_id', 'defect_id', 'document_path')
 
 
+
+@admin.register(SORItem)
+class SORItemAdmin(admin.ModelAdmin):
+    list_display = ('name', 'customer_id', 'category_id', 'price', 'created_at', 'updated_at')
+    list_filter = ('customer_id', 'category_id', 'created_at')
+    search_fields = ('name', 'reference_number', 'user_id__email')
+    
+@admin.register(SORCategory)
+class SORCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user_id', 'status', 'created_at', 'updated_at')
+    list_filter = ('user_id', 'status', 'created_at')
+    search_fields = ('name',)
+
+
+class QuotationAdmin(admin.ModelAdmin):
+    list_display = ('user_id', 'customer_id', 'requirement_id', 'report_id', 'status', 'created_at', 'updated_at')
+    list_filter = ('status',)
+    search_fields = ('user_id__username', 'customer_id__username', 'requirement_id__name', 'report_id__name')
+    readonly_fields = ('created_at', 'updated_at')
+    # You can customize other admin options here
+
+admin.site.register(Quotation, QuotationAdmin)
 admin.site.register(Requirement, RequirementAdmin)
 admin.site.register(RequirementDefect, RequirementDefectAdmin)
-admin.site.register(SOR)
-admin.site.register(SORImage)
+admin.site.register(SORItemImage)
 admin.site.register(RequirementDefectDocument, RequirementDefectDocumentAdmin)
 admin.site.register(RequirementAsset)
 admin.site.register(Report)
