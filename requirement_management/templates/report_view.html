@@ -89,7 +89,7 @@
                     </tbody>
                 </table>
                 <h5 class='section-header'>Defects</h5>
-                {% for defect in report_instance.defect_id.all %}
+                {% for defect in requirement_defects %}
                 <table class="table table-striped " id="fire_risk_assessment_report">
                     <tbody> <!-- Use tbody for table body -->
                         <tr class=" text-sm">
@@ -108,6 +108,23 @@
                             <th>Defect Type</th>
                             <td>{{ defect.get_defect_type_display}}</td>
                         </tr>
+                        
+                        {% if requirement_defect_images %}
+                        <tr class=" text-sm">
+                            <th>Photos of Defect</th>
+                            <td>
+                                <div class="image-container row">
+                                    {% for requirement_defect_image in requirement_defect_images %}
+                                        {% if requirement_defect_image.defect_id.id == defect.id %}
+                                        <div class="col-3 mb-3">
+                                                <img src="{{ requirement_defect_image.document_path.url }}" alt="Defect Image" width="900%" class="img-thumbnail">
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
                     <tbody>
                 </table>
                 {% endfor %}

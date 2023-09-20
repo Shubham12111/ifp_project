@@ -170,6 +170,11 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         customer_data = User.objects.filter(id=kwargs.get('customer_id')).first()
+
+        requirement_defect_images = {}
+        requirement_defect_images_serializer = {}
+        all_report_defects={}
+
         if customer_data:
             report_id = kwargs.get('pk')
             # This method handles GET requests for updating an existing Requirement object.
@@ -181,6 +186,10 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
                 if report_instance:
                     document_paths = []
                     document_paths = requirement_image(requirement_instance)
+                    all_report_defects = report_instance.defect_id.all()
+                    requirement_defect_images = RequirementDefectDocument.objects.filter(defect_id__in=all_report_defects)
+                    requirement_defect_images_serializer = RequirementDefectDocumentSerializer(requirement_defect_images, many=True)
+
                     if report_instance.pdf_path:
                         pdf_url =  generate_presigned_url(report_instance.pdf_path)
                         report_instance.pdf_url = pdf_url
@@ -199,7 +208,9 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
                         'report_instance':report_instance,
                         'document_paths': document_paths,
                         'customer_id': kwargs.get('customer_id'),
-                        'customer_data':customer_data
+                        'customer_data':customer_data,
+                        'requirement_defects': all_report_defects,
+                        'requirement_defect_images': requirement_defect_images_serializer.data,
                         }
                 
 
