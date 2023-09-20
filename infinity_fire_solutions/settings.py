@@ -190,7 +190,7 @@ LOGIN_URL = '/auth/login/'
 AWS_BUCKET_NAME = 'ifp-assets-dev'
 #supported file
 SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
-IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov']
+IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg']
 IMAGE_SUPPORTED_EXTENSIONS = ["png", "jpg", "jpeg"]
 
 # Include data for English language translations

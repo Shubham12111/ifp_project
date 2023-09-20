@@ -57,11 +57,11 @@
                                             <i class="fas fa-sync-alt reset-button mx-2"></i>
                                         </div>
                                         {% endif %}
-                                        {% if item.is_video %}
+                                        {% comment %} {% if item.is_video %}
                                         <video controls class="d-block zoomable-video">
                                             <source src="{{ item.presigned_url }}" type="video/mp4">
                                         </video>
-                                        {% endif %}
+                                        {% endif %} {% endcomment %}
                                     </div>
                                 </div>
                                 {% endfor %}
@@ -73,13 +73,13 @@
                                     <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded border me-4" alt="Product media">
                                 </li>
                                 {% endif %}
-                                {% if item.is_video %}
+                                {% comment %} {% if item.is_video %}
                                 <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
                                     <video class="d-block wid-100 zoomable-video rounded border p-2">
                                         <source src="{{ item.presigned_url }}" type="video/mp4">
                                     </video>
                                 </li>
-                                {% endif %}
+                                {% endif %} {% endcomment %}
                                 {% endfor %}
                             </ol>
                         </div>
