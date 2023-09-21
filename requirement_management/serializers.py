@@ -917,7 +917,6 @@ class SORSerializer(serializers.ModelSerializer):
         instance = SORItem.objects.create(**validated_data)
 
         if file_list and len(file_list) > 0:
-
             for file in file_list:
                 # Generate a unique filename for each file
                 unique_filename = f"{str(uuid.uuid4())}_{file.name}"
@@ -961,8 +960,7 @@ class SORSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
 
         document_paths = []
-        if hasattr(instance, 'itemimage_set'):  # Using 'itemimage_set' for images
-
+        if hasattr(instance, 'soritemimage_set'):  # Using 'itemimage_set' for images
             for document in SORItemImage.objects.filter(sor_id=instance):
                 document_paths.append({
                     'presigned_url': generate_presigned_url(document.image_path),
