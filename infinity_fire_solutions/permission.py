@@ -134,10 +134,33 @@ class HasListDataPermission(BasePermission):
         raise PermissionDenied()
 
 class HasCreateDataPermission(BasePermission):
+    """
+    Custom permission class to check if a user has permission to create data in a specific module.
+
+    Args:
+        module_name (str): The name of the module for which permission is checked.
+
+    Attributes:
+        module_name (str): The name of the module for which permission is checked.
+    """
+
     def __init__(self, module_name):
         self.module_name = module_name
 
     def has_permission(self, request, view):
+        """
+        Check if the user has permission to create data in the specified module.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            view (View): The view requesting the permission check.
+
+        Returns:
+            bool: True if the user has permission to create data, False otherwise.
+
+        Raises:
+            PermissionDenied: If no permission is found.
+        """
         user = request.user
         user_permissions = get_user_module_permissions(user, self.module_name)
 
@@ -149,10 +172,32 @@ class HasCreateDataPermission(BasePermission):
         raise PermissionDenied()
 
 class HasUpdateDataPermission(BasePermission):
+    """
+    Custom permission class to check if a user has permission to update data in a specific module.
+
+    Args:
+        module_name (str): The name of the module for which permission is checked.
+
+    Attributes:
+        module_name (str): The name of the module for which permission is checked.
+    """
     def __init__(self, module_name):
         self.module_name = module_name
 
     def has_permission(self, request, view):
+        """
+        Check if the user has permission to update data in the specified module.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            view (View): The view requesting the permission check.
+
+        Returns:
+            bool: True if the user has permission to update data, False otherwise.
+
+        Raises:
+            PermissionDenied: If no permission is found.
+        """
         user = request.user
         user_permissions = get_user_module_permissions(user, self.module_name)
 
@@ -164,10 +209,32 @@ class HasUpdateDataPermission(BasePermission):
         raise PermissionDenied()
 
 class HasDeleteDataPermission(BasePermission):
+    """
+    Custom permission class to check if a user has permission to delete data in a specific module.
+
+    Args:
+        module_name (str): The name of the module for which permission is checked.
+
+    Attributes:
+        module_name (str): The name of the module for which permission is checked.
+    """
     def __init__(self, module_name):
         self.module_name = module_name
 
     def has_permission(self, request, view):
+        """
+        Check if the user has permission to delete data in the specified module.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            view (View): The view requesting the permission check.
+
+        Returns:
+            bool: True if the user has permission to delete data, False otherwise.
+
+        Raises:
+            PermissionDenied: If no permission is found.
+        """
         user = request.user
         user_permissions = get_user_module_permissions(user, self.module_name)
 
@@ -179,10 +246,32 @@ class HasDeleteDataPermission(BasePermission):
         raise PermissionDenied()
 
 class HasViewDataPermission(BasePermission):
+    """
+    Custom permission class to check if a user has permission to view data in a specific module.
+
+    Args:
+        module_name (str): The name of the module for which permission is checked.
+
+    Attributes:
+        module_name (str): The name of the module for which permission is checked.
+    """
     def __init__(self, module_name):
         self.module_name = module_name
 
     def has_permission(self, request, view):
+        """
+        Check if the user has permission to view data in the specified module.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            view (View): The view requesting the permission check.
+
+        Returns:
+            bool: True if the user has permission to view data, False otherwise.
+
+        Raises:
+            PermissionDenied: If no permission is found.
+        """
         user = request.user
         user_permissions = get_user_module_permissions(user, self.module_name)
 

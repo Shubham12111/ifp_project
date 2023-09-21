@@ -20,26 +20,31 @@ from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-
 class ToDoUserSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    API view to search for users by email.
+
+    This view allows searching for users by email and returns a list of matching user emails.
+    """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     swagger_schema = None
     template_name = 'todo_list.html'
 
     def get(self, request, *args, **kwargs):
+        # Get the search term from the request's query parameters
         search_term = request.GET.get('term')
         data = {}
         if search_term:
-            user_list = User.objects.filter(email__icontains=search_term)  # Adjust your filter logic
-            
+            # Filter users whose email contains the search term
+            user_list = User.objects.filter(email__icontains=search_term)
+
             # Get the usernames from the user_list
             results = [user.email for user in user_list]
-            
+
             data = {'results': results}
             return create_api_response(status_code=status.HTTP_200_OK,
-                                    message="user data",
-                                    data=data)
-
+                                       message="User data",
+                                       data=data)
 
 
 class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -94,15 +99,16 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             'assigned_to': self.request.GET.get('assigned_to'),
             'dateRange': self.request.GET.get('dateRange'),
         }
+        date_format = '%d/%m/%Y'
 
         # Apply additional filters based on the received parameters
         for filter_name, filter_value in filters.items():
             if filter_value:
                 if filter_name == 'dateRange':
                     # If 'dateRange' parameter is provided, filter TODO items within the date range
-                    start_date_str, end_date_str = filter_value.split('_')
-                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-                    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.strptime(end_date_str.strip(), date_format).date()
                     base_queryset = base_queryset.filter(start_date__gte=start_date, end_date__lte=end_date)
                 else:
                     # For other filters, apply the corresponding filters on the queryset

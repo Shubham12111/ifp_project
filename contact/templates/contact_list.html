@@ -20,7 +20,7 @@
                
                 {% if request.user|has_add_permission:"contact" %}
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
-                <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Contact</a>
+                <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New Contact</a>
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}

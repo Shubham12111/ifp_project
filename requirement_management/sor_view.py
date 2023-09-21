@@ -290,6 +290,7 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 instance = self.get_queryset()
                 if instance:
                     serializer = self.serializer_class(instance=instance, context={'request': request})
+                   
                     context = {'serializer': serializer, 'sor_instance': instance, 'customer_id': customer_id}
                     return render_html_response(context, self.template_name)
                 else:
@@ -454,3 +455,31 @@ class SORDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             messages.error(request, "SOR not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="SOR not found OR You are not authorized to perform this action.", )
+
+
+class SORRemoveImageView(generics.DestroyAPIView):
+    """
+    View to remove a document associated with sor.
+    """
+    swagger_schema = None
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to remove the document associated with a sor.
+        """
+        sor_id = kwargs.get('sor_id')
+        if sor_id:
+            image_instance = SORItemImage.objects.filter(sor_id=sor_id, pk=kwargs.get('document_id') ).first()
+            if image_instance and image_instance.image_path: 
+                
+                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = image_instance.image_path)
+                image_instance.delete()
+            return Response(
+                {"message": "Your item image has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "SOR Image not found or you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )
