@@ -233,9 +233,9 @@ color: #344767;
 }
 
 .ranges li.active {
-    background-color: unset !important;
-    border: 1px solid unset!important;
-    color: #344767 !important;
+    background-color: #7b8eab !important;
+    border: 1px solid #7b8eab !important;
+    color: #fff !important;
 }
 
 
@@ -277,6 +277,19 @@ color: #344767;
     text-align: center
 }
 
+
+.ranges li
+
+{
+    font-size: 13px;
+    background-color:unset !important ;
+    border: unset !important ;
+    border-radius: 4px;
+    color: unset !important ;
+    padding: 3px 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
 .flatpickr-calendar .flatpickr-day.today, .flatpickr-calendar .flatpickr-day.selected, .flatpickr-calendar .flatpickr-day.startRange, .flatpickr-calendar .flatpickr-day.endRange
 {
     background: #d53436 !important;
