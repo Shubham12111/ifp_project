@@ -116,7 +116,7 @@ display: inline-block;
           const formattedDateRange = formattedStartDate + ' - ' + formattedEndDate;
   
           $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
-  
+          
           applyFilter('dateRange', formattedDateRange);
       }
   
@@ -271,10 +271,13 @@ function applyFilter(filterName, filterValue) {
   if (filterName === 'dateRange') {
     filterValue = filterValue; // Use a custom delimiter to separate start and end dates
     
+    
   }
   const currentUrl = new URL(window.location.href);
   currentUrl.searchParams.set(filterName, filterValue);
   window.location.href = currentUrl.toString();
+ 
+  
 }
 
 // JavaScript code to clear single filter on onclick event
@@ -305,21 +308,26 @@ function clearAllFilters() {
   window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
   window.location.reload(); // Reload the page after clearing all filters
 }
+
+
 // Check URL parameters on page load and update search and filter selections
 window.addEventListener('DOMContentLoaded', function() {
   const filterNames = ['status', 'priority', 'module', 'assigned_to', 'dateRange'];
   filterNames.forEach(filterName => {
     const filterValue = new URLSearchParams(window.location.search).get(filterName);
-
+    
     if (filterValue) {
       let displayedValue = filterValue; // Default displayed value is the filter value itself
 
       if (filterName === 'dateRange') {
         const formattedDateRange = filterValue.replace('_', ' to ');
         displayedValue = formattedDateRange;
+        
         // Also update the date range input field if needed
         document.getElementById('reportrange').value = formattedDateRange;
-      } else if (filterValue.length > 9) {
+      } 
+      else if (filterValue.length > 9) 
+      {
         // Truncate the filter value if it's longer than 5 characters
         displayedValue = filterValue.substring(0, 9) + '..';
       }

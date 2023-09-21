@@ -99,15 +99,16 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             'assigned_to': self.request.GET.get('assigned_to'),
             'dateRange': self.request.GET.get('dateRange'),
         }
+        date_format = '%d/%m/%Y'
 
         # Apply additional filters based on the received parameters
         for filter_name, filter_value in filters.items():
             if filter_value:
                 if filter_name == 'dateRange':
                     # If 'dateRange' parameter is provided, filter TODO items within the date range
-                    start_date_str, end_date_str = filter_value.split('_')
-                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-                    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.strptime(end_date_str.strip(), date_format).date()
                     base_queryset = base_queryset.filter(start_date__gte=start_date, end_date__lte=end_date)
                 else:
                     # For other filters, apply the corresponding filters on the queryset
