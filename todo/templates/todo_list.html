@@ -63,7 +63,7 @@ display: inline-block;
                     <td>{{ todo_data.assigned_to}}</td>
                     <td>{{ todo_data.status|title }}</td>
                     <td>{{ todo_data.priority|title }}</td>
-                    <td>{{ todo_data.start_date|date:"d M, Y" }} - {{ todo_data.end_date|date:"d M, Y" }}</td>
+                    <td>{{ todo_data.start_date|date:"d/m/Y " }} - {{ todo_data.end_date|date:" d/m/Y" }}</td>
                     <td>
                       <div class="dropstart ms-auto pe-0">
                         <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
