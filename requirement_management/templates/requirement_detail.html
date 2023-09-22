@@ -21,6 +21,14 @@
 }
 
 
+.custom-swal {
+  font-size: 16px; /* Set your desired font size */
+    width: 420px; /* Set your desired width */
+    height: 150px; /* Set your desired height */
+}
+
+
+
 </style>
 {% endblock %}
 {% block title %} FRA Actions  {{ block.super }}{% endblock %}
@@ -550,9 +558,10 @@ const deleteButton = document.querySelector('.delete-icon');
 deleteButton.addEventListener('click', function (event) {
     event.preventDefault(); // Prevent the default click behavior
     Swal.fire({
-        title: 'Error',
         text: 'You cannot delete the single defect from this FRA.',
-        icon: 'error',
+        customClass: {
+          popup: 'custom-swal' // Apply the custom class to the pop-up dialog
+      }
     });
 });
 
