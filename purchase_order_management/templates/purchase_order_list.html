@@ -232,24 +232,24 @@ function applyFilter(filterName, filterValue) {
 }
 
 
-// Check URL parameters on page load and update search and filter selections
 window.addEventListener('DOMContentLoaded', function() {
   const filterNames = ['vendor', 'location', 'status'];
   filterNames.forEach(filterName => {
     const filterValue = new URLSearchParams(window.location.search).get(filterName);
-    
+
     if (filterValue) {
       let displayedValue = filterValue; // Default displayed value is the filter value itself
-      
+
       if (filterValue.length > 9) {
         // Truncate the filter value if it's longer than 5 characters
         displayedValue = filterValue.substring(0, 9) + '..';
-        // Update the dropdown element with the displayed value
-        document.getElementById(`${filterName}Dropdown`).textContent = displayedValue.replace(/_/g, ' ');
       }
 
-      
-
+      // Update the dropdown element with the displayed value
+      const dropdownElement = document.getElementById(`${filterName}Dropdown`);
+      if (dropdownElement) {
+        dropdownElement.textContent = displayedValue.replace(/_/g, ' ');
+      }
     }
   });
 });
@@ -260,21 +260,26 @@ function clearFilter(filterName) {
   currentUrl.searchParams.delete(filterName);
   window.location.href = currentUrl.toString();
 }
-  // JavaScript code to clear all the filters
-  function clearAllFilters() {
+
+// JavaScript code to clear all the filters
+function clearAllFilters() {
   const currentUrl = new URL(window.location.href);
   const queryParams = new URLSearchParams(currentUrl.search);
-  const filterNames = ['vendor', 'location', 'status']; // Add dateRange to the filterNames array
+  const filterNames = ['vendor', 'location', 'status'];
 
   filterNames.forEach(filterName => {
     queryParams.delete(filterName);
-    document.getElementById(`${filterName}Dropdown`).textContent = filterName;
-   
-    
+    const dropdownElement = document.getElementById(`${filterName}Dropdown`);
+    if (dropdownElement) {
+      dropdownElement.textContent = filterName;
+    }
   });
 
+  // Remove the dateRange parameter if needed
+  // queryParams.delete('dateRange');
+
   window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
-  window.location.reload(); // Reload the page after clearing all filters
+  // Don't reload the page here
 }
 
 var searchUrl = window.location.href;
