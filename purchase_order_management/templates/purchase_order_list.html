@@ -274,6 +274,11 @@ function clearAllFilters() {
       dropdownElement.textContent = filterName;
     }
   });
+  window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+  window.location.reload(); // Reload the page after clearing all filters
+
+
+
 
   // Remove the dateRange parameter if needed
   // queryParams.delete('dateRange');
