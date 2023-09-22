@@ -159,7 +159,7 @@
                                     <a href="#" class="invoice-link" data-invoice="{{ invoice_item.id }}" data-po="{{purchase_order.id}}">
                                         {{invoice_item.invoice_number}}</a>
                                     </h6>
-                                        <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{invoice_item.invoice_date}}</p>
+                                        <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{invoice_item.invoice_date|date:"d/m/Y"}}</p>
                                     </div>
                                 </div>
                         {% endfor %}

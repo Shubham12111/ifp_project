@@ -160,7 +160,7 @@
                                 <span class="text-dark ms-2 font-weight-bold">£ {{ purchase_order.tax }}</span>
                             </div>
                             <div class="d-flex justify-content-between mt-4">
-                                <span class="mb-2 text-md font-weight-bolder mb-0 text-end grand-total-value"">Total</span>
+                                <span class="mb-2 text-md font-weight-bolder mb-0 text-end grand-total-value">Total</span>
                                 <span class="font-weight-bolder mb-0 text-end grand-total-value">£ {{ purchase_order.total_amount }}</span>
                         </div>
                     </div>
@@ -185,15 +185,26 @@
  // Check if the datetimepicker element exists
  if (document.querySelector('.invoice_date')) {
     // Get the default value for the datetime picker
-    const defaultDateValue = 'invoice_date';
+    const fieldElement = document.querySelector('.invoice_date');
+    if (fieldElement.value)
+    {
+        var defaultDateValue = fieldElement.value ; 
+    }
+    else
+    {
+        var defaultDateValue;
+    }
+
+    
 
     // Convert the default value to a Date object (if available)
     const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
-
+   
     // Create the flatpickr date-time picker and set the default date to the default value or current date
     flatpickr('.invoice_date', {
-      allowInput: false,
-      defaultDate: defaultDate
+      allowInput: true,
+      defaultDate: defaultDate,
+      dateFormat: "d/m/Y" // Set your desired date format
     });
   }
 
