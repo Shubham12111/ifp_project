@@ -118,10 +118,10 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'infinity_fire_solutions.exceptions.custom_exception_handler',
     "DATE_INPUT_FORMATS": [
         # English date format
-        "%d-%m-%Y",   # DD-MM-YYYY
+        "%d/%m/%Y",   # DD-MM-YYYY
         # Added to handle and edge case if date formatting not correctly fixed.
-        "%Y-%m-%d",   # YYYY-MM-DD
-        "%m-%d-%Y",   # MM-DD-YYYY
+        "%Y/%m/%d",   # YYYY-MM-DD
+        "%m/%d/%Y",   # MM-DD-YYYY
     ],
 }
 
