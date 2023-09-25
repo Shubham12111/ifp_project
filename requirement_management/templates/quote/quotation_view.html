@@ -26,58 +26,56 @@
        <div class="card ">
             <div class="card-header text-center">
               <div class="row justify-content-between">
-                <div class="col-md-6 text-start ">
-                  <h6 class="text-sm">
-                    Infinity Fire Prevention Ltd Infinity House
-                  </h6>
-                  <p class="text-sm text-secondary d-block mt-2 mb-0">38 Riverside,Sir Thomas Longley Road<br>
-                    Medway City Estate,Rochester Kent .ME24D
-                  </p>
-                  <p class="text-sm text-secondary d-block mt-2 mb-0" >Tel:03300102203</p>
-                  <p class="text-sm text-secondary d-block mt-2 mb-0">Fax:03300102204</p>
-                  <p class="text-sm text-secondary d-block mt-2 mb-0">Email: <a href="mailto:customer@example.com">enquiries@infinityfireprevention.com</a></p>
+                <div class="col-md-6 text-start">
+                    <h6 class="text-sm">
+                        Infinity Fire Prevention Ltd Infinity House
+                    </h6>
+                    <p class="text-sm text-secondary d-block mt-2 mb-0">38 Riverside, Sir Thomas Longley Road<br>
+                        Medway City Estate, Rochester Kent .ME24D
+                    </p>
+                    <p class="text-sm text-secondary d-block mt-2 mb-0">Tel: 03300102203</p>
+                    <p class="text-sm text-secondary d-block mt-2 mb-0">Fax: 03300102204</p>
+                    <p class="text-sm text-secondary d-block mt-2 mb-0">Email: <a href="mailto:customer@example.com">enquiries@infinityfireprevention.com</a></p>
                 </div>
-               <div class="col-lg-4 col-md-7 text-md-end text-start">
-              <table>
-                  <tr class="text-sm">
-                      <td class="text-sm"><strong>Client:</strong></td>
-                      <td>{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</td>
-                  </tr>
-                  <tr class="text-sm">
-                      <td><strong>Client Address:</strong></td>
-                      <td>
-                          {{ customer_address.address }}
-                          {% if customer_address.town %}
-                              {{ customer_address.town.name }},
-                          {% endif %}
-                          {% if customer_address.county %}
-                              {{ customer_address.county.name }},
-                          {% endif %}
-                          {% if customer_address.country %}
-                              {{ customer_address.country.name }}
-                          {% endif %}
-                          {% if customer_address.country.post_code %}
-                              <br>{{ customer_address.country.post_code }}
-                          {% endif %}
-                      </td>
-                  </tr>
-              <tr class="text-sm">
-                    <td><strong>Job Address:</strong></td>
-                    <td>{{ requirement_instance.site_address }}</td>
-                </tr>
-                <tr class="text-sm">
-                    <td><strong>UPRN:</strong></td>
-                    <td>{{ requirement_instance.UPRN|default:''|title }}</td>
-                </tr>
-                <tr class="text-sm">
-                    <td><strong>RBNO:</strong></td>
-                    <td>{{ requirement_instance.RBNO|default:''|title }}</td>
-                </tr>
-            </table>
-        </div>
-
-              </div>
-              
+            
+                <div class="col-lg-4 col-md-7 text-start">
+                    <div class="row mb-2">
+                        <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
+                        <div class="col-7 text-sm">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
+                        <div class="col-7 text-sm">
+                            {{ customer_address.address }}
+                            {% if customer_address.town %}
+                                {{ customer_address.town.name }},
+                            {% endif %}
+                            {% if customer_address.county %}
+                                {{ customer_address.county.name }},
+                            {% endif %}
+                            {% if customer_address.country %}
+                                {{ customer_address.country.name }}
+                            {% endif %}
+                            {% if customer_address.country.post_code %}
+                                {{ customer_address.country.post_code }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
+                        <div class="col-7 text-sm">{{ requirement_instance.site_address }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
+                        <div class="col-7 text-sm">{{ requirement_instance.UPRN|default:''|title }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-5 text-sm text-start"><strong>RBNO:</strong></div>
+                        <div class="col-7 text-sm">{{ requirement_instance.RBNO|default:''|title }}</div>
+                    </div>
+                </div>
+            </div>
+            
             </div>
             <div class="card-body">
               <div class="row">
@@ -86,12 +84,12 @@
                     <table class="custom-table text-right text-sm" style="width: 100%;">
                       <thead class="bg-default">
                         <tr class="text-sm">
-                          <th scope="col" class="pe-2 text-start text-center ps-2">SOR Code </th>
-                          <th scope="col" class="pe-2 text-start text-center ps-2">Defect Action </th>
-                          <th scope="col" class="pe-2 text-start text-center ps-2">Defect Rectification </th>
-                          <th scope="col" class="text-center pe-2">SOR Description</th>
-                          <th scope="col" class="text-center pe-2">Category</th>
-                          <th scope="col" class="text-center pe-2">Price(£)</th>
+                          <th scope="col" class="pe-2 text-start ps-2 no-wrap">SOR Code </th>
+                          <th scope="col" class="pe-2 text-start ps-2 no-wrap">Defect Action </th>
+                          <th scope="col" class="pe-2 text-start ps-2 no-wrap">Defect Rectification </th>
+                          <th scope="col" class="pe-2 no-wrap">SOR Description</th>
+                          <th scope="col" class="pe-2 no-wrap">Category</th>
+                          <th scope="col" class="pe-2 no-wrap">Price(£)</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -128,5 +126,5 @@
   </div>
 {% endblock %}
 {% block extra_js %}
-
+​
 {% endblock %}

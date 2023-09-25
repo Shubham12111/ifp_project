@@ -21,6 +21,14 @@
 }
 
 
+.custom-swal {
+  font-size: 16px; /* Set your desired font size */
+    width: 420px; /* Set your desired width */
+    height: 150px; /* Set your desired height */
+}
+
+
+
 </style>
 {% endblock %}
 {% block title %} FRA Actions  {{ block.super }}{% endblock %}
@@ -106,11 +114,20 @@
                                 </li>
                                 {% endif %}
                                 {% if request.user|has_delete_permission:"fire_risk_assessment" %}
-                                <li>
-                                    <a href="#" type="button" class="dropdown-item border-radius-md" onclick="CustomconfirmDelete({{ defect.id }}, 'Are you sure you want to delete this requirement defect?','The requirement defect has been deleted successfully.','{% url 'requirement_defect_delete' defect.id %}')">
-                                        Delete
-                                    </a>
-                                </li>
+                                
+                                {% if requirement_defect|length > 1 %}
+                                <a href="#" type="button" class="dropdown-item border-radius-md" onclick="CustomconfirmDelete({{ defect.id }}, 'Are you sure you want to delete this requirement defect?','The requirement defect has been deleted successfully.','{% url 'requirement_defect_delete' defect.id %}')">
+                                  Delete
+                              </a>
+
+                            {% else %}
+
+                                <!-- Disable the delete button if there's only one defect -->
+                                <a href="#" class=" dropdown-item border-radius-md delete-icon">
+                                    Delete
+                                </a>
+                            {% endif %}
+
                                 {% endif %}
                                 {% else %}
                                 {% if request.user|has_view_permission:"fire_risk_assessment" %}
@@ -536,6 +553,17 @@ function saveFormData(formData) {
     });
 }
 
+
+const deleteButton = document.querySelector('.delete-icon');
+deleteButton.addEventListener('click', function (event) {
+    event.preventDefault(); // Prevent the default click behavior
+    Swal.fire({
+        text: 'You cannot delete the single defect from this FRA.',
+        customClass: {
+          popup: 'custom-swal' // Apply the custom class to the pop-up dialog
+      }
+    });
+});
 
 </script>
 
