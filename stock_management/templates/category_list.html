@@ -33,7 +33,9 @@
                   <th>Name</th>
                   <th>Description</th>
                   <th>Status</th>
+                  {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %}
                   <th class="custom-last-column">Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody>
@@ -42,6 +44,8 @@
                   <td>{{category.name|default:''|truncatechars:20|title}}</td>
                   <td>{{category.description|safe|truncatechars:120}}</td>
                   <td>{{ category.get_status_display|title }} </td>
+
+                  {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %}
                   <td>
                     <div class="dropstart ms-auto pe-0">
                     <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -66,6 +70,7 @@
                     </ul>
                     </div>
                   </td>
+                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>

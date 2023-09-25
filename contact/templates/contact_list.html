@@ -69,7 +69,12 @@
                   <th>Email</th>
                   <th>Company Name</th>
                   <th>Contact Type</th>
+                  {% if request.user|has_update_permission:"contact" or request.user|has_add_permission:"contact" or request.user|has_delete_permission:"contact" or request.user|has_view_permission:"contact" %}
                   <th class="custom-last-column">Actions</th>
+
+                  {% endif %}
+
+
                 </tr>
               </thead>
               <tbody class="ml-4"> 
@@ -80,7 +85,9 @@
                   <td  class="text-sm">{{contact.email}}</td>
                   <td  class="text-sm">{{contact.company_name}}</td>
                   <td  class="text-sm">{{contact.contact_type|title}}</td>
+                  {% if request.user|has_update_permission:"contact" or request.user|has_add_permission:"contact" or request.user|has_delete_permission:"contact" or request.user|has_view_permission:"contact" %}
                   <td>
+                   
                     <div class="dropstart ms-auto pe-0">
                       <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
@@ -118,10 +125,11 @@
                       
                         </ul>
                       </div>
-
-
+                     
+             
                    
                   </td>
+                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>
