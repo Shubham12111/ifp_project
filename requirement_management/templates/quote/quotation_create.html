@@ -213,9 +213,11 @@
                   <div class="col-lg-12 col-sm-12 mb-0">
                     <button class="btn btn-outline-dotted text-lower btn-sm mt-4" data-defect-id="{{ defect.id }}"
                       onclick="addTable(this)">Add SOR</button>
-                    <button class="btn bg-gradient-secondary btn-sm mt-4" data-defect-id="{{ defect.id }}"
-                      onclick="removeDefect(this)">Remove Defect</button>
-
+                    
+                    {% if requiremnt_defect_instances|length > 1 %}
+                      <button class="btn bg-gradient-secondary btn-sm mt-4" data-defect-id="{{ defect.id }}"
+                        onclick="removeDefect(this)">Remove Defect</button>
+                    {% endif %}
                   </div>
                 </div>
               </div>
