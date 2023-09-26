@@ -18,7 +18,7 @@ import uuid
 
 
 class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
-    serializer_class = CustomerSerializer
+    serializer_class = QuotationCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -50,7 +50,7 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
 
 class QuotationCustomerReportListView(CustomAuthenticationMixin,generics.ListAPIView):
     
-    serializer_class = CustomerSerializer
+    serializer_class = QuotationCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']

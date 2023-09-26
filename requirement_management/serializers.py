@@ -150,7 +150,7 @@ class RequirementDetailSerializer(serializers.ModelSerializer):
         return data
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class  RequirementCustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User

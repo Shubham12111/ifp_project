@@ -40,7 +40,7 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
         get: Handle GET requests for listing requirement reports and rendering HTML responses.
     """
 
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -146,7 +146,7 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
         get: Handle GET requests for displaying a requirement report and rendering HTML responses.
     """
     
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -248,7 +248,7 @@ class ReportEdit(CustomAuthenticationMixin,generics.ListAPIView):
     """
 
     
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']

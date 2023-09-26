@@ -162,7 +162,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
         ordering_fields (list): The fields for ordering.
     """
 
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
