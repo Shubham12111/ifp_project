@@ -5,7 +5,7 @@
 <link id="pagestyle" href="{% static 'assets/css/daterangepicker.css' %}" rel="stylesheet" />
 
 {% endblock %}
-{% block title %} To Do List {{ block.super }}{% endblock %}
+{% block title %} Task List {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
@@ -21,7 +21,7 @@ display: inline-block;
         <div class="card-header pb-0">
           <div class="d-lg-flex">
             <div>
-              <h4 class="font-weight-bolder">To Do List</h4>
+              <h4 class="font-weight-bolder">Task List</h4>
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
               <div class="ms-auto my-auto">
@@ -78,7 +78,7 @@ display: inline-block;
                             {% endif %}
                             
                             {% if request.user|has_delete_permission:"todo" == "all" or request.user == todo_data.user_id and request.user|has_delete_permission:"todo" %}
-                                <li><a class="dropdown-item border-radius-md" href="#" onclick="CustomconfirmDelete({{ todo_data.id }}, 'Are you sure you want to delete this todo?', 'The todo has been deleted successfully.','{% url 'todo_delete' todo_data.id %}')">Delete</a></li>
+                                <li><a class="dropdown-item border-radius-md" href="#" onclick="CustomconfirmDelete({{ todo_data.id }}, 'Are you sure you want to delete this Task?', 'The task has been deleted successfully.','{% url 'todo_delete' todo_data.id %}')">Delete</a></li>
                             {% endif %}
                             
                             {% if request.user|has_view_permission:"todo" == "all" or request.user|has_view_permission:"todo" %}
