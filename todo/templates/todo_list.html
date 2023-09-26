@@ -52,7 +52,10 @@ display: inline-block;
                    <th>Status</th>
                    <th>Priority</th>
                    <th>Date</th>
+
+                   {% if request.user|has_update_permission:"todo" or request.user|has_add_permission:"todo" or request.user|has_delete_permission:"todo" or request.user|has_view_permission:"todo" %}
                    <th class="custom-last-column">Actions</th>
+                   {% endif %}
                  </tr>
                </thead>
                <tbody class="ml-4"> 
@@ -64,6 +67,8 @@ display: inline-block;
                     <td>{{ todo_data.status|title }}</td>
                     <td>{{ todo_data.priority|title }}</td>
                     <td>{{ todo_data.start_date|date:"d/m/Y " }} - {{ todo_data.end_date|date:" d/m/Y" }}</td>
+
+                    {% if request.user|has_update_permission:"todo" or request.user|has_add_permission:"todo" or request.user|has_delete_permission:"todo" or request.user|has_view_permission:"todo" %}
                     <td>
                       <div class="dropstart ms-auto pe-0">
                         <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -87,6 +92,8 @@ display: inline-block;
                           </ul>
                         </div>
                       </td>
+
+                      {% endif %}
                   </tr>
                 {% endfor %}
               </div>

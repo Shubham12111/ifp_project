@@ -37,7 +37,9 @@
                   <th>Company Name</th>
                   <th>Email</th>
                   <th>Phone</th>
+                  {% if request.user|has_update_permission:"customer" or request.user|has_add_permission:"customer" or request.user|has_delete_permission:"customer" or request.user|has_view_permission:"customer" %}
                   <th class="custom-last-column">Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody class="ml-4"> 
@@ -48,6 +50,8 @@
                   <td >{{customer.company_name|default:''|truncatechars:20|title}}</td>
                   <td >{{customer.email}}</td>
                   <td >{% if customer.phone_number %}{{customer.phone_number}}{% endif %}</td>
+
+                  {% if request.user|has_update_permission:"customer" or request.user|has_add_permission:"customer" or request.user|has_delete_permission:"customer" or request.user|has_view_permission:"customer" %}
                   <td>
                       <div class="dropstart ms-auto pe-0">
                        <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -74,6 +78,8 @@
                       </ul>
                     </div>
                    </td>
+
+                   {% endif %}
                 </tr>
               {% endfor %}
               </tbody>

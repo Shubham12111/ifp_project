@@ -43,7 +43,10 @@
                             <th>Comments</th>
                             <th>Status</th>
                             <th>Created At</th>
+
+                            {% if request.user|has_update_permission:"fire_risk_assessment" or request.user|has_add_permission:"fire_risk_assessment" or request.user|has_delete_permission:"fire_risk_assessment" or request.user|has_view_permission:"fire_risk_assessment" %}
                             <th class="custom-last-column">Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody class="ml-4">
@@ -53,6 +56,8 @@
                             <td>{{ report.comments|truncatechars:30}}</td>
                             <td class="text-sm">{{report.get_status_display|default:''|title}}</td>
                             <td class="text-truncate">{{ report.created_at|date:"M d, Y" }}</td>
+
+                            {% if request.user|has_update_permission:"fire_risk_assessment" or request.user|has_add_permission:"fire_risk_assessment" or request.user|has_delete_permission:"fire_risk_assessment" or request.user|has_view_permission:"fire_risk_assessment" %}
                             <td>
                                 <div class="dropstart ms-auto pe-0">
                                     <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -83,6 +88,8 @@
                                   </li>
                                 </ul>
                             </td>
+
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>
