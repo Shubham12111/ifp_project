@@ -12,6 +12,11 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.core.serializers import serialize
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
+import csv 
+import chardet
+import pandas as pd
+from datetime import datetime, time
+from django.utils import timezone
 
 
 class SORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -483,3 +488,87 @@ class SORRemoveImageView(generics.DestroyAPIView):
                 {"message": "SOR Image not found or you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+class SORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'sor/sor_list.html'
+    serializer_class = SORSerializer
+
+    def post(self, request, *args, **kwargs):
+        customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
+        try:
+            customer_data = get_customer_data(customer_id)
+            print(customer_data)
+            if customer_data:
+                csv_file = request.FILES.get('csv_file')
+                print(csv_file)
+                # Check if a file was provided
+                if not csv_file:
+                    messages.error(request, "Please select a file to import")
+                    return redirect(reverse('customer_sor_list', kwargs={'customer_id': customer_id}))
+
+                # Check if the file extension is in the list of allowed formats
+                allowed_formats = ['csv', 'xls', 'xlsx']
+                file_extension = csv_file.name.split('.')[-1]
+                print(file_extension)
+                if file_extension not in allowed_formats:
+                    messages.error(request, 'Unsupported file format. Please upload a CSV, XLS, or XLSX file.')
+                    return redirect(reverse('customer_sor_list', kwargs={'customer_id': customer_id}))
+
+                # Explicitly specify the encoding as ISO-8859-1 (latin1)
+                decoded_file = csv_file.read().decode('ISO-8859-1').splitlines()
+                print(decoded_file)
+                
+                if file_extension == 'csv':
+                    csv_reader = csv.DictReader(decoded_file)
+                else:
+                    # Use pandas to read Excel data
+                    xls = pd.ExcelFile(csv_file)
+                    df = xls.parse(xls.sheet_names[0])  # Assuming you want to read the first sheet
+                    csv_reader = df.to_dict(orient='records')
+
+                success = True  # Flag to track if the import was successful
+                for row in csv_reader:
+                    # Extract the date from the CSV row (you may need to format it properly)
+                    serializer_data = {
+                        'name': row.get('Name', ''),
+                        'reference_number': row.get('SOR code', ''),
+                        'category_id': row.get('Category',''),
+                        'description': row.get('Description', ''),
+                        'price': row.get('Price', ''),
+                        'unit': row.get('Unit', ''),
+                        'file_list': [],  # Empty file_list since you want to pass null
+                    }
+                    serializer = SORSerializer(data=serializer_data,context={'request': request})
+                    print(serializer_data)
+
+                    if serializer.is_valid():
+                        serializer.validated_data['user_id'] = request.user 
+                        serializer.validated_data['customer_id'] = customer_data
+                        # print(serializer.data)
+                        serializer.save()  # Save the sor
+                    else:
+                        success = False
+                         # Attach serializer errors to the error message
+                        error_message = "Failed to import file.Check the file again.. "
+                        # for field, errors in serializer.errors.items():
+                        #     error_message += f"{field}: {', '.join(errors)}; "
+                        messages.error(request, error_message)
+                        print(serializer.errors)
+
+                # Fetch the imported data and pass it to the template
+                if success:
+                    sor_data = SORItem.objects.filter(customer_id=customer_data.id)
+                    context = {
+                      ' sor_data': sor_data,
+                }
+                    messages.success(request,'SOR CSV file imported and data imported successfully.')
+            
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            print(e)
+            messages.error(self.request, "Something went wrong !")
+        
+        return redirect(reverse('customer_sor_list', kwargs={'customer_id': customer_id}))
