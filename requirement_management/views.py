@@ -1267,17 +1267,23 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
 
 class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    API view to handle CSV file import for requirements.
+    """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'requirement_list.html'
     serializer_class = RequirementAddSerializer
 
     def post(self, request, *args, **kwargs):
+         # Get customer_id from URL kwargs
         customer_id = kwargs.get('customer_id', None)
         print(customer_id)
         try:
+             # Fetch customer data based on customer_id
             customer_data = get_customer_data(customer_id)
             print(customer_data)
             if customer_data:
+                 # Get the uploaded CSV file
                 csv_file = request.FILES.get('csv_file')
                 print(csv_file)
                 # Check if a file was provided
