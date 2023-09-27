@@ -1311,7 +1311,7 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                     df = xls.parse(xls.sheet_names[0])  # Assuming you want to read the first sheet
                     csv_reader = df.to_dict(orient='records')
 
-
+                success = True  # Flag to track if the import was successful
                 for row in csv_reader:
                     # Extract the date from the CSV row (you may need to format it properly)
                     csv_date = row.get('date', None)
@@ -1334,14 +1334,18 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         
                         requirement.update_created_at(csv_date)
                     else:
+                        success = False
+                        error_message = "Failed to import file.Check the file again.. "
+                        messages.error(request, error_message)
                         print(serializer.errors)
 
                 # Fetch the imported data and pass it to the template
-                requirements = Requirement.objects.filter(customer_id=customer_data.id)
-                context = {
-                      'requirements': requirements,
-                }
-                messages.success(request,'CSV file uploaded and data imported successfully.')
+                if success:
+                    requirements = Requirement.objects.filter(customer_id=customer_data.id)
+                    context = {
+                        'requirements': requirements,
+                    }
+                    messages.success(request,'FRA CSV file imported and data imported successfully.')
             
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
