@@ -6,6 +6,8 @@ from django.utils.translation import gettext_lazy as _
 from ckeditor.fields import RichTextField
 from stock_management.models import Category
 from customer_management.models import SiteAddress
+from django.utils import timezone
+from datetime import datetime,time
 
 
 REQUIREMENT_DEFECT_CHOICES = (
@@ -82,6 +84,29 @@ class Requirement(models.Model):
 
     def __str__(self):
         return f"{self.customer_id.first_name} {self.customer_id.last_name}'s requirement"
+    
+
+    def update_created_at(self, date_str):
+        """
+        Update the 'created_at' field with a new date.
+        """
+        if date_str:
+            try:
+                if isinstance(date_str, str):
+                    # If date_str is a string (e.g., from a CSV file), parse it into a datetime object
+                    date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                elif isinstance(date_str, datetime):
+                    # If date_str is a datetime object (e.g., from an Excel file), use it directly
+                    date = date_str.date()
+                else:
+                    raise ValueError("Invalid date_str format")
+            
+                # Set the 'created_at' field
+                self.created_at = timezone.make_aware(datetime.combine(date, time.min))
+                self.save()
+            except ValueError as e:
+                # Handle any parsing errors or invalid date formats here
+                print(f"Error parsing date string: {e}")
 
 class RequirementAsset(models.Model):
     """

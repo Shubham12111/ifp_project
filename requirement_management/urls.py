@@ -63,5 +63,7 @@ urlpatterns = [
 
     path('quotation/view/<int:customer_id>/<int:quotation_id>/', CustomerQuotationView.as_view(), name='customer_quotation_view'),
 
+    path('customers/import_csv/<int:customer_id>/', RequirementCSVView.as_view(), name='import_csv'),
+
 
 ]   
