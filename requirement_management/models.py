@@ -8,6 +8,8 @@ from stock_management.models import Category
 from customer_management.models import SiteAddress
 
 
+
+
 REQUIREMENT_DEFECT_CHOICES = (
     ('actual_defect', 'Actual Defect'),
     ('recommended', 'Recommended Defect'),
@@ -263,6 +265,7 @@ class SORItem(models.Model):
             'reference_number': self.reference_number,
             'units':self.units
         }
+    
 
 class SORItemImage(models.Model):
     sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)

@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import MenuItem, EmailNotificationTemplate,AdminConfiguration
+from .models import MenuItem, EmailNotificationTemplate,AdminConfiguration,SORValidity,UpdateWindowConfiguration
+
+
 
 class MenuItemInline(admin.StackedInline):
     model = MenuItem
@@ -29,4 +31,16 @@ class EmailNotificationTemplateAdmin(admin.ModelAdmin):
 class AdminConfigurationAdmin(admin.ModelAdmin):
     list_display = ('tax_rate',)
 
+
+class SORValidityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'sor_expiration_date', 'is_expired', 'is_within_update_window')
+    list_filter = ('sor_expiration_date',)
+
+
+@admin.register(UpdateWindowConfiguration)
+class UpdateWindowConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('start_date', 'end_date', 'is_active')
+
+
 admin.site.register(MenuItem, MenuItemAdmin)
+admin.site.register(SORValidity, SORValidityAdmin)

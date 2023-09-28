@@ -14,7 +14,9 @@
               <h5 class="mb-0">SOR List</h5>
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
+              {% if update_window.is_active %}
               <button id="importsorModalButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Import SOR</button>
+              {% endif %}
               {% if request.user|has_add_permission:"fire_risk_assessment" %}
               <a href="{% url 'add_sor_customer' customer_id%}" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
                 +&nbsp; New SOR
@@ -56,10 +58,12 @@
                       <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
                       
                     {% if request.user|has_update_permission:"fire_risk_assessment" %}
+                    {% if not update_window.is_active %}
                     <li>
                       <a href="{% url 'edit_sor_customer' customer_id item.id%}" class="dropdown-item border-radius-md">
                         Edit
                       </a>
+                      {% endif %}
                       {% endif %}
                     </li>
                         
