@@ -537,7 +537,7 @@ class SORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         'category_id': row.get('Category',''),
                         'description': row.get('Description', ''),
                         'price': row.get('Price', ''),
-                        'unit': row.get('Unit', ''),
+                        'units': row.get('Unit', ''),
                         'file_list': [],  # Empty file_list since you want to pass null
                     }
                     serializer = SORSerializer(data=serializer_data,context={'request': request})

@@ -34,6 +34,7 @@
                   <th>SOR Code</th>
                   <th>Name</th>
                   <th>Description</th>
+                  <th>Units</th>
                   <th>Price ( £ )</th>
                   <th class="custom-last-column">Actions</th>
                 </tr>
@@ -44,6 +45,7 @@
                   <td style="text-transform: uppercase;">{{item.reference_number|default:''|truncatechars:20|title}}</td>
                   <td>{{item.name|title|default:''|truncatechars:20|title}}</td>
                   <td>{{item.description|safe|truncatechars:50}}</td>
+                  <td>{{item.units|safe|truncatechars:50}}</td>
                   <td>{{item.price}}</td>
 
                   <td>

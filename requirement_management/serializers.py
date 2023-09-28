@@ -847,6 +847,20 @@ class SORSerializer(serializers.ModelSerializer):
             "blank":"Reference Number is required.", 
         },
     )
+    units = serializers.ChoiceField(
+        label=('Units'),
+        choices=UNIT_CHOICES, 
+        required=True,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-6 units'
+        },
+        error_messages={
+            "required": "Units is required.",
+            "invalid": "Units is invalid.",  
+            "blank":"Units is required.", 
+        },
+    )
     
     file_list = serializers.ListField(
         child=serializers.FileField(
@@ -872,7 +886,7 @@ class SORSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = SORItem
-        fields = ['name','reference_number','category_id','price', 'description','file_list']
+        fields = ['name','reference_number','category_id','price', 'description','units','file_list']
 
         
     def validate_price(self, value):

@@ -36,7 +36,7 @@ class RequirementDefectDocumentAdmin(admin.ModelAdmin):
 
 @admin.register(SORItem)
 class SORItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'customer_id', 'category_id', 'price', 'created_at', 'updated_at')
+    list_display = ('name', 'customer_id', 'category_id', 'price','units', 'created_at', 'updated_at')
     list_filter = ('customer_id', 'category_id', 'created_at')
     search_fields = ('name', 'reference_number', 'user_id__email')
     
