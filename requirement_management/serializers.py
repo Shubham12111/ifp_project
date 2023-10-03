@@ -876,8 +876,10 @@ class SORSerializer(serializers.ModelSerializer):
 
         
     def validate_price(self, value):
-        if value <= 0:
+        if value < 0:
             raise serializers.ValidationError("Price cannot be negative.")
+        elif value == 0:
+            raise serializers.ValidationError("Price should be greater than zero.")
         return value
 
     def validate_item_name(self, value):
