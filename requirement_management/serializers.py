@@ -232,7 +232,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         create: Create a new Requirement instance with associated files.
         update: Update an existing Requirement instance with associated files.
     """
-    
+    # Add a field to accept the date from the CSV file
     action = serializers.CharField(
         required=True, 
         style={'base_template': 'textarea.html'},
@@ -830,6 +830,7 @@ class SORSerializer(serializers.ModelSerializer):
             "required": "Price is required.",
             "invalid": "Price is invalid.",  
             "blank":"Price is required.", 
+            "max_length": "Invalid price and max limit should be 10.",
         },
     )
     
@@ -892,6 +893,8 @@ class SORSerializer(serializers.ModelSerializer):
     def validate_price(self, value):
         if value < 0:
             raise serializers.ValidationError("Price cannot be negative.")
+        elif value == 0:
+            raise serializers.ValidationError("Price should be greater than zero.")
         return value
 
     def validate_item_name(self, value):
