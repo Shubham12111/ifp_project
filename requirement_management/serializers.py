@@ -830,6 +830,7 @@ class SORSerializer(serializers.ModelSerializer):
             "required": "Price is required.",
             "invalid": "Price is invalid.",  
             "blank":"Price is required.", 
+            "max_length": "Invalid price and max limit should be 10.",
         },
     )
     
