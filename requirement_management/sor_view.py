@@ -22,7 +22,7 @@ from common_app.models import UpdateWindowConfiguration
 
 class SORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
