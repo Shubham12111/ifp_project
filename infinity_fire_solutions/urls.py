@@ -42,12 +42,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('authentication.urls')),
     path('contact/',include('contact.urls')),
-    path('todo/',include('todo.urls')),
+    path('task/',include('todo.urls')),
     path('',include('common_app.urls')),
     path('customer/',include('customer_management.urls')),
     path('stock/',include('stock_management.urls')),
     path('fra/',include('requirement_management.urls')),
     path('purchase_order/',include('purchase_order_management.urls')),
+    path('work_planning/',include('work_planning_management.urls')),
 
 
     #swagger links for the api documentation

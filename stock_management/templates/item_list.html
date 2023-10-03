@@ -66,7 +66,10 @@
                   <th>Price ( £ )</th>
                   <th>Reference Number</th>
                   <th>Inventory In Hand </th>
+
+                  {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %}
                   <th class="custom-last-column">Actions</th>
+                  {% endif %}
 
                 </tr>
               </thead>
@@ -78,6 +81,8 @@
                   <td>{{item.price}}</td>
                   <td>{{item.reference_number}}</td>
                   <td> {{item|calculate_total_received_inventory}} </td>
+
+                  {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %}
                   <td>
                     <div class="dropstart ms-auto pe-0">
                       <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -103,6 +108,8 @@
                    </ul>
                    </div>
                   </td>
+
+                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>

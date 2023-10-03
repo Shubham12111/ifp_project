@@ -409,7 +409,6 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
         });
     }
 }
-// Function to format date from "DD-MM-YYYY" to "Aug 23, 2023" format
 function formatDate(dateString) {
   var date = new Date(dateString);
 
@@ -417,11 +416,21 @@ function formatDate(dateString) {
   var month = date.getMonth() + 1; // Months are zero-based, so we add 1
   var year = date.getFullYear();
 
+  // Add leading zeros to day and month if they are single digits
+  var formattedDay = day < 10 ? '0' + day : day;
+  var formattedMonth = month < 10 ? '0' + month : month;
+
   // Create a formatted date string in the desired format
-  var formattedDate = day + '/' + month + '/' + year;
+  var formattedDate = formattedDay + '/' + formattedMonth + '/' + year;
 
   return formattedDate;
 }
+
+// Example usage:
+var inputDate = '03-01-2023'; // Assuming input in "DD-MM-YYYY" format
+var formatted = formatDate(inputDate);
+console.log(formatted); // Output: "01/03/2023"
+
 
 
 // Function to convert string to title case and replace underscores with spaces

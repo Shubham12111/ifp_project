@@ -20,9 +20,6 @@
   margin-top: 1px;
 }
 
-
-
-
 </style>
 {% endblock %}
 {% block title %} FRA Actions  {{ block.super }}{% endblock %}
@@ -73,7 +70,9 @@
                     <th class="col-3">Action</th>
                     <th>Description</th>
                     <th>Rectification</th>
+                    {% if request.user|has_update_permission:"fire_risk_assessment" or request.user|has_add_permission:"fire_risk_assessment" or request.user|has_delete_permission:"fire_risk_assessment" or request.user|has_view_permission:"fire_risk_assessment" %}
                     <th class="custom-last-column">Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody class="ml-4">
@@ -86,6 +85,7 @@
                     <td class="align-middle">{{ defect.action|truncatechars:30 }}</td>
                     <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.description|safe|truncatechars:50 }}</td>
                     <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.rectification_description|safe|truncatechars:50 }}</td>
+                    {% if request.user|has_update_permission:"fire_risk_assessment" or request.user|has_add_permission:"fire_risk_assessment" or request.user|has_delete_permission:"fire_risk_assessment" or request.user|has_view_permission:"fire_risk_assessment" %}
                     <td class="align-middle">
                         <div class="dropstart ms-auto pe-0">
                             <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -94,25 +94,23 @@
                             <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
                                 {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user %}
                                   {% if request.user|has_update_permission:"fire_risk_assessment" %}
-                                  <li>
-                                      <a href="{% url 'customer_requirement_defect_update' customer_id requirement_instance.id defect.id %}" class="dropdown-item border-radius-md">
-                                          Edit
-                                      </a>
-                                  </li>
+                                    <li>
+                                        <a href="{% url 'customer_requirement_defect_update' customer_id requirement_instance.id defect.id %}" class="dropdown-item border-radius-md">
+                                            Edit
+                                        </a>
+                                    </li>
                                   {% endif %}
-                                  {% if request.user|has_update_permission:"fire_risk_assessment" %}
+                                    {% if request.user|has_update_permission:"fire_risk_assessment" %}
                                     <li>
                                         <a href="{% url 'customer_requirement_defect_detail' customer_id requirement_instance.id defect.id %}" class="dropdown-item border-radius-md">
                                             View
                                         </a>
                                     </li>
                                   {% endif %}
-                                  {% if request.user|has_delete_permission:"fire_risk_assessment" %}
-
+                                  {% if request.user|has_delete_permission:"fire_risk_assessment" %}                                    
                                     <a href="#" type="button" class="dropdown-item border-radius-md" onclick="CustomconfirmDelete({{ defect.id }}, 'Are you sure you want to delete this requirement defect?','The requirement defect has been deleted successfully.','{% url 'requirement_defect_delete' defect.id %}')">
                                       Delete
-                                  </a>
-
+                                    </a>
                                   {% endif %}
                                 {% else %}
                                   {% if request.user|has_view_permission:"fire_risk_assessment" %}
@@ -122,10 +120,13 @@
                                       </a>
                                   </li>
                                   {% endif %}
-                                {% endif %}
+                              {% endif %}
+
                             </ul>
                         </div>
                     </td>
+
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -156,7 +157,7 @@
                 <div id="error-messages-comment" ></div>
                 
                  <div class="col-4 mt-4">
-                  <label class="">Signature</label> 
+                  <label>Signature <span class="text-sm text-danger">*</span></label> 
                   <i class="fas fa-sync-alt" id="clear-button" style="float: right;"
                   data-bs-toggle="tooltip" data-bs-original-title="Clear Signature"> </i>
                   <div class="signature-container">
@@ -397,8 +398,21 @@ cretaeReportButton.addEventListener("click", function () {
           const titleElement = document.createElement('h5');
           titleElement.classList.add('defect-title', 'text-sm');
 
+          const actionText = defect.fields.action;
+          const defectType = defect.fields.defect_type;
+
+          let titleText = `${index + 1} - ${actionText.substr(0, 100)}`;
+          if (actionText.length > 100) {
+          // Append ellipsis (...) if actionText exceeds 100 characters
+          titleText += '....';
+          }
+
           // Add the action text and a Font Awesome icon at the end
-          titleElement.innerHTML =  `<strong>${index + 1}</strong> - ${defect.fields.action.substr(0, 100)}   <i class="fas fa-chevron-down mt-2" aria-hidden="true" style="float: right;"></i> <span class="badge badge-sm bg-gradient-dark" style="float: right; margin-top: 5px; margin-right: 7px;">${defect.fields.defect_type} </span>`;
+          titleElement.innerHTML = `
+          <strong>${titleText}</strong>
+          <i class="fas fa-chevron-down mt-2" aria-hidden="true" style="float: right;"></i>
+          <span class="badge badge-sm bg-gradient-dark" style="float: right; margin-top: 5px; margin-right: 7px;">${defectType}</span>
+          `;
 
 
           // Add click event listener to the title to toggle the accordion

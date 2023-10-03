@@ -150,7 +150,7 @@ class RequirementDetailSerializer(serializers.ModelSerializer):
         return data
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class  RequirementCustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
@@ -232,7 +232,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         create: Create a new Requirement instance with associated files.
         update: Update an existing Requirement instance with associated files.
     """
-    
+    # Add a field to accept the date from the CSV file
     action = serializers.CharField(
         required=True, 
         style={'base_template': 'textarea.html'},
@@ -830,6 +830,7 @@ class SORSerializer(serializers.ModelSerializer):
             "required": "Price is required.",
             "invalid": "Price is invalid.",  
             "blank":"Price is required.", 
+            "max_length": "Invalid price and max limit should be 10.",
         },
     )
     
@@ -845,6 +846,20 @@ class SORSerializer(serializers.ModelSerializer):
             "required": "Reference Number is required.",
             "invalid": "Reference Number is invalid.",  
             "blank":"Reference Number is required.", 
+        },
+    )
+    units = serializers.ChoiceField(
+        label=('Units'),
+        choices=UNIT_CHOICES, 
+        required=True,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-6 units'
+        },
+        error_messages={
+            "required": "Units is required.",
+            "invalid": "Units is invalid.",  
+            "blank":"Units is required.", 
         },
     )
     
@@ -872,12 +887,14 @@ class SORSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = SORItem
-        fields = ['name','reference_number','category_id','price', 'description','file_list']
+        fields = ['name','reference_number','category_id','price', 'description','units','file_list']
 
         
     def validate_price(self, value):
         if value < 0:
             raise serializers.ValidationError("Price cannot be negative.")
+        elif value == 0:
+            raise serializers.ValidationError("Price should be greater than zero.")
         return value
 
     def validate_item_name(self, value):
