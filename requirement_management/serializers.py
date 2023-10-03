@@ -232,7 +232,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         create: Create a new Requirement instance with associated files.
         update: Update an existing Requirement instance with associated files.
     """
-    
+    # Add a field to accept the date from the CSV file
     action = serializers.CharField(
         required=True, 
         style={'base_template': 'textarea.html'},

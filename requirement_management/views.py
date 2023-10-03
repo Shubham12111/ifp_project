@@ -17,6 +17,12 @@ import os
 import pdfkit
 from django.template.loader import render_to_string
 from infinity_fire_solutions.email import *
+from rest_framework.parsers import FileUploadParser
+import csv
+import chardet
+import pandas as pd
+from datetime import datetime, time
+from django.utils import timezone
 
 
 
@@ -244,8 +250,10 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         Handle both AJAX (JSON) and HTML requests.
         """
         customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
         
         customer_data = User.objects.filter(id=customer_id).first()
+        print(customer_data)
         
         if customer_data:
             # Call the handle_unauthenticated method to handle unauthenticated access.
@@ -260,10 +268,11 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
             quantity_sureveyors = User.objects.filter(roles__in=qs_role)
             
             sureveyors = User.objects.filter(roles__name='surveyor')
-            
 
+            
             if request.accepted_renderer.format == 'html':
-                context = {'requirements':queryset, 'customer_id':customer_id,
+                context = {'requirements':queryset,
+                            'customer_id':customer_id,
                         'quantity_sureveyors': quantity_sureveyors,
                         'customer_data':customer_data,
                         'sureveyors':sureveyors}
@@ -296,8 +305,10 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         If the requirement does not exist, render the HTML template with an empty serializer.
         """
         customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
         
         customer_data = User.objects.filter(id=customer_id).first()
+        print(customer_data)
         
         if customer_data:
             # Call the handle_unauthenticated method to handle unauthenticated access
@@ -330,8 +341,10 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a requirement.
         """
         customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
         
         customer_data = User.objects.filter(id=customer_id).first()
+        print(customer_data)
         
         if customer_data:
             data = request.data
@@ -1251,5 +1264,93 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
         except Exception as e:
             print(e)
             messages.error(request, "Something went wrong !")
-            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
 
+class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    API view to handle CSV file import for requirements.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'requirement_list.html'
+    serializer_class = RequirementAddSerializer
+
+    def post(self, request, *args, **kwargs):
+         # Get customer_id from URL kwargs
+        customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
+        try:
+             # Fetch customer data based on customer_id
+            customer_data = get_customer_data(customer_id)
+            print(customer_data)
+            if customer_data:
+                 # Get the uploaded CSV file
+                csv_file = request.FILES.get('csv_file')
+                print(csv_file)
+                # Check if a file was provided
+                if not csv_file:
+                    messages.error(request, "Please select a file to import")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+
+                # Check if the file extension is in the list of allowed formats
+                allowed_formats = ['csv', 'xls', 'xlsx']
+                file_extension = csv_file.name.split('.')[-1]
+                print(file_extension)
+                if file_extension not in allowed_formats:
+                    messages.error(request, 'Unsupported file format. Please upload a CSV, XLS, or XLSX file.')
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+
+                # Explicitly specify the encoding as ISO-8859-1 (latin1)
+                decoded_file = csv_file.read().decode('ISO-8859-1').splitlines()
+                print(decoded_file)
+                
+                if file_extension == 'csv':
+                    csv_reader = csv.DictReader(decoded_file)
+                else:
+                    # Use pandas to read Excel data
+                    xls = pd.ExcelFile(csv_file)
+                    df = xls.parse(xls.sheet_names[0])  # Assuming you want to read the first sheet
+                    csv_reader = df.to_dict(orient='records')
+
+                success = True  # Flag to track if the import was successful
+                for row in csv_reader:
+                    # Extract the date from the CSV row (you may need to format it properly)
+                    csv_date = row.get('date', None)
+                    serializer_data = {
+                        'action': row.get('action', ''),
+                        'RBNO': row.get('RBNO', ''),
+                        'UPRN': row.get('UPRN',''),
+                        'description': row.get('description', ''),
+                        'site_address': row.get('site_address', ''),
+                        'file_list': [],  # Empty file_list since you want to pass null
+                    }
+                    serializer = RequirementAddSerializer(data=serializer_data,context={'request': request})
+                    print(serializer_data)
+
+                    if serializer.is_valid():
+                        serializer.validated_data['user_id'] = request.user 
+                        serializer.validated_data['customer_id'] = customer_data
+                        # print(serializer.data)
+                        requirement = serializer.save()  # Save the requirement
+                        
+                        requirement.update_created_at(csv_date)
+                    else:
+                        success = False
+                        error_message = "Failed to import file.Check the file again.. "
+                        messages.error(request, error_message)
+                        print(serializer.errors)
+
+                # Fetch the imported data and pass it to the template
+                if success:
+                    requirements = Requirement.objects.filter(customer_id=customer_data.id)
+                    context = {
+                        'requirements': requirements,
+                    }
+                    messages.success(request,'FRA CSV file imported and data imported successfully.')
+            
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            print(e)
+            messages.error(self.request, "Something went wrong !")
+        
+        return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
