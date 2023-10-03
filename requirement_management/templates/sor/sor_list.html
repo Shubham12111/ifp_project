@@ -14,6 +14,9 @@
               <h5 class="mb-0">SOR List</h5>
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
+              {% if update_window.is_active %}
+              <button id="importsorModalButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Import SOR</button>
+              {% endif %}
               {% if request.user|has_add_permission:"fire_risk_assessment" %}
               <a href="{% url 'add_sor_customer' customer_id%}" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
                 +&nbsp; New SOR
@@ -33,6 +36,7 @@
                   <th>SOR Code</th>
                   <th>Name</th>
                   <th>Description</th>
+                  <th>Units</th>
                   <th>Price ( £ )</th>
                   <th class="custom-last-column">Actions</th>
                 </tr>
@@ -43,6 +47,7 @@
                   <td style="text-transform: uppercase;">{{item.reference_number|default:''|truncatechars:20|title}}</td>
                   <td>{{item.name|title|default:''|truncatechars:20|title}}</td>
                   <td>{{item.description|safe|truncatechars:50}}</td>
+                  <td>{{item.units|safe|truncatechars:50}}</td>
                   <td>{{item.price}}</td>
 
                   <td>
@@ -53,10 +58,12 @@
                       <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
                       
                     {% if request.user|has_update_permission:"fire_risk_assessment" %}
+                    {% if not update_window.is_active %}
                     <li>
                       <a href="{% url 'edit_sor_customer' customer_id item.id%}" class="dropdown-item border-radius-md">
                         Edit
                       </a>
+                      {% endif %}
                       {% endif %}
                     </li>
                         
@@ -81,6 +88,32 @@
     </div>
   </div>
 </div>
+
+<!-- Modal for importing csv -->
+<div class="modal fade" id="sorModal" tabindex="-1" aria-labelledby="sorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="sorModalLabel">Import CSV</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Your form content goes here -->
+        <form id="csvForm" method="POST" action="{% url 'import_csv_sor' customer_id %}" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="fileInput">Select File:</label>
+            <input type="file" class="form-control-file" id="fileInput" name="csv_file">
+            <div class="modal-footer mt-4 mb-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
+            </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 
 {% endblock %}
@@ -109,6 +142,29 @@
         const searchText = searchInput.value.toLowerCase();
         dataTableSearch.search(searchText).draw();
       });
+  }
+
+
+  const saveButton = document.getElementById("saveButton");
+    saveButton.addEventListener("click", function () {
+      const csvForm = document.getElementById("csvForm");
+      csvForm.submit(); // Submit the form
+    });
+
+
+
+  // JavaScript to open the modal when the button is clicked
+  const importsorModalButton = document.getElementById("importsorModalButton");
+  const sorModal = new bootstrap.Modal(document.getElementById("sorModal"));
+
+  if (importsorModalButton) {
+    importsorModalButton.addEventListener('click', function () {
+      sorModal.show();
+
+      // Clear the file input when the modal is shown
+      const fileInput = document.getElementById("fileInput");
+      fileInput.value = ""; // Clear the selected file
+    });
   }
 </script>
 {% endblock %}

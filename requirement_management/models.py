@@ -10,6 +10,8 @@ from django.utils import timezone
 from datetime import datetime,time
 
 
+
+
 REQUIREMENT_DEFECT_CHOICES = (
     ('actual_defect', 'Actual Defect'),
     ('recommended', 'Recommended Defect'),
@@ -45,6 +47,16 @@ QUOTATION_STATUS_CHOICES = [
     ('approved', 'Approved'),
     ('rejected', 'Rejected'),
 ]
+
+
+# Choices for Unit
+UNIT_CHOICES = (
+    ('no', 'No'),
+    ('week', 'Week'),
+    ('sqm', 'SqM'),
+    ('lm', 'LM'),
+    ('unit', 'Unit'),
+)
 
 
 class Requirement(models.Model):
@@ -256,6 +268,7 @@ class SORItem(models.Model):
     description =  RichTextField(null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     reference_number = models.CharField(max_length=50)
+    units = models.CharField(max_length=20, choices=UNIT_CHOICES, default='no')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -274,8 +287,10 @@ class SORItem(models.Model):
             'name': self.name,
             'price': str(self.price),
             'description':self.description,
-            'reference_number': self.reference_number
+            'reference_number': self.reference_number,
+            'units':self.units
         }
+    
 
 class SORItemImage(models.Model):
     sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)
