@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'customer_management',
     'requirement_management',
     'stock_management',
-    'purchase_order_management'
+    'purchase_order_management',
+    'work_planning_management'
     
 ]
 
