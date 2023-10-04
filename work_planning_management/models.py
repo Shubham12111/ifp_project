@@ -11,7 +11,18 @@ STW_CHOICES = (
     ('completed', 'Completed')
 )
 
-class STW(models.Model):
+STW_DEFECT_STATUS_CHOICES=(
+    ('pending', 'Pending'),
+    ('in-progress', 'In Progress'),
+    ('executed', 'Executed')
+)
+
+STW_DEFECT_CHOICES=(
+    ('actual_defect', 'Actual Defect'),
+    ('recommended', 'Recommended Defect'),
+)
+
+class STWRequirements(models.Model):
     """
     Model for storing STW.
 
@@ -27,6 +38,7 @@ class STW(models.Model):
         updated_at (DateTimeField): Date and time when the STW was last updated.
     """
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stw_user')
+    customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stw_requirement')
     UPRN = models.CharField(max_length=255, null=True)
     RBNO = models.CharField(max_length=255, null=True)
     description = models.TextField()
@@ -37,10 +49,87 @@ class STW(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = _('STW')
-        verbose_name_plural = _('STW')
+        verbose_name = _('STW Requirements')
+        verbose_name_plural = _('STW Requirements')
 
     def __str__(self):
-        return f"{self.user_id.first_name} {self.user_id.last_name}'s STW"
+        return f"{self.user_id.first_name} {self.user_id.last_name}'s STW Requirement"
+    
+
+class STWAsset(models.Model):
+    """
+    Model for storing STW assets.
+
+    Attributes:
+        stw_id (ForeignKey): The stw associated with the asset.
+        document_path (CharField): Path to the asset document.
+        created_at (DateTimeField): Date and time when the asset was created.
+        updated_at (DateTimeField): Date and time when the asset was last updated.
+    """
+    stw_id = models.ForeignKey(STWRequirements, on_delete=models.CASCADE)
+    document_path = models.CharField(max_length=256)
+    create_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('STW Action Document')
+        verbose_name_plural = _('STW Action Document')
+        
+class STWDefect(models.Model):
+    """
+    Model for storing STW defects.
+
+    Attributes:
+        stw_id (ForeignKey): The STW associated with the defect.
+        action (TextField): Action for the defect.
+        description (TextField): Description of the defect.
+        reference_number (CharField): Reference number for the defect.
+        rectification_description (TextField): Description of rectification for the defect.
+        status (CharField): Status of the defect (choices defined in STW_DEFECT_CHOICES).
+        created_at (DateTimeField): Date and time when the defect was created.
+        updated_at (DateTimeField): Date and time when the defect was last updated.
+    """
+    stw_id = models.ForeignKey(STWRequirements, on_delete=models.CASCADE)
+    action = models.TextField()
+    description = models.TextField()
+    reference_number = models.CharField(max_length=50, null=True)
+    rectification_description = models.TextField()
+    status = models.CharField(max_length=30, choices=STW_DEFECT_STATUS_CHOICES, default='pending')
+    defect_type = models.CharField(max_length=30, choices=STW_DEFECT_CHOICES, default='actual_defect')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.action
+    class Meta:
+        verbose_name = _('STW Defect')
+        verbose_name_plural = _('STW Defect')
+
+class STWDefectDocument(models.Model):
+    """
+    Model for storing STW defect documents.
+
+    Attributes:
+        stw_id (ForeignKey): The STW associated with the defect document.
+        defect_id (ForeignKey): The defect associated with the defect document.
+        document_path (CharField): Path to the defect document.
+        created_at (DateTimeField): Date and time when the defect document was created.
+        updated_at (DateTimeField): Date and time when the defect document was last updated.
+    """
+    stw_id = models.ForeignKey(STWRequirements, on_delete=models.CASCADE)
+    defect_id = models.ForeignKey(STWDefect, on_delete=models.CASCADE)
+    document_path = models.CharField(max_length=256)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('STW Defect Document')
+        verbose_name_plural = _('STW Defect Document')
+    
+
+
+
+    
+
 
 
