@@ -56,16 +56,17 @@
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-12 ms-auto text-sm">
-                   <div class="d-flex justify-content-between">
-                        <span class="mb-2 font-weight-bold">PO Number :</span>
-                        <span class="text-dark ms-2">{{purchase_order.po_number}}</span>
-                    </div>
-                    
-                        <div class="d-flex justify-content-between">
-                            <span class="font-weight-bold">Status:</span>
-                            <span class="text-dark ms-2 ">{{purchase_order.get_status_display}}</span>
-                        </div>
+                <div class="col-lg-3 col-xs-12 col-sm-12 col-12">
+                    <ul class="list-group">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+
+                                <span class="mb-2 text-sm">PO No.: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_number}}</span></span>
+                                <span class="mb-2 text-sm">Status: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.get_status_display}}</span></span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
                         
                 </div>
             </div>
