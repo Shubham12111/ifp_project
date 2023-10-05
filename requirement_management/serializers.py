@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from collections import OrderedDict
 from collections.abc import Mapping
+from decimal import Decimal
 
 class CustomerNameField(serializers.RelatedField):
     """
@@ -890,12 +891,26 @@ class SORSerializer(serializers.ModelSerializer):
         fields = ['name','reference_number','category_id','price', 'description','units','file_list']
 
         
-    def validate_price(self, value):
+    def validate_price(value):
+        # Ensure that the price is not empty or None
+        if value is None:
+            raise ValidationError("Price is required.")
+
+        # Ensure that the price is a valid Decimal with 2 decimal places
+        if not isinstance(value, Decimal):
+            raise ValidationError("Price is invalid.")
+
+        # Ensure that the price is not negative
         if value < 0:
-            raise serializers.ValidationError("Price cannot be negative.")
-        elif value == 0:
-            raise serializers.ValidationError("Price should be greater than zero.")
-        return value
+            raise ValidationError("Price cannot be negative.")
+
+        # Ensure that the price has at most 10 digits in total
+        if len(str(value)) > 10:
+            raise ValidationError("Invalid price, max limit should be 10 digits.")
+
+        # Ensure that the price has at most 2 decimal places
+        if value.as_tuple().exponent < -2:
+            raise ValidationError("Price can have at most 2 decimal places.")
 
     def validate_item_name(self, value):
         # Check for minimum length of 3 characters
