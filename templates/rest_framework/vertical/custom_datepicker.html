@@ -22,6 +22,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Check if the datetimepicker element exists
+
         const fieldName = '{{ field.name }}';
         const fieldElement = document.querySelector(`[name="${fieldName}"]`);
 
@@ -30,8 +31,7 @@
             const fieldValue = fieldElement.defaultValue;
 
             // Format the date if it's not empty
-            const defaultDateValue = fieldValue ? new Date(fieldValue) : new Date();
-
+            const defaultDateValue = fieldValue ? fieldValue : new Date();
             // Create the flatpickr date-time picker and set the default date to the default value or current date
             flatpickr(fieldElement, {
                 allowInput: true,
