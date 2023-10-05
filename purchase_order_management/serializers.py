@@ -199,6 +199,7 @@ invoice_file_extension_validator = FileExtensionValidator(
 class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
     invoice_date = serializers.DateField(
         required=True,
+        input_formats=['%d/%m/%Y'],
         error_messages={
             "required": "Invoice date is required.",
             "blank": "Invoice date is required.",
