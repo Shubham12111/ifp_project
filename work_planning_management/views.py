@@ -1,3 +1,5 @@
+import json 
+
 from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -5,6 +7,8 @@ from django.http import Http404, JsonResponse, HttpResponse, HttpResponseRedirec
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from decimal import Decimal
+from django.views.decorators.csrf import csrf_exempt
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -19,7 +23,8 @@ from infinity_fire_solutions.response_schemas import create_api_response, conver
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers  import STWRequirementSerializer,CustomerSerializer
+from .serializers  import STWRequirementSerializer,CustomerSerializer,STWDefectSerializer
+from requirement_management.models import SORItem
 
 
 
@@ -38,6 +43,76 @@ def get_customer_data(customer_id):
                                         roles__name__icontains='customer').first()
     
     return customer_data
+
+
+def get_selected_defect_data(request, customer_id, pk):
+    """
+    Get selected defect data based on the customer and STW requirement.
+
+    This function retrieves selected STW RequirementDefect objects related to the specified customer and STW requirement.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        customer_id (int): The ID of the customer.
+        pk (int): The ID of the STW requirement.
+
+    Returns:
+        JsonResponse: A JSON response containing selected defect data.
+    """
+    if request.method == 'POST':
+        selected_defect_ids = request.POST.getlist('selectedDefectIds')
+        # Query STW RequirementDefect objects related to the customer and STW requirement
+        stw_defect = STWDefect.objects.filter(
+            stw_id=pk, requirement_id__customer_id=customer_id, pk__in =selected_defect_ids
+        )
+
+        # Create a list to store serialized defect data
+        defect_data = []
+
+        from django.core import serializers
+
+
+        for defect in stw_defect:
+            # Serialize the defect data (excluding images)
+            defect_json = serializers.serialize('json', [defect])
+            
+            defect_data.append({
+                'defect': defect_json,  # Assuming 'defect_json' is a list with one item
+            })
+
+        # Create a JSON response containing all the defect data
+        response_data = {'defects': defect_data}
+        return JsonResponse(response_data, safe=False)
+
+def stw_requirement_image(stw_instance):
+    """
+    Get document paths and types (image or video) associated with a STW requirement.
+
+    This function retrieves document paths and types (image or video) associated with a given STW requirement.
+
+    Args:
+        stw_instance (STWRequirement): The STW Requirement instance.
+
+    Returns:
+        list: A list of dictionaries containing document paths and types.
+    """
+    document_paths = []
+    
+    for document in STWAsset.objects.filter(stw_id=stw_instance):
+        extension = document.document_path.split('.')[-1].lower()
+
+        # is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+        # Remove video upload feature for no support in PDF
+        is_video = False
+        is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
+        document_paths.append({
+            'presigned_url': generate_presigned_url(document.document_path),
+            'filename': document.document_path,
+            'id': document.id,
+            'is_video': is_video,
+            'is_image': is_image
+        })
+    return document_paths   
 
 def filter_requirements(data_access_value, user, customer=None):
     """
@@ -474,14 +549,14 @@ class STWRequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIVie
         }
 
         # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = filter_requirements(data_access_value, self.request.user)
-        instance = queryset.filter(pk=self.kwargs.get('pk')).first()
-        print(instance)
+        queryset = STWRequirements.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
+        
+        stw_instance = queryset.first()
+        print(stw_instance)
 
-        if instance:
+        if stw_instance:
             # Proceed with the deletion
-            instance.delete()
+            stw_instance.delete()
             messages.success(request, "Your STW requirement has been deleted successfully!")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Your STW requirement has been deleted successfully!", )
@@ -517,7 +592,7 @@ class STWRemoveDocumentView(generics.DestroyAPIView):
                 {"message": "Requirement not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
-    
+            
 
 class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     """
@@ -527,7 +602,7 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     Supports both HTML and JSON response formats.
     """
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
-    template_name = 'stw_view.html'
+    template_name = 'stw_details.html'
     serializer_class = STWRequirementSerializer
 
     def get_queryset(self):
@@ -549,7 +624,6 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         
 
         return queryset
-    
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
@@ -566,15 +640,23 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         customer_data = User.objects.filter(id=customer_id).first()
         
         if customer_data:
-            # This method handles GET requests for updating an existing Requirement object.
+            # This method handles GET requests for updating an existing STW Requirement object.
             if request.accepted_renderer.format == 'html':
                 instance = self.get_queryset()
                 if instance:
+                    document_paths = []
+                    stw_defect = STWDefect.objects.filter(stw_id=instance.id)
                     serializer = self.serializer_class(instance=instance, context={'request': request})
+                    
+                    
+                    document_paths = stw_requirement_image(instance)
+                            
                     
                     context = {
                         'serializer': serializer, 
                         'stw_instance': instance, 
+                        'stw_defect': stw_defect, 
+                        'document_paths': document_paths,
                         'customer_id': kwargs.get('customer_id'),
                         'customer_data':customer_data
                         }
@@ -584,4 +666,333 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
             else:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+
+
+# Custom JSON encoder that can handle Decimal instances
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return str(obj)  # Convert Decimal to a string
+        return super(DecimalEncoder, self).default(obj)
+               
+class STWDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding  a STW requirement.
+    Supports both HTML and JSON response formats.
+    """
+    # serializer_class = RequirementDefectAddSerializer
+    serializer_class = STWDefectSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'stw_defects.html'
+    swagger_schema = None
     
+    def get_queryset(self):
+        """
+        Get the filtered queryset for stw requirements based on the authenticated user.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasCreateDataPermission, 'view'
+        )
+        
+        queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
+        queryset = queryset.filter(pk=self.kwargs.get('stw_id')).first()
+        
+        return queryset
+    
+    def get_queryset_defect(self):
+        """
+        Get the filtered queryset for stw requirements based on the authenticated user.
+        """
+        queryset_defect = STWDefect.objects.filter(stw_id = self.get_queryset() ).order_by('-created_at')
+        return queryset_defect
+    
+    def get(self, request, *args, **kwargs):
+        customer_id = kwargs.get('customer_id')
+        customer_data = User.objects.filter(id=customer_id).first()
+        # This method handles GET requests for updating an existing stw Requirement object.
+        stw_instance = self.get_queryset()
+        document_paths = stw_requirement_image(stw_instance)
+        
+        stw_defects = self.get_queryset_defect()
+        defect_instance = stw_defects.filter(pk=self.kwargs.get('pk')).first()
+        
+        if defect_instance:
+            serializer =  self.serializer_class(instance=defect_instance)
+            
+        else:
+            serializer =  self.serializer_class()
+            defect_instance = {}
+
+        # Fetch all SOR items and serialize them
+        all_sors = SORItem.objects.filter(customer_id=customer_data).values('id', 'name', 'reference_number', 'category_id__name', 'price',)
+        all_sors_list = list(all_sors)
+        all_sors_json = json.dumps(all_sors_list, cls=DecimalEncoder)
+        
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'serializer': serializer,
+                'stw_instance': stw_instance,
+                'defects_list': self.get_queryset_defect(),
+                'defect_instance':defect_instance,
+                'customer_id': kwargs.get('customer_id'),
+                'document_paths':document_paths,
+                'all_sors': all_sors_json,  # Include SOR data in the context
+                }
+            return render_html_response(context, self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))  
+    
+        
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add a  STW requirement.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access.
+        
+        data = request.data
+        
+        file_list = data.getlist('file_list', [])
+        
+        stw_instance = self.get_queryset()
+        defect_instance = STWDefect.objects.filter(stw_id = stw_instance, pk=self.kwargs.get('pk')).first()
+        
+        if not any(file_list):
+            data = data.copy()      # make a mutable copy of data before performing delete.
+            del data['file_list']
+
+        # Handle adding SOR items to the defect
+        selected_sor_ids = request.POST.getlist('selected_sor_ids[]')
+        if defect_instance and selected_sor_ids:
+            self.add_sor_to_defect(defect_instance, selected_sor_ids)
+        
+        serializer_data = request.data if any(file_list) else data
+        
+        message = "Congratulations! your  STW requirement defect has been added successfully."
+        
+        # Check if the site address instance exists for the customer
+        if defect_instance:
+            # If the site address instance exists, update it.
+            serializer = self.serializer_class(data=serializer_data, instance=defect_instance, context={'request': request})
+            message = "Your STW requirement defect has been updated successfully!"
+        else: 
+            # If the site address instance does not exist, create a new one.
+            serializer = self.serializer_class(data=serializer_data, context={'request': request})
+            message = "Your STW requirement defect has been added successfully!"
+        
+        
+        if serializer.is_valid():
+            if  not defect_instance:
+                serializer.validated_data['stw_id'] = stw_instance
+                serializer.save()
+            else:
+                serializer.update(defect_instance, validated_data=serializer.validated_data)
+
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('customer_stw_view', kwargs={'customer_id': self.kwargs.get('customer_id'), 'pk':stw_instance.id}))
+            else:
+                # Return JSON response with success message and serialized data.
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message=message,
+                                    data=serializer.data
+                                    )
+        else:
+            # Invalid serializer data.
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data.
+                context = {'serializer':serializer, 
+                           'stw_instance': stw_instance,
+                           'defects_list': self.get_queryset_defect(),
+                        'defect_instance':defect_instance,
+                        'customer_id':self.kwargs.get('customer_id')
+                           }
+                return render_html_response(context,self.template_name)
+            else:   
+                # Return JSON response with error message.
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                    message="We apologize for the inconvenience, but please review the below information.",
+                                    data=convert_serializer_errors(serializer.errors))
+            
+
+class STWDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+    """
+    View for deleting a stw defect.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = STWDefectSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    # permission_classes = [IsAuthenticated]
+    template_name = 'stw_defects.html'
+    swagger_schema = None
+    
+    def delete(self, request, *args, **kwargs):
+        """
+        Handle DELETE request to delete a stw defect.
+        """
+        # Get the stw defect instance from the database
+        # Call the handle_unauthenticated method to handle unauthenticated access
+
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"survey", HasDeleteDataPermission, 'delete'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(requirement_id__user_id=request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+
+        queryset = STWDefect.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
+        
+        stw_defect = queryset.first()
+        
+        if stw_defect:
+            # Proceed with the deletion
+            stw_defect.delete()
+            messages.success(request, "STW defect has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Your STW defect has been deleted successfully!", )
+        else:
+            messages.error(request, "STW defect not found OR You are not authorized to perform this action.")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="STW defect not found OR You are not authorized to perform this action.", )
+  
+class STWDefectRemoveDocumentView(generics.DestroyAPIView):
+    """
+    View to remove a document associated with a STW defect.
+    """
+    swagger_schema = None
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to remove the document associated with a STW defect.
+        """
+        defect_id = kwargs.get('defect_id')
+        if defect_id:
+            defect_instance = STWDefectDocument.objects.filter(defect_id=defect_id, pk=kwargs.get('pk') ).get()
+            if defect_instance and defect_instance.document_path: 
+                
+                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = defect_instance.document_path)
+                defect_instance.delete()
+            return Response(
+                {"message": "Your STW defect has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "STW Defect not found OR you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+class STWDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for displaying and handling stw Defect details.
+
+    This view displays the details of a stw Defect and handles related documents and actions.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+        swagger_schema: None
+    """
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'stw_defect_details.html'
+    swagger_schema = None
+    
+    def get_queryset(self):
+        """
+        Get the filtered queryset for stw defect based on the authenticated user.
+        """
+        queryset = STWDefect.objects.filter(pk=self.kwargs.get('defect_id')).order_by('-created_at')
+        return queryset
+
+    def get_stw_instance(self):
+        """
+        Get the filtered queryset for stw based on the authenticated user.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasCreateDataPermission, 'view'
+        )
+        
+        queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
+        queryset = queryset.filter(pk=self.kwargs.get('stw_id')).first()
+        
+        return queryset
+
+    def get_documents(self):
+        """
+        Get the filtered document_paths related to the stw Defect.
+
+        Returns:
+            list: A list of document paths with additional information (e.g., video/image flags).
+        """
+        document_paths = []
+        
+        defect_instance = self.get_queryset().first()
+        for document in STWDefectDocument.objects.filter(defect_id=defect_instance):
+                extension = document.document_path.split('.')[-1].lower()
+
+                is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+                is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
+                
+                document_paths.append({
+                    'presigned_url': generate_presigned_url(document.document_path),
+                    'filename': document.document_path,
+                    'id': document.id,
+                    'is_video': is_video,
+                    'is_image': is_image
+                })
+        return document_paths
+
+    
+    
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for displaying stw Defect details.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
+        customer_id = self.kwargs.get('customer_id')
+
+        customer_data = User.objects.filter(id=customer_id).first()
+        if customer_data:
+            defect_instance = self.get_queryset().first()
+            stw_instance = self.get_stw_instance()
+            document_paths = stw_requirement_image(stw_instance)
+            
+            if not defect_instance:
+                messages.warning(request, "You are not authorized to perform this action")
+                return redirect(reverse('customer_stw_list', kwargs={'customer_id': self.kwargs.get('customer_id')}))  
+            
+            # Defect response doesn't exist, prepare context for displaying form
+            context = {
+                'defect_instance': defect_instance,
+                'defect_document_paths':self.get_documents(),
+                'defect_instance':defect_instance,
+                'document_paths':document_paths,
+                'customer_id':customer_id,
+                'stw_instance':stw_instance,
+                'customer_data':customer_data
+            }
+
+            return render_html_response(context, self.template_name)
+        else:
+            messages.warning(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_stw_list', kwargs={'customer_id': self.kwargs.get('customer_id')}))  
+        
+

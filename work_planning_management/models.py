@@ -96,6 +96,8 @@ class STWDefect(models.Model):
     rectification_description = models.TextField()
     status = models.CharField(max_length=30, choices=STW_DEFECT_STATUS_CHOICES, default='pending')
     defect_type = models.CharField(max_length=30, choices=STW_DEFECT_CHOICES, default='actual_defect')
+    # JSONField to store SOR-related data
+    sor_data = models.JSONField(null=True, blank=True)  # You can adjust null and blank based on your needs
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
