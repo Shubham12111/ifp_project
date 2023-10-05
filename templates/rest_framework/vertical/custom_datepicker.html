@@ -18,42 +18,30 @@
   </div>
 
   <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
-  <!-- <script>
-    // Check if the datetimepicker element exists
-    if (document.querySelector('.{{ field.name }}')) {
-      // Get the default value for the datetime picker
-      const defaultDateValue = '{{ field.value }}';
-  
-      // Convert the default value to a Date object (if available)
-      const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
-  
-      // Create the flatpickr date-time picker and set the default date to the default value or current date
-      flatpickr('.{{ field.name }}', {
-        allowInput: true,
-        defaultDate: defaultDate
-      });
-    }
-  </script> -->
+
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Check if the datetimepicker element exists
-      const fieldElement = document.querySelector('.{{ field.name }}');
-  
-      if (fieldElement) {
-        // Get the default value for the datetime picker
-        const defaultDateValue = '{{ field.value }}';
-  
-        // Convert the default value to a Date object (if available)
-        const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
-  
-        // Create the flatpickr date-time picker and set the default date to the default value or current date
-        flatpickr(fieldElement, {
-          allowInput: true,
-          defaultDate: defaultDate,
-          dateFormat: "d/m/Y", // Set your desired date format
-          //enableTime: true, // Enable time selection if needed
-        });
-      }
+        // Check if the datetimepicker element exists
+        const fieldName = '{{ field.name }}';
+        const fieldElement = document.querySelector(`[name="${fieldName}"]`);
+
+        if (fieldElement) {
+            // Get the value of the input field
+            const fieldValue = fieldElement.defaultValue;
+
+            // Format the date if it's not empty
+            const defaultDateValue = fieldValue ? new Date(fieldValue) : new Date();
+
+            // Create the flatpickr date-time picker and set the default date to the default value or current date
+            flatpickr(fieldElement, {
+                allowInput: true,
+                defaultDate: defaultDateValue,
+                dateFormat: "d/m/Y", // Set your desired date format
+                //enableTime: true, // Enable time selection if needed
+            });
+        }
     });
-  </script>
+</script>
+
+  
   

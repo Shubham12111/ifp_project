@@ -616,7 +616,8 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
 
                     email = Email()
-                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report")
+                    attachment_path = generate_presigned_url(report.pdf_path)
+                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
 
                 
                 
@@ -1312,17 +1313,41 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                     csv_reader = df.to_dict(orient='records')
 
                 success = True  # Flag to track if the import was successful
+                existing_rbno_set = set()  # To store existing RBNO values encountered in the file
+                existing_uprn_set = set()  # To store existing UPRN values encountered in the file
                 for row in csv_reader:
                     # Extract the date from the CSV row (you may need to format it properly)
                     csv_date = row.get('date', None)
+                    rbno = row.get('RBNO', '')
+                    uprn = row.get('UPRN', '')
+                    # Check if the RBNO already exists in the database
+                    if rbno and Requirement.objects.filter(RBNO=rbno).exists():
+                        messages.error(request, f"RBNO '{rbno}' already exists.")
+                        success = False
+                        continue
+
+                    # Check if the UPRN already exists in the database
+                    if uprn and Requirement.objects.filter(UPRN=uprn).exists():
+                        messages.error(request, f"UPRN '{uprn}' already exists.")
+                        success = False
+                        continue
                     serializer_data = {
                         'action': row.get('action', ''),
-                        'RBNO': row.get('RBNO', ''),
-                        'UPRN': row.get('UPRN',''),
+                        'RBNO': rbno,
+                        'UPRN': uprn,
                         'description': row.get('description', ''),
                         'site_address': row.get('site_address', ''),
                         'file_list': [],  # Empty file_list since you want to pass null
                     }
+                    # Retrieve the customer's site address using the related name
+                    customer_site_address = SiteAddress.objects.filter(user_id=customer_data.id, id=serializer_data['site_address']).first()
+
+                    # Check if the customer's site address matches the one in the CSV
+                    if not customer_site_address:
+                        messages.error(request, "Invalid site address. It does not match the customer's site address.")
+                        success = False
+                        continue
+            
                     serializer = RequirementAddSerializer(data=serializer_data,context={'request': request})
                     print(serializer_data)
 
@@ -1335,9 +1360,6 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         requirement.update_created_at(csv_date)
                     else:
                         success = False
-                        error_message = "Failed to import file.Check the file again.. "
-                        messages.error(request, error_message)
-                        print(serializer.errors)
 
                 # Fetch the imported data and pass it to the template
                 if success:
