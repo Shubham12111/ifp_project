@@ -100,7 +100,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
     def validate(self, data):
         start_date = data.get('start_date')
         end_date = data.get('end_date')
-        breakpoint()
+
         if start_date and end_date and start_date > end_date:
             raise ValidationError({'end_date':'End date should be greater than the start date.'})
 
