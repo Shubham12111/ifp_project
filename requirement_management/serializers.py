@@ -891,7 +891,7 @@ class SORSerializer(serializers.ModelSerializer):
         fields = ['name','reference_number','category_id','price', 'description','units','file_list']
 
         
-    def validate_price(value):
+    def validate_price(self, value):
         # Ensure that the price is not empty or None
         if value is None:
             raise ValidationError("Price is required.")
@@ -911,6 +911,8 @@ class SORSerializer(serializers.ModelSerializer):
         # Ensure that the price has at most 2 decimal places
         if value.as_tuple().exponent < -2:
             raise ValidationError("Price can have at most 2 decimal places.")
+
+        return value
 
     def validate_item_name(self, value):
         # Check for minimum length of 3 characters
