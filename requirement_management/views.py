@@ -616,7 +616,8 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
 
                     email = Email()
-                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report")
+                    attachment_path = generate_presigned_url(report.pdf_path)
+                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
 
                 
                 
