@@ -248,7 +248,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     """
     
     vat_number = serializers.CharField(
-        label=_('Vat Number'),
+        label=_('VAT Number'),
         required=True,
         style={
             'base_template': 'custom_input.html'
