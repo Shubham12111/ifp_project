@@ -48,6 +48,12 @@ urlpatterns = [
     path('stock/',include('stock_management.urls')),
     path('fra/',include('requirement_management.urls')),
     path('purchase_order/',include('purchase_order_management.urls')),
+    path('work_planning/',include('work_planning_management.urls')),
+
+
+
+
+
 
 
     #swagger links for the api documentation

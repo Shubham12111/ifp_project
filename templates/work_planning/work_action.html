@@ -1,0 +1,31 @@
+<div class="container-fluid mt-4">
+    <div class="row align-items-center">
+        <div class="col-lg-12 col-sm-8">
+            <div class="nav-wrapper position-relative end-0">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        {% if customer_instance %}
+                            <a class="nav-link" href="quotation_report.html">Quotation Reports</a>
+                        {% else %}
+                            <a class="nav-link active" href="quotation_report.html">Quotation Reports</a>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        {% if customer_instance %}
+                            <a class="nav-link" href="stw.html">STW</a>
+                        {% else %}
+                            <a class="nav-link" href="stw.html">STW</a>
+                        {% endif %}
+                    </li>
+                    <li class="nav-item">
+                        {% if customer_instance %}
+                            <a class="nav-link" href="jobs.html">Jobs</a>
+                        {% else %}
+                            <a class="nav-link" href="jobs.html">Jobs</a>
+                        {% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

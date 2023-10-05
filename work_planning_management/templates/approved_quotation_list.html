@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Approved Quotation List {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+{% include 'work_planning/work_action.html'%}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex justify-content-between">
+            <div>
+              <h4 class="mb-0">Approved Quotation List</h4>
+            </div>
+            <a href="" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Create Job</a>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-0">
+         <div class="table-responsive">
+            <table class="table table-flush text-dark" id="contact-list">
+              <thead class="thead-light">
+                <tr>
+                  <th class="custom-last-column"></th>
+                  <th> Action</th>
+                  <th>Description</th>
+                  <th>Date</th>
+                  <th>Surveyor name</th>
+                  <th>No of Defects</th>
+                  <th>Defects Description</th>
+                  {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                  {% endif %}
+                </tr>
+              </thead>
+              <tbody class="ml-4">
+                {% for item in approved_quotation %}
+                  <tr class="text-sm">
+                    <td class="text-sm">
+                      <input type="checkbox" name="requirement_checkbox" value="{{ item.id }}">
+                    </td>
+                    <td class="text-sm">{{ item.status}}</td>
+                    <td class="text-sm">{{ item.description }}</td>
+                    <td class="text-sm">{{ item.created_at }}</td>
+                    <td class="text-sm">{{ require.surveyor__first_name }} {{ item.surveyor__last_name }}</td>
+                    <td class="text-sm">{{ item.no_of_defects }}</td>
+                    <td class="text-sm">{{ item.defects_description }}</td>
+                    {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                      <td class="custom-last-column">
+                      </td>
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/custom_convert.js' %}"></script>
+<script>
+if (document.getElementById('contact-list')) {
+  const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
+    searchable: false,
+    fixedHeight: false,
+    perPage: 25,
+    perPageSelect: false,
+  });
+  const dataTableTop = document.querySelector('.dataTable-top');
+  if (dataTableTop) {
+    dataTableTop.parentNode.removeChild(dataTableTop);
+  }
+  const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+      const searchText = searchInput.value.toLowerCase();
+      dataTableSearch.search(searchText).draw();
+    });
+}
+  // JavaScript code to handle removing the contact_type filter
+  const removeContactTypeFilter = () => {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete('contact_type');
+    window.location.href = currentUrl.toString(); // Redirect to the URL without the contact_type parameter
+  };
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+</script>
+{% endblock %}
