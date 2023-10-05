@@ -897,7 +897,7 @@ class SORSerializer(serializers.ModelSerializer):
             raise ValidationError("Price is required.")
 
         # Ensure that the price is a valid Decimal with 2 decimal places
-        if not isinstance(value, Decimal):
+        if not isinstance(value, Decimal) and not isinstance(value, int):
             raise ValidationError("Price is invalid.")
 
         # Ensure that the price is not negative
