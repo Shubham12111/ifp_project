@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import UniqueValidator
 from infinity_fire_solutions.custom_form_validation import *
 from .models import *
@@ -124,7 +125,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
     """
 
     vat_number = serializers.CharField(
-        label='VAT Number',
+        label=_('VAT Number'),
         max_length=20,
         required=True,
         style={
