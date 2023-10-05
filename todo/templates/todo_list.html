@@ -228,7 +228,7 @@ function handleApplyFilter() {
 
   // Make a request to your backend API with the searchTerm
   // Example using fetch:
-  fetch(`/todo/search?term=${searchTerm}`)
+  fetch(`/task/search?term=${searchTerm}`)
   .then(response => {
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
