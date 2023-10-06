@@ -27,6 +27,7 @@ class ApprovedQuotationListView(generics.ListAPIView):
         if customer_id:
             queryset = queryset.filter(customer_id=customer_id)
         return queryset
+    
     def get(self, request, *args, **kwargs):
         customer_id = self.request.query_params.get('customer_id')
         queryset = self.get_queryset()
