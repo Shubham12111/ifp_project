@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: infinity-fire-systems-namespace-beta
+  name: infinity-fire-systems-namespace-uat
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: infinity-fire-systems-namespace-beta
-  name: infinity-fire-systems-deployment-beta
+  namespace: infinity-fire-systems-namespace-uat
+  name: infinity-fire-systems-deployment-uat
 spec:
   selector:
     matchLabels:
@@ -21,53 +21,53 @@ spec:
     spec:
       nodeName: ip-10-0-128-81.eu-west-2.compute.internal
       containers:
-      - image: 591836277216.dkr.ecr.eu-west-2.amazonaws.com/ifp-ecr-beta:latest
+      - image: 591836277216.dkr.ecr.eu-west-2.amazonaws.com/ifp-ecr-uat:latest
         imagePullPolicy: Always
-        name: infinity-fire-systems-container-beta
+        name: infinity-fire-systems-container-uat
         ports:
         - containerPort: 8000
         env:
           - name: DB_NAME
             valueFrom:
               configMapKeyRef:
-                name: ifs-config
+                name: infinity-fire-systems-config-uat
                 key: DB_NAME
           - name: DB_USER
             valueFrom:
               configMapKeyRef:
-                name: ifs-config
+                name: infinity-fire-systems-config-uat
                 key: DB_USER
           - name: DB_PASSWORD
             valueFrom:
               configMapKeyRef:
-                name: ifs-config
+                name: infinity-fire-systems-config-uat
                 key: DB_PASSWORD
           - name: DB_HOST
             valueFrom:
               configMapKeyRef:
-                name: ifs-config
+                name: infinity-fire-systems-config-uat
                 key: DB_HOST
           - name: DB_PORT
             valueFrom:
               configMapKeyRef:
-                name: ifs-config
+                name: infinity-fire-systems-config-uat
                 key: DB_PORT
           - name: SU_EMAIL
             valueFrom:
               configMapKeyRef:
-                name: ifs-config
+                name: infinity-fire-systems-config-uat
                 key: SU_EMAIL
           - name: SU_PASSWORD
             valueFrom:
               configMapKeyRef:
-                name: ifs-config
+                name: infinity-fire-systems-config-uat
                 key: SU_PASSWORD
           
           
 # apiVersion: v1
 # kind: Service
 # metadata:
-#   namespace: infinity-fire-systems-namespace-beta
+#   namespace: infinity-fire-systems-namespace-uat
 #   name: infinity-fire-systems-service
 # spec:
 #   ports:
