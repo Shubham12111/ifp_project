@@ -61,7 +61,9 @@
                   <div class="ms-auto my-auto mt-lg-0 mt-4">
                     {% if request.user|has_add_permission:"survey" %}
                       <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'work planning' module -->
-                      <a href="" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add SOR</a>
+                      {% if defect_instance %}
+                      <a href="{% url 'add_sor' defect_instance.id customer_id %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add SOR</a>
+                    {% endif %}
                     {% else %}
                       <!-- The user doesn't have the permission, so don't show the "Add" button -->
                     {% endif %}

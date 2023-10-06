@@ -24,6 +24,7 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
 from .serializers  import STWRequirementSerializer,CustomerSerializer,STWDefectSerializer
+from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
 
 
@@ -996,3 +997,130 @@ class STWDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
             return redirect(reverse('customer_stw_list', kwargs={'customer_id': self.kwargs.get('customer_id')}))  
         
 
+
+class STWSORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding or updating a SOR.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = SORSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'stw_sor/sor_form.html'
+
+    def get_queryset(self):
+        """
+        Get the filtered queryset for stw defect based on the authenticated user.
+        """
+        queryset = STWDefect.objects.filter(pk=self.kwargs.get('defect_id')).order_by('-created_at')
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None) 
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for updating a SOR.
+        If the SOR exists, retrieve the serialized data and render the HTML template.
+        If the SOR does not exist, render the HTML template with an empty serializer.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        customer_id = self.kwargs.get('customer_id')
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        defect_instance = self.get_queryset().first()
+        context = {
+                'defect_instance': defect_instance,
+                'customer_id':customer_id
+            }
+            
+        if request.accepted_renderer.format == 'html':
+            context = {'serializer':self.serializer_class()}
+            return render_html_response(context,self.template_name)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message="GET Method Not Alloweded",)
+        
+        
+        
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Congratulations! SOR has been added successfully.",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "We apologize for the inconvenience, but please review the below information.",
+                ),
+
+    }  
+
+    @swagger_auto_schema(operation_id='Add SOR', responses={**common_post_response})
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add a standalone SOR.
+        """
+        # Check authentication and permissions here if needed
+
+        message = "Congratulations! SOR has been added successfully."
+
+        data = request.data
+        print(data)
+        # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
+        file_list = data.getlist('file_list', None)
+
+        if file_list is not None and not any(file_list):
+            data = data.copy()
+            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+        serializer = self.serializer_class(data=data)
+
+
+        if serializer.is_valid():
+            print("valid")
+            # Assuming you have a method to create the SOR in your serializer
+            serializer.validated_data['customer_id'] = User.objects.get(pk=kwargs.get('customer_id'))  # Assign the current user instance.
+            serializer.validated_data['user_id'] = request.user
+            sor_data = serializer.save()
+
+            # Update the STWDefect model's sor_data field with the added SOR
+            defect_id = kwargs.get('defect_id') 
+            print(defect_id) # Assuming you have a defect_id in your URL
+            try:
+                defect = STWDefect.objects.get(pk=defect_id)
+                print(defect)
+                if defect.sor_data is None:
+                    defect.sor_data = [sor_data.id]
+                else:
+                    defect.sor_data.append(sor_data.id)
+                defect.save()
+
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    # return redirect(reverse('customer', kwargs={'defect_id': defect_id}))
+
+                else:
+                    # Return JSON response with success message and serialized data
+                    return create_api_response(status_code=status.HTTP_201_CREATED,
+                                               message=message,
+                                               data=serializer.data
+                                               )
+            except STWDefect.DoesNotExist:
+                return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                           message="Defect not found"
+                                           )
+        else:
+            # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data
+                context = {'serializer': serializer}
+                return render_html_response(context, self.template_name)
+            else:
+                # Return JSON response with error message
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                           message="We apologize for the inconvenience, but please review the below information.",
+                                           data=convert_serializer_errors(serializer.errors))

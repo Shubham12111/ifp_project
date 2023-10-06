@@ -551,7 +551,5 @@ class STWDefectSerializer(serializers.ModelSerializer):
         representation['document_paths'] = document_paths
 
         return representation
-
-
-            
+    
 
