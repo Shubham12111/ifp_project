@@ -139,7 +139,7 @@
                         <input type="hidden" id="grandTotalInput" name="total_amount" value="0">
                         <div class="row mb-2">
                             <div class="col-6 text-end mb-1">
-                                <p class="subtotal-label">Sub Total:</p>
+                                <p class=" mx-1 subtotal-label ">Sub Total:</p>
                             </div>
                             <div class="col-6 mb-1">
                                 <p class="mb-2 text-end subtotal-value"> £00.00</p>
@@ -179,13 +179,13 @@
                  </div>
                 <div class="row mt-5 mb-5">
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
-                <div class="col-md-6 m-auto text-center text-md-end">
-                    <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-0" href="{% url 'purchase_order_list' %}">Cancel</a>
+                <div class="col-md-6 col-xs-12 col-sm-12 m-auto text-center text-md-end">
+                    <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-2" href="{% url 'purchase_order_list' %}">Cancel</a>
                     {% if purchase_order.status == "pending" or not purchase_order   %}
-                    <button class="btn bg-gradient-primary mb-0 js-btn-prev  ms-2 mb-0" id="submitSaveAsDraftBtn" title="Submit">Save As Draft</button>
-                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
+                    <button class="btn bg-gradient-primary mb-0 js-btn-prev  ms-2 mb-2" id="submitSaveAsDraftBtn" title="Submit">Save As Draft</button>
+                    <button class="btn btn-md bg-gradient-primary ms-2 mb-2 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
                     {% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "projects_admin_(IT)"  %}
-                    <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitBtnApproved" title="Submit">I Approve this Purchase Order </button>
+                    <button class="btn btn-md bg-gradient-primary ms-2 mb-2 js-btn-next" id="submitBtnApproved" title="Submit">I Approve this Purchase Order </button>
                     {% endif %}
                     
                 </div>

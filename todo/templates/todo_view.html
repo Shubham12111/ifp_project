@@ -2,7 +2,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %} To Do View {{ block.super }}{% endblock %}
+{% block title %} Task View {{ block.super }}{% endblock %}
 {% block content %}
 <style>
   /* Set a fixed height for the scrollable container */
@@ -131,14 +131,14 @@
               </li>
               <li class="d-flex">
                 <p class="mb-0">Start Date</p>
-                <span class="ms-auto">{{ todo_data.start_date|date:"M d, Y" }}</span>
+                <span class="ms-auto">{{ todo_data.start_date|date:"d/m/Y" }}</span>
               </li>
               <li>
                 <hr class="horizontal dark">
               </li>
               <li class="d-flex">
                 <p class="mb-0">End Date</p>
-                <span class="ms-auto">{{ todo_data.end_date|date:"M d, Y" }}</span>
+                <span class="ms-auto">{{ todo_data.end_date|date:"d/m/Y" }}</span>
               </li>
               {% if todo_data.completed_at %}
                 <li>
@@ -146,7 +146,7 @@
                 </li>
                 <li class="d-flex">
                   <p class="mb-0">Completed At</p>
-                  <span class="ms-auto">{{ todo_data.completed_at|date:"M d, Y" }}</span>
+                  <span class="ms-auto">{{ todo_data.completed_at|date:"d/m/Y" }}</span>
                 </li>
               {% endif %}
             </ul>

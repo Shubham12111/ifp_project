@@ -1,4 +1,3 @@
-<!-- add_customer.html -->
 {% extends 'base.html' %}
 {% load static %}
 {% load inventory_tags %}
@@ -10,18 +9,19 @@
     /* Add borders to the table */
     .custom-table th,
     .custom-table td {
-      border: 1px solid #dee2e6;
-      padding: 8px;
+        border: 1px solid #dee2e6;
+        padding: 8px;
     }
     .btn.btn-outline-dotted {
-    border: 1px dotted #000; /* Replace #000 with the desired color for the border */
-    background-color: transparent;
-    color: #000; /* Replace #000 with the desired text color */
-}
-.choices__item--disabled{
-  display: none !important;
-}
+        border: 1px dotted #000; /* Replace #000 with the desired color for the border */
+        background-color: transparent;
+        color: #000; /* Replace #000 with the desired text color */
+    }
+    .choices__item--disabled {
+        display: none !important;
+    }
 </style>
+
 <div class="container-fluid py-4">
     <div class="row mt-2 mb-2">
         <div class="col-6 col-lg-6 m-auto text-end"></div>
@@ -32,45 +32,57 @@
     <div class="card ">
         <div class="card-body px-4 pb-0 mb-10">
             <div class="row">
-                <div class="col-lg-4 col-md-4 col-12">
+                <div class="col-lg-4  col-xs-12 col-sm-12 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-                            <h6 class="mb-3 text-sm">Vendor Information </h6>
-                            <span class="mb-2 text-sm">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
-                            <span class="mb-2 text-sm">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
-                            <span class="mb-2 text-sm">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
+                                <h6 class="mb-3 text-sm">Vendor Information</h6>
+                                <span class="mb-2 text-sm">Vendor Name:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}
+                                    </span>
+                                </span>
+                                <span class="mb-2 text-sm">Phone Number:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.vendor_id.phone_number}}
+                                    </span>
+                                </span>
+                                <span class="mb-2 text-sm">Email Address:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap d-inline-block" style="max-width: 100%;">
+                                        {{purchase_order.vendor_id.email}}
+                                    </span>
+                                </span>
                             </div>
                         </li>
                     </ul>
                 </div>
+                
 
-                <div class="col-lg-4 col-md-4 col-12">
+                <div class="col-lg-4  col-xs-12 col-sm-12 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Inventory Location Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
-                            <span class="mb-2 text-sm">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.name}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.address}}</span></span>
                             </div>
                         </li>
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-12 ms-auto text-sm">
-                   <div class="d-flex justify-content-between">
-                        <span class="mb-2 font-weight-bold">PO Number :</span>
-                        <span class="text-dark ms-2 ">{{purchase_order.po_number}}</span>
-                    </div>
-                    
-                        <div class="d-flex justify-content-between">
-                            <span class="font-weight-bold">Status:</span>
-                            <span class="text-dark ms-2 ">{{purchase_order.get_status_display}}</span>
-                        </div>
-                        
+                <div class="col-lg-3 col-xs-12 col-sm-12 col-12">
+                    <ul class="list-group">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+
+                            <span class="mb-2 text-sm">PO No.: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_number}}</span></span>
+                    <span class="mb-2 text-sm">Status: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.get_status_display}}</span></span>
+
                 </div>
-            </div>
-         
+            </li>
+        </ul>
+    </div>
+            
             <div class="row mt-5">
                 <div class="col-md-12">
                     <table class="table-responsive custom-table mb-3 " style="width:100%">
@@ -113,19 +125,19 @@
                     </div>
                     <div class="col-lg-3 col-12 ms-auto">
                          <div class="d-flex justify-content-between">
-                                <span class="mb-2 text-md">Sub Total</span>
+                                <span class="mb-2 text-md mx-6">Sub Total</span>
                                 <span class="text-dark font-weight-bold ms-2">£{{ purchase_order.sub_total }}</span>
                             </div>
                         <div class="d-flex justify-content-between">
-                            <span class="mb-2  mb-0 text-end grand-total-value">Discount </span>
-                            <span class="text-dark ms-2 font-weight-bold">£{{ purchase_order.discount}}</span>
+                            <span class="mb-2 text-md mx-6">Discount</span>
+                            <span class="text-dark font-weight-bold ms-2">£{{ purchase_order.discount }}</span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span class="text-md"> Tax (%):</span>
+                            <span class="text-md mx-6"> Tax (%):</span>
                             <span class="text-dark ms-2 font-weight-bold">£{{ purchase_order.tax }}</span>
                         </div>
                         <div class="d-flex justify-content-between mt-4">
-                            <span class="mb-2 font-weight-bolder mb-0 text-end grand-total-value">Total</span>
+                            <span class="mb-2 font-weight-bolder mb-0 text-end grand-total-value mx-6">Total</span>
                             <span class="font-weight-bolder mb-0 text-end grand-total-value">£{{ purchase_order.total_amount }}</span>
                     </div>
                 </div>
@@ -146,7 +158,7 @@
                                     <a href="#" class="invoice-link" data-invoice="{{ invoice_item.id }}" data-po="{{purchase_order.id}}">
                                         {{invoice_item.invoice_number}}</a>
                                     </h6>
-                                        <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{invoice_item.invoice_date}}</p>
+                                        <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{invoice_item.invoice_date|date:"d/m/Y"}}</p>
                                     </div>
                                 </div>
                         {% endfor %}

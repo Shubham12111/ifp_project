@@ -1,3 +1,16 @@
+"""
+This module contains views and utilities for managing purchase orders and related data.
+
+It includes views for creating, updating, and deleting purchase orders, as well as retrieving and displaying
+purchase order invoices. The module also provides utilities for generating purchase order numbers and handling
+purchase order item data.
+
+The module imports various modules and packages, including Django, DRF, and custom modules such as
+`aws_helper`, `permission`, and `response_schemas`. It also uses models and serializers from the `stock_management`
+app to handle vendor, inventory location, and item-related data.
+
+"""
+
 from django.http import HttpResponseRedirect
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status, filters
@@ -25,22 +38,27 @@ import json
 from rest_framework.response import Response
 from common_app.models import *
 
-def po_numbe_generated():
+def po_number_generated():
+    """
+    Generate a new purchase order number based on existing numbers.
+
+    Returns:
+        str: The newly generated purchase order number.
+    """
+
     # Check if any existing PO numbers exist
     existing_purchases = PurchaseOrder.objects.all()
     existing_purchases = existing_purchases.order_by('-created_at').first()
-    
-    new_po_number = 'IFB0001'
-    
-    print(existing_purchases)
+
+    new_po_number = 'IFB0001'  # Default starting PO number
+
     if existing_purchases:
         if existing_purchases.po_number:
             last_po_number = existing_purchases.po_number
             last_po_number_int = int(last_po_number[3:])  # Extract the numeric part
             new_po_number_int = last_po_number_int + 1
-            new_po_number = f'IFB{str(new_po_number_int).zfill(4)}'
-    
-    
+            new_po_number = f'IFB{str(new_po_number_int).zfill(4)}'  # Generate the new PO number
+
     return new_po_number
 
 
@@ -267,7 +285,7 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             context = {'vendor_list':vendor_list, 
                        'inventory_location_list':inventory_location_list,
                        'tax_rate':tax_rate,
-                       'new_po_number':po_numbe_generated()
+                       'new_po_number':po_number_generated()
                        
                        }
             return render_html_response(context,self.template_name)
@@ -281,7 +299,7 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a requirement.
         """
         data = request.data
-        po_number = po_numbe_generated()
+        po_number = po_number_generated()
         with transaction.atomic():
             serializer = self.serializer_class(data=request.data)
             if serializer.is_valid():
@@ -430,7 +448,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
             if purchase_order_data:
                 vendor_list = Vendor.objects.all()
                 inventory_location_list = InventoryLocation.objects.all()
-                item_list = Item.objects.filter(item_type='item', vendor_id=purchase_order_data.vendor_id)
+                item_list = Item.objects.filter(vendor_id=purchase_order_data.vendor_id)
                 tax_rate = AdminConfiguration.objects.all().first()
 
                 existingPurchaseOrderData = {} 
@@ -576,72 +594,105 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
             return render_html_response(context, self.template_name)
     
     def post(self, request, *args, **kwargs):
-        purchase_order = self.get_purchase_order().filter(pk=kwargs.get('purchase_order_id')).first() 
+        """
+        Handle POST request to create a purchase order invoice and update received inventory.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            JsonResponse: JSON response with success status and appropriate message.
+
+        Note:
+        This method processes a POST request to create a purchase order invoice and update the received inventory.
+        It also checks if the received inventory matches the total quantity of the purchase order items and updates the purchase order status accordingly.
+        """
+
+        # Get the purchase order based on the provided purchase_order_id
+        purchase_order = self.get_purchase_order().filter(pk=kwargs.get('purchase_order_id')).first()
+
+        # Initialize invoice serializer with request data
         invoice_serializer = PurchaseOrderInvoiceSerializer(data=request.data)
+
+        # Deserialize the purchase_order_items from JSON
         purchase_order_items = json.loads(request.POST.get('purchase_order_items'))
-      
+
+        # Create a list of received inventory serializers for each item
         received_inventory_serializers = [
             PurchaseOrderReceivedInventorySerializer(data=item)
             for item in purchase_order_items
         ]
-        
-       
 
+        # Combine all serializers, including the invoice serializer
         all_serializers = [invoice_serializer] + received_inventory_serializers
+
+        # Check if all serializers are valid
         all_valid = all(serializer.is_valid() for serializer in all_serializers)
-        
+
         if all_valid:
-            invoice_serializer.validated_data['purchase_order_id'] = purchase_order
-            
-            from rest_framework import serializers
-            invoice = invoice_serializer.save()
-            
-            error_messages = []
+            with transaction.atomic():
+                invoice_serializer.validated_data['purchase_order_id'] = purchase_order
+                
+                from rest_framework import serializers
+                
+                
+                error_messages = []
 
-            for serializer in received_inventory_serializers:
-                purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
-                received_inventory = PurchaseOrderReceivedInventory.objects.filter(
-                    purchase_order_item_id=purchase_order_item_id,
-                    purchase_order_item_id__purchase_order_id=purchase_order,
-                    purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
-                ).first()
+                for serializer in received_inventory_serializers:
+                    purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
+                    received_inventory = PurchaseOrderReceivedInventory.objects.filter(
+                        purchase_order_item_id=purchase_order_item_id,
+                        purchase_order_item_id__purchase_order_id=purchase_order,
+                        purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
+                    ).first()
 
-                cumulative_received_quantity = serializer.validated_data['received_inventory']
+                    cumulative_received_quantity = serializer.validated_data.get('received_inventory')
+                    if serializer.validated_data.get('received_inventory') is None:
+                        # Handle the case where received_inventory is None (e.g., return an error)
+                        error_message = f"Received inventory is missing for purchase order item {serializer.validated_data['purchase_order_item_id'].id}."
+                        error_data = {
+                            'purchase_order_item_id': str(serializer.validated_data['purchase_order_item_id'].id),
+                            'error_message': error_message
+                        }
+                        error_messages.append(error_data)
+                    else:
+                        if received_inventory:
+                            cumulative_received_quantity += received_inventory.received_inventory
 
-                if received_inventory:
-                    cumulative_received_quantity += received_inventory.received_inventory
+                        if cumulative_received_quantity is not None and cumulative_received_quantity > serializer.validated_data['purchase_order_item_id'].quantity:
+                            error_message = f"Received quantity exceeds available quantity."
+                            error_data = {
+                                'purchase_order_item_id': str(serializer.validated_data['purchase_order_item_id'].id),
+                                'error_message': error_message
+                            }
+                            error_messages.append(error_data)
+                        else:
+                            serializer.is_valid()
 
-                if cumulative_received_quantity > serializer.validated_data['purchase_order_item_id'].quantity:
-                    error_message = f"Received quantity exceeds available quantity."
-                    error_data = {
-                        'purchase_order_item_id': str(serializer.validated_data['purchase_order_item_id'].id),
-                        'error_message': error_message
-                    }
-                    error_messages.append(error_data)
-                else:
-                    serializer.is_valid()
+                # Check if any errors were encountered
+                if error_messages:
+                    return JsonResponse({'success': False, 'errors': error_messages, 'status': status.HTTP_400_BAD_REQUEST})
 
-            # Check if any errors were encountered
-            if error_messages:
-                return JsonResponse({'success': False, 'errors': error_messages, 'status': status.HTTP_400_BAD_REQUEST})
+                # No errors, proceed with saving
+                invoice = invoice_serializer.save()
+                for serializer in received_inventory_serializers:
+                    purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
+                    received_inventory = PurchaseOrderReceivedInventory.objects.filter(
+                        purchase_order_item_id=purchase_order_item_id,
+                        purchase_order_item_id__purchase_order_id=purchase_order,
+                        purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
+                    ).first()
 
-            # No errors, proceed with saving
-            for serializer in received_inventory_serializers:
-                purchase_order_item_id = serializer.validated_data['purchase_order_item_id']
-                received_inventory = PurchaseOrderReceivedInventory.objects.filter(
-                    purchase_order_item_id=purchase_order_item_id,
-                    purchase_order_item_id__purchase_order_id=purchase_order,
-                    purchase_order_item_id__purchase_order_id__inventory_location_id=purchase_order.inventory_location_id
-                ).first()
+                    cumulative_received_quantity = serializer.validated_data['received_inventory']
 
-                cumulative_received_quantity = serializer.validated_data['received_inventory']
+                    if received_inventory:
+                        cumulative_received_quantity += received_inventory.received_inventory
+                    
+                    received_inventory = serializer.save(purchase_order_invoice_id=invoice)
 
-                if received_inventory:
-                    cumulative_received_quantity += received_inventory.received_inventory
-
-                received_inventory = serializer.save(purchase_order_invoice_id=invoice)
-
-                update_or_create_inventory(purchase_order, serializer.validated_data['purchase_order_item_id'], cumulative_received_quantity)
+                    update_or_create_inventory(purchase_order, serializer.validated_data['purchase_order_item_id'], cumulative_received_quantity)
 
             
             
@@ -678,31 +729,56 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
             'status':status.HTTP_400_BAD_REQUEST})
 
 
+class PurchaseOrderInvoiceView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    Retrieve and display a purchase order invoice along with related purchase order items and additional details.
 
-class PurchaseOrderInvoiceView(CustomAuthenticationMixin,generics.RetrieveAPIView):
-    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    Attributes:
+        renderer_classes (list): List of renderer classes for the view.
+        template_name (str): The name of the HTML template used for rendering.
+    """
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'purchase_order_invoice_view.html'
     
     def get(self, request, *args, **kwargs):
-        # Get the filtered queryset using get_queryset method
+        """
+        Handle GET request to retrieve and display a purchase order invoice and related details.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            JsonResponse: JSON response containing invoice data and related details.
+        """
+
+        # Check authentication and permissions for the authenticated user
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "purchase_order", HasViewDataPermission, 'view'
         )
+
+        # Get the purchase order invoice based on the provided invoice_id
         purchase_order_invoice = PurchaseOrderInvoice.objects.filter(pk=kwargs.get('invoice_id')).first()
-        
-        purchase_order_items = PurchaseOrderReceivedInventory.objects.filter(purchase_order_invoice_id=purchase_order_invoice)
-        
-        
+
+        # Get related purchase order items for the invoice
+        purchase_order_items = PurchaseOrderReceivedInventory.objects.filter(
+            purchase_order_invoice_id=purchase_order_invoice
+        )
+
         presigned_url = ""
         file_name = ''
-        comments= ''
+        comments = ''
+
+        # Extract comments and presigned URL from the purchase order invoice
         if purchase_order_invoice:
             comments = purchase_order_invoice.comments
             if purchase_order_invoice.invoice_pdf_path:
                 presigned_url = generate_presigned_url(purchase_order_invoice.invoice_pdf_path),
                 file_name =  purchase_order_invoice.invoice_pdf_path.split('/')[-1]
         
-        # Create a list of dictionaries containing the required attributes from purchase_order_items
+        # Create a list of dictionaries containing required attributes from purchase_order_items
         items_list = []
         for item in purchase_order_items:
             items_list.append({
@@ -710,46 +786,70 @@ class PurchaseOrderInvoiceView(CustomAuthenticationMixin,generics.RetrieveAPIVie
                 'quantity': item.purchase_order_item_id.quantity,
                 'unit_price': item.purchase_order_item_id.unit_price,
                 'item_name': item.purchase_order_item_id.item_name,
-                
             })
 
+        # Prepare the context data for rendering the template
         context = {
             'purchase_order_items': items_list,
             'presigned_url': presigned_url,
             'file_name': file_name,
-            'comments':comments
+            'comments': comments
         }
 
+        # Create an API response with the context data
         return create_api_response(status_code=status.HTTP_200_OK, message="Invoice DATA", data=context)
         
         
+class PurchaseDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+    """
+    Delete a purchase order based on the provided purchase_order_id.
 
-class PurchaseDeleteView(CustomAuthenticationMixin,generics.DestroyAPIView):
-    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    Attributes:
+        renderer_classes (list): List of renderer classes for the view.
+        template_name (str): The name of the HTML template used for rendering.
+    """
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'purchase_order_view.html'
     
     def delete(self, request, *args, **kwargs):
-        # Get the filtered queryset using get_queryset method
+        """
+        Handle DELETE request to delete a purchase order.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: JSON response indicating the success or failure of the delete operation.
+        """
+
+        # Check authentication and permissions for the authenticated user
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "purchase_order", HasDeleteDataPermission, 'delete'
         )
+
         # Check if authenticated_user is a redirect response
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
             "self": Q(created_by=self.request.user),
             "all": Q(),  # An empty Q() object returns all data
         }
        
+        # Get the purchase order based on the provided purchase_order_id
         base_queryset = PurchaseOrder.objects.filter(pk=kwargs.get('purchase_order_id')).first()
 
         if base_queryset:
+            # Delete the purchase order
             base_queryset.delete()
             return Response(
-                    {"message": "Your Purchase Order has been deleted successfully."},
-                    status=status.HTTP_204_NO_CONTENT
-                )
+                {"message": "Your Purchase Order has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
         else:
             return Response(
                 {"message": "Purchase Order not found or you don't have permission to delete."},

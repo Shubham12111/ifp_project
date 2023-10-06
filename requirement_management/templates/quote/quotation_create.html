@@ -1,0 +1,899 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<style>
+  /* Add borders to the table */
+  .custom-table th,
+  .custom-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+  }
+
+  .read-more {
+    cursor: pointer;
+    /* Add a pointer cursor when hovering */
+  }
+
+  /* Custom styles for the accordion header */
+  .accordion-button {
+    background-color: #eff0f18a;
+    /* Set your desired background color */
+    color: #344767;
+    /* Set text color */
+    padding: 10px 20px;
+    /* Adjust padding as needed */
+    border: none;
+    /* Remove border */
+    border: 1px solid #ccc;
+  }
+
+  /* Custom styles for the active (expanded) header button */
+  .accordion-button[aria-expanded="true"] {
+    background-color: #8fa0be66;
+    /* Set a different background color for active state */
+    border: 1px solid #ccc;
+  }
+
+  /* Custom styles for the accordion body */
+  .accordion-body {
+    padding: 20px;
+    /* Adjust padding as needed */
+  }
+
+  .accordion-item {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, .125);
+  }
+
+  .btn.btn-outline-dotted {
+    border: 1px dotted #000;
+    /* Replace #000 with the desired color for the border */
+    background-color: transparent;
+    color: #000;
+    /* Replace #000 with the desired text color */
+  }
+</style>
+{% endblock %}
+{% load rest_framework %}
+{% block title %}FRA Reports {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid mt-3">
+  <div class="row align-items-center mb-2">
+    <div class="col-lg-6 col-sm-12">
+      <h4> {% if quotation_data %} {% else %}Create {% endif %} Quotation</h4>
+    </div>
+    <div class="col-lg-6 col-sm-12">
+      {% if quotation_data %}
+      <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0"
+        href="{% url 'view_customer_quotation_list'  customer_id %}">Back</a>
+      {% else %}
+      <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0"
+        href="{% url 'view_customer_fra_list_report'  customer_id %}">Back</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="row ">
+    <div class="col-lg-6 col-sm-12">
+      <!-- Works Description and Defects Section -->
+      <div class="card">
+        <div class="card-header pb-0 mt-0">
+          <h5 class="card-title">FRA Details</h5>
+        </div>
+        <div class="card-body mt-0 text-sm">
+          <b>Action</b>
+          <p class="text-sm mt-2" style="text-align: justify;">
+            <span id="actionText">{{ requirement_instance.action|truncatechars:300 }}</span>
+            <span id="actionMore" style="display: none;">{{ requirement_instance.action }}</span>
+            {% if requirement_instance.action|length > 300 %}
+            <span class="read-more text-primary" id="actionToggle"
+              onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
+              Read More
+            </span>
+            {% endif %}
+          </p>
+
+          <b>Description</b>
+          <p class="text-sm mt-2" style="text-align: justify;">
+            <span id="descriptionText">{{ requirement_instance.description|truncatechars:300 }}</span>
+            <span id="descriptionMore" style="display: none;">{{ requirement_instance.description }}</span>
+            {% if requirement_instance.description|length > 300 %}
+            <span class="read-more text-primary" id="descriptionToggle"
+              onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
+              Read More
+            </span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+
+    </div>
+    <div class="col-lg-6 col-sm-12">
+      <div class="card">
+        <div class="card-header pb-0">
+          <h5>Client Details</h5>
+        </div>
+        <div class="row">
+          <div class="card-body mt-0 text-sm">
+            <div class="row mb-2">
+              <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">
+                {{ customer_address.address }}
+                {% if customer_address.town %}
+                  {{ customer_address.town.name }},
+                {% endif %}
+                {% if customer_address.county %}
+                  {{ customer_address.county.name }},
+                {% endif %}
+                {% if customer_address.country %}
+                  {{ customer_address.country.name }}
+                {% endif %}
+                {% if customer_address.country.post_code %}
+                  {{ customer_address.country.post_code }}
+                {% endif %}
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.site_address }}</div>
+            </div>
+            <div class="row">
+              <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.UPRN|default:''|title }}</div>
+            </div>
+            <div class="row">
+              <div class="col-5 text-sm text-start"><strong>RBNO:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.RBNO|default:''|title }}</div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+
+  </div>
+  <div class="row ">
+    <div class="col-lg-12 col-sm-12">
+      <div class="card mt-4 mx-0">
+        <div class="card-header pb-0">
+          <h5>Defects</h5>
+        </div>
+        <div class="card-body mt-0 ">
+          <div class="accordion" id="accordionDefect">
+            {% for defect in requiremnt_defect_instances %}
+
+            <div class="accordion-item column-with-border mb-3 " data-defect-id="{{ defect.id }}">
+              <h5 class="accordion-header text-sm" id="headingOne">
+                <button class="accordion-button " type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapse{{ forloop.counter }}"
+                  aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
+                  <div class="col-9">
+                    <strong>{{ forloop.counter }} - </strong>{{ defect.action|truncatechars:150 }}
+                  </div>
+                  <div class="col-3 text-end">
+                    <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
+                    <i class="fas fa-chevron-down  mx-2 " aria-hidden="true"></i>
+                  </div>
+
+                </button>
+
+              </h5>
+              <div id="collapse{{ forloop.counter }}"
+                class="accordion-collapse  collapse {% if forloop.first %}show {% endif %} "
+                aria-labelledby="heading{{ forloop.counter }}">
+                <div class="accordion-body text-sm">
+                  <p class="text-sm"><strong>Action: </strong>{{ defect.action }}</p>
+                  <p class="text-sm"><strong>Description: </strong>{{ defect.description }}</p>
+                  <p class="text-sm"><strong>Rectification Description: </strong>{{ defect.rectification_description }}
+                  </p>
+                  <div class="col-lg-12 col-sm-12">
+                    {% csrf_token %}
+
+                    <!-- Empty table element with a unique ID -->
+                    <table id="table-{{ defect.id }}" class="custom-table text-sm" style="width:100%">
+                      <!-- Table content will be added dynamically here -->
+                      <tr id="header-{{ defect.id }}">
+                        <th class="col-4">SOR Code</th>
+                        <th>Category</th>
+                        <th>Price(£)</th>
+                        <th class="col-1">Action</th>
+                        <!-- Add more headers as needed -->
+                      </tr>
+                    </table>
+                  </div>
+                  <div class="col-lg-12 col-sm-12 mb-0">
+                    <button class="btn btn-outline-dotted text-lower btn-sm mt-4" data-defect-id="{{ defect.id }}"
+                      onclick="addTable(this)">Add SOR</button>
+                      {% if requiremnt_defect_instances|length > 1 %}
+                        <button class="btn bg-gradient-secondary btn-sm mt-4" data-defect-id="{{ defect.id }}"
+                          onclick="removeDefect(this)">Remove Defect</button>
+                      {% endif %}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            {% endfor %}
+            <div class="row ">
+              <div class="col-lg-6 col-sm-6">
+
+              </div>
+              <div class="col-lg-6 col-sm-6 mt-4">
+                <h5 class="text-end text-md">
+
+                  <strong>Total (£) : </strong> <span id="total-price">0.00</span>
+
+                </h5>
+              </div>
+
+              <div class="col-lg-12 col-sm-12 mt-4">
+                {% if quotation_data.status == "send_for_approval" %}
+                <button id="submit-approved" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">I Approve This
+                  Quotation </button>
+                {% else %}
+                <button id="submit-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Send For
+                  Approval </button>
+                <button id="submit-darft-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save As
+                  Draft</button>
+                {% endif %}
+
+                <button id="reset-button" class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0 mx-2"
+                  onclick="resetPage()">Reset</button>
+
+                {% include 'components/loader.html' %}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content ">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        The customer will receive an email asking for approval for this Quotation. Make sure you've included all the
+        necessary details. This action cannot be undone.
+      </div>
+
+
+      <div class="modal-footer">
+        <button type="button" class="btn bg-gradient-dark" id="confirmSubmit">I Acknowledge </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content ">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        There are no values to send.
+      </div>
+
+
+      <div class="modal-footer">
+        <button type="button" class="btn bg-gradient-dark" id="closeModal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script>
+
+  function resetPage() {
+    // Reload the current page
+    window.location.reload();
+  }
+
+  const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
+
+  function showLoader() {
+    loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+  }
+
+  function hideLoader() {
+    loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+  }
+
+
+  function removeDefect(button) {
+    // Find the parent div of the button
+    var defectDiv = button.closest('.column-with-border');
+
+    if (defectDiv) {
+      // Extract the defect ID from the data attribute
+      var defectId = defectDiv.getAttribute('data-defect-id');
+
+      // Find the tbody element within the defect table
+      var tbody = document.querySelector('#table-' + defectId + ' tbody');
+
+      if (tbody) {
+        // Find all rows within the tbody element
+        var rows = tbody.querySelectorAll('tr');
+
+
+        // After removing the rows inside tbody, you can remove rows after tbody
+        var table = document.querySelector('#table-' + defectId);
+        if (table) {
+          var rowsAfterTbody = Array.from(table.querySelectorAll('tr')).slice(rows.length); // Get rows after tbody
+          rowsAfterTbody.forEach(function (row) {
+            var rowId = row.getAttribute('id');
+            // Remove the price associated with the row after tbody
+            if (rowPrices[defectId] && rowPrices[defectId][rowId]) {
+              delete rowPrices[defectId][rowId];
+            }
+            // Remove the row
+            row.remove();
+          });
+        }
+      }
+      // After removing the defect, call updateTotalPrice to update the total prices for all defect tables
+      updateTotalPrice();
+
+      // Finally, remove the entire defect div, including the table
+      defectDiv.remove();
+    }
+  }
+
+
+  function toggleReadMore(truncateId, fullId, toggleId) {
+    const truncateElement = document.getElementById(truncateId);
+    const fullElement = document.getElementById(fullId);
+    const toggleElement = document.getElementById(toggleId);
+
+    if (truncateElement.style.display === 'none') {
+      // Show truncated text and hide full text
+      truncateElement.style.display = '';
+      fullElement.style.display = 'none';
+      toggleElement.textContent = 'Read More';
+    } else {
+      // Show full text and hide truncated text
+      truncateElement.style.display = 'none';
+      fullElement.style.display = '';
+      toggleElement.textContent = 'Read Less';
+    }
+  }
+
+  var totalAllDefects = 0;
+  var rowPrices = {};
+  var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  {% if quotation_data %}
+  // Assuming you have a JSON string in quotation_data.quotation_json
+  var jsonString = '{{ quotation_data.quotation_json|safe|escapejs }}';
+ 
+   // will not replace apostrophe's when making '' around key/value to be a valid JSON value
+  var sanitizedJsonString = jsonString.replace(/(\W)'|'(\W)/g, function(match, p1, p2) {
+  return p1 ? p1 + '"' : '"' + p2;
+  sanitizedJsonString = sanitizedJsonString.replace(/\\xa0/g, '\\u0020')
+
+  });
+  try {
+    var savedData = JSON.parse(sanitizedJsonString);
+    console.log(savedData);
+  } catch (e) {
+    console.error("Error parsing sanitizedJsonString :", e);
+  }
+
+  function populateSavedRows(defectId) {
+
+    if (savedData.defectSorValues[defectId]) {
+
+      Object.keys(savedData.defectSorValues[defectId]).forEach(function (inner_key) {
+
+        var tableId = "table-" + defectId;
+        var headerId = "header-" + defectId;
+
+        rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
+
+        // Check if the table already exists, and if not, create it
+        var existingTable = document.getElementById(tableId);
+
+
+        var savedRow = savedData.defectSorValues[defectId][inner_key];
+        var sorItem = savedRow['sor_items'];
+
+        var newRow = document.createElement('tr');
+        var rowId = inner_key; // Create a unique ID for each row
+        newRow.id = rowId;
+        // Create and append the first <td> with the dropdown <select> element
+        var firstCell = document.createElement('td');
+        var select = document.createElement('select');
+        select.className = 'form-control';
+        select.id = 'choices-sor-' + defectId + '-' + rowId;
+
+        // Assuming sorItem has properties like 'id', 'user_id', 'customer_id', 'category_id', etc.
+        var option = document.createElement('option');
+        option.value = sorItem.id; // You can use any property you need here
+        option.textContent = sorItem.reference_number; // You can use any property you need here
+
+        select.appendChild(option);
+        firstCell.appendChild(select);
+        newRow.appendChild(firstCell);
+
+        // Create and append the second <td> for category
+        var categoryCell = document.createElement('td');
+        categoryCell.textContent = sorItem.category_id;
+        newRow.appendChild(categoryCell);
+
+        // Create and append the third <td> for price
+        var priceCell = document.createElement('td');
+        priceCell.textContent = sorItem.price;
+        newRow.appendChild(priceCell);
+
+        // Create and append the fourth <td> with the "x" icon to delete the row
+        var deleteCell = document.createElement('td');
+        var deleteIcon = document.createElement('span');
+        deleteIcon.textContent = 'x';
+        deleteIcon.style.cursor = 'pointer';
+        deleteIcon.classList.add('text-danger', 'text-center');
+
+        deleteIcon.addEventListener('click', function () {
+          removeRow(defectId, rowId);
+        });
+
+        deleteCell.appendChild(deleteIcon);
+        newRow.appendChild(deleteCell);
+
+        // Create and append the hidden input for the SOR ID
+        var sorIdInput = document.createElement('input');
+        sorIdInput.type = 'hidden';
+        sorIdInput.name = 'sor-id'; // You can specify a unique name here if needed
+        sorIdInput.id = 'sor-id-' + defectId + '-' + rowId;
+        sorIdInput.value = sorItem.id; // Set the value of the SOR ID input
+        newRow.appendChild(sorIdInput);
+        // Update the row price in the array
+        rowPrices[defectId][rowId] = sorItem.price;
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+        // Append the new row to the table
+        existingTable.appendChild(newRow);
+
+
+      });
+    }
+  }
+
+
+
+  // Loop through the defectSorValues object and call the function to populate saved rows for each defectId
+  Object.keys(savedData.defectSorValues).forEach(function (defectId) {
+    populateSavedRows(defectId);
+  });
+  {% endif %}
+
+
+
+
+  function addTable(button) {
+    var defectId = button.getAttribute('data-defect-id');
+    var tableId = "table-" + defectId;
+    var headerId = "header-" + defectId;
+
+
+    // Check if the table already exists, and if not, create it
+    var existingTable = document.getElementById(tableId);
+    if (!existingTable) {
+      var table = document.createElement('table');
+      table.id = tableId;
+      table.className = 'custom-table mb-4 text-sm';
+      table.style.width = '100%';
+
+      // Create and add table headers initially hidden
+      var tableHeader = document.createElement('tr');
+      tableHeader.id = headerId;
+      tableHeader.style.display = 'none';
+      tableHeader.innerHTML = '<th>SOR Column 1</th><th>SOR Column 2</th>'; // Add more headers as needed
+      table.appendChild(tableHeader);
+
+      document.querySelector('.col-lg-12.col-sm-12').appendChild(table);
+    }
+
+    // Show the headers
+    var headerRow = document.getElementById(headerId);
+    headerRow.style.display = 'table-row';
+
+    const allSors = JSON.parse('{{ all_sors|safe }}');
+    // Create a new row for the table
+    var newRow = document.createElement('tr');
+    var rowId = Date.now(); // Unique row ID
+    newRow.id = rowId;
+
+    rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
+
+
+    // Add the first <td> with the dropdown <select> element
+    var firstCell = document.createElement('td');
+    var select = document.createElement('select');
+    select.className = 'form-control';
+    select.id = 'choices-sor-' + defectId + '-' + rowId; // Set the ID for the select element to include bot
+    var defaultOption = document.createElement('option');
+    defaultOption.textContent = ' ';
+    select.appendChild(defaultOption);
+    allSors.forEach(sor => {
+      var option = document.createElement('option');
+      option.value = sor.reference_number;
+      option.textContent = sor.reference_number;
+      select.appendChild(option);
+    });
+    firstCell.appendChild(select);
+    newRow.appendChild(firstCell);
+
+
+    // Add a hidden input for the SOR ID
+    var sorIdInput = document.createElement('input');
+    sorIdInput.type = 'hidden';
+    sorIdInput.name = 'sor-id'; // You can specify a unique name here if needed 
+    sorIdInput.id = 'sor-id-' + defectId + '-' + rowId; // 
+    newRow.appendChild(sorIdInput);
+    // Add the second <td> for category
+    var categoryCell = document.createElement('td');
+    newRow.appendChild(categoryCell);
+
+    // Add the third <td> for price
+    var priceCell = document.createElement('td');
+    newRow.appendChild(priceCell);
+
+
+    // Add the fourth <td> with the "x" icon to delete the row
+    var deleteCell = document.createElement('td');
+    var deleteIcon = document.createElement('span');
+    deleteIcon.textContent = 'x';
+    deleteIcon.style.cursor = 'pointer';
+    deleteIcon.classList.add('text-danger', 'text-center'); // Add the classes to the delete icon
+
+    // Modify your existing deleteIcon.addEventListener as follows:
+    deleteIcon.addEventListener('click', function () {
+      removeRow(defectId, rowId); // Call the removeRow function when "x" is clicked
+    });
+
+    deleteCell.appendChild(deleteIcon);
+    newRow.appendChild(deleteCell);
+
+    // Append the new row to the table
+    existingTable.appendChild(newRow);
+
+    // Initialize Choices.js for the dropdown
+    var element = document.getElementById('choices-sor-' + defectId + '-' + rowId);
+    const vendor_choices = new Choices(element, {
+      default: false,
+      items: [],
+      choices: [],
+      renderChoiceLimit: 5,
+      searchEnabled: true,
+      searchChoices: true,
+      searchFloor: 1,
+      searchResultLimit: 10,
+      resetScrollPosition: true,
+      shouldSort: true,
+      shouldSortItems: false,
+      searchPlaceholderValue: "Search Sor....",
+      fuseOptions: {
+        includeScore: true,
+        includeMatches: true,
+        threshold: 0, // Set to 0 for an exact match
+        location: 0,
+        distance: 100,
+        maxPatternLength: 32,
+        minMatchCharLength: 1
+      }
+    });
+
+
+    // Listen for changes in the dropdown and update other <td> elements
+    element.addEventListener('change', function () {
+      var selectedValue = element.value; // Get the selected value
+      // Find the corresponding SOR object based on the selected value
+      var selectedSor = allSors.find(sor => sor.reference_number === selectedValue);
+      if (selectedSor) {
+
+        // Update category and price <td> elements with data from the selected SOR object
+        categoryCell.textContent = selectedSor.category_id__name; // Update category
+        priceCell.textContent = selectedSor.price;      // Update price
+        sorIdInput.value = selectedSor.id;      // Update price
+        // Update the row price in the array
+
+        rowPrices[defectId][rowId] = selectedSor.price;
+
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+
+    });
+
+  }
+
+
+  var totalPriceInput = document.getElementById('total-price');
+
+
+  // Function to remove a row from a defect table
+  function removeRow(defectId, rowId) {
+    // Check if the defectId exists in rowPrices
+    if (rowPrices.hasOwnProperty(defectId)) {
+      // Remove the row price from the current defect
+      delete rowPrices[defectId][rowId];
+      // Calculate and display the total price for the current defect table
+      var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+        return sum + (parseFloat(rowPrice) || 0);
+      }, 0);
+
+      // Update the total for the current defect
+      updateDefectTotal(defectId, defectTotal);
+
+      // Get the HTML element for the row and remove it
+      var rowToRemove = document.getElementById(rowId);
+      if (rowToRemove) {
+        rowToRemove.parentNode.removeChild(rowToRemove);
+      }
+
+      // Update the total price for all defect tables
+      updateTotalPrice();
+    }
+  }
+
+  // Function to update the total price for the current defect table
+  function updateDefectTotal(defectId, total) {
+    // Update the total price input for the current defect table
+    var totalInput = document.getElementById('total-price-' + defectId);
+    if (totalInput) {
+      totalInput.textContent = total.toFixed(2); // Format the total as needed
+    }
+  }
+
+  // Function to update the total price for all defect tables
+  function updateTotalPrice() {
+    // Calculate the total price of all defect tables
+    totalAllDefects = Object.keys(rowPrices).reduce(function (sum, defectId) {
+
+      var defectPrices = rowPrices[defectId];
+      var defectTotal = Object.values(defectPrices).reduce(function (defectSum, price) {
+        return defectSum + (parseFloat(price) || 0);
+      }, 0);
+      return sum + defectTotal;
+    }, 0);
+
+    // Update the total price input for all defect tables
+    var totalPriceInput = document.getElementById('total-price');
+    if (totalPriceInput) {
+      totalPriceInput.textContent = totalAllDefects.toFixed(2); // Format the total as needed
+    }
+  }
+
+
+
+
+  // Get references to the "send_for_approval" and "Save As Draft" buttons
+  var submitButton = document.getElementById('submit-button');
+  var saveDraftButton = document.getElementById('submit-darft-button');
+  var submitApproved = document.getElementById('submit-approved');
+  const modalContainer = document.querySelector('.container-fluid.mt-3');
+
+  function addBlur() {
+    modalContainer.classList.add('blur-background');
+  }
+
+  // Function to remove the blur class
+  function removeBlur() {
+    modalContainer.classList.remove('blur-background');
+  }
+
+
+  // Check if the submitButton exists before adding an event listener
+  // Check if the submitButton exists before adding an event listener
+  if (submitButton) {
+    submitButton.addEventListener('click', function (event) {
+      event.preventDefault(); // Prevent the form from submitting immediately
+      showLoader();
+      sendDataToServer('send_for_approval', false); // Set the status to "send_for_approval" when "Submit" is clicked
+    });
+  }
+
+  // Check if the saveDraftButton exists before adding an event listener
+  if (saveDraftButton) {
+    saveDraftButton.addEventListener('click', function () {
+      showLoader();
+      sendDataToServer('draft', true); // Set the status to "draft" when "Save As Draft" is clicked
+    });
+  }
+
+  // Check if the submitApproved button exists before adding an event listener
+  if (submitApproved) {
+    submitApproved.addEventListener('click', function () {
+      showLoader();
+      sendDataToServer('approved', true); // Set the status to "approved" when "Submit Approved" is clicked
+    });
+  }
+  // Function to send data to the server using fetch
+  function sendDataToServer(status, acknowledge) {
+    // Collect the data you want to send to the server, including defect-SOR values
+    var dataToSend = {
+      // Include your data here
+      status: status, // Include the status based on the button clicked
+      total_amount: totalPriceInput.textContent,
+      defectSorValues: {}, // Initialize an empty object to store defect-SOR values
+      defectList: [] // Initialize an empty array to store the list of defects
+    };
+    // Loop through each defectId in rowPrices and add the corresponding SOR values with IDs to the data
+    for (var defectId in rowPrices) {
+      if (rowPrices.hasOwnProperty(defectId)) {
+        var defectSorData = {}; // Initialize an empty object for defect-SOR data
+        var hasPrices = false; // Flag to track if prices exist for this defect
+
+        for (var rowId in rowPrices[defectId]) {
+          if (rowPrices[defectId].hasOwnProperty(rowId)) {
+            // Get the price for this row
+            var price = rowPrices[defectId][rowId];
+            // Fetch the SOR ID from the hidden input field within the row
+            var sorIdInput = document.querySelector('#' + 'sor-id-' + defectId + '-' + rowId);
+            var sorId = sorIdInput.value; // Fetch the SOR ID from the hidden input
+
+            // Add the SOR ID and price to the defect-SOR data
+            defectSorData[rowId] = { 'sor-id': sorId, 'price': price };
+
+            // Check if there is a price, set the flag to true
+            if (price) {
+              hasPrices = true;
+            }
+          }
+        }
+
+        // Check if there are prices for this defect before adding to the list
+        if (hasPrices) {
+          // Add the defect-SOR data to the main data object
+          dataToSend.defectSorValues[defectId] = defectSorData;
+          dataToSend.defectList.push(defectId);
+        }
+      }
+    }
+    // Check if dataToSend has some values
+    if (Object.keys(dataToSend.defectSorValues).length > 0) {
+
+      if (acknowledge != true) {
+        addBlur();
+        // Get a reference to the confirmation modal
+        var confirmationModal = document.getElementById('confirmationModal');
+
+        // Show the Bootstrap confirmation modal
+        confirmationModal.classList.add('show');
+        confirmationModal.style.display = 'block';
+
+        // Attach a click event listener to the "OK" button in the modal
+        document.getElementById('confirmSubmit').addEventListener('click', function () {
+          // User clicked OK, so proceed with form submission
+          removeBlur();
+          showLoader();
+          sendDataToServer(status, true); // Set the status to "send_for_approval" when "Submit" is clicked
+          // You can submit the form here if it's a regular HTML form
+          // e.g., document.getElementById('yourFormId').submit();
+
+          // Close the modal
+          confirmationModal.classList.remove('show');
+          confirmationModal.style.display = 'none';
+        });
+
+        // Attach a click event listener to the "Cancel" button in the modal
+        confirmationModal.querySelector('[data-dismiss="modal"]').addEventListener('click', function () {
+          // User clicked Cancel, do nothing
+          // Close the modal
+          removeBlur();
+          confirmationModal.classList.remove('show');
+          confirmationModal.style.display = 'none';
+
+        });
+      } else {
+
+        // There are values to send, proceed with the fetch request
+        // Make a fetch request to send the data to the server
+        fetch("{% if quotation_data %}{% url 'edit_customer_estimation' customer_id quotation_data.id %}{% else %}{% url 'add_customer_estimation' customer_id report_instance.id %}{% endif %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken, // Include the CSRF token here
+          },
+          body: JSON.stringify(dataToSend),
+        })
+          .then(function (response) {
+            if (response.ok) {
+              // Request was successful, handle the server's response if needed
+
+              window.location.href = "{% if quotation_data %}{% url 'view_customer_quotation_list' customer_id %}{% else %}{% url 'view_customer_fra_list_report' customer_id %}{% endif %}";
+            } else {
+              // Handle errors or failed requests
+              console.error('Error sending data to the server');
+            }
+          })
+          .catch(function (error) {
+            // Handle network errors or other exceptions
+            console.error('Error:', error);
+          });
+      }
+    } else {
+      // No values to send
+      hideLoader();
+      addBlur();
+      // Get a reference to the confirmation modal
+      var errorModal = document.getElementById('errorModal');
+
+      // Show the Bootstrap confirmation modal
+      errorModal.classList.add('show');
+      errorModal.style.display = 'block';
+
+      // Attach a click event listener to the "OK" button in the modal
+      document.getElementById('closeModal').addEventListener('click', function () {
+        // User clicked OK, so proceed with form submission
+        removeBlur();
+
+        // Close the modal
+        errorModal.classList.remove('show');
+        errorModal.style.display = 'none';
+      });
+
+      // Attach a click event listener to the "Cancel" button in the modal
+      errorModal.querySelector('[data-dismiss="modal"]').addEventListener('click', function () {
+        // User clicked Cancel, do nothing
+        // Close the modal
+        removeBlur();
+        errorModal.classList.remove('show');
+        errorModal.style.display = 'none';
+
+      });
+    }
+  }
+
+
+
+</script>
+
+
+{% endblock %}

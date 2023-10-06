@@ -21,7 +21,7 @@ def validate_file_size(value):
     max_size = 5 * 1024 * 1024
 
     if value.size > max_size:
-        raise ValidationError(_('File size must be up to 5 MB.'))
+        raise ValidationError(('File size must be up to 5 MB.'))
 
 # Validator for checking the supported file extensions
 file_extension_validator = FileExtensionValidator(

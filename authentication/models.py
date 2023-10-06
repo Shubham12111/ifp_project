@@ -122,7 +122,26 @@ class UserRolePermission(models.Model):
         unique_together = ['role', 'module']
   
 class UserManager(BaseUserManager):
+    """
+    Custom manager for the User model.
+
+    Provides methods to create regular users and superusers.
+    """
     def create_user(self, email, password=None, **extra_fields):
+        """
+        Create and save a regular user.
+
+        Args:
+            email (str): The user's email address.
+            password (str): The user's password.
+            **extra_fields: Additional user fields.
+
+        Returns:
+            User: The created user.
+
+        Raises:
+            ValueError: If the email is not provided.
+        """
         if not email:
             raise ValueError('The Email field must be set')
         
@@ -133,12 +152,28 @@ class UserManager(BaseUserManager):
         return user
     
     def create_superuser(self, email, password=None, **extra_fields):
+        """
+        Create and save a superuser.
+
+        Args:
+            email (str): The superuser's email address.
+            password (str): The superuser's password.
+            **extra_fields: Additional superuser fields.
+
+        Returns:
+            User: The created superuser.
+        """
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         
         return self.create_user(email, password, **extra_fields)
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """
+    Custom User model with email as the unique identifier.
+
+    Provides additional fields for user information.
+    """
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)

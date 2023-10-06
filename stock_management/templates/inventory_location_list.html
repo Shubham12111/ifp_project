@@ -17,7 +17,7 @@
             <div class="ms-auto my-auto mt-lg-0 mt-4">
               {% if request.user|has_add_permission:"stock_management" %}
               <a href="{% url 'inventory_location_add' %}" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
-                +&nbsp; Add Inventory Location
+                +&nbsp; New Inventory Location
               </a>
               {% else %}
               <!-- The user doesn't have the permission, so don't show the "Add" button -->
@@ -37,7 +37,10 @@
                   <th>County</th>
                   <th>Country</th>
                   <th>Post Code</th>
+                  {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %}
                   <th class="custom-last-column">Actions</th>
+                  {% endif %}
+
                 </tr>
               </thead>
               <tbody class="ml-4">
@@ -49,6 +52,8 @@
                     <td>{{ inventory_location.county|default:''|title  }}</td>
                     <td>{{ inventory_location.country|default:''|title  }}</td>
                     <td>{{ inventory_location.post_code|default:'' }}</td>
+
+                    {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %} 
                   <td>
                     <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
                       <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
@@ -72,6 +77,8 @@
 
                       {% endif %}
                   </td>
+
+                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>

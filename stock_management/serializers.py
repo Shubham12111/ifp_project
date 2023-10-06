@@ -1,14 +1,15 @@
 from rest_framework import serializers
+from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import UniqueValidator
-
 from infinity_fire_solutions.custom_form_validation import *
-
 from .models import *
 import re
 
-
-
 class VendorSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the Vendor model.
+    """
+    
     first_name = serializers.CharField(
         label=('First Name '),
         required=True,
@@ -24,10 +25,8 @@ class VendorSerializer(serializers.ModelSerializer):
             "required": "This field is required.",
             "blank": "First Name is required.",
             "invalid": "First Name can only contain characters.",
-
         },
     )
-    
     last_name = serializers.CharField(
         label=('Last Name '),
         required=True,
@@ -85,8 +84,6 @@ class VendorSerializer(serializers.ModelSerializer):
         label=('Company'),
         max_length=100,
         required=False,
-        allow_null=True,
-        allow_blank= True,
         style={
             "input_type": "text",
             "autocomplete": "off",
@@ -94,12 +91,16 @@ class VendorSerializer(serializers.ModelSerializer):
             "base_template": 'custom_input.html'
         }
     )
+
+
     class Meta:
         model = Vendor
-        fields = ('first_name','last_name','email','phone_number','company')
-
+        fields = ('first_name', 'last_name', 'email', 'phone_number', 'company')
 
     def validate_first_name(self, value):
+        """
+        Custom validation for the first name field.
+        """
         if not re.match(r'^[a-zA-Z\s]+$', value):
             raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
 
@@ -107,7 +108,7 @@ class VendorSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("First Name should be at least 2 characters long.")
 
         return value
-
+    
     def validate_last_name(self, value):
         if not re.match(r'^[a-zA-Z\s]+$', value):
             raise serializers.ValidationError("Invalid Last Name. Only alphabets and spaces are allowed.")
@@ -119,9 +120,12 @@ class VendorSerializer(serializers.ModelSerializer):
 
 
 class BillingDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the BillingDetail model.
+    """
 
     vat_number = serializers.CharField(
-        label='VAT Number (VAT Number must have 9 digits.)',
+        label=_('VAT Number'),
         max_length=20,
         required=True,
         style={
@@ -131,7 +135,6 @@ class BillingDetailSerializer(serializers.ModelSerializer):
             "base_template": 'custom_input.html'
         },
     )
-    
     tax_preference = serializers.ChoiceField(
         label='Tax Preferences',
         choices= TAX_PREFERENCE_CHOICES,
@@ -144,11 +147,13 @@ class BillingDetailSerializer(serializers.ModelSerializer):
     address = serializers.CharField(
         label='Address',
         max_length=255,
-        min_length=5,
-        required=True,
-        allow_blank=True,
-        allow_null=True,
-        
+        required=False,
+        style={
+           "input_type": "text",
+            "autocomplete": "off",
+            "autofocus": False,
+            
+        },
     )
     country = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.all(),
@@ -171,52 +176,42 @@ class BillingDetailSerializer(serializers.ModelSerializer):
             'base_template': 'custom_select.html'
         },
     )
+
+    
     post_code = serializers.CharField(
-        label='Post Code',
+        label=('Post Code'),
         max_length=7,
         required=False,
-        allow_blank=True,
-        allow_null=True,
         style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
             'base_template': 'custom_input.html'
         },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Post Code is required.",
-          
-        },
-        validators=[validate_uk_postcode] 
+
+        validators=[validate_uk_postcode]
+
     )
-    
+  
     class Meta:
         model = Vendor 
-        fields = ('vat_number','tax_preference','address','town','county','country','post_code')
-
-    
+        fields = ('vat_number', 'tax_preference', 'address', 'town', 'county', 'country', 'post_code')
 
     def validate_vat_number(self, value):
-        # Custom validation for VAT number format (United Kingdom VAT number)
+        """
+        Custom validation for the VAT number field.
+        """
         if not re.match(r'^\d{9}$', value):
             raise serializers.ValidationError("Invalid VAT number format. It should be a 9-digit number.")
         if int(value) == 0:
             raise serializers.ValidationError("Only zeros are not allowed in VAT Number")
         return value
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-
-        # Check if the representation is empty (no records found)
-        if not any(representation.values()):
-            representation = {'message': 'No records found for this vendor.'}
-        else:
-            # Remove None values from the representation
-            representation = {key: value for key, value in representation.items() if value is not None}
-
-        return representation
-
-    
 
 class VendorContactPersonSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the VendorContactPerson model.
+    """
 
     salutation = serializers.ChoiceField(
         label=('Salutation '),
@@ -274,7 +269,6 @@ class VendorContactPersonSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField(
         label=('Email '),
-        validators=[UniqueValidator(queryset=VendorContactPerson.objects.all(), message="Email already exists. Please use a different email.")],
         required=True,
         max_length=100,
         style={
@@ -290,7 +284,7 @@ class VendorContactPersonSerializer(serializers.ModelSerializer):
         },
     )
     phone_number = serializers.CharField(
-        label=('Phone Number'),
+        label=('Phone'),
         max_length=14,
         min_length=10,
         required= True,
@@ -312,26 +306,24 @@ class VendorContactPersonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VendorContactPerson
-        fields = ['salutation','first_name' ,'last_name','email', 'phone_number']
-
-
+        fields = ['salutation', 'first_name', 'last_name', 'email', 'phone_number']
 
 class VendorRemarkSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the VendorRemark model.
+    """
 
     remarks = serializers.CharField(
         label=' ',
         max_length=255,
-        required = False,
+        required=False,
         allow_blank=True,
         allow_null=True,
         style={
            'base_template': 'rich_textarea.html',
         },
-        #  validators=[validate_remarks]
     )
+
     class Meta:
         model = Vendor
-        fields = ['remarks',]
-
-
-
+        fields = ['remarks']

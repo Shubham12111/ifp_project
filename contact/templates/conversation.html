@@ -11,7 +11,7 @@
       <div class="card">
         <div class="card-header pb-0">
 
-          <h5 class="font-weight-bolder">{% if conversation_data %}Edit {% else %} Add {% endif %} Conversation</h5>
+          <h5 class="font-weight-bolder">{% if conversation_data %}Edit {% else %} New {% endif %} Conversation</h5>
 
         </div>
         <form role="form" method="POST" autocomplete="off" class="multisteps-form__form" enctype="multipart/form-data"  onsubmit="showLoader()">
@@ -85,7 +85,7 @@
                     </a>
                   </div>
                 </div>
-                <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ conversation_data.created_at|date:"F d, Y" }}</p>
+                <p class="text-secondary font-weight-bold text-xs mt-1 mb-0">{{ conversation_data.created_at|date:"d/m/Y" }}</p>
                 <p class="text-xs text-dark mt-3 mb-2">
                   {{ conversation_data.message|safe }}
 

@@ -42,7 +42,7 @@ class ItemSerializer(serializers.ModelSerializer):
         required=True, 
         style={
             'base_template': 'custom_input.html',
-            'custom_class':'col-12'
+            # 'custom_class':'col-12'
         },
         error_messages={
             "required": "Item Name is required.",
@@ -151,7 +151,7 @@ class ItemSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = Item
-        fields = ['item_name','category_id','price', 'description', 'units', 'quantity_per_box','reference_number','file_list']
+        fields = ['item_name','category_id','price', 'units','description',  'quantity_per_box','reference_number','file_list']
 
         
     def validate_price(self, value):

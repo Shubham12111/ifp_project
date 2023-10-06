@@ -33,7 +33,7 @@
                   <div class="ms-auto my-auto">
                     {% if request.user|has_add_permission:"purchase_order" %}
                     <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
-                      <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Purchase Order</a>
+                      <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New Purchase Order</a>
                     {% else %}
                       <!-- The user doesn't have the permission, so don't show the "Add" button -->
                     {% endif %}
@@ -164,7 +164,7 @@ let locationisDropdownOpen = false; // Variable to track dropdown open state
 function updateLocationSearchResults(results) {
   locationcurrentSearchResults = results; 
   locationsearchResults.innerHTML = '';
-  console.log(results)
+
   if (results.length > 0) {
     results.forEach(result => {
       const li = document.createElement('li');
@@ -232,44 +232,59 @@ function applyFilter(filterName, filterValue) {
 }
 
 
-// Check URL parameters on page load and update search and filter selections
 window.addEventListener('DOMContentLoaded', function() {
   const filterNames = ['vendor', 'location', 'status'];
   filterNames.forEach(filterName => {
     const filterValue = new URLSearchParams(window.location.search).get(filterName);
-    
+
     if (filterValue) {
       let displayedValue = filterValue; // Default displayed value is the filter value itself
-      
+
       if (filterValue.length > 9) {
         // Truncate the filter value if it's longer than 5 characters
         displayedValue = filterValue.substring(0, 9) + '..';
-        // Update the dropdown element with the displayed value
-        document.getElementById(`${filterName}Dropdown`).textContent = displayedValue.replace(/_/g, ' ');
       }
 
-      
-
+      // Update the dropdown element with the displayed value
+      const dropdownElement = document.getElementById(`${filterName}Dropdown`);
+      if (dropdownElement) {
+        dropdownElement.textContent = displayedValue.replace(/_/g, ' ');
+      }
     }
   });
 });
 
+// JavaScript code to clear single filter on onclick event
+function clearFilter(filterName) {
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.delete(filterName);
+  window.location.href = currentUrl.toString();
+}
 
-  // JavaScript code to clear all the filters
-  function clearAllFilters() {
+// JavaScript code to clear all the filters
+function clearAllFilters() {
   const currentUrl = new URL(window.location.href);
   const queryParams = new URLSearchParams(currentUrl.search);
-  const filterNames = ['vendor', 'location', 'status']; // Add dateRange to the filterNames array
+  const filterNames = ['vendor', 'location', 'status'];
 
   filterNames.forEach(filterName => {
     queryParams.delete(filterName);
-    document.getElementById(`${filterName}Dropdown`).textContent = filterName;
-   
-    
+    const dropdownElement = document.getElementById(`${filterName}Dropdown`);
+    if (dropdownElement) {
+      dropdownElement.textContent = filterName;
+    }
   });
-
   window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
   window.location.reload(); // Reload the page after clearing all filters
+
+
+
+
+  // Remove the dateRange parameter if needed
+  // queryParams.delete('dateRange');
+
+  window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+  // Don't reload the page here
 }
 
 var searchUrl = window.location.href;
@@ -394,12 +409,29 @@ function initializeDataTable(tableId, dataUrl, columnsConfig) {
         });
     }
 }
-// Function to format date from "YYYY-MM-DD" to "Aug 23, 2023" format
 function formatDate(dateString) {
-    var options = { year: 'numeric', month: 'short', day: 'numeric' };
-    var formattedDate = new Date(dateString).toLocaleDateString('en-US', options);
-    return formattedDate;
+  var date = new Date(dateString);
+
+  var day = date.getDate();
+  var month = date.getMonth() + 1; // Months are zero-based, so we add 1
+  var year = date.getFullYear();
+
+  // Add leading zeros to day and month if they are single digits
+  var formattedDay = day < 10 ? '0' + day : day;
+  var formattedMonth = month < 10 ? '0' + month : month;
+
+  // Create a formatted date string in the desired format
+  var formattedDate = formattedDay + '/' + formattedMonth + '/' + year;
+
+  return formattedDate;
 }
+
+// Example usage:
+var inputDate = '03-01-2023'; // Assuming input in "DD-MM-YYYY" format
+var formatted = formatDate(inputDate);
+console.log(formatted); // Output: "01/03/2023"
+
+
 
 // Function to convert string to title case and replace underscores with spaces
 function formatStatus(status) {

@@ -3,17 +3,22 @@
 {% block extra_css %}
 <link id="pagestyle" href="{% static '/assets/css/slider.css' %}" rel="stylesheet" />
 <style>
-    .table td {
-        white-space: normal; /* Use 'normal' to allow text wrapping */
-    }
-     /* Style for table borders */
-     .table-bordered tr:not(:last-child) {
-        border: 1px solid #000; /* Change the color and width as needed */
-    }
+  th, td {
+    border: 1px solid #ddd; /* Add a border to table cells */
+    padding: 8px; /* Adjust cell padding as needed */
+    text-align: left;
+}
 
-    .table-bordered td {
-        border: 1px solid #000; /* Change the color and width as needed */
-    }
+/* Style for the last td element in each row */
+.table tr td:last-child {
+    border: 1px solid #ddd; /* Change the color and width as needed */
+}
+.table> :not(:last-child)> :last-child>*{
+    border: 1px solid #ddd !important; /* Change the color and width as needed */  
+}
+.table tbody tr:last-child td {
+    border: 1px solid #ddd !important;
+}
 </style>
 {% endblock %}
 {% load rest_framework %}
@@ -22,7 +27,7 @@
 {% load custom_tags %}
 {% include 'components/alert.html' %}
 <div class="container-fluid my-3 py-3">
-    <div class="row align-items-center mb-2">
+     <div class="row align-items-center mb-2">
         <div class="col-lg-12 col-sm-8">
             {% if report_instance.pdf_url %}
             <a class="btn bg-gradient-primary btn-sm float-end mt-2 mb-0 mx-2" 
@@ -33,163 +38,118 @@
 
         </div>
     </div>
-    
-    <div class="card h-100">
-        <div class="card-header pb-0">
-            <h5>FRA Actions</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- Left Column with Media Carousel -->
-                <div class="col-md-5">
-                    <div class="sticky-md-top product-sticky">
-                        <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
-                            <div class="carousel-inner bg-light rounded">
-                                {% for item in document_paths %}
-                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                                    <div class="zoomable-media">
-                                        {% if item.is_image %}
-                                        <img src="{{ item.presigned_url }}" class="d-block zoomable-image" alt="Product Image">
-                                        <div class="zoom-controls">
-                                            <i class="fas fa-plus zoom-in-button m-2"></i>
-                                            <i class="fas fa-minus zoom-out-button mx-2"></i>
-                                            <i class="fas fa-sync-alt reset-button mx-2"></i>
+    <div class="row align-items-center mb-2">
+        <div class="card h-100">
+            <div class="card-body">
+            <h4 class="text-center mt-3" style="text-align: center;">Fire Risk Assessment Report</h4>
+            <h6 class='section-header text-center' style="text-align: center;">{{ requirement_instance.customer_id.company_name|title}} Survey Form </h6>
+                <table class="table table-striped  text-sm  mt-4" id="fire_risk_assessment_report">
+                    <tbody> <!-- Use thead for table headers -->
+                        <tr>
+                            <th>Client</th>
+                            <td>{{ requirement_instance.customer_id.first_name }} {{ requirement_instance.customer_id.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Site Address</th>
+                            <td>{{ requirement_instance.site_address }}</td>
+                        </tr>
+                        <tr>
+                            <th>RBNO</th>
+                            <td>{{ requirement_instance.RBNO|default:''|title }}</td>
+                        </tr>
+                        <tr>
+                            <th>UPRN</th>
+                            <td>{{ requirement_instance.UPRN|default:''|title }}</td>
+                        </tr>
+                    </tbody>
+                    <tbody> <!-- Use tbody for table body -->
+                        {% if requirement_instance %}
+                            <tr>
+                                <th>FRA Action </th>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.action }}</td>
+                            </tr>
+                            <tr>
+                                <th>FRA Description </th>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.description }}</td>
+                            </tr>
+
+                            <tr>
+                                <th>Photos of FRA</th>
+                                <td>
+                                    <div class="image-container row">
+                                        {% for requirement_image in document_paths %}
+                                        <div class="col-3 mb-3">
+                                            <img src="{{ requirement_image.presigned_url }}" alt="Requirememt Image" width="90%" class="img-thumbnail">
                                         </div>
-                                        {% endif %}
-                                        {% if item.is_video %}
-                                        <video controls class="d-block zoomable-video">
-                                            <source src="{{ item.presigned_url }}" type="video/mp4">
-                                        </video>
-                                        {% endif %}
+                                        {% endfor %}
                                     </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+                <h5 class='section-header'>Defects</h5>
+                {% for defect in requirement_defects %}
+                <table class="table table-striped " id="fire_risk_assessment_report">
+                    <tbody> <!-- Use tbody for table body -->
+                        <tr class=" text-sm">
+                            <th>Action</th>
+                            <td class="text-wrap  text-sm">{{ defect.action }}</td>
+                        </tr>
+                        <tr class=" text-sm">
+                            <th>Description of Defect</th>
+                            <td class="text-wrap  text-sm">{{ defect.description }}</td>
+                        </tr>
+                        <tr class=" text-sm">
+                            <th>Rectification of Defect</th>
+                            <td class="text-wrap text-sm">{{ defect.rectification_description }}</td>
+                        </tr>
+                        <tr class=" text-sm">
+                            <th>Defect Type</th>
+                            <td>{{ defect.get_defect_type_display}}</td>
+                        </tr>
+                        
+                        {% if requirement_defect_images %}
+                        <tr class=" text-sm">
+                            <th>Photos of Defect</th>
+                            <td>
+                                <div class="image-container row">
+                                    {% for requirement_defect_image in requirement_defect_images %}
+                                        {% if requirement_defect_image.defect_id.id == defect.id %}
+                                        <div class="col-3 mb-3">
+                                                <img src="{{ requirement_defect_image.document_path.url }}" alt="Defect Image" width="900%" class="img-thumbnail">
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
-                            </div>
-                            <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0 mt-0">
-                                {% for item in document_paths %}
-                                {% if item.is_image %}
-                                <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
-                                    <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded border me-4" alt="Product media">
-                                </li>
-                                {% endif %}
-                                {% if item.is_video %}
-                                <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
-                                    <video class="d-block wid-100 zoomable-video rounded border p-2">
-                                        <source src="{{ item.presigned_url }}" type="video/mp4">
-                                    </video>
-                                </li>
-                                {% endif %}
-                                {% endfor %}
-                            </ol>
-                        </div>
-                    </div>
-                </div>
-                <!-- Right Column with Action Details -->
-                <div class="col-lg-7">
-                    <div class="card-body p-0">
-                        <div class="mb-3">
-                            <b>Action</b>
-                            <p class="text-sm mt-2" style="text-align: justify;">
-                                {{ requirement_instance.action }}
-                            </p>
-                        </div>
-                        <div class="mb-3">
-                            <b>Description</b>
-                            <p class="text-sm mt-2" style="text-align: justify;">
-                                {{ requirement_instance.description }}
-                            </p>
-                        </div>
-                        <hr class="horizontal gray-light">
-                        <div class="mb-3">
-                            <table class="table">
-                                <tbody>
-                                    <tr>
-                                        <td><strong class="text-dark">Customer</strong></td>
-                                        <td>{{ requirement_instance.customer_id.first_name|title }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong class="text-dark">Email</strong></td>
-                                        <td>{{ requirement_instance.customer_id.email }}</td>
-                                    </tr>
-                                    {% if requirement_instance.UPRN %}
-                                    <tr>
-                                        <td><strong class="text-dark">UPRN</strong></td>
-                                        <td>{{ requirement_instance.UPRN }}</td>
-                                    </tr>
-                                    {% endif %}
-                                    {% if requirement_instance.RBNO %}
-                                    <tr>
-                                        <td><strong class="text-dark">RBNO</strong></td>
-                                        <td>{{ requirement_instance.RBNO }}</td>
-                                    </tr>
-                                    {% endif %}
-                                    <tr>
-                                        <td><strong class="text-dark">Site Address</strong></td>
-                                        <td>{{ requirement_instance.site_address|title }}</td>
-                                    </tr>
-                                    {% if requirement_instance.surveyor %}
-                                    <tr>
-                                        <td><strong class="text-dark">Surveyor</strong></td>
-                                        <td>{{ requirement_instance.surveyor.first_name|title }} {{ requirement_instance.surveyor.last_name|title }}</td>
-                                    </tr>
-                                    {% endif %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                    <tbody>
+                </table>
+                {% endfor %}
+                    <h5 class='section-header'>Note</h5>
+                    <table class="table table-striped " id="fire_risk_assessment_report">
+                    <tbody>
+                        {% if report_instance.comments %}
+                        <tr class=" text-sm">
+                            <th>Report Comments</th>
+                            <td class="text-wrap text-sm">{{ report_instance.comments }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if report_instance.signature_path %}
+                        <tr class="text-sm">
+                            <th><strong>Signature</strong></th>
+                            <td><img src="{{report_instance.signature_path}}"></td>
+                        </tr>
+                        {% endif %}
+                        
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-    {% for defect in report_instance.defect_id.all %}
-    <div class="card mt-4 mx-0">
-        <div class="card-header pb-0 mt-0">
-            <h5 class="card-title">Defect - {{ forloop.counter }}</h5>
-        </div>
-        <div class="card-body mt-0">
-            <table class="table text-sm ">
-                <tbody>
-                    <tr>
-                        <td><strong>Action</strong></td>
-                        <td>{{ defect.action }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Description</strong></td>
-                        <td>{{ defect.description }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Rectification</strong></td>
-                        <td>{{ defect.rectification_description }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endfor %}
-    <div class="card mt-4 mx-0">
-        <div class="card-body mt-0">
-            <table class="table text-sm ">
-                <tbody>
-                    {% if report_instance.comments %}
-                    <tr>
-                        <td><strong>Report Comments</strong></td>
-                        <td>{{ report_instance.comments }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if report_instance.signature_pathc %}
-                    <tr>
-                        <td><strong>Signature</strong></td>
-                        <td><img src="{{report_instance.signature_path}}"></td>
-                    </tr>
-                    {% endif %}
-                    
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>    
-
-
+</div>
 
 
 {% endblock %}

@@ -56,16 +56,17 @@
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-12 ms-auto text-sm">
-                   <div class="d-flex justify-content-between">
-                        <span class="mb-2 font-weight-bold">PO Number :</span>
-                        <span class="text-dark ms-2">{{purchase_order.po_number}}</span>
-                    </div>
-                    
-                        <div class="d-flex justify-content-between">
-                            <span class="font-weight-bold">Status:</span>
-                            <span class="text-dark ms-2 ">{{purchase_order.get_status_display}}</span>
-                        </div>
+                <div class="col-lg-3 col-xs-12 col-sm-12 col-12">
+                    <ul class="list-group">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+
+                                <span class="mb-2 text-sm">PO No.: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_number}}</span></span>
+                                <span class="mb-2 text-sm">Status: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.get_status_display}}</span></span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
                         
                 </div>
             </div>
@@ -96,7 +97,7 @@
                                         <td class="text-sm text-center">{{item.quantity}} </td>
                                         <td class="text-sm">
                                             <input type="number" class="form-control quantity-input" value="0" data-max="{{item.quantity}}" data-item-id="{{item.id}}" id="" oninput="this.value =!!this.value && Math.abs(this.value) >= 0 ? Math.abs(this.value) : null">
-                                            <p class="error-message text-sm text-danger" style=" display: none;">Exceeds available quantity</p>
+                                            <p class="error-message text-sm text-danger" style=" display: none;">Exceeds available quantity or Received inventory is missing.</p>
                                         </td>
 
                                         <td class="text-sm text-center">{{item.row_total}} </td>
@@ -111,30 +112,27 @@
                     <div class="row mt-2">
                         <div class="col-md-6 ">
                             <div class="row mb-6">
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label for="invoiceNumber">Invoice Number <span class="text-danger">*</span></label>
-                                </div>
-                                <div class="col-md-9 mb-4">
                                     <input type="text" id="invoiceNumber" name="invoice_number" class="form-control" placeholder="Enter Invoice Number" required>
+
                                 </div>
-                                <div class="col-md-3">
+                               
+                                <div class="col-md-6">
                                     <label for="invoiceDate">Invoice Date <span class="text-danger">*</span> </label>
-                                </div>
-                                <div class="col-md-9 mb-4">
                                     <input type="date" id="invoiceDate" name="invoice_date"  class="form-control invoice_date" required>
                                 </div>
-                                <div class="col-md-3">
-                                    <label for="invoicePDF">Invoice PDF</label>
-                                </div>
-                                <div class="col-md-9 mb-4">
-                                    <input type="file" name="file" id="invoicePDF"  class="form-control" accept=".pdf">
-                                </div>
-                                <div class="col-md-3">
-                                    <label for="invoicePDF">Coments</label>
-                                </div>
-                                <div class="col-md-9">
+                                <div class="col-md-12 mt-4">
+                                    <label for="invoicePDF">Comments</label>
                                     <textarea class="form-control comments" rows="6" name="comments" ></textarea>
                                 </div>
+                                <div class="col-md-12 mt-4">
+                                    <label for="invoicePDF">Invoice PDF</label>
+                                    <input type="file" name="file" id="invoicePDF"  class="form-control" accept=".pdf">
+                                    <small class="form-text text-muted">Only pdf formats are supported (pdf).</small> 
+                                </div>
+                               
+                                
                             </div>
     
                             {% if purchase_order.notes %}
@@ -163,7 +161,7 @@
                                 <span class="text-dark ms-2 font-weight-bold">£ {{ purchase_order.tax }}</span>
                             </div>
                             <div class="d-flex justify-content-between mt-4">
-                                <span class="mb-2 text-md font-weight-bolder mb-0 text-end grand-total-value"">Total</span>
+                                <span class="mb-2 text-md font-weight-bolder mb-0 text-end grand-total-value">Total</span>
                                 <span class="font-weight-bolder mb-0 text-end grand-total-value">£ {{ purchase_order.total_amount }}</span>
                         </div>
                     </div>
@@ -188,15 +186,26 @@
  // Check if the datetimepicker element exists
  if (document.querySelector('.invoice_date')) {
     // Get the default value for the datetime picker
-    const defaultDateValue = 'invoice_date';
+    const fieldElement = document.querySelector('.invoice_date');
+    if (fieldElement.value)
+    {
+        var defaultDateValue = fieldElement.value ; 
+    }
+    else
+    {
+        var defaultDateValue;
+    }
+
+    
 
     // Convert the default value to a Date object (if available)
     const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
-
+   
     // Create the flatpickr date-time picker and set the default date to the default value or current date
     flatpickr('.invoice_date', {
-      allowInput: false,
-      defaultDate: defaultDate
+      allowInput: true,
+      defaultDate: defaultDate,
+      dateFormat: "d/m/Y" // Set your desired date format
     });
   }
 
@@ -253,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Clear the error message after 3 seconds
                 setTimeout(() => {
                     rowErrorElement.textContent = "";
-                }, 3000); // 3000 milliseconds = 3 seconds
+                }, 9000); // 3000 milliseconds = 3 seconds
             }
         }
 

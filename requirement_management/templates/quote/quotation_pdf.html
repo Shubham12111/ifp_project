@@ -1,0 +1,143 @@
+{% load requirement_tag %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Quotation</title>
+
+    <style>
+        /* Define your CSS styles here for the invoice */
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 10px;
+        }
+        .invoice {
+            
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+        .invoice-left {
+            width: 50%;
+        }
+        .invoice-right {
+            width: 40%;
+        }
+       
+        .invoice-logo {
+            max-width: 250px;
+        }
+        .invoice-header {
+            text-align: left;
+            margin-bottom: 20px;
+          
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #000; /* Add this line to set a border around the table */
+        }
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #000; /* Add this line to set borders for table cells */
+            padding: 8px;
+            text-align: left;
+        }
+        .invoice-total {
+            text-align: right;
+            margin-top: 25px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice">
+        <div class="invoice-left">
+            <img src="{% static 'assets/img/logo2.png' %}" alt="Company Logo" class="invoice-logo">
+            <div class="company-details">
+                <p>Infinity Fire Prevention Ltd Infinity House</p>
+                <p>38 Riverside,Sir Thomas Longley Road</p>
+                <p>Medway City Estate,Rochester Kent .ME24D</p>
+                <p>Tel:03300102203</p>
+                <p>Fax:03300102204</p>
+                <p>Email: <a href="mailto:customer@example.com">enquiries@infinityfireprevention.com</a></p>
+            </div>
+        </div>
+        <div class="invoice-right">
+            <div class="customer-details">
+                <h2 style="text-align: center;">Quotation</h2>
+                <table class="quotation-table">
+                    <tr>
+                        <td><strong>Client:</strong></td>
+                        <td>{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Client Address:</strong></td>
+                        <td>
+                            {{ customer_address.address }}
+                            {% if customer_address.town %}
+                                {{ customer_address.town.name }},
+                            {% endif %}
+                            {% if customer_address.county %}
+                                {{ customer_address.county.name }},
+                            {% endif %}
+                            {% if customer_address.country %}
+                                {{ customer_address.country.name }}
+                            {% endif %}
+                            {% if customer_address.country.post_code %}
+                                , {{ customer_address.country.post_code }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Job Address:</strong></td>
+                        <td>{{ requirement_instance.site_address }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>UPRN:</strong></td>
+                        <td>{{ requirement_instance.UPRN|default:''|title }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RBNO:</strong></td>
+                        <td>{{ requirement_instance.RBNO|default:''|title }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+    <table class="invoice-table">
+        <thead style="background-color: #ccc;">
+            <tr>
+                <th scope="col" class="pe-2 text-center">SOR Code </th>
+                <th scope="col" class="pe-2 text-center">Defect Action </th>
+                <th scope="col" class="pe-2 text-center">Defect Rectification </th>
+                <th scope="col" class="pe-2 text-center">SOR Description</th>
+                <th scope="col" class="pe-2 text-center">Category</th>
+                <th scope="col" class="pe-2 text-center">Price(£)</th>
+
+            </tr>
+        </thead>
+        <tbody id="sor-items-table">
+            {% for defect_key, value in queryset.quotation_json.defectSorValues.items %}
+            {% for inner_key, item in value.items %}
+            <tr>
+                        <td>{{ item.sor_items.reference_number }}</td>
+                        <td>{{defect_key|get_defect_action|safe}}</td>
+                        <td>{{defect_key|get_defect_rectification|safe}}</td>
+                        <td>{{ item.sor_items.description|safe }}</td>
+                        <td>{{ item.sor_items.category_id }}</td>
+                        <td>{{ item.sor_items.price }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="invoice-total ">
+        <h2 style="text-align: right;">Total (£) : {{queryset.total_amount}} </h2>
+    </div>
+</body>
+</html>
+
+

@@ -6,6 +6,7 @@ from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
 from django.conf import settings
 from stock_management.models import Item
+from django.utils.translation import gettext as _
 
 
 def validate_non_negative(value):
@@ -198,6 +199,7 @@ invoice_file_extension_validator = FileExtensionValidator(
 class PurchaseOrderInvoiceSerializer(serializers.ModelSerializer):
     invoice_date = serializers.DateField(
         required=True,
+        input_formats=['%d/%m/%Y'],
         error_messages={
             "required": "Invoice date is required.",
             "blank": "Invoice date is required.",

@@ -18,7 +18,7 @@
               <div class="ms-auto my-auto mt-lg-0 mt-4">
                 {% if request.user|has_add_permission:"stock_management" %}
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
-                <a href="{% url 'vendor_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Add Vendor</a>
+                <a href="{% url 'vendor_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New Vendor</a>
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
@@ -35,8 +35,10 @@
                   <th>Last Name</th>
                   <th>Email</th>
                   <th>Phone</th>
-                  
+
+                  {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %}
                   <th class="custom-last-column">Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody class="ml-4"> 
@@ -46,6 +48,8 @@
                   <td >{{vendor.last_name|default:''|truncatechars:20|title}}</td>
                   <td >{{vendor.email}}</td>
                   <td >{{vendor.phone_number}}</td>
+
+                  {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %}
                   <td>
                     <div class="dropstart ms-auto pe-0">
                       <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
@@ -73,6 +77,9 @@
                       </ul>
                     </div>
                   </td>
+
+                  {% endif %}
+                  
                 </tr>
               
                 {% endfor %}

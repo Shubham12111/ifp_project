@@ -17,15 +17,45 @@ import os
 import pdfkit
 from django.template.loader import render_to_string
 from infinity_fire_solutions.email import *
+from rest_framework.parsers import FileUploadParser
+import csv
+import chardet
+import pandas as pd
+from datetime import datetime, time
+from django.utils import timezone
 
 
 
 def get_customer_data(customer_id):
-    customer_data = User.objects.filter(id=customer_id).first()
+
+    """
+    Get customer data by customer ID.
+
+    Args:
+        customer_id (int): The ID of the customer.
+
+    Returns:
+        User: The customer data if found, otherwise None.
+    """
+    customer_data = User.objects.filter(id=customer_id, is_active=True,
+                                        roles__name__icontains='customer').first()
     
     return customer_data
 
 def get_selected_defect_data(request, customer_id, pk):
+    """
+    Get selected defect data based on the customer and requirement.
+
+    This function retrieves selected RequirementDefect objects related to the specified customer and requirement.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        customer_id (int): The ID of the customer.
+        pk (int): The ID of the requirement.
+
+    Returns:
+        JsonResponse: A JSON response containing selected defect data.
+    """
     if request.method == 'POST':
         selected_defect_ids = request.POST.getlist('selectedDefectIds')
         # Query RequirementDefect objects related to the customer and requirement
@@ -54,12 +84,25 @@ def get_selected_defect_data(request, customer_id, pk):
 
 
 def requirement_image(requirement_instance):
+    """
+    Get document paths and types (image or video) associated with a requirement.
+
+    This function retrieves document paths and types (image or video) associated with a given requirement.
+
+    Args:
+        requirement_instance (Requirement): The Requirement instance.
+
+    Returns:
+        list: A list of dictionaries containing document paths and types.
+    """
     document_paths = []
     
     for document in RequirementAsset.objects.filter(requirement_id=requirement_instance):
         extension = document.document_path.split('.')[-1].lower()
 
-        is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+        # is_video = extension in ['mp4', 'avi', 'mov']  # Add more video extensions if needed
+        # Remove video upload feature for no support in PDF
+        is_video = False
         is_image = extension in ['jpg', 'jpeg', 'png', 'gif']  # Add more image extensions if needed
         document_paths.append({
             'presigned_url': generate_presigned_url(document.document_path),
@@ -73,6 +116,20 @@ def requirement_image(requirement_instance):
     
 
 def filter_requirements(data_access_value, user, customer=None):
+    """
+    Filter Requirement objects based on data access and user roles.
+
+    This function filters Requirement objects based on the data access value and user roles.
+    It applies appropriate filters to return a queryset of Requirement objects.
+
+    Args:
+        data_access_value (str): The data access value.
+        user (User): The authenticated user.
+        customer (User, optional): The customer for which to filter Requirements. Defaults to None.
+
+    Returns:
+        QuerySet: A filtered queryset of Requirement objects.
+    """
     # Define a mapping of data access values to corresponding filters.
     filter_mapping = {
         "self": Q(user_id=user),
@@ -96,7 +153,21 @@ def filter_requirements(data_access_value, user, customer=None):
     return queryset 
 
 class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
-    
+    """
+    View for listing Requirement customers.
+
+    This view lists Requirement customers, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class (RequirementCustomerSerializer): The serializer class.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        filter_backends (list): The filter backends, including search filter.
+        search_fields (list): The fields for search.
+        template_name (str): The template name for HTML rendering.
+        ordering_fields (list): The fields for ordering.
+    """
+
     serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
@@ -105,12 +176,27 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
+            """
+        Get the queryset of Requirement customers.
+
+        Returns:
+            QuerySet: A queryset of Requirement customers.
+        """
             queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
         
 
 
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for listing Requirement customers.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "fire_risk_assessment", HasListDataPermission, 'list'
         )
@@ -164,8 +250,10 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         Handle both AJAX (JSON) and HTML requests.
         """
         customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
         
         customer_data = User.objects.filter(id=customer_id).first()
+        print(customer_data)
         
         if customer_data:
             # Call the handle_unauthenticated method to handle unauthenticated access.
@@ -180,10 +268,11 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
             quantity_sureveyors = User.objects.filter(roles__in=qs_role)
             
             sureveyors = User.objects.filter(roles__name='surveyor')
-            
 
+            
             if request.accepted_renderer.format == 'html':
-                context = {'requirements':queryset, 'customer_id':customer_id,
+                context = {'requirements':queryset,
+                            'customer_id':customer_id,
                         'quantity_sureveyors': quantity_sureveyors,
                         'customer_data':customer_data,
                         'sureveyors':sureveyors}
@@ -216,8 +305,10 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         If the requirement does not exist, render the HTML template with an empty serializer.
         """
         customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
         
         customer_data = User.objects.filter(id=customer_id).first()
+        print(customer_data)
         
         if customer_data:
             # Call the handle_unauthenticated method to handle unauthenticated access
@@ -250,8 +341,10 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a requirement.
         """
         customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
         
         customer_data = User.objects.filter(id=customer_id).first()
+        print(customer_data)
         
         if customer_data:
             data = request.data
@@ -300,6 +393,18 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
 
 class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    View for displaying and updating Requirement details.
+
+    This view displays the details of a Requirement and handles the submission of Requirement reports.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+        serializer_class (RequirementAddSerializer): The serializer class for Requirement objects.
+        pdf_options (dict): PDF generation options.
+    """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'requirement_detail.html'
     serializer_class = RequirementAddSerializer
@@ -361,6 +466,15 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for displaying Requirement details.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
         customer_id = kwargs.get('customer_id')
         customer_data = User.objects.filter(id=customer_id).first()
         
@@ -396,6 +510,15 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
             
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests for submitting Requirement reports.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The response, either a success message or an error message.
+        """
         instance = self.get_queryset()
         try:
             import base64
@@ -493,7 +616,8 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
 
                     email = Email()
-                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report")
+                    attachment_path = generate_presigned_url(report.pdf_path)
+                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
 
                 
                 
@@ -618,6 +742,11 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             serializer_data['UPRN'] = instance.UPRN
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
+            if not any(file_list) and not any([i.document_path for i in RequirementAsset.objects.filter(requirement_id=instance)]):
+
+                error_message = "Documents cannot be empty, Please upload a document first !"
+                messages.error(request, error_message)
+                return redirect(reverse('customer_requirement_edit', kwargs=kwargs))
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated requirement instance.
@@ -835,6 +964,17 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
 
   
 class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for displaying and handling Requirement Defect details.
+
+    This view displays the details of a Requirement Defect and handles related documents and actions.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+        swagger_schema: None
+    """
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'defect_detail.html'
@@ -862,7 +1002,10 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
 
     def get_documents(self):
         """
-        Get the filtered document_paths.
+        Get the filtered document_paths related to the Requirement Defect.
+
+        Returns:
+            list: A list of document paths with additional information (e.g., video/image flags).
         """
         document_paths = []
         
@@ -886,6 +1029,17 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
     
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for displaying Requirement Defect details.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
         customer_id = self.kwargs.get('customer_id')
 
         customer_data = User.objects.filter(id=customer_id).first()
@@ -1017,8 +1171,26 @@ class RequirementDefectRemoveDocumentView(generics.DestroyAPIView):
 
 
 class RequirementQSAddView(CustomAuthenticationMixin, generics.CreateAPIView):
-    
+    """
+    View for assigning Quantity Surveyor to Requirements.
+
+    This view handles POST requests to assign a Quantity Surveyor to selected Requirements.
+
+    Attributes:
+        serializer_class (Serializer): The serializer class for handling POST request data.
+    """
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests to assign Quantity Surveyor to Requirements.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            HttpResponse: The response, either a success message or an error message.
+        """
         customer_id = kwargs.get('customer_id', None)
             
         try:
@@ -1048,8 +1220,26 @@ class RequirementQSAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
 
 class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
-    
+    """
+    View for assigning Surveyor to Requirements.
+
+    This view handles POST requests to assign a Surveyor to selected Requirements.
+
+    Attributes:
+        serializer_class (Serializer): The serializer class for handling POST request data.
+    """
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST requests to assign Surveyor to Requirements.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            HttpResponse: The response, either a success message or an error message.
+        """
         customer_id = kwargs.get('customer_id', None)
             
         try:
@@ -1075,7 +1265,114 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
         except Exception as e:
             print(e)
             messages.error(request, "Something went wrong !")
-            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
 
+class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    API view to handle CSV file import for requirements.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'requirement_list.html'
+    serializer_class = RequirementAddSerializer
+
+    def post(self, request, *args, **kwargs):
+         # Get customer_id from URL kwargs
+        customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
+        try:
+             # Fetch customer data based on customer_id
+            customer_data = get_customer_data(customer_id)
+            print(customer_data)
+            if customer_data:
+                 # Get the uploaded CSV file
+                csv_file = request.FILES.get('csv_file')
+                print(csv_file)
+                # Check if a file was provided
+                if not csv_file:
+                    messages.error(request, "Please select a file to import")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+
+                # Check if the file extension is in the list of allowed formats
+                allowed_formats = ['csv', 'xls', 'xlsx']
+                file_extension = csv_file.name.split('.')[-1]
+                print(file_extension)
+                if file_extension not in allowed_formats:
+                    messages.error(request, 'Unsupported file format. Please upload a CSV, XLS, or XLSX file.')
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+
+                # Explicitly specify the encoding as ISO-8859-1 (latin1)
+                decoded_file = csv_file.read().decode('ISO-8859-1').splitlines()
+                print(decoded_file)
                 
+                if file_extension == 'csv':
+                    csv_reader = csv.DictReader(decoded_file)
+                else:
+                    # Use pandas to read Excel data
+                    xls = pd.ExcelFile(csv_file)
+                    df = xls.parse(xls.sheet_names[0])  # Assuming you want to read the first sheet
+                    csv_reader = df.to_dict(orient='records')
+
+                success = True  # Flag to track if the import was successful
+                existing_rbno_set = set()  # To store existing RBNO values encountered in the file
+                existing_uprn_set = set()  # To store existing UPRN values encountered in the file
+                for row in csv_reader:
+                    # Extract the date from the CSV row (you may need to format it properly)
+                    csv_date = row.get('date', None)
+                    rbno = row.get('RBNO', '')
+                    uprn = row.get('UPRN', '')
+                    # Check if the RBNO already exists in the database
+                    if rbno and Requirement.objects.filter(RBNO=rbno).exists():
+                        messages.error(request, f"RBNO '{rbno}' already exists.")
+                        success = False
+                        continue
+
+                    # Check if the UPRN already exists in the database
+                    if uprn and Requirement.objects.filter(UPRN=uprn).exists():
+                        messages.error(request, f"UPRN '{uprn}' already exists.")
+                        success = False
+                        continue
+                    serializer_data = {
+                        'action': row.get('action', ''),
+                        'RBNO': rbno,
+                        'UPRN': uprn,
+                        'description': row.get('description', ''),
+                        'site_address': row.get('site_address', ''),
+                        'file_list': [],  # Empty file_list since you want to pass null
+                    }
+                    # Retrieve the customer's site address using the related name
+                    customer_site_address = SiteAddress.objects.filter(user_id=customer_data.id, id=serializer_data['site_address']).first()
+
+                    # Check if the customer's site address matches the one in the CSV
+                    if not customer_site_address:
+                        messages.error(request, "Invalid site address. It does not match the customer's site address.")
+                        success = False
+                        continue
+            
+                    serializer = RequirementAddSerializer(data=serializer_data,context={'request': request})
+                    print(serializer_data)
+
+                    if serializer.is_valid():
+                        serializer.validated_data['user_id'] = request.user 
+                        serializer.validated_data['customer_id'] = customer_data
+                        # print(serializer.data)
+                        requirement = serializer.save()  # Save the requirement
+                        
+                        requirement.update_created_at(csv_date)
+                    else:
+                        success = False
+
+                # Fetch the imported data and pass it to the template
+                if success:
+                    requirements = Requirement.objects.filter(customer_id=customer_data.id)
+                    context = {
+                        'requirements': requirements,
+                    }
+                    messages.success(request,'FRA CSV file imported and data imported successfully.')
+            
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            print(e)
+            messages.error(self.request, "Something went wrong !")
         
+        return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))

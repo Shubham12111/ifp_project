@@ -267,3 +267,12 @@
       float: right; }
     .daterangepicker .calendar.left {
       clear: none !important; } }
+
+
+  /* Common styles for smaller screens (max-width: 730px) and medium screens (max-width: 992px) */
+@media (max-width: 730px), (max-width:1280px) {
+  .responsive-date-filter {
+      width: 100%; /* Set width to 100% for smaller screens */
+      max-width: none;
+  }
+}

@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
+# Quick-start betaelopment settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'customer_management',
     'requirement_management',
     'stock_management',
-    'purchase_order_management'
+    'purchase_order_management',
+    'work_planning_management'
     
 ]
 
@@ -85,7 +86,8 @@ TEMPLATES = [
             ],
             'libraries':  {
                 'custom_tags': 'authentication.templatetags.custom_tags',
-                'inventory_tags': 'stock_management.templatetags.inventory_tags'
+                'inventory_tags': 'stock_management.templatetags.inventory_tags',
+                 'requirement_tag': 'requirement_management.templatetags.requirement_tag'
             }
         },
         
@@ -114,7 +116,14 @@ DATABASES = {
 # settings.py
 REST_FRAMEWORK = {
     # ... other settings ...
-    'EXCEPTION_HANDLER': 'infinity_fire_solutions.exceptions.custom_exception_handler'
+    'EXCEPTION_HANDLER': 'infinity_fire_solutions.exceptions.custom_exception_handler',
+    "DATE_INPUT_FORMATS": [
+        # English date format
+        "%d/%m/%Y",   # DD-MM-YYYY
+        # Added to handle and edge case if date formatting not correctly fixed.
+        "%Y/%m/%d",   # YYYY-MM-DD
+        "%m/%d/%Y",   # MM-DD-YYYY
+    ],
 }
 
 
@@ -155,7 +164,7 @@ USE_TZ = True
 # AWS
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
-STATIC_URL= 'https://ifp-static-uat.s3.eu-west-2.amazonaws.com/static/'
+STATIC_URL= 'https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/'
 #STATIC_URL = '/static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
@@ -186,10 +195,10 @@ AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = '/auth/login/'
 
 #AWS
-AWS_BUCKET_NAME = 'ifp-assets-uat'
+AWS_BUCKET_NAME = 'ifp-assets-beta'
 #supported file
 SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
-IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov']
+IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg']
 IMAGE_SUPPORTED_EXTENSIONS = ["png", "jpg", "jpeg"]
 
 # Include data for English language translations
