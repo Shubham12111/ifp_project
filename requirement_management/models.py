@@ -6,6 +6,10 @@ from django.utils.translation import gettext_lazy as _
 from ckeditor.fields import RichTextField
 from stock_management.models import Category
 from customer_management.models import SiteAddress
+from django.utils import timezone
+from datetime import datetime,time
+
+
 
 
 REQUIREMENT_DEFECT_CHOICES = (
@@ -45,6 +49,16 @@ QUOTATION_STATUS_CHOICES = [
 ]
 
 
+# Choices for Unit
+UNIT_CHOICES = (
+    ('no', 'No'),
+    ('week', 'Week'),
+    ('sqm', 'SqM'),
+    ('lm', 'LM'),
+    ('unit', 'Unit'),
+)
+
+
 class Requirement(models.Model):
     """
     Model for storing requirements.
@@ -82,6 +96,29 @@ class Requirement(models.Model):
 
     def __str__(self):
         return f"{self.customer_id.first_name} {self.customer_id.last_name}'s requirement"
+    
+
+    def update_created_at(self, date_str):
+        """
+        Update the 'created_at' field with a new date.
+        """
+        if date_str:
+            try:
+                if isinstance(date_str, str):
+                    # If date_str is a string (e.g., from a CSV file), parse it into a datetime object
+                    date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                elif isinstance(date_str, datetime):
+                    # If date_str is a datetime object (e.g., from an Excel file), use it directly
+                    date = date_str.date()
+                else:
+                    raise ValueError("Invalid date_str format")
+            
+                # Set the 'created_at' field
+                self.created_at = timezone.make_aware(datetime.combine(date, time.min))
+                self.save()
+            except ValueError as e:
+                # Handle any parsing errors or invalid date formats here
+                print(f"Error parsing date string: {e}")
 
 class RequirementAsset(models.Model):
     """
@@ -231,6 +268,7 @@ class SORItem(models.Model):
     description =  RichTextField(null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     reference_number = models.CharField(max_length=50)
+    units = models.CharField(max_length=20, choices=UNIT_CHOICES, default='no')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -249,8 +287,10 @@ class SORItem(models.Model):
             'name': self.name,
             'price': str(self.price),
             'description':self.description,
-            'reference_number': self.reference_number
+            'reference_number': self.reference_number,
+            'units':self.units
         }
+    
 
 class SORItemImage(models.Model):
     sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)

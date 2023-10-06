@@ -56,7 +56,7 @@
                   <td class="text-sm">{{stw.RBNO}}</td>
                   <td class="text-sm">{{stw.UPRN}}</td>
                   <td class="text-sm">{{stw.status}}</td>
-                  <td class="text-sm">{{stw.created_at|date:"M d, Y"}}</td>
+                  <td class="text-sm">{{stw.created_at|date:"d/m/Y"}}</td>
 
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <td>

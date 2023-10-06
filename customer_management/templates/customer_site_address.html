@@ -31,6 +31,7 @@
             <table class="table table-flush text-dark" id="site-address-list">
                 <thead class="thead-light">
                     <tr>
+                        <th>Address ID</th>
                         <th>Name</th>
                         <th>Address</th>
                         <th>Town</th>
@@ -43,6 +44,7 @@
                 <tbody class="ml-4">
                     {% for site_address in site_address_list %}
                     <tr class="text-sm">
+                        <td>{{ site_address.id}}</td>
                         <td>{{ site_address.site_name|default:''|truncatechars:20 }}</td>
                         <td >{{ site_address.address|default:''|truncatechars:20|title }}</td>
                         <td>{% if site_address.town %}{{ site_address.town.name|title }}{% endif %}</td>

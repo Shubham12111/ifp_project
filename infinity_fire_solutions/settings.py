@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'customer_management',
     'requirement_management',
     'stock_management',
-    'purchase_order_management'
+    'purchase_order_management',
+    'work_planning_management'
     
 ]
 
@@ -163,7 +164,7 @@ USE_TZ = True
 # AWS
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
-STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
+STATIC_URL= 'https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/'
 #STATIC_URL = '/static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
@@ -194,7 +195,7 @@ AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = '/auth/login/'
 
 #AWS
-AWS_BUCKET_NAME = 'ifp-assets-dev'
+AWS_BUCKET_NAME = 'ifp-assets-beta'
 #supported file
 SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
 IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg']
