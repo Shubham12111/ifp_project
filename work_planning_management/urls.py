@@ -21,7 +21,9 @@ urlpatterns = [
     path('stw_customers/<int:customer_id>/<int:stw_id>/defect/detail/<int:defect_id>/', STWDefectDetailView.as_view(), name='customer_stw_defect_detail'),
 
     # sor 
-    path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor'),
+    path('sor/list/', STWDefectView.as_view(), name='stw_sor_list'),
+    path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor')
+
 
 
 

@@ -48,7 +48,6 @@
                 {% endif %}
             </div>
         </div>
-    
             {% include 'components/table_search.html' %}
           </div>
           <div class="card-body px-0 pb-0">
@@ -56,6 +55,7 @@
               <table class="table table-flush text-dark" id="stw-defect-list">
                 <thead class="thead-light">
                   <tr>
+                   
                     <th class="col-3">Type</th>
                                 <th class="col-3">Action</th>
                                 <th>Description</th>
@@ -69,6 +69,7 @@
                 <tbody class="ml-4">
                     {% for defect in stw_defect %}
                     <tr class="text-sm">
+    
                         <td class="align-middle">{{ defect.get_defect_type_display }}</td>
                         <td class="align-middle">{{ defect.action|truncatechars:30 }}</td>
                         <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.description|safe|truncatechars:50 }}</td>
@@ -157,6 +158,7 @@
       });
     }
       
+    
 
 </script>
 
