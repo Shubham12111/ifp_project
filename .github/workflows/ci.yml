@@ -4,16 +4,16 @@ name: Deploy to ECR & EKS
 
 on:
   push:
-    # Trigger the workflow on push events, but only when uat is updated.
-    branches: [uat]
+    # Trigger the workflow on push events, but only when beta is updated.
+    branches: [beta]
 
 env:
   AWS_REGION: eu-west-2  # The AWS region in which the ECR and EKS resources are located.
   ECR_REGISTRY: 591836277216.dkr.ecr.eu-west-2.amazonaws.com  # The URL of the ECR registry.
-  ECR_REPOSITORY: ifp-ecr-uat  # The name of the ECR repository.
+  ECR_REPOSITORY: ifp-ecr-beta  # The name of the ECR repository.
   IMAGE_TAG: latest  # The tag to be used for the Docker image.
-  K8S_DEPLOYMENT: infinity-fire-systems-deployment-uat  # The name of the Kubernetes deployment.
-  K8S_NAMESPACE: infinity-fire-systems-namespace-uat  # The namespace in which the Kubernetes deployment will be created.
+  K8S_DEPLOYMENT: infinity-fire-systems-deployment-beta  # The name of the Kubernetes deployment.
+  K8S_NAMESPACE: infinity-fire-systems-namespace-beta  # The namespace in which the Kubernetes deployment will be created.
   EKS_CLUSTER: infinity-system-eks-cluster # The name of the EKS cluster.
 
 jobs:
