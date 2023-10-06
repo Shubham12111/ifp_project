@@ -1,5 +1,5 @@
 from django.contrib import admin
-from . models import STW 
+from . models import STW ,Job
 
 # Register your models here.
 
@@ -15,3 +15,9 @@ class STWAdmin(admin.ModelAdmin):
 
 
 admin.site.register(STW,STWAdmin)
+
+class JobAdmin(admin.ModelAdmin):
+    list_display = ('quotation', 'created_at', 'updated_at') 
+    list_filter = ('created_at', 'updated_at') 
+    search_fields = ('quotation__title',) 
+admin.site.register(Job, JobAdmin)

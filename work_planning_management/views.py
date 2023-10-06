@@ -19,7 +19,7 @@ from infinity_fire_solutions.response_schemas import create_api_response, conver
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers  import STWAddSerializer
+from .serializers  import STWAddSerializer, JobSerializer
 
 # Create your views here.
 # Define a custom API view for STW search
@@ -486,3 +486,225 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
             messages.error(request, "The specified STW does not exist or you are not authorized to view it.")
             return redirect(reverse('stw_list'))
             
+
+
+
+class JobListView(CustomAuthenticationMixin, generics.ListAPIView):
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    search_fields = []
+    template_name = 'job_list.html'
+
+
+
+    def get_queryset(self):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'    
+        )
+        if isinstance(authenticated_user,HttpResponseRedirect):
+            return authenticated_user    
+        
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        base_queryset = Job.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+
+        Job_type_filter = self.request.GET.get('job_type')
+
+
+        if Job_type_filter:
+            base_queryset = base_queryset.filter(job_type_name = Job_type_filter)
+
+    def get_job_type(self):
+        return Job.objects.all()
+        
+    
+    def get(self,request,*args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"survey", HasListDataPermission, 'list'
+        )
+
+        if isinstance(authenticated_user,HttpResponseRedirect):
+            return authenticated_user
+        
+        queryset = self .get_queryset()
+        job_type = self.get_job_type()
+        job_type_filter = self.request.GET.get('job_type')
+        if request.accepted_renderer.format == 'html':
+            context = {'job': queryset,
+                       'job_type': job_type,
+                       'job_type_filter': job_type_filter}
+            return render_html_response(context, self.template_name)
+        else:
+            serializer = self.serializer_class(queryset,many=True)
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Data retrieved",
+                data=serializer.data
+            )
+
+
+
+class JobAddView(CustomAuthenticationMixin, generics.CreateAPIView):
+    serializer_class = JobSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'add_job.html'
+
+    def get_queryset(self):
+        queryset = Job.objects.filter(pk=self.kwargs.get('pk'),user_id=self.request.user.id).order_by('-created_at').first()
+        return queryset
+    
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"Job", HasCreateDataPermission, 'add'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  
+
+
+        if request.accepted_renderer.format == 'html':
+            context = {'serializer':self.serializer_class()}
+            return render_html_response(context,self.template_name)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                message="GET Method Not Alloweded",)
+        
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add or update a contact.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"job", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        message = "Congratulations! your job has been added successfully."
+        serializer = self.serializer_class(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+            serializer.save()
+
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('job_list'))
+
+            else:
+                # Return JSON response with success message and serialized data
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message=message,
+                                    data=serializer.data
+                                    )
+        else:
+            # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                context = {'serializer':serializer}
+                return render_html_response(context,self.template_name)
+            else:   
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                    message="We apologize for the inconvenience, but please review the below information.",
+                                    data=convert_serializer_errors(serializer.errors))
+class JobUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'add_job.html'
+    serializer_class = JobSerializer
+
+    def get_queryset(self):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "job", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        queryset = Job.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        
+        return queryset
+    
+    def get(self, request, *args, **kwargs):
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            if instance:
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                context = {'serializer': serializer, 'instance': instance}
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('job_list'))
+               
+    def put(self, request, *args, **kwargs):
+        pass
+    def patch(self, request, *args, **kwargs):
+        pass
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        instance = self.get_queryset()
+        if instance:
+            serializer = self.serializer_class(instance=instance, data=data)
+            print(data,"data")
+            if serializer.is_valid():
+                serializer.save()
+                message = "Your Job has been updated successfully!"
+
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    return redirect('job_list')
+                else:
+                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+            else:
+                if request.accepted_renderer.format == 'html':
+                    context = {'serializer': serializer, 'instance': instance}
+                    return render(request, self.template_name, context)
+                else:
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            error_message = "You are not authorized to perform this action"
+            if request.accepted_renderer.format == 'html':
+                messages.error(request, error_message)
+                return redirect('job_list')
+            else:
+                return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
+            
+
+class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+    serializer_class = JobSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'add_job.html'
+
+    def delete(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"job", HasDeleteDataPermission, 'delete'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  
+
+        filter_mapping = {
+            "self": Q(user_id=request.user ),
+            "all": Q(), 
+        }
+
+        queryset = Job.objects.filter(filter_mapping.get(data_access_value, Q()))
+        instance = queryset.filter(pk=self.kwargs.get('pk')).first()
+        if instance:
+            instance.delete()
+            messages.success(request, "Your job has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Your job has been deleted successfully!", )
+        else:
+            messages.error(request, "job not found OR You are not authorized to perform this action.")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="job not found OR You are not authorized to perform this action.", )
+                   
+

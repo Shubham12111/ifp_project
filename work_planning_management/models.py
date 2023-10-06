@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from requirement_management.models import Quotation  
 
 from authentication.models import User
 from customer_management.models import SiteAddress
@@ -44,3 +45,14 @@ class STW(models.Model):
         return f"{self.user_id.first_name} {self.user_id.last_name}'s STW"
 
 
+
+class Job(models.Model):
+    quotation = models.ForeignKey(Quotation, on_delete=models.CASCADE)  
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+    
+
+ 

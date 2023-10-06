@@ -144,3 +144,93 @@ class STWAddSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("UPRN already exists.")
         return value
             
+class JobSerializer(serializers.ModelSerializer):
+
+    UPRN = serializers.CharField(
+        label=('UPRN'),
+        required=True, 
+        max_length=12,
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "UPRN is required.",
+        },
+    )
+
+    RBNO = serializers.CharField(
+        label=('RBNO'),
+        required=True,
+        max_length=12,
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "RBNO is required.",
+        },
+    )
+
+    action = serializers.CharField(
+        required=True, 
+        style={'base_template': 'textarea.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Action is required.",
+            "null": "Action is required."
+        },
+        validators=[action_description],
+        
+    )
+
+    description = serializers.CharField(
+        required=True, 
+        style={'base_template': 'textarea.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Description is required.",
+            "null": "Description is required."
+        },
+        validators=[validate_description],
+        
+    )
+    date = serializers.DateField(
+        required=True, 
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Description is required.",
+            "null": "Description is required."
+        },
+        validators=[validate_description],
+    )
+    Surveyor_name = serializers.CharField(
+        required=True, 
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Description is required.",
+            "null": "Description is required."
+        },
+        validators=[validate_description],
+     )
+    No_of_defects = serializers.IntegerField(
+        required=True, 
+       style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Description is required.",
+            "null": "Description is required."
+        },
+        validators=[validate_description],
+     )
+    Defects_descreption = serializers.CharField(
+        required=True, 
+        style={'base_template': 'textarea.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Description is required.",
+            "null": "Description is required."
+        },
+        validators=[validate_description],
+     )
+    class Meta:
+        model = Job
+        fields = ( 'UPRN', 'RBNO' ,'date','No_of_defects' , 'action','description','Defects_descreption' ,'Surveyor_name')

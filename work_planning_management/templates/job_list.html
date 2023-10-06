@@ -1,0 +1,104 @@
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Approved Quotation List {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex justify-content-between">
+            <div>
+              <h4 class="mb-0">Approved Quotation List</h4>
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-0">
+          <div class="table-responsive">
+            <table class="table table-flush text-dark" id="contact-list">
+              <thead class="thead-light">
+                <tr>
+                  <th class="custom-last-column"></th>
+                  <th>UPRN</th>
+                  <th>RBNO</th>
+                  <th>Action</th>
+                  <th>Description</th>
+                  <th>Date</th>
+                  <th>Surveyor Name</th>
+                  <th>Number of Defects</th>
+                  <th>Defects description and option icon</th>
+                  {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                  {% endif %}
+                </tr>
+              </thead>
+              <tbody class="ml-4">
+                {% for item in approved_quotation %}
+                  <tr class="text-sm">
+                    <td class="text-sm">
+                      <input type="checkbox" class="quotation-checkbox" name="quotation_checkbox" value="{{ item.id }}">
+                    </td>
+                    <td class="text-sm">{{ item.UPRN}}</td>
+                    <td class="text-sm">{{ item.RBNO }}</td>
+                    <td class="text-sm">{{ item.Action }}</td>
+                    <td class="text-sm">{{ item.Description }}</td>
+                    <td class="text-sm">{{ item.Date }}</td>
+                    <td class="text-sm">{{ item.Survayer_name }}</td>
+                    <td class="text-sm">{{ item.Numberofdefects }}</td>
+                    {% comment %} <td class="text-sm">{{ item.Defects description and option icon }}</td> {% endcomment %}
+                    {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                      <td class="custom-last-column">
+                      </td>
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/custom_convert.js' %}"></script>
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+  const stwCheckboxes = document.querySelectorAll('.quotation-checkbox');
+  const createJobButton = document.getElementById("createJobButton");
+
+  // Function to check if at least one checkbox is selected
+  function updateCreateJobButton() {
+    const atLeastOneSelected = Array.from(stwCheckboxes).some(checkbox => checkbox.checked);
+    createJobButton.disabled = !atLeastOneSelected;
+  }
+
+  // Function to handle checkbox change and allow only a single checkbox to be selected
+  function handleCheckboxChange(checkbox) {
+    stwCheckboxes.forEach(cb => {
+      if (cb !== checkbox) {
+        cb.checked = false;
+      }
+    });
+    updateCreateJobButton();
+  }
+
+  // Add event listeners to checkboxes
+  stwCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener("change", function() {
+      handleCheckboxChange(checkbox);
+    });
+  });
+
+  // Initial check
+  updateCreateJobButton();
+});
+</script>
+{% endblock %}
