@@ -40,7 +40,7 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
         get: Handle GET requests for listing requirement reports and rendering HTML responses.
     """
 
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -146,7 +146,7 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
         get: Handle GET requests for displaying a requirement report and rendering HTML responses.
     """
     
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -248,7 +248,7 @@ class ReportEdit(CustomAuthenticationMixin,generics.ListAPIView):
     """
 
     
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -393,11 +393,12 @@ class ReportEdit(CustomAuthenticationMixin,generics.ListAPIView):
                 report_instance.save()
                 
                 # send email to QS
-                if report_instance.requirement_id.quantity_surveyor and instance.surveyor:
+                if report_instance.requirement_id.quantity_surveyor and report_instance.requirement_id.surveyor:
                     context = {'user': report_instance.requirement_id.quantity_surveyor,'surveyor': report_instance.requirement_id.surveyor,'site_url': get_site_url(request) }
 
                     email = Email()
-                    email.send_mail(report_instance.requirement_id.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report")
+                    attachment_path = generate_presigned_url(report_instance.pdf_path)
+                    email.send_mail(report_instance.requirement_id.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
 
                 messages.success(request, "Congratulations! your requirement report has been added successfully. ")
                 return create_api_response(status_code=status.HTTP_404_NOT_FOUND,

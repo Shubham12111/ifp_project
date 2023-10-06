@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from collections import OrderedDict
 from collections.abc import Mapping
+from decimal import Decimal
 
 class CustomerNameField(serializers.RelatedField):
     """
@@ -150,7 +151,7 @@ class RequirementDetailSerializer(serializers.ModelSerializer):
         return data
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class  RequirementCustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
@@ -232,7 +233,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         create: Create a new Requirement instance with associated files.
         update: Update an existing Requirement instance with associated files.
     """
-    
+    # Add a field to accept the date from the CSV file
     action = serializers.CharField(
         required=True, 
         style={'base_template': 'textarea.html'},
@@ -830,6 +831,7 @@ class SORSerializer(serializers.ModelSerializer):
             "required": "Price is required.",
             "invalid": "Price is invalid.",  
             "blank":"Price is required.", 
+            "max_length": "Invalid price and max limit should be 10.",
         },
     )
     
@@ -845,6 +847,20 @@ class SORSerializer(serializers.ModelSerializer):
             "required": "Reference Number is required.",
             "invalid": "Reference Number is invalid.",  
             "blank":"Reference Number is required.", 
+        },
+    )
+    units = serializers.ChoiceField(
+        label=('Units'),
+        choices=UNIT_CHOICES, 
+        required=True,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-6 units'
+        },
+        error_messages={
+            "required": "Units is required.",
+            "invalid": "Units is invalid.",  
+            "blank":"Units is required.", 
         },
     )
     
@@ -872,12 +888,30 @@ class SORSerializer(serializers.ModelSerializer):
         
     class Meta:
         model = SORItem
-        fields = ['name','reference_number','category_id','price', 'description','file_list']
+        fields = ['name','reference_number','category_id','price', 'description','units','file_list']
 
         
     def validate_price(self, value):
+        # Ensure that the price is not empty or None
+        if value is None:
+            raise ValidationError("Price is required.")
+
+        # Ensure that the price is a valid Decimal with 2 decimal places
+        if not isinstance(value, Decimal) and not isinstance(value, int):
+            raise ValidationError("Price is invalid.")
+
+        # Ensure that the price is not negative
         if value < 0:
-            raise serializers.ValidationError("Price cannot be negative.")
+            raise ValidationError("Price cannot be negative.")
+
+        # Ensure that the price has at most 10 digits in total
+        if len(str(value)) > 10:
+            raise ValidationError("Invalid price, max limit should be 10 digits.")
+
+        # Ensure that the price has at most 2 decimal places
+        if value.as_tuple().exponent < -2:
+            raise ValidationError("Price can have at most 2 decimal places.")
+
         return value
 
     def validate_item_name(self, value):

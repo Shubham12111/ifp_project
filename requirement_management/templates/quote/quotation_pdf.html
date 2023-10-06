@@ -110,10 +110,9 @@
     <table class="invoice-table">
         <thead style="background-color: #ccc;">
             <tr>
-                <th scope="col" class="pe-2 text-start ps-2 text-center">SOR Code </th>
-                <th scope="col" class="pe-2 text-start ps-2 text-center">Defect Action </th>
-                <th scope="col" class="pe-2 text-start ps-2 text-center">Defect Action </th>
-                <th scope="col" class="pe-2 text-start ps-2 text-center">Defect Rectification </th>
+                <th scope="col" class="pe-2 text-center">SOR Code </th>
+                <th scope="col" class="pe-2 text-center">Defect Action </th>
+                <th scope="col" class="pe-2 text-center">Defect Rectification </th>
                 <th scope="col" class="pe-2 text-center">SOR Description</th>
                 <th scope="col" class="pe-2 text-center">Category</th>
                 <th scope="col" class="pe-2 text-center">Price(£)</th>
@@ -125,9 +124,9 @@
             {% for inner_key, item in value.items %}
             <tr>
                         <td>{{ item.sor_items.reference_number }}</td>
-                        <td>{{defect_key|get_defect_action}}</td>
-                        <td>{{defect_key|get_defect_rectification}}</td>
-                        <td>{{ item.sor_items.description }}</td>
+                        <td>{{defect_key|get_defect_action|safe}}</td>
+                        <td>{{defect_key|get_defect_rectification|safe}}</td>
+                        <td>{{ item.sor_items.description|safe }}</td>
                         <td>{{ item.sor_items.category_id }}</td>
                         <td>{{ item.sor_items.price }}</td>
                     </tr>

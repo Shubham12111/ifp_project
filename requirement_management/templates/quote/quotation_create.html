@@ -397,9 +397,19 @@
   {% if quotation_data %}
   // Assuming you have a JSON string in quotation_data.quotation_json
   var jsonString = '{{ quotation_data.quotation_json|safe|escapejs }}';
-  var sanitizedJsonString = jsonString.replace(/'/g, '"').replace(/\\xa0/g, '\\u0020');
+ 
+   // will not replace apostrophe's when making '' around key/value to be a valid JSON value
+  var sanitizedJsonString = jsonString.replace(/(\W)'|'(\W)/g, function(match, p1, p2) {
+  return p1 ? p1 + '"' : '"' + p2;
+  sanitizedJsonString = sanitizedJsonString.replace(/\\xa0/g, '\\u0020')
 
-  var savedData = JSON.parse(sanitizedJsonString);
+  });
+  try {
+    var savedData = JSON.parse(sanitizedJsonString);
+    console.log(savedData);
+  } catch (e) {
+    console.error("Error parsing sanitizedJsonString :", e);
+  }
 
   function populateSavedRows(defectId) {
 

@@ -12,11 +12,17 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.core.serializers import serialize
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
+import csv 
+import chardet
+import pandas as pd
+from datetime import datetime, time
+from django.utils import timezone
+from common_app.models import UpdateWindowConfiguration
 
 
 class SORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     
-    serializer_class = CustomerSerializer
+    serializer_class = RequirementCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
@@ -97,13 +103,14 @@ class SORListView(CustomAuthenticationMixin, generics.ListAPIView):
         customer_id = kwargs.get('customer_id')
 
         customer_data = get_customer_data(customer_id)
-
+        # Get the active update window
+        update_window = UpdateWindowConfiguration.objects.filter(is_active=True).first()
         if customer_data:
             # Apply filters and retrieve SOR items for the specified customer
             sor_queryset = SORItem.objects.filter(data_access_filter, customer_id=customer_id).order_by('-created_at')
 
             if request.accepted_renderer.format == 'html':
-                context = {'list_sor': sor_queryset, 'customer_id': customer_id}
+                context = {'list_sor': sor_queryset, 'customer_id': customer_id,'update_window': update_window}
                 return render_html_response(context, self.template_name)
             else:
                 serializer = self.serializer_class(sor_queryset, many=True)
@@ -186,7 +193,6 @@ class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         # Apply an additional filter for customer_id
         if customer_data:
             
-            message = "Congratulations! sor has been added successfully."
             
             data = request.data
             # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
@@ -195,6 +201,10 @@ class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             if file_list is not None and not any(file_list):
                 data = data.copy()
                 del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+
+            # Check if the current date is within the update window
+            update_window = UpdateWindowConfiguration.objects.filter(is_active=True).first()
+            
             serializer = self.serializer_class(data=data)
 
             if serializer.is_valid():
@@ -203,6 +213,13 @@ class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 sor_data = serializer.save()
 
                 sor_data.save()
+
+                if update_window:
+                    message = f"SOR has been added successfully.You can update SOR till {update_window.end_date}."
+                else:
+                    message = "SOR has been added successfully."
+
+            
                 if request.accepted_renderer.format == 'html':
                     messages.success(request, message)
                     return redirect(reverse('customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
@@ -214,7 +231,6 @@ class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                                         data=serializer.data
                                         )
             else:
-
                 # Invalid serializer data
                 if request.accepted_renderer.format == 'html':
                     # Render the HTML template with invalid serializer data
@@ -223,9 +239,11 @@ class SORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 else:   
                     # Return JSON response with error message
                     return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                        message="We apologize for the inconvenience, but please review the below information.",
-                                        data=convert_serializer_errors(serializer.errors))
+                                        message="We apologize for the inconvenience, but please review the below information.",)
+        
+
         else:
+    
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('sor_customers_list', kwargs={'customer_id': customer_id}))
         
@@ -354,7 +372,7 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
             instance = self.get_queryset()
             if instance:
-                # If the SOR instance exists, initialize the serializer with instance and provided data.
+                
                 serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
 
                 if serializer.is_valid():
@@ -377,6 +395,8 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                     else:
                         # For API requests with invalid data, return an error response with serializer errors.
                         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+                
             else:
                 error_message = "You are not authorized to perform this action"
                 if request.accepted_renderer.format == 'html':
@@ -386,6 +406,9 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 else:
                     # For API requests with no instance, return an error response with an error message.
                     return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('sor_customers_list', kwargs={'customer_id': customer_id}))
 
         
 class SORDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
@@ -483,3 +506,90 @@ class SORRemoveImageView(generics.DestroyAPIView):
                 {"message": "SOR Image not found or you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+class SORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'sor/sor_list.html'
+    serializer_class = SORSerializer
+
+    def post(self, request, *args, **kwargs):
+        customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
+        try:
+            customer_data = get_customer_data(customer_id)
+            print(customer_data)
+            if customer_data:
+                csv_file = request.FILES.get('csv_file')
+                print(csv_file)
+                # Check if a file was provided
+                if not csv_file:
+                    messages.error(request, "Please select a file to import")
+                    return redirect(reverse('customer_sor_list', kwargs={'customer_id': customer_id}))
+
+                # Check if the file extension is in the list of allowed formats
+                allowed_formats = ['csv', 'xls', 'xlsx']
+                file_extension = csv_file.name.split('.')[-1]
+                print(file_extension)
+                if file_extension not in allowed_formats:
+                    messages.error(request, 'Unsupported file format. Please upload a CSV, XLS, or XLSX file.')
+                    return redirect(reverse('customer_sor_list', kwargs={'customer_id': customer_id}))
+
+                # Explicitly specify the encoding as ISO-8859-1 (latin1)
+                decoded_file = csv_file.read().decode('ISO-8859-1').splitlines()
+                print(decoded_file)
+                
+                if file_extension == 'csv':
+                    csv_reader = csv.DictReader(decoded_file)
+                else:
+                    # Use pandas to read Excel data
+                    xls = pd.ExcelFile(csv_file)
+                    df = xls.parse(xls.sheet_names[0])  # Assuming you want to read the first sheet
+                    csv_reader = df.to_dict(orient='records')
+
+                success = True  # Flag to track if the import was successful
+                for row in csv_reader:
+                    # Extract the date from the CSV row (you may need to format it properly)
+                    serializer_data = {
+                        'name': row.get('Name', ''),
+                        'reference_number': row.get('SOR code', ''),
+                        'category_id': row.get('Category',''),
+                        'description': row.get('Description', ''),
+                        'price': row.get('Price', ''),
+                        'units': row.get('Unit', ''),
+                        'file_list': [],  # Empty file_list since you want to pass null
+                    }
+                    serializer = SORSerializer(data=serializer_data,context={'request': request})
+                    print(serializer_data)
+
+                    if serializer.is_valid():
+                        serializer.validated_data['user_id'] = request.user 
+                        serializer.validated_data['customer_id'] = customer_data
+                        # print(serializer.data)
+                        serializer.save()  # Save the sor
+                        # Check if the SOR item was updated within the update window
+                        # update_window = UpdateWindowConfiguration.objects.filter(is_active=True).first()
+                        # if update_window and sor_item.updated_at >= update_window.start_date and sor_item.updated_at <= update_window.end_date:
+                        #     message = f"You have updated SOR on {sor_item.updated_at}."
+                        #     messages.success(request, message)
+                    else:
+                        success = False
+                         # Attach serializer errors to the error message
+                        error_message = "Failed to import file.Check the file again.. "
+                        messages.error(request, error_message)
+                        print(serializer.errors)
+
+                # Fetch the imported data and pass it to the template
+                if success:
+                    sor_data = SORItem.objects.filter(customer_id=customer_data.id)
+                    context = {
+                      ' sor_data': sor_data,
+                }
+                    messages.success(request,'SOR CSV file imported and data imported successfully.')
+            
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            print(e)
+            messages.error(self.request, "Something went wrong !")
+        
+        return redirect(reverse('customer_sor_list', kwargs={'customer_id': customer_id}))
