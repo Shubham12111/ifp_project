@@ -34,7 +34,7 @@ class Todo(models.Model):
     """
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="userid")
     module = models.ForeignKey(Module, on_delete=models.CASCADE, null=True)
-    title = models.CharField(max_length=200)
+    title = models.CharField(max_length=250)
     description = RichTextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', help_text='The status of the to-do item.')
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='Low', help_text='The priority of the to-do item.')
