@@ -1,43 +1,82 @@
+
+
+
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %}   {% if is_edit %} Edit {% else %}Add {% endif %} STW {{ block.super }}{% endblock %}
+{% block title %} STW Summary {{ block.super }}{% endblock %}
 {% block content %}
-<!-- base.html -->
-<div class="container-fluid py-4">
-  {% include 'components/alert.html' %}
-   <div class="row">
-        <div class="col-12  m-auto">
-          <form  role="form" method="POST"autocomplete="off" class="multisteps-form__form mb-8" onsubmit="showLoader()">
-                {% csrf_token %}
-              <input type="hidden" name="_method" value="PUT">
-              <!--single form panel-->
-              <div class="card p-3  bg-white js-active" data-animation="FadeIn">
-                  <h5>  {% if is_edit %} Edit {% else %}Add {% endif %} STW</h5>
-                  <div class="multisteps-form__content">
-                      <div class="row mt-3">
-                          {% render_form serializer %}
-                      </div>
-                      <div class="card-footer p-3">
-                          <div class="row mt-2">
-                              <div class="col-6 col-lg-6 m-auto text-end"></div>
-                              <div class="col-md-6 m-auto text-center text-md-end">
-                                  <a class="btn bg-gradient-secondary mb-0 js-btn-prev " href="{% url 'stw_list' %}" title="Back">Back</a>
-                                  <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
+{% include 'components/alert.html' %}
+<div class="container-fluid my-3 py-3">
+  <div class="row">
+    <div class="col-lg-12">
+        <!-- Card Basic Info -->
+        <div class="card" id="basic-info">
+            <div class="card-header">
+              <h5>STW Summary</h5>
+              {% include 'customer_info.html' %}
+            </div>
+            <div class="card-body pt-0">
+             <form role="form"  method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+                  <div class='row'>
+                      {% csrf_token %}
+                      {% render_form serializer %}
+                  </div>
+                 {% if serializer.data.document_paths and  stw_instance %}
+                      {% for document in serializer.data.document_paths %}
+                          <div class="col-lg-12">
+                              <div style="position: relative;">
+                              <a href="{{ document.presigned_url }}" download>
+                                  <span class="text-sm me-2">{{ document.filename }}</span>
+                              </a>
+                              <a href="#" class="delete-icon" onclick="CustomconfirmDelete('{{stw_instance.id}}{{stw_instance.id}}  {{document.id}}',
+                                      'Are you sure you want to delete this STW requirement document?','The STW requirement document has been deleted successfully.',
+                                      '{% url 'remove_stw_document' stw_instance.id  document.id %}')" class="delete-link ms-2" data-title="{{ stw_instance.title}}">
+                                      <i class="fas fa-times-circle text-danger">  </i> 
+                                  </a>
                               </div>
                           </div>
-                      </div>
-                  </div>
-              </div>
-
-            </form>
-            {% include 'components/loader.html' %}
-
-      </div>
+                      {% endfor %}
+                  {% endif %}
+                <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
+                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_stw_list' customer_id %}">Back</a>
+            
+              </form>
+              {% include 'components/loader.html' %}
+        </div>
+    </div>
   </div>
-  {% endblock %}
-  {% block extra_js %}
-  <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-  <script src="{% static 'assets/js/custom_country.js' %}"></script>
-  <script src="{% static 'assets/js/custom_button.js' %}"></script>
- {% endblock %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_country.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+{% if stw_instance %}
+<script>
+  // Get the input element with the name attribute "RBNO"
+  var rbnoInput = document.querySelector('input[name="RBNO"]');
+  // Check if the input value is not empty
+  if (rbnoInput.value) {
+    // If it's not empty, disable the input
+    rbnoInput.disabled = true;
+  } else {
+    // If it's empty, enable the input
+    rbnoInput.disabled = false;
+  }
+  // Get the input element with the name attribute "RBNO"
+  var UPRNInput = document.querySelector('input[name="UPRN"]');
+  // Check if the input value is not empty
+  if (UPRNInput.value) {
+    // If it's not empty, disable the input
+    UPRNInput.disabled = true;
+  } else {
+    // If it's empty, enable the input
+    UPRNInput.disabled = false;
+  }
+
+</script>
+{% endif %}
+
+{% endblock %}

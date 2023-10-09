@@ -75,7 +75,7 @@
     </div>
   </div>
   <div class="row ">
-    <div class="col-lg-7 col-sm-12">
+    <div class="col-lg-6 col-sm-12">
       <!-- Works Description and Defects Section -->
       <div class="card">
         <div class="card-header pb-0 mt-0">
@@ -107,56 +107,52 @@
           </p>
         </div>
       </div>
+
     </div>
-    <div class="col-lg-5 col-sm-12">
+    <div class="col-lg-6 col-sm-12">
       <div class="card">
         <div class="card-header pb-0">
           <h5>Client Details</h5>
         </div>
-        <div class="card-body p-3">
-          <table class="table align-items-center mb-0">
-            <tbody>
-              <tr class="text-sm">
-                <td><strong>Client</strong></td>
-                <td class="text-warp ">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</td>
-              </tr>
-              <tr class="text-sm">
-                <td><strong>Client Email</strong></td>
-                <td class="text-warp ">{{ customer_data.email }}</td>
-              </tr>
-              <tr class="text-sm">
-                <td><strong>Client Address</strong></td>
-                <td>
-                  {{ customer_address.address }}
-                  {% if customer_address.town %}
+        <div class="row">
+          <div class="card-body mt-0 text-sm">
+            <div class="row mb-2">
+              <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">
+                {{ customer_address.address }}
+                {% if customer_address.town %}
                   {{ customer_address.town.name }},
-                  {% endif %}
-                  {% if customer_address.county %}
+                {% endif %}
+                {% if customer_address.county %}
                   {{ customer_address.county.name }},
-                  {% endif %}
-                  {% if customer_address.country %}
+                {% endif %}
+                {% if customer_address.country %}
                   {{ customer_address.country.name }}
-                  {% endif %}
-                  {% if customer_address.country.post_code %}
-                  , {{ customer_address.country.post_code }}
-                  {% endif %}
-                </td>
-              </tr>
-              <tr class="text-sm">
-                <td><strong>Job Address</strong></td>
-                <td class="text-warp">{{ requirement_instance.site_address }}</td>
-              </tr>
-              <tr class="text-sm">
-                <td><strong>UPRN</strong></td>
-                <td class="text-warp">{{ requirement_instance.UPRN|default:''|title }}</td>
-              </tr>
-              <tr class="text-sm">
-                <td><strong>RBNO</strong></td>
-                <td class="text-warp">{{ requirement_instance.RBNO|default:''|title }}</td>
-              </tr>
-            </tbody>
-          </table>
+                {% endif %}
+                {% if customer_address.country.post_code %}
+                  {{ customer_address.country.post_code }}
+                {% endif %}
+              </div>
+            </div>
+            <div class="row mb-2">
+              <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.site_address }}</div>
+            </div>
+            <div class="row">
+              <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.UPRN|default:''|title }}</div>
+            </div>
+            <div class="row">
+              <div class="col-5 text-sm text-start"><strong>RBNO:</strong></div>
+              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.RBNO|default:''|title }}</div>
+            </div>
+          </div>
         </div>
+        
       </div>
     </div>
 
