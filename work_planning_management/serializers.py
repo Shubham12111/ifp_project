@@ -1,6 +1,11 @@
+
+from rest_framework import serializers
+from requirement_management.models import Quotation  
+from authentication.models import User
 import re
 import uuid
 from django.db import transaction
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.html import strip_tags
@@ -19,6 +24,11 @@ from customer_management.models import SiteAddress
 
 from .models import *
 
+
+class QuotationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quotation
+        fields = '__all__'
 
 class CustomFileValidator(FileExtensionValidator):
     def __init__(self, allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS, *args, **kwargs):
@@ -220,6 +230,7 @@ class STWRequirementSerializer(serializers.ModelSerializer):
             if STWRequirements.objects.filter(UPRN=value).exists():
                 raise serializers.ValidationError("UPRN already exists.")
         return value
+
     
     def get_initial(self):
         """
@@ -552,4 +563,3 @@ class STWDefectSerializer(serializers.ModelSerializer):
 
         return representation
     
-

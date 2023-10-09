@@ -3,6 +3,8 @@ from . models import STWRequirements,STWAsset,STWDefect,STWDefectDocument
 
 # Register your models here.
 
+from . models import STW 
+
 
 class STWRequirementsAdmin(admin.ModelAdmin):
     """
@@ -38,4 +40,5 @@ admin.site.register(STWAsset)
 admin.site.register(STWDefect, STWDefectAdmin)
 admin.site.register(STWDefectDocument, STWDefectDocumentAdmin)
 
+admin.site.register(STW,STWAdmin)
 
