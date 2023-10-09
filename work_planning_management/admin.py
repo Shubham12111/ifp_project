@@ -5,6 +5,8 @@ from . models import STW ,Job, STWRequirements,STWAsset,STWDefect,STWDefectDocum
 
 # Register your models here.
 
+from . models import STW 
+
 
 class STWRequirementsAdmin(admin.ModelAdmin):
     """
@@ -40,6 +42,7 @@ admin.site.register(STWAsset)
 admin.site.register(STWDefect, STWDefectAdmin)
 admin.site.register(STWDefectDocument, STWDefectDocumentAdmin)
 
+admin.site.register(STW,STWAdmin)
 
 admin.site.register(STW,STWAdmin)
 

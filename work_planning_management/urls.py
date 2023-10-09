@@ -1,11 +1,20 @@
+# your_app_name/urls.py
+from django.urls import path
+from . import views
+from .views import *
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
 from .views import *
 from django.urls import path
 from django.contrib.auth.decorators import login_required
 
 
 
+
 urlpatterns = [
 
+    path('approved_list/', ApprovedQuotationListView.as_view(), name='approved_quotation_list'),
     path('stw/search/', STWSearchAPIView.as_view(), name='stw_search'),
     path('stw/list/', STWListAPIView.as_view(), name='stw_list'),
     path('stw/add/', STWAddAPIView.as_view(), name='stw_add'),
@@ -34,8 +43,4 @@ urlpatterns = [
     # sor 
     path('sor/list/', STWDefectView.as_view(), name='stw_sor_list'),
     path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor')
-
-    
-
-   
 ]
