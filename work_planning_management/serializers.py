@@ -500,153 +500,36 @@ class STWDefectSerializer(serializers.ModelSerializer):
                 )
             
 
-class JobSerializer(serializers.ModelSerializer):
+class JobListSerializer(serializers.ModelSerializer):
+    UPRN = serializers.SerializerMethodField()
+    RBNO = serializers.SerializerMethodField()
+    Action = serializers.SerializerMethodField()
+    Description = serializers.SerializerMethodField()
+    Date = serializers.SerializerMethodField()
+    Surveyor_Name = serializers.SerializerMethodField()
+    Number_of_Defects = serializers.SerializerMethodField()
 
-    UPRN = serializers.CharField(
-        label=('UPRN'),
-        required=True, 
-        max_length=12,
-        style={'base_template': 'custom_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "UPRN is required.",
-        },
-    )
-
-    RBNO = serializers.CharField(
-        label=('RBNO'),
-        required=True,
-        max_length=12,
-        style={'base_template': 'custom_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "RBNO is required.",
-        },
-    )
-
-    action = serializers.CharField(
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Action is required.",
-            "null": "Action is required."
-        },
-        validators=[action_description],
-        
-    )
-
-    description = serializers.CharField(
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Description is required.",
-            "null": "Description is required."
-        },
-        validators=[validate_description],
-        
-    )
-    date = serializers.DateField(
-        required=True, 
-        style={'base_template': 'custom_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Description is required.",
-            "null": "Description is required."
-        },
-        validators=[validate_description],
-    )
-    Surveyor_name = serializers.CharField(
-        required=True, 
-        style={'base_template': 'custom_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Description is required.",
-            "null": "Description is required."
-        },
-        validators=[validate_description],
-     )
-    No_of_defects = serializers.IntegerField(
-        required=True, 
-       style={'base_template': 'custom_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Description is required.",
-            "null": "Description is required."
-        },
-        validators=[validate_description],
-     )
-    Defects_descreption = serializers.CharField(
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Description is required.",
-            "null": "Description is required."
-        },
-        validators=[validate_description],
-     )
     class Meta:
         model = Job
-        fields = ( 'UPRN', 'RBNO' ,'date','No_of_defects' , 'action','description','Defects_descreption' ,'Surveyor_name')
+        fields = ['UPRN', 'RBNO', 'Action', 'Description', 'Date', 'Surveyor_Name', 'Number_of_Defects']
 
-    def update(self, instance, validated_data):
-        """
-        Update an existing STW Defect instance with associated documents.
+    def get_UPRN(self, obj):
+        return obj.quotation.requirement_id.UPRN
 
-        Args:
-            instance (STWDefect): The existing STW Defect instance to be updated.
-            validated_data (dict): Validated data for updating the stw  Defect instance.
+    def get_RBNO(self, obj):
+        return obj.quotation.requirement_id.RBNO
 
-        Returns:
-            RequirementDefect: The updated STW Defect instance.
-        """
-        file_list = validated_data.pop('file_list', None)
-        
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
-        with transaction.atomic():
-            instance.save()
+    def get_Action(self, obj):
+        return obj.quotation.requirement_id.action
 
-            # Update associated documents if file_list is provided
-            if file_list and len(file_list) > 0:
-                
-                for file in file_list:
-                    unique_filename = f"{str(uuid.uuid4())}_{file.name}"
-                    upload_file_to_s3(unique_filename, file, f'work_planning/{instance.id}/defects')
-                    file_path = f'work_planning/{instance.id}/defects/{unique_filename}'
-                
-                    STWDefectDocument.objects.create(
-                        stw_id=instance.stw_id,
-                        defect_id=instance,
-                        document_path=file_path,
-                    )
-        
-        return instance
-    
-    def to_representation(self, instance):
-        """
-        Serialize the stw Defect instance.
+    def get_Description(self, obj):
+        return obj.quotation.requirement_id.description
 
-        Args:
-            instance (STWDefect): The stw Defect instance.
+    def get_Date(self, obj):
+        return obj.quotation.requirement_id.date
 
-        Returns:
-            dict: The serialized representation of the stw Defect.
-        """
-        representation = super().to_representation(instance)
+    def get_Surveyor_Name(self, obj):
+        return f"{obj.quotation.requirement_id.surveyor.first_name} {obj.quotation.requirement_id.surveyor.last_name}"
 
-        document_paths = []
-        if hasattr(instance, 'stwdefectdocument_set'):
-            for document in STWDefectDocument.objects.filter(defect_id=instance, stw_id=instance.stw_id):
-                document_paths.append({
-                    'presigned_url': generate_presigned_url(document.document_path),
-                    'filename': document.document_path.split('/')[-1],
-                    'id': document.id  #  document ID
-                })
-
-        representation['document_paths'] = document_paths
-
-        return representation
+    def get_Number_of_Defects(self, obj):
+        return obj.quotation.defect_id.count()

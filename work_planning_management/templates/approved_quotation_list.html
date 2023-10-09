@@ -15,7 +15,7 @@
             <div>
               <h4 class="mb-0">Approved Quotation List</h4>
             </div>
-            <a href="" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; Create Job</a>
+            <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Create Job</button>
           </div>
         </div>
         <div class="card-body px-0 pb-0">
@@ -29,23 +29,19 @@
                   <th>Date</th>
                   <th>Surveyor name</th>
                   <th>No of Defects</th>
-                  <th>Defects Description</th>
-                  {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
-                  {% endif %}
                 </tr>
               </thead>
               <tbody class="ml-4">
                 {% for item in approved_quotation %}
                   <tr class="text-sm">
                     <td class="text-sm">
-                      <input type="checkbox" name="requirement_checkbox" value="{{ item.id }}">
+                      <input type="checkbox" class="checkbox-item" name="requirement_checkbox" value="{{ item.id }}">
                     </td>
-                    <td class="text-sm">{{ item.status}}</td>
-                    <td class="text-sm">{{ item.description }}</td>
+                    <td class="text-sm">{{ item.requirement_id.action| safe|truncatechars:20}}</td>
+                    <td class="text-sm">{{ item.requirement_id.description | safe|truncatechars:20 }}</td>
                     <td class="text-sm">{{ item.created_at }}</td>
-                    <td class="text-sm">{{ require.surveyor__first_name }} {{ item.surveyor__last_name }}</td>
-                    <td class="text-sm">{{ item.no_of_defects }}</td>
-                    <td class="text-sm">{{ item.defects_description }}</td>
+                    <td class="text-sm">{{ item.requirement_id.surveyor.email }}</td>
+                    <td class="text-sm">{{ item.defect_id.count }}</td>
                     {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                       <td class="custom-last-column">
                       </td>
@@ -65,6 +61,48 @@
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/custom_convert.js' %}"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const addSurveyorButton = document.getElementById("addSurveyorButton");
+    const checkboxItems = document.querySelectorAll(".checkbox-item");
+
+    // Function to update the button state based on checkbox selection
+    function updateButtonState() {
+      const selectedCheckboxes = document.querySelectorAll(".checkbox-item:checked");
+      const isChecked = selectedCheckboxes.length > 0;
+
+      // Enable or disable the "Create Job" button based on checkbox selection
+      addSurveyorButton.disabled = !isChecked;
+
+      // Disable all other checkboxes when one is checked
+      checkboxItems.forEach(function (checkbox) {
+        checkbox.disabled = isChecked && checkbox !== selectedCheckboxes[0];
+      });
+    }
+
+    // Add event listeners to each checkbox
+    checkboxItems.forEach(function (checkbox) {
+      checkbox.addEventListener("change", updateButtonState);
+    });
+
+    // Add event listener to the "Create Job" button
+    addSurveyorButton.addEventListener("click", function () {
+      const selectedCheckbox = document.querySelector(".checkbox-item:checked");
+      if (selectedCheckbox) {
+        const selectedItemID = selectedCheckbox.value;
+        const createJobURL = window.location.origin + "/work_planning/jobs/add/"
+        const newURL = createJobURL + selectedItemID;
+        window.location.href = newURL;
+      }
+    });
+
+    // Initial button state update
+    updateButtonState();
+  });
+</script>
+
+
 <script>
 if (document.getElementById('contact-list')) {
   const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {

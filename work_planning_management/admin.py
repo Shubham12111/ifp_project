@@ -1,11 +1,6 @@
 from django.contrib import admin
 
-from . models import STW ,Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument
-
-
-# Register your models here.
-
-from . models import STW 
+from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument
 
 
 class STWRequirementsAdmin(admin.ModelAdmin):
@@ -41,11 +36,7 @@ admin.site.register(STWRequirements,STWRequirementsAdmin)
 admin.site.register(STWAsset)
 admin.site.register(STWDefect, STWDefectAdmin)
 admin.site.register(STWDefectDocument, STWDefectDocumentAdmin)
-
-admin.site.register(STW,STWAdmin)
-
-admin.site.register(STW,STWAdmin)
-
+    
 class JobAdmin(admin.ModelAdmin):
     list_display = ('quotation', 'created_at', 'updated_at') 
     list_filter = ('created_at', 'updated_at') 
