@@ -500,66 +500,36 @@ class STWDefectSerializer(serializers.ModelSerializer):
                 )
             
 
-        instance.save()
-        return instance
-    
-    def update(self, instance, validated_data):
-        """
-        Update an existing STW Defect instance with associated documents.
+class JobListSerializer(serializers.ModelSerializer):
+    UPRN = serializers.SerializerMethodField()
+    RBNO = serializers.SerializerMethodField()
+    Action = serializers.SerializerMethodField()
+    Description = serializers.SerializerMethodField()
+    Date = serializers.SerializerMethodField()
+    Surveyor_Name = serializers.SerializerMethodField()
+    Number_of_Defects = serializers.SerializerMethodField()
 
-        Args:
-            instance (STWDefect): The existing STW Defect instance to be updated.
-            validated_data (dict): Validated data for updating the stw  Defect instance.
+    class Meta:
+        model = Job
+        fields = ['UPRN', 'RBNO', 'Action', 'Description', 'Date', 'Surveyor_Name', 'Number_of_Defects']
 
-        Returns:
-            RequirementDefect: The updated STW Defect instance.
-        """
-        file_list = validated_data.pop('file_list', None)
-        
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
-        with transaction.atomic():
-            instance.save()
+    def get_UPRN(self, obj):
+        return obj.quotation.requirement_id.UPRN
 
-            # Update associated documents if file_list is provided
-            if file_list and len(file_list) > 0:
-                
-                for file in file_list:
-                    unique_filename = f"{str(uuid.uuid4())}_{file.name}"
-                    upload_file_to_s3(unique_filename, file, f'work_planning/{instance.id}/defects')
-                    file_path = f'work_planning/{instance.id}/defects/{unique_filename}'
-                
-                    STWDefectDocument.objects.create(
-                        stw_id=instance.stw_id,
-                        defect_id=instance,
-                        document_path=file_path,
-                    )
-        
-        return instance
-    
-    def to_representation(self, instance):
-        """
-        Serialize the stw Defect instance.
+    def get_RBNO(self, obj):
+        return obj.quotation.requirement_id.RBNO
 
-        Args:
-            instance (STWDefect): The stw Defect instance.
+    def get_Action(self, obj):
+        return obj.quotation.requirement_id.action
 
-        Returns:
-            dict: The serialized representation of the stw Defect.
-        """
-        representation = super().to_representation(instance)
+    def get_Description(self, obj):
+        return obj.quotation.requirement_id.description
 
-        document_paths = []
-        if hasattr(instance, 'stwdefectdocument_set'):
-            for document in STWDefectDocument.objects.filter(defect_id=instance, stw_id=instance.stw_id):
-                document_paths.append({
-                    'presigned_url': generate_presigned_url(document.document_path),
-                    'filename': document.document_path.split('/')[-1],
-                    'id': document.id  #  document ID
-                })
+    def get_Date(self, obj):
+        return obj.quotation.requirement_id.date
 
-        representation['document_paths'] = document_paths
+    def get_Surveyor_Name(self, obj):
+        return f"{obj.quotation.requirement_id.surveyor.first_name} {obj.quotation.requirement_id.surveyor.last_name}"
 
-        return representation
-    
+    def get_Number_of_Defects(self, obj):
+        return obj.quotation.defect_id.count()

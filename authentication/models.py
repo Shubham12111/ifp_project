@@ -13,7 +13,7 @@ ACCESS_CHOICES = [
 
 MODULE_CHOICES = [
     ('contact', 'Contacts'),
-    ('todo', 'ToDo'),
+    ('task', 'Task'),
     ('customer', 'Customer'),
     ('estimation', 'Estimation'),
     ('fire_risk_assessment', 'Fire Risk Assessment'),

@@ -5,23 +5,23 @@
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
                         {% if customer_instance %}
-                            <a class="nav-link" href="quotation_report.html">Quotation Reports</a>
+                            <a class="nav-link" href="{% url 'approved_quotation_view' %}">Quotation Reports</a>
                         {% else %}
-                            <a class="nav-link active" href="quotation_report.html">Quotation Reports</a>
+                            <a class="nav-link active" href="{% url 'approved_quotation_view' %}">Quotation Reports</a>
                         {% endif %}
                     </li>
                     <li class="nav-item">
                         {% if customer_instance %}
-                            <a class="nav-link" href="stw.html">STW</a>
+                            <a class="nav-link" href="{% url 'stw_customers_list'%}">STW</a>
                         {% else %}
-                            <a class="nav-link" href="stw.html">STW</a>
+                            <a class="nav-link" href="{% url 'stw_customers_list'%}">STW</a>
                         {% endif %}
                     </li>
                     <li class="nav-item">
                         {% if customer_instance %}
-                            <a class="nav-link" href="jobs.html">Jobs</a>
+                            <a class="nav-link" href="{% url 'jobs_list' %}">Jobs</a>
                         {% else %}
-                            <a class="nav-link" href="jobs.html">Jobs</a>
+                            <a class="nav-link" href="{% url 'jobs_list' %}">Jobs</a>
                         {% endif %}
                     </li>
                 </ul>

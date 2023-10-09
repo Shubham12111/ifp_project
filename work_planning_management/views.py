@@ -1,22 +1,103 @@
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse
 from django.contrib import messages
-from rest_framework.views import APIView
+from decimal import Decimal
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from rest_framework.response import Response
-from rest_framework import generics, permissions, filters,status
-from requirement_management.models import Requirement
+from rest_framework import generics, permissions, filters, status, renderers
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
-from requirement_management.models import Quotation
-from .serializers import QuotationSerializer
-from django.shortcuts import render
-from django.views.generic.base import View
+import json
 from drf_yasg.utils import swagger_auto_schema
-import json 
 
+from requirement_management.models import Requirement, Quotation
+from .serializers import QuotationSerializer
 
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
+from infinity_fire_solutions.aws_helper import *
+from infinity_fire_solutions.permission import *
+from infinity_fire_solutions.utils import docs_schema_response_new
 
-class ApprovedQuotationListView(generics.ListAPIView):
+from .models import *
+from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer
+from requirement_management.serializers import SORSerializer
+from requirement_management.models import SORItem
+from django.http.response import JsonResponse
+
+class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.ListAPIView):
+    
+    """
+    View for listing stw Requirement customers.
+
+    This view lists Quotation customers, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class : The serializer class.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        filter_backends (list): The filter backends, including search filter.
+        search_fields (list): The fields for search.
+        template_name (str): The template name for HTML rendering.
+        ordering_fields (list): The fields for ordering.
+    """
+
+    serializer_class = CustomerSerializer
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    template_name = 'quote_customer_list.html'
+    ordering_fields = ['created_at'] 
+
+    def get_queryset(self):
+            """
+        Get the queryset of stw Requirement customers.
+
+        Returns:
+            QuerySet: A queryset of stw Requirement customers.
+        """
+            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+            return queryset
+        
+
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for listing STW Requirement customers.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
+
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        queryset = self.get_queryset()
+        all_quotes = Quotation.objects.filter()
+        
+        customers_with_counts = []  # Create a list to store customer objects with counts
+
+        for customer in queryset:
+            quote_counts = all_quotes.filter(customer_id=customer).count()
+            customers_with_counts.append({'customer': customer, 'quote_counts': quote_counts})
+
+
+        if request.accepted_renderer.format == 'html':
+            context = {'customers_with_counts': customers_with_counts}  # Pass the list of customers with counts to the template
+            return render_html_response(context, self.template_name)
+        else:
+            serializer = self.serializer_class(queryset, many=True)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
+    
+class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = QuotationSerializer
     filter_backends = [filters.SearchFilter]
@@ -44,37 +125,6 @@ class ApprovedQuotationListView(generics.ListAPIView):
         else:
             messages.error(request, "You are not authorized to perform this action")
             return Response(status=status.HTTP_403_FORBIDDEN)
-
-
-
-
-from django.contrib import messages
-from django.urls import reverse
-from django.shortcuts import render, redirect
-from django.http import Http404, JsonResponse, HttpResponse, HttpResponseRedirect
-from django.conf import settings
-from django.shortcuts import get_object_or_404
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from decimal import Decimal
-from django.views.decorators.csrf import csrf_exempt
-
-from drf_yasg.utils import swagger_auto_schema
-
-from rest_framework import generics, status, filters
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
-
-from infinity_fire_solutions.aws_helper import *
-from infinity_fire_solutions.permission import *
-from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
-from infinity_fire_solutions.utils import docs_schema_response_new
-
-from .models import *
-from .serializers  import STWRequirementSerializer,CustomerSerializer,STWDefectSerializer
-from requirement_management.serializers import SORSerializer
-from requirement_management.models import SORItem
-
 
 
 def get_customer_data(customer_id):
@@ -1354,3 +1404,99 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             messages.error(request, "The specified STW does not exist or you are not authorized to view it.")
             return redirect(reverse('stw_list'))
             
+
+
+
+
+class QuoteJobView(CustomAuthenticationMixin, generics.CreateAPIView):
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'quote_job_view.html'
+    
+    def get_object(self):
+
+        quote = Quotation.objects.filter(id=self.kwargs.get('qoute_id')).get()
+        
+        return quote
+    
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self, "work_planning_management", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  
+
+        query_object = self.get_object()
+
+        if request.accepted_renderer.format == 'html':
+            context = {'query_object': query_object}
+            return render(request, self.template_name, context)
+        else:
+            return create_api_response(
+                status_code=status.HTTP_201_CREATED,
+                message="GET Method Not Allowed",
+            )
+        
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add or update a contact.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"job", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        message = "Congratulations! your job has been added successfully."
+        serializer = self.serializer_class(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+            serializer.save()
+
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('job_list'))
+
+            else:
+                # Return JSON response with success message and serialized data
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message=message,
+                                    data=serializer.data
+                                    )
+        else:
+            # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                context = {'serializer':serializer}
+                return render_html_response(context,self.template_name)
+            else:   
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                    message="We apologize for the inconvenience, but please review the below information.",
+                                    data=convert_serializer_errors(serializer.errors))
+
+class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
+    
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    serializer_class = JobListSerializer
+    filter_backends = [filters.SearchFilter]
+    template_name = 'job_list.html'
+
+    def get_queryset(self):
+
+        queryset = Job.objects.filter()
+
+        return queryset
+    
+    def get(self, request, *args, **kwargs):
+        customer_id = self.request.query_params.get('customer_id')
+        queryset = self.get_queryset()
+        customer_data = {}
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'queryset': queryset,                }
+            return render(request, self.template_name, context)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
