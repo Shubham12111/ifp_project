@@ -63,7 +63,7 @@
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script>
-if (document.getElementById('stw-customer-list')) {
+  if (document.getElementById('stw-customer-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#stw-customer-list", {
       searchable: true,
       fixedHeight: false,
@@ -75,14 +75,21 @@ if (document.getElementById('stw-customer-list')) {
     if (dataTableTop) {
       dataTableTop.parentNode.removeChild(dataTableTop);
     }
+
     const searchInput = document.getElementById('searchInput');
-      searchInput.addEventListener('input', function() {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
+    searchInput.addEventListener('input', function() {
+      const searchText = searchInput.value.toLowerCase();
+      dataTableSearch.search(searchText).draw();
+    });
+
+    // Highlight the currently selected page
+    const pages = document.querySelectorAll('.dataTable-pagination .dataTable-page');
+    pages.forEach(page => {
+      page.addEventListener('click', function() {
+        pages.forEach(p => p.classList.remove('selected'));
+        page.classList.add('selected');
       });
+    });
   }
-
-
-
 </script>
 {% endblock %}
