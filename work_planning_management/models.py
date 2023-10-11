@@ -48,6 +48,8 @@ class STWRequirements(models.Model):
     RBNO = models.CharField(max_length=255, null=True)
     description = models.TextField()
     action = models.TextField()
+    building_name = models.CharField(max_length=255, null=True)
+    postcode = models.CharField(max_length=255)
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=30,choices = STW_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
