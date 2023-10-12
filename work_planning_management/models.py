@@ -27,6 +27,12 @@ STW_DEFECT_CHOICES=(
     ('recommended', 'Recommended Defect'),
 )
 
+
+RLO_STATUS_CHOICES = (
+    ('approved', 'Approved'),
+    ('pending', 'Pending'),
+    ('rejected', 'Rejected')
+)
 class STWRequirements(models.Model):
     """
     Model for storing STW.
@@ -141,3 +147,36 @@ class Job(models.Model):
 
     def __str__(self):
         return f" Job {self.id} for {self.quotation.id}"
+    
+class RLOLetterTemplate(models.Model):
+    name = models.CharField(max_length=100, null=True)
+    site_address_info = models.TextField(null=True)
+    company_info = models.TextField(null=True)
+    main_content_block = models.TextField(null=True)
+    complete_template = models.TextField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('RLO Letter Template')
+        verbose_name_plural = _('RLO Letter Templates')
+
+    def __str__(self):
+        return self.name
+
+class RLO(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rlo_user')
+    name = models.CharField(max_length=100, null=True)
+    status = models.CharField(max_length=30, choices=RLO_STATUS_CHOICES, default='pending')
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    base_template = models.ForeignKey(RLOLetterTemplate, on_delete=models.CASCADE, null=True)
+    edited_content =  models.TextField(blank=True, null=True)  # New field to store edited template content 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('RLO')
+        verbose_name_plural = _('RLO')
+
+    def __str__(self):
+        return self.name
