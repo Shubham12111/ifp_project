@@ -8,6 +8,7 @@ from drf_yasg import openapi
 from .views import *
 from django.urls import path
 from django.contrib.auth.decorators import login_required
+from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,DocumentView
 
 
 
@@ -42,5 +43,13 @@ urlpatterns = [
 
     # sor 
     path('sor/list/', STWDefectView.as_view(), name='stw_sor_list'),
-    path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor')
+    path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor'),
+
+
+    # sitepack 
+    path('sitepack/document/list/', DocumentListView.as_view(), name='sitepack_document_list'),
+    path('sitepack/document/add/',DocumentAddView.as_view(),name="document_add"),
+    path('sitepack/document/delete/<int:pk>/',DocumentDeleteView.as_view(),name="document_delete"),
+    path('sitepack/document/view/<int:pk>/',DocumentView.as_view(),name="document_view")
+
 ]

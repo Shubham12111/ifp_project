@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument
+from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,SitepackDocument,SitepackAsset
 
 
 class STWRequirementsAdmin(admin.ModelAdmin):
@@ -32,10 +32,14 @@ class STWDefectDocumentAdmin(admin.ModelAdmin):
     list_display = ('stw_id', 'defect_id', 'document_path')
 
 
+
+
 admin.site.register(STWRequirements,STWRequirementsAdmin)
 admin.site.register(STWAsset)
 admin.site.register(STWDefect, STWDefectAdmin)
 admin.site.register(STWDefectDocument, STWDefectDocumentAdmin)
+admin.site.register(SitepackDocument)
+admin.site.register(SitepackAsset)
     
 class JobAdmin(admin.ModelAdmin):
     list_display = ('quotation', 'created_at', 'updated_at') 
