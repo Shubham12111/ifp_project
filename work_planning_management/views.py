@@ -1620,3 +1620,56 @@ class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         else:
             return create_api_response(status_code=status.HTTP_204_NO_CONTENT,
                                        message="Job deleted successfully.")
+        
+
+class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    View for retrieving job details.
+
+    This view retrieves details of a job, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class (JobSerializer): The serializer class for the job.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+    """
+
+    serializer_class = JobListSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'job_detail.html'
+
+    def get_queryset(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        # Your queryset logic to filter jobs goes here
+        queryset = Job.objects.all()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        job_id = self.kwargs.get('job_id')
+        queryset = self.get_queryset()
+
+        try:
+            job = queryset.get(id=job_id)
+        except Job.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Additional job data can be retrieved here based on your requirements
+        # For example, get related data or perform other queries to obtain additional job details
+
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'job': job,
+                # Add more job-related data to the context as needed
+            }
+            return render(request, self.template_name, context)
+        else:
+            serializer = self.serializer_class(job)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
