@@ -43,6 +43,24 @@ urlpatterns = [
     # sor 
     path('sor/list/', STWDefectView.as_view(), name='stw_sor_list'),
     path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor'),
+    path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor'),
+    path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor'),
+
+    # Members URLs
+    path('members/', MembersListView.as_view(), name='members_list'),
+    path('members/form/', MemberFormView.as_view(), name='member_form'),
+    path('members/add/<int:qoute_id>/', MemberFormView.as_view(), name='members_add'),
+    path('members/edit/<int:pk>/', MemberEditView.as_view(), name='member_edit'),
+    path('members/delete/<int:member_id>/', MemberDeleteView.as_view(), name='member_delete'),
+    path('members/<int:member_id>/view/<int:pk>/', views.MemberDetailView.as_view(), name='member_detail'),
+
+
+    # Teams URLs
+    path('teams/', TeamsListView.as_view(), name='teams_list'),
+    path('teams/create/', TeamAddView.as_view(), name='team_create'),
+    path('team_edit/<int:team_id>/', views.TeamEditView.as_view(), name='team_edit'),
+    path('teams/<int:pk>/', views.TeamDeleteView.as_view(), name='team_delete'),
+    path('teams/<int:pk>/', views.TeamDetailView.as_view(), name='team_detail'),
 
 
     # RLO views:-

@@ -21,6 +21,7 @@ from authentication.models import User
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 from customer_management.models import SiteAddress
+from rest_framework.validators import UniqueValidator
 
 from .models import *
 
@@ -65,7 +66,6 @@ class SiteAddressField(serializers.PrimaryKeyRelatedField):
     """
     Primary key related field for SiteAddress model.
 
-    This field is used for relating SiteAddress model instances to other models.
 
     Methods:
         get_queryset: Get the queryset for SiteAddress instances.
@@ -558,3 +558,117 @@ class JobListSerializer(serializers.ModelSerializer):
 
     def get_Number_of_Defects(self, obj):
         return obj.quotation.defect_id.count()
+    
+
+class MemberSerializer(serializers.ModelSerializer):
+
+    name = serializers.CharField(
+        label=('Name'),
+        required=True,
+        max_length=50,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "First Name is required.",
+            "invalid": "First Name can only contain characters.",
+        },
+        validators=[validate_first_name] 
+    )
+
+
+    address = serializers.CharField(
+        label=('Address'),
+        max_length=255,
+        min_length=5,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+        style={'base_template': 'textarea.html'}  
+    )
+
+    trade_type = serializers.CharField(
+        label='Trade/Type',
+        required=True,
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Trade/Type is required.",
+        },
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+
+    mobile_number = serializers.CharField(
+        label=('Phone Number'),
+        max_length=14,
+        min_length=10,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        style={
+            'base_template': 'custom_input.html'
+        },
+        validators=[validate_phone_number] 
+    )
+
+    email = serializers.EmailField(
+        label=('Email'),
+        validators=[UniqueValidator(queryset=User.objects.all(), message="Email already exists. Please use a different email.")],
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "email",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Email is required.",
+        },
+    )
+    job_title = serializers.CharField(
+        label='Job Title',
+        required=True,
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Job Title is required.",
+        },
+          style={
+            'base_template': 'custom_input.html'
+        },
+    )
+
+    class Meta:
+        model = Member 
+        fields = ('name', 'email','mobile_number', 'trade_type','address', 'job_title' )
+
+class TeamSerializer(serializers.ModelSerializer):
+    team_name = serializers.CharField(
+        label='Team Name',
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Team Name is required.",
+        }
+    )
+
+
+    class Meta:
+        model = Team
+        fields = "__all__"  # You can specify the fields you want explicitly if needed

@@ -1,7 +1,6 @@
 from django.db import models
 
 
-# Create your models here.
 
 from django.utils.translation import gettext_lazy as _
 from requirement_management.models import Quotation  
@@ -182,3 +181,22 @@ class RLO(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Member(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.TextField()
+    trade_type = models.CharField(max_length=50)
+    mobile_number = models.CharField(max_length=15)
+    email = models.EmailField()
+    job_title = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+class Team(models.Model):
+    team_name = models.CharField(max_length=100)
+    members = models.ManyToManyField(Member)  
+
+    def __str__(self):
+        return self.team_name
