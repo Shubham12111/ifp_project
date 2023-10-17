@@ -19,7 +19,7 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer
+from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer
 from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
 from django.http.response import JsonResponse
@@ -1412,6 +1412,7 @@ class QuoteJobView(CustomAuthenticationMixin, generics.CreateAPIView):
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'quote_job_view.html'
+    serializer_class = JobListSerializer
     
     def get_object(self):
 
@@ -1421,43 +1422,47 @@ class QuoteJobView(CustomAuthenticationMixin, generics.CreateAPIView):
     
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self, "work_planning_management", HasCreateDataPermission, 'add'
+           self, "survey", HasCreateDataPermission, 'add'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  
 
         query_object = self.get_object()
+        print(query_object)
+        if query_object:
 
-        if request.accepted_renderer.format == 'html':
-            context = {'query_object': query_object}
-            return render(request, self.template_name, context)
+            if request.accepted_renderer.format == 'html':
+                context = {'query_object': query_object}
+                return render(request, self.template_name, context)
+            else:
+                return create_api_response(
+                    status_code=status.HTTP_201_CREATED,
+                    message="GET Method Not Allowed",
+                )
         else:
-            return create_api_response(
-                status_code=status.HTTP_201_CREATED,
-                message="GET Method Not Allowed",
-            )
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('approved_quotation_view'))
         
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request to add or update a contact.
+        Handle POST request to add or update a job.
         """
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"job", HasCreateDataPermission, 'add'
-        )
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         message = "Congratulations! your job has been added successfully."
-        serializer = self.serializer_class(data=request.data)
+        job_data = Quotation.objects.get(id=self.kwargs.get('qoute_id'))
+
+        # Create a serializer instance with the request data
+        serializer = JobListSerializer(data=request.data)
+        # serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid():
-            serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+            # serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+            serializer.validated_data['quotation'] = job_data
             serializer.save()
 
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
-                return redirect(reverse('job_list'))
+                return redirect(reverse('jobs_list'))
 
             else:
                 # Return JSON response with success message and serialized data
@@ -1500,6 +1505,81 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             messages.error(request, "You are not authorized to perform this action")
             return Response(status=status.HTTP_403_FORBIDDEN)
         
+
+
+class AddJobView(CustomAuthenticationMixin, generics.CreateAPIView):
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'stw_job_view.html'
+    serializer_class = AddJobSerializer
+    
+    def get_object(self):
+        stw = STWRequirements.objects.filter(id=self.kwargs.get('stw_id')).get()
+        return stw
+    
+    
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self, "survey", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  
+
+        query_object = self.get_object()
+        print(query_object)
+        if query_object:
+
+            if request.accepted_renderer.format == 'html':
+                context = {'query_object': query_object}
+                return render(request, self.template_name, context)
+            else:
+                return create_api_response(
+                status_code=status.HTTP_201_CREATED,
+                message="GET Method Not Allowed",
+            )
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('stw_customers_list'))
+        
+        
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add or update a stw job.
+        """
+
+        message = "Congratulations! your STW Job has been added successfully."
+        # Get the STWRequirement object based on the stw_id
+        stw_requirement = STWRequirements.objects.get(id=self.kwargs.get('stw_id'))
+
+        # Create a serializer instance with the request data
+        serializer = AddJobSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            # Assign the STWRequirement to the STWJob instance
+            serializer.validated_data['stw'] = stw_requirement
+
+            serializer.save()
+
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('jobs_list'))
+
+            else:
+                # Return JSON response with success message and serialized data
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message=message,
+                                    data=serializer.data
+                                    )
+        else:
+            # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                context = {'serializer':serializer}
+                return render_html_response(context,self.template_name)
+            else:   
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                    message="We apologize for the inconvenience, but please review the below information.",
+                                    data=convert_serializer_errors(serializer.errors))
+
 class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     View for listing job Requirement customers.
@@ -1673,3 +1753,4 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
             return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
+

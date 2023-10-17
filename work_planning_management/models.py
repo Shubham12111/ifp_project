@@ -33,6 +33,7 @@ RLO_STATUS_CHOICES = (
     ('pending', 'Pending'),
     ('rejected', 'Rejected')
 )
+
 class STWRequirements(models.Model):
     """
     Model for storing STW.
@@ -149,7 +150,20 @@ class Job(models.Model):
 
     def __str__(self):
         return f" Job {self.id} for {self.quotation.id}"
-    
+
+
+
+class STWJob(models.Model):
+    stw = models.ForeignKey(STWRequirements,on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('STW Job')
+        verbose_name_plural = _('STW Job')
+    def __str__(self):
+        return f" Job {self.id} for STW{self.stw.id}"
+        
 
 class SitepackDocument(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_pack_user')
@@ -178,9 +192,7 @@ class RLOLetterTemplate(models.Model):
     company_info = models.TextField(null=True)
     main_content_block = models.TextField(null=True)
     complete_template = models.TextField(null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
         verbose_name = _('RLO Letter Template')
         verbose_name_plural = _('RLO Letter Templates')

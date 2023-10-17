@@ -46,6 +46,10 @@ urlpatterns = [
     path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor'),
 
 
+
+    # add job for stw
+    path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
+
     # RLO views:-
     path('RLO/list/', RLOListView.as_view(), name='rlo_list'),
     path('RLO/add/',RLOAddView.as_view(),name='rlo_add'),
@@ -59,5 +63,6 @@ urlpatterns = [
     path('sitepack/document/add/',DocumentAddView.as_view(),name="document_add"),
     path('sitepack/document/delete/<int:pk>/',DocumentDeleteView.as_view(),name="document_delete"),
     path('sitepack/document/view/<int:pk>/',DocumentView.as_view(),name="document_view")
+
 
 ]
