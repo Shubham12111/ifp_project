@@ -67,13 +67,13 @@
                         </a>
                         <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
 
-                             {% if request.user|has_view_permission:"survey" %} 
+                             {% comment %} {% if request.user|has_view_permission:"survey" %} 
                                 <li>
                                   <a href="{% url 'document_view' doc.pk %}" class="dropdown-item border-radius-md">
                                     View
                                   </a>
                                 </li>
-                              {% endif %} 
+                              {% endif %}  {% endcomment %}
 
 
                         {% if request.user|has_delete_permission:"survey" %}

@@ -305,7 +305,7 @@ class DocumentView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     Supports both HTML and JSON response formats.
     """
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
-    template_name = 'site_packs/document_detail.html'
+    template_name = 'site_packs/document_details.html'
     serializer_class = DocumentSerializer
 
     def get_queryset(self):
