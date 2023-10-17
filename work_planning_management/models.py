@@ -150,6 +150,28 @@ class Job(models.Model):
     def __str__(self):
         return f" Job {self.id} for {self.quotation.id}"
     
+
+class SitepackDocument(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_pack_user')
+    name = models.CharField(max_length=255, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"name -{self.name}"
+    
+
+class SitepackAsset(models.Model):
+    sitepack_id = models.ForeignKey(SitepackDocument, on_delete=models.CASCADE)
+    document_path = models.CharField(max_length=256)
+    create_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('Sitepack Asset')
+        verbose_name_plural = _('Sitepack Asset')
+
+
 class RLOLetterTemplate(models.Model):
     name = models.CharField(max_length=100, null=True)
     site_address_info = models.TextField(null=True)
@@ -182,3 +204,4 @@ class RLO(models.Model):
 
     def __str__(self):
         return self.name
+
