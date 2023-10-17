@@ -27,6 +27,13 @@ STW_DEFECT_CHOICES=(
     ('recommended', 'Recommended Defect'),
 )
 
+
+RLO_STATUS_CHOICES = (
+    ('approved', 'Approved'),
+    ('pending', 'Pending'),
+    ('rejected', 'Rejected')
+)
+
 class STWRequirements(models.Model):
     """
     Model for storing STW.
@@ -48,6 +55,8 @@ class STWRequirements(models.Model):
     RBNO = models.CharField(max_length=255, null=True)
     description = models.TextField()
     action = models.TextField()
+    building_name = models.CharField(max_length=255, null=True)
+    postcode = models.CharField(max_length=255)
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
     status = models.CharField(max_length=30,choices = STW_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -143,6 +152,7 @@ class Job(models.Model):
         return f" Job {self.id} for {self.quotation.id}"
 
 
+
 class STWJob(models.Model):
     stw = models.ForeignKey(STWRequirements,on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -151,6 +161,59 @@ class STWJob(models.Model):
     class Meta:
         verbose_name = _('STW Job')
         verbose_name_plural = _('STW Job')
-
     def __str__(self):
         return f" Job {self.id} for STW{self.stw.id}"
+        
+
+class SitepackDocument(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_pack_user')
+    name = models.CharField(max_length=255, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"name -{self.name}"
+    
+
+class SitepackAsset(models.Model):
+    sitepack_id = models.ForeignKey(SitepackDocument, on_delete=models.CASCADE)
+    document_path = models.CharField(max_length=256)
+    create_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('Sitepack Asset')
+        verbose_name_plural = _('Sitepack Asset')
+
+
+class RLOLetterTemplate(models.Model):
+    name = models.CharField(max_length=100, null=True)
+    site_address_info = models.TextField(null=True)
+    company_info = models.TextField(null=True)
+    main_content_block = models.TextField(null=True)
+    complete_template = models.TextField(null=True)
+    
+    class Meta:
+        verbose_name = _('RLO Letter Template')
+        verbose_name_plural = _('RLO Letter Templates')
+
+    def __str__(self):
+        return self.name
+
+class RLO(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rlo_user')
+    name = models.CharField(max_length=100, null=True)
+    status = models.CharField(max_length=30, choices=RLO_STATUS_CHOICES, default='pending')
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    base_template = models.ForeignKey(RLOLetterTemplate, on_delete=models.CASCADE, null=True)
+    edited_content =  models.TextField(blank=True, null=True)  # New field to store edited template content 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('RLO')
+        verbose_name_plural = _('RLO')
+
+    def __str__(self):
+        return self.name
+

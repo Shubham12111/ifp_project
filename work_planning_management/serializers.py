@@ -164,6 +164,31 @@ class STWRequirementSerializer(serializers.ModelSerializer):
         },
     )
 
+    building_name = serializers.CharField(
+        label=('Building Name'),
+        required=True, 
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Building Name is required.",
+            "null": "Building Name is required."
+        },
+        
+    )
+
+    postcode = serializers.CharField(
+        label=('Post Code'),
+        max_length=7,
+        required=True,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_input.html'
+        },
+   validators=[validate_uk_postcode]
+    )
+
     file_list = serializers.ListField(
         child=serializers.FileField(
             allow_empty_file=False,
@@ -191,7 +216,7 @@ class STWRequirementSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = STWRequirements
-        fields = ('RBNO','UPRN','action','description', 'site_address','file_list')
+        fields = ('RBNO','UPRN','action','description', 'site_address','building_name','postcode','file_list')
     
     def validate_RBNO(self, value):
         """
