@@ -10,7 +10,7 @@ class STWRequirementsAdmin(admin.ModelAdmin):
     Attributes:
         list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
     """
-    list_display = ('user_id','customer_id', 'action', 'description', 'status', 'RBNO')
+    list_display = ('building_name','postcode', 'action', 'description', 'status', 'RBNO')
 
 class STWDefectAdmin(admin.ModelAdmin):
     """
