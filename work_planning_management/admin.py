@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,SitepackDocument,SitepackAsset
+from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,SitepackDocument,SitepackAsset
 
 
 class STWRequirementsAdmin(admin.ModelAdmin):
@@ -10,7 +10,7 @@ class STWRequirementsAdmin(admin.ModelAdmin):
     Attributes:
         list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
     """
-    list_display = ('user_id','customer_id', 'action', 'description', 'status', 'RBNO')
+    list_display = ('building_name','postcode', 'action', 'description', 'status', 'RBNO')
 
 class STWDefectAdmin(admin.ModelAdmin):
     """
@@ -32,6 +32,15 @@ class STWDefectDocumentAdmin(admin.ModelAdmin):
     list_display = ('stw_id', 'defect_id', 'document_path')
 
 
+class RLOAdmin(admin.ModelAdmin):
+    """
+    Admin class for the RLO model.
+
+    Attributes:
+        list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
+    """
+    list_display = ('user_id','name','status', 'created_at', 'updated_at')
+
 
 
 admin.site.register(STWRequirements,STWRequirementsAdmin)
@@ -46,4 +55,6 @@ class JobAdmin(admin.ModelAdmin):
     list_filter = ('created_at', 'updated_at') 
     search_fields = ('quotation__title',) 
 admin.site.register(Job, JobAdmin)
+admin.site.register(RLO, RLOAdmin)
+admin.site.register(RLOLetterTemplate)
 

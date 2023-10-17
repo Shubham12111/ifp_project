@@ -1,10 +1,12 @@
-
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Approved Quotation List {{ block.super }}{% endblock %}
+{% block title %} Job List {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
+<div>
+
+</div>
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-12">
@@ -12,9 +14,15 @@
         <!-- Card header -->
         <div class="card-header pb-0">
           <div class="d-lg-flex justify-content-between">
+            
             <div>
               <h4 class="mb-0">Jobs List</h4>
             </div>
+
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-3" href="{% url 'job_customers_list' %}">Back</a>
+            </div>
+
           </div>
         </div>
         <div class="card-body px-0 pb-0">
@@ -57,18 +65,12 @@
                           </a>
                           <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
                               {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user %}
-                                {% if request.user|has_update_permission:"fire_risk_assessment" %}
+                        
+                                  {% if request.user|has_view_permission:"fire_risk_assessment" %}
                                   <li>
-                                      <a href="#" class="dropdown-item border-radius-md">
-                                          Edit
-                                      </a>
-                                  </li>
-                                {% endif %}
-                                  {% if request.user|has_update_permission:"fire_risk_assessment" %}
-                                  <li>
-                                      <a href="" class="dropdown-item border-radius-md">
-                                          View
-                                      </a>
+                                  <a href="{% url 'job_detail' job.id %}" class="dropdown-item border-radius-md">
+                                    View
+                                    </a>
                                   </li>
                                 {% endif %}
                                 {% if request.user|has_delete_permission:"fire_risk_assessment" %}                                    
@@ -77,13 +79,7 @@
                                   </a>
                                 {% endif %}
                               {% else %}
-                                {% if request.user|has_view_permission:"fire_risk_assessment" %}
-                                <li>
-                                    <a href="#" class="dropdown-item border-radius-md">
-                                        View
-                                    </a>
-                                </li>
-                                {% endif %}
+                              
                             {% endif %}
 
                           </ul>

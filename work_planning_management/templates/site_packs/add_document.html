@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %} Document Upload {{ block.super }}{% endblock %}
+{% block title %} Document Add {{ block.super }}{% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
 <div class="container-fluid my-3 py-3">
@@ -10,7 +10,7 @@
         <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
-              <h5>Document Upload</h5>
+              <h5>Document Add</h5>
             </div>
             <div class="card-body pt-0">
              <form role="form"  method="POST" enctype="multipart/form-data" onsubmit="showLoader()">

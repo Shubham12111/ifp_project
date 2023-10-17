@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} RLO Form {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% load rest_framework %}
+{% include 'components/alert.html' %}
+
+{% block extra_css %}
+<style>
+
+
+</style>
+{% endblock %}
+
+<div class="container-fluid my-3 py-3">
+    <div class="row">
+      <div class="col-lg-12">
+          <!-- Card Basic Info -->
+          <div class="card" id="basic-info">
+              <div class="card-header">
+                <h5>RLO Form</h5>
+              </div>
+              <div class="card-body pt-0">
+               <form role="form"  method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+                    <div class='row'>
+                        {% csrf_token %}
+                       {% render_form serializer %} 
+                    </div>
+                    <!-- Add a hidden input field for template_id -->
+                <input type="hidden" name="template_id" id="templateId">
+                 <input type="hidden" name="edited_content" id="editedContent">
+                    <button type="button" class="btn bg-gradient-primary btn-sm float-start mt-2 mb-0"
+                    data-bs-toggle="modal" data-bs-target="#templateModal">
+                    Sample Template
+                </button>
+                <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
+                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'rlo_list' %}">Back</a>
+                
+                
+              </form>
+              {% include 'components/loader.html' %}
+            </div>
+        </div>
+    </div>
+    </div>
+
+                <div class="modal fade" id="templateModal" tabindex="-1" aria-labelledby="templateModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="templateModalLabel">Select a Template</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                              <div class="template-options">
+                           
+                                    {% for template in templates %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="template_id"
+                                            id="template{{ forloop.counter }}" value="{{ template.id }}">
+                                        <label class="form-check-label"
+                                            for="template{{ forloop.counter }}">
+                                            {{ template.name }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                            
+                            </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                                    Close
+                                </button>
+                                <button class="btn bg-gradient-dark btn-sm"
+                                onclick="openCompleteTemplate()">
+                            Open Complete Template
+                        </button>
+
+                        
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+</div>
+
+
+<div class="container-fluid" style="max-width:none;">
+    <div class="row">
+      <div class="col-6">
+        <div class="section-header" id="editableHeader" style="display: none;background-color:#8fa0be66;
+        border-radius:5px;padding:5px 5px 5px 5px;">
+            <h5>Editable Format</h5>
+        </div>
+        <textarea id="src" onkeyup="updateEditedContentAndChange();" style="width:100%;
+  height: 595px; display:none; border:none;outline: none;"></textarea>
+
+      </div>
+      <div class="col-6">
+        <div class="section-header" id="previewHeader" style="display: none;background-color:#8fa0be66;
+        border-radius:5px;padding:5px 5px 5px 5px;">
+            <h5>Final Preview</h5>
+        </div>
+        <iframe id="target" style="width:100%;
+  height: 595px;"></iframe>
+      </div>
+    </div>
+  </div>
+
+                 
+ 
+
+{% endblock %} 
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+
+<script>
+
+  function toggleTemplate() {
+        var templateSection = document.getElementById("templateSection");
+        if (templateSection.style.display === "none") {
+            templateSection.style.display = "block";
+        } else {
+            templateSection.style.display = "none";
+        }
+    }
+
+    function openCompleteTemplate() {
+        var selectedTemplateId = document.querySelector('input[name="template_id"]:checked').value;
+        var templateIdField = document.getElementById('templateId'); // Hidden input field for template_id
+        var editedContentField = document.getElementById('editedContent'); 
+
+
+    
+        // Check if a template has been selected
+        if (!selectedTemplateId) {
+            alert("Please select a template.");
+            return;
+        }
+    
+         // Set the value of template_id in the hidden input field
+        templateIdField.value = selectedTemplateId;
+
+        // 
+
+        // Fetch the complete template content for the selected template
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/work_planning/RLO/get_template_content/?template_id=' + selectedTemplateId, true);
+    
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                // Parse the response as JSON
+                var response = JSON.parse(xhr.responseText);
+    
+                // Get the HTML content from the response
+                var templateContent = response.template_content;
+    
+                // Update the textarea with the complete template content
+                var srcTextarea = document.getElementById('src');
+
+
+            
+                 editedContentField.value = templateContent;
+             
+
+                // Update the textarea with the complete template content
+                srcTextarea.textContent = templateContent;
+                
+                 
+                // Trigger the change event to update the iframe
+                change();
+
+            // Close the modal
+            $('#templateModal').modal('hide');
+
+                 // Show the headers
+            var editableHeader = document.getElementById('editableHeader');
+            var previewHeader = document.getElementById('previewHeader');
+            editableHeader.style.display = "block";
+            previewHeader.style.display = "block";
+    
+                // Show the textarea
+                srcTextarea.style.display = "block";
+            } else {
+                alert('Error fetching template content.');
+            }
+        };
+    
+        xhr.send();
+    }
+
+    //handle the on change of both div of preview and editable format.
+    function change() {
+        var iFrame = document.getElementById('target');
+        var iFrameBody;
+        if (iFrame.contentDocument) {
+          iFrameBody = iFrame.contentDocument.getElementsByTagName('body')[0];
+        } else if (iFrame.contentWindow) {
+          iFrameBody = iFrame.contentWindow.document.getElementsByTagName('body')[0];
+        }
+        iFrameBody.innerHTML = document.getElementById('src').value;
+      } 
+   
+      
+    // update the edited content in the edited_content in model.
+    function updateEditedContent() {
+        var srcTextarea = document.getElementById('src');
+        var editedContentField = document.getElementById('editedContent');
+    
+        // Get the edited content from the textarea
+        var editedContent = srcTextarea.value;
+    
+        // Set the edited content in the hidden input field
+        editedContentField.value = editedContent;
+    }
+
+    function updateEditedContentAndChange() {
+        updateEditedContent(); // Call the function to update edited_content
+        change(); // Call the function to update the iframe
+    }
+
+
+      
+</script>
+
+
+{% endblock %} 

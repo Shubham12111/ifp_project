@@ -5,7 +5,6 @@ from django.conf import settings
 from django.http.response import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-from rest_framework.response import Response
 from rest_framework import generics, permissions, filters, status, renderers
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from drf_yasg.utils import swagger_auto_schema

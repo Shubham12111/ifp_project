@@ -2,7 +2,6 @@ from rest_framework import serializers
 from authentication.models import User
 import re
 import uuid
-from django.db import transaction
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -18,6 +17,7 @@ from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 
 from .models import *
+
 
 
 class CustomFileValidator(FileExtensionValidator):

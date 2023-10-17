@@ -5,23 +5,25 @@
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
                         {% if customer_instance %}
-                            <a class="nav-link" href="{% url 'approved_quotation_view' %}">Quotation Reports</a>
-                        {% else %}
-                            <a class="nav-link active" href="{% url 'approved_quotation_view' %}">Quotation Reports</a>
+                            <a class="nav-link {% if '/work_planning/approved_quotation/' in request.path %}active{% endif %}" href="{% url 'approved_quotation_view' %}">Quotation Reports</a>
+                      {% else %}
+                      <a class="nav-link {% if '/work_planning/approved_quotation/' in request.path %}active{% endif %}" href="{% url 'approved_quotation_view' %}">Quotation Reports</a>
                         {% endif %}
                     </li>
+
                     <li class="nav-item">
                         {% if customer_instance %}
-                            <a class="nav-link" href="{% url 'stw_customers_list'%}">STW</a>
-                        {% else %}
-                            <a class="nav-link" href="{% url 'stw_customers_list'%}">STW</a>
+                            <a class="nav-link {% if '/work_planning/stw_customers/' in request.path %}active{% endif %}" href="{% url 'stw_customers_list' %}">STW</a>
+                            {% else %}
+                            <a class="nav-link {% if '/work_planning/stw_customers/' in request.path %}active{% endif %}" href="{% url 'stw_customers_list' %}">STW</a>
                         {% endif %}
                     </li>
+
                     <li class="nav-item">
                         {% if customer_instance %}
-                            <a class="nav-link" href="{% url 'jobs_list' %}">Jobs</a>
-                        {% else %}
-                            <a class="nav-link" href="{% url 'jobs_list' %}">Jobs</a>
+                            <a class="nav-link {% if '/work_planning/job_customers/' in request.path %}active{% endif %}" href="{% url 'job_customers_list' %}">Jobs</a>
+                            {% else %}
+                            <a class="nav-link {% if '/work_planning/job_customers/' in request.path %}active{% endif %}" href="{% url 'job_customers_list' %}">Jobs</a>
                         {% endif %}
                     </li>
                 </ul>
@@ -29,3 +31,37 @@
         </div>
     </div>
 </div>
+
+
+<script>
+    // Function to highlight the selected tab
+    function highlightTab(tabId) {
+      const menuTabs = document.querySelectorAll('#menuTabs .nav-link');
+      menuTabs.forEach(tab => {
+        if (tab.getAttribute('data-tab') === tabId) {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
+    }
+  
+    // Add click event listeners to the tabs
+    const menuTabs = document.querySelectorAll('#menuTabs .nav-link');
+    menuTabs.forEach(tab => {
+      tab.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent default link behavior
+        const tabId = tab.getAttribute('data-tab');
+        highlightTab(tabId);
+  
+        // You can add further logic here if needed, such as loading content for the selected tab.
+      });
+    });
+  
+    // Initially highlight the tab based on the current URL or any other criteria
+    // For example, if the current URL contains 'stw_customers_list', highlight the 'STW' tab.
+    const currentUrl = window.location.href;
+    if (currentUrl.includes('stw_customers_list')) {
+      highlightTab('stw');
+    }
+  </script>

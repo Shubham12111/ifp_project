@@ -73,28 +73,6 @@
 
 <script>
 
-     if (document.getElementById('stw-defect-list')) {
-        const dataTableSearch = new simpleDatatables.DataTable("#stw-defect-list", {
-          searchable: true,
-          fixedHeight: false,
-          perPage: 25,
-          perPageSelect: false,
-      });
-
-      const dataTableTop = document.querySelector('.dataTable-top');
-      if (dataTableTop) {
-          dataTableTop.parentNode.removeChild(dataTableTop);
-      }
-
-      
-      const searchInput = document.getElementById('searchInput');
-
-      searchInput.addEventListener('input', function () {
-          const searchText = searchInput.value.toLowerCase();
-          dataTableSearch.search(searchText).draw();
-      });
-    }
-      
     
 
 </script>
