@@ -22,7 +22,7 @@
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
-              <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Create Job</button>
+              <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Add Job</button>
             </div>
           </div>
           
@@ -143,16 +143,45 @@
       const atLeastOneSelected = Array.from(stwCheckboxes).some(checkbox => checkbox.checked);
       createJobButton.disabled = !atLeastOneSelected;
     }
+
+
+     // Function to handle checkbox change and allow only a single checkbox to be selected
+  function handleCheckboxChange(checkbox) {
+    stwCheckboxes.forEach(cb => {
+      if (cb !== checkbox) {
+        cb.checked = false;
+      }
+    });
+    updateCreateJobButton();
+  }
     
     // Add event listeners to checkboxes
-    stwCheckboxes.forEach(checkbox => {
-      checkbox.addEventListener("change", updateCreateJobButton);
+  stwCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener("change", () => {
+      handleCheckboxChange(checkbox); // Handle checkbox change
+      updateCreateJobButton(); // Update the "Add Job" button
     });
+  });
     
     // Initial check
     updateCreateJobButton();
+
+    // Add an onclick event listener to the createJobButton button
+    createJobButton.addEventListener("click", function() {
+      // Get the stw_id of the checked checkbox
+      const stwId = Array.from(stwCheckboxes).filter(checkbox => checkbox.checked)[0].value;
+
+      // Construct the redirect URL with the stw_id
+      const redirectUrl = `/work_planning/stw_job/add/${stwId}/`;
+
+      // Redirect the user to the redirect URL
+      window.location.href = redirectUrl;
+  });
   });
 
 
 </script>
+
+
+
 {% endblock %}     

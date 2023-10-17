@@ -498,6 +498,8 @@ class STWDefectSerializer(serializers.ModelSerializer):
                 defect_id = instance,
                 document_path=file_path,
                 )
+            instance.save()
+            return instance  # Return the created STWDefect instance
             
 
 class JobListSerializer(serializers.ModelSerializer):
@@ -533,3 +535,52 @@ class JobListSerializer(serializers.ModelSerializer):
 
     def get_Number_of_Defects(self, obj):
         return obj.quotation.defect_id.count()
+    
+
+class AddJobSerializer(serializers.ModelSerializer):
+    """
+    Serializer for adding a add JOb.
+
+    Fields:
+    - action: The JOb action description.
+    - RBNO: The RBNO (Reference Base Number) for the Job.
+    - UPRN: The UPRN (Unique Property Reference Number) for the Job.
+    - description: The JOb description.
+    - Date: The date of job created.
+
+    Validators:
+    - RBNO uniqueness validator.
+    - UPRN uniqueness validator.
+    """
+    UPRN = serializers.SerializerMethodField()
+    RBNO = serializers.SerializerMethodField()
+    Action = serializers.SerializerMethodField()
+    Description = serializers.SerializerMethodField()
+    Site_address = serializers.SerializerMethodField()
+    Date = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = STWJob
+        fields = ['UPRN', 'RBNO', 'Action', 'Description', 'Date','Site_address']
+
+    def get_UPRN(self, obj):
+        return obj.stw.UPRN
+
+    def get_RBNO(self, obj):
+        return obj.stw.stw_id.RBNO
+
+    def get_Action(self, obj):
+        return obj.stw.stw_id.action
+
+    def get_Description(self, obj):
+        return obj.stw.stw_id.description
+    
+    def get_Site_Address(self, obj):
+        return obj.stw.stw_id.site_address
+
+    def get_Date(self, obj):
+        return obj.stw.stw_id.date
+
+   
+    
+    

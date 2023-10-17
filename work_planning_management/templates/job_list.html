@@ -16,10 +16,11 @@
               <h4 class="mb-0">Jobs List</h4>
             </div>
           </div>
+          {% include 'components/table_search.html' %}
         </div>
         <div class="card-body px-0 pb-0">
           <div class="table-responsive">
-            <table class="table table-flush text-dark" id="contact-list">
+            <table class="table table-flush text-dark" id="job-list">
               <thead class="thead-light">
                 <tr>
                   <th class="custom-last-column"></th>
@@ -106,6 +107,26 @@
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/custom_convert.js' %}"></script>
 <script>
+
+  if (document.getElementById('job-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#job-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25,
+      perPageSelect: false,
+    });
+  
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+  }
+
 
 document.addEventListener("DOMContentLoaded", function () {
   const stwCheckboxes = document.querySelectorAll('.quotation-checkbox');

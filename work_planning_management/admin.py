@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument
+from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,STWJob
 
 
 class STWRequirementsAdmin(admin.ModelAdmin):
@@ -31,11 +31,21 @@ class STWDefectDocumentAdmin(admin.ModelAdmin):
     """
     list_display = ('stw_id', 'defect_id', 'document_path')
 
+class STWJobAdmin(admin.ModelAdmin):
+    """
+    Admin class for the stw JOB model.
+
+    Attributes:
+        list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
+    """
+    list_display = ('stw', 'created_at', 'updated_at')
+
 
 admin.site.register(STWRequirements,STWRequirementsAdmin)
 admin.site.register(STWAsset)
 admin.site.register(STWDefect, STWDefectAdmin)
 admin.site.register(STWDefectDocument, STWDefectDocumentAdmin)
+admin.site.register(STWJob,STWJobAdmin)
     
 class JobAdmin(admin.ModelAdmin):
     list_display = ('quotation', 'created_at', 'updated_at') 

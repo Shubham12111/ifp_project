@@ -42,5 +42,9 @@ urlpatterns = [
 
     # sor 
     path('sor/list/', STWDefectView.as_view(), name='stw_sor_list'),
-    path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor')
+    path('defect/<int:defect_id>/add_sor/<int:customer_id>/', STWSORAddView.as_view(), name='add_sor'),
+
+
+    # add job for stw
+    path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
 ]

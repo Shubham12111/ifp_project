@@ -141,3 +141,16 @@ class Job(models.Model):
 
     def __str__(self):
         return f" Job {self.id} for {self.quotation.id}"
+
+
+class STWJob(models.Model):
+    stw = models.ForeignKey(STWRequirements,on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('STW Job')
+        verbose_name_plural = _('STW Job')
+
+    def __str__(self):
+        return f" Job {self.id} for STW{self.stw.id}"
