@@ -22,8 +22,15 @@ urlpatterns = [
     # path('stw/delete/<int:stw_id>', STWDeleteView.as_view(), name='stw_delete'),
     # path('stw/view/<int:stw_id>/', STWDetailView.as_view(), name='stw_view'),
 
+
+    path('job_customers/', JobCustomerListView.as_view(), name='job_customers_list'),
     path('jobs/add/<int:qoute_id>/', QuoteJobView.as_view(), name='job_add'),
     path('jobs/list/', JobsListView.as_view(), name='jobs_list'),
+    path('job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
+    path('job/<int:job_id>/', JobDetailView.as_view(), name='job_detail'),
+
+
+
 
     path('stw_customers/', STWCustomerListView.as_view(), name='stw_customers_list'),
     path('stw_customers/<int:customer_id>/list/', STWRequirementListView.as_view(), name='customer_stw_list'),

@@ -14,7 +14,7 @@
         <div class="card-header pb-0">
           <div class="d-lg-flex">
             <div>
-              <h4 class="mb-0">Quotation Customer List</h4>
+              <h4 class="mb-0">Job Customer List</h4>
             </div>
           </div>
           {% include 'components/table_search.html' %}
@@ -35,7 +35,7 @@
                 {% for query_obj  in customers_with_counts %}
                     <tr class="text-sm">
                       <td>
-                        <a class="font-weight-bolder" href="{% url 'approved_quotation_list' query_obj.customer.id %}"  data-bs-toggle="tooltip" data-bs-original-title="Click For View Quotation">
+                        <a class="font-weight-bolder" href="{% url 'jobs_list'  %}"  data-bs-toggle="tooltip" data-bs-original-title="Click For View Quotation">
                           {{ query_obj.customer.first_name|truncatechars:20|title }} {{ query_obj.customer.last_name|truncatechars:20|lower }}
                         </a>
                       </td>
@@ -63,7 +63,7 @@
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script>
-  if (document.getElementById('stw-customer-list')) {
+if (document.getElementById('stw-customer-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#stw-customer-list", {
       searchable: true,
       fixedHeight: false,
@@ -75,21 +75,14 @@
     if (dataTableTop) {
       dataTableTop.parentNode.removeChild(dataTableTop);
     }
-
     const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', function() {
-      const searchText = searchInput.value.toLowerCase();
-      dataTableSearch.search(searchText).draw();
-    });
-
-    // Highlight the currently selected page
-    const pages = document.querySelectorAll('.dataTable-pagination .dataTable-page');
-    pages.forEach(page => {
-      page.addEventListener('click', function() {
-        pages.forEach(p => p.classList.remove('selected'));
-        page.classList.add('selected');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
       });
-    });
   }
+
+
+
 </script>
 {% endblock %}
