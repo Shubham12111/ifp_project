@@ -362,3 +362,4 @@ class DocumentView(CustomAuthenticationMixin,generics.RetrieveAPIView):
             else:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('sitepack_document_list'))
+            

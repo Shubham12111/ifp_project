@@ -21,7 +21,7 @@
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'work planning' module -->
                 <a href="{% url 'document_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;"> Upload File</a>
              {% endif %}
-              <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Assign Job</button> 
+              <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Add Job</button> 
             </div>
           </div>
           
@@ -131,14 +131,28 @@
       createJobButton.disabled = !atLeastOneSelected;
     }
     
-    // Add event listeners to checkboxes
-    stwCheckboxes.forEach(checkbox => {
-      checkbox.addEventListener("change", updateCreateJobButton);
+    // Function to handle checkbox change and allow only a single checkbox to be selected
+  function handleCheckboxChange(checkbox) {
+    stwCheckboxes.forEach(cb => {
+      if (cb !== checkbox) {
+        cb.checked = false;
+      }
     });
+    updateCreateJobButton();
+  }
+    
+  stwCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener("change", () => {
+      handleCheckboxChange(checkbox); // Handle checkbox change
+      updateCreateJobButton(); // Update the "Add Job" button
+    });
+  });
     
     // Initial check
     updateCreateJobButton();
-  });
+
+ 
+});
 
 
 </script>
