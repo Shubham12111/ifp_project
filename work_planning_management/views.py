@@ -1482,6 +1482,25 @@ class QuoteJobView(CustomAuthenticationMixin, generics.CreateAPIView):
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
 
+
+def filter_job(data_access_value, user, customer=None):
+    # Define a base queryset that contains all jobs
+    base_queryset = Job.objects.all()
+
+    # Define a mapping of data access values to corresponding filters.
+    filter_mapping = {
+        "self": Q(quotation__user_id=user),
+        "all": Q(),  # An empty Q() object returns all data.
+    }
+
+    if customer:
+        # Filter the base queryset based on customer
+        base_queryset = base_queryset.filter(quotation__customer_id=customer)
+    
+    # Apply the filter based on data_access_value
+    queryset = base_queryset.filter(filter_mapping.get(data_access_value, Q()))
+    
+    return queryset
 class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
     
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
@@ -1489,26 +1508,54 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
     filter_backends = [filters.SearchFilter]
     template_name = 'job_list.html'
 
-    def get_queryset(self):
-
-        queryset = Job.objects.filter()
-
-        return queryset
+    common_get_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message = "Data retrieved",
+            )
+    }
     
+    @swagger_auto_schema(operation_id='Job Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
-        customer_id = self.request.query_params.get('customer_id')
-        queryset = self.get_queryset()
-        customer_data = {}
-        if request.accepted_renderer.format == 'html':
-            context = {
-                'queryset': queryset,                }
-            return render(request, self.template_name, context)
+
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        customer_id = kwargs.get('customer_id', None)
+        
+        customer_data = User.objects.filter(id=customer_id).first()
+        
+        if customer_data:
+            # Call the handle_unauthenticated method to handle unauthenticated access.
+            authenticated_user, data_access_value = check_authentication_and_permissions(
+                self,"survey", HasListDataPermission, 'list'
+            )
+            if isinstance(authenticated_user, HttpResponseRedirect):
+                return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+
+            # Get the appropriate filter from the mapping based on the data access value,
+            queryset = filter_job(data_access_value, self.request.user, customer_data)
+            print(queryset)
+
+            if request.accepted_renderer.format == 'html':
+                context = {'queryset':queryset, 'customer_id':customer_id,
+                        'customer_data':customer_data,
+                     }
+                return render_html_response(context,self.template_name)
+            else:
+                serializer = self.serializer_class(queryset, many=True)
+                return create_api_response(status_code=status.HTTP_200_OK,
+                                                message="Data retrieved",
+                                                data=serializer.data)
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id})) 
+
+
         
-
-
 class AddJobView(CustomAuthenticationMixin, generics.CreateAPIView):
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
@@ -2223,24 +2270,30 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if serializer.is_valid():
             # Create the team if the serializer is valid
             team = serializer.save()
-            members_data = request.data.get('members', [])
-            print(members_data)
-            for member_id in members_data:
-
-                member = Member.objects.get(id=member_id)
-                print(member)
-                # Assuming Member model has a 'team' field for the team relationship
-                member.team = team
-                member.save()
+            members_data = request.data.getlist('members', [])
+            if 2 <= len(members_data) <= 6:
+                # Ensure there are between 2 and 6 members
+                for member_id in members_data:
+                    member = Member.objects.get(id=member_id)
+                    member.team = team
+                    member.save()
                 if request.accepted_renderer.format == 'html':
                     messages.success(request, message)
                     return redirect(reverse('teams_list'))
                 else:
                     # Return JSON response with success message and serialized data.
-                    return create_api_response(status_code=status.HTTP_201_CREATED,
-                                        message=message,
-                                        data=serializer.data
-                                        )
+                    return create_api_response(status_code=status.HTTP_201_CREATED, message=message, data=serializer.data)
+            else:
+                # Team doesn't have the required number of members
+                error_message = "A team must have between 2 and 6 members."
+                if request.accepted_renderer.format == 'html':
+                    messages.error(request, error_message)
+                    context = {'serializer':serializer}
+                    return render(request, self.template_name, context)
+                else:
+                    # Return JSON response with error message
+                    return create_api_response(status_code=status.HTTP_400_BAD_REQUEST, message=error_message)
+
         else:
                 # Invalid serializer data
             if request.accepted_renderer.format == 'html':
@@ -2403,28 +2456,33 @@ class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
             # If the team instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
 
+            message = "Team has been added successfully"
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated team instance.
-                serializer.save()
-                message = "Team has been updated successfully!"
-
-                if request.accepted_renderer.format == 'html':
-
-                    # For HTML requests, display a success message and redirect to team.
-
-                    messages.success(request, message)
-                    return redirect(reverse('teams_list'))
+                team = serializer.save()
+                members_data = request.data.getlist('members', [])
+                if 2 <= len(members_data) <= 6:
+                    # Ensure there are between 2 and 6 members
+                    for member_id in members_data:
+                        member = Member.objects.get(id=member_id)
+                        member.team = team
+                        member.save()
+                    if request.accepted_renderer.format == 'html':
+                        messages.success(request, message)
+                        return redirect(reverse('teams_list'))
+                    else:
+                        # Return JSON response with success message and serialized data.
+                        return create_api_response(status_code=status.HTTP_201_CREATED, message=message, data=serializer.data)
                 else:
-                    # For API requests, return a success response with serialized data.
-                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
-            else:
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'team_instance': instance}
-                    return render(request, self.template_name, context)
-                else:
-                    # For API requests with invalid data, return an error response with serializer errors.
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    # Team doesn't have the required number of members
+                    error_message = "A team must have between 2 and 6 members."
+                    if request.accepted_renderer.format == 'html':
+                        messages.error(request, error_message)
+                        context = {'serializer':serializer}
+                        return render(request, self.template_name, context)
+                    else:
+                        # Return JSON response with error message
+                        return create_api_response(status_code=status.HTTP_400_BAD_REQUEST, message=error_message)
         else:
             error_message = "You are not authorized to perform this action"
             if request.accepted_renderer.format == 'html':

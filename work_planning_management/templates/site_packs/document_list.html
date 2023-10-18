@@ -132,18 +132,11 @@
     }
     
     // Function to handle checkbox change and allow only a single checkbox to be selected
-  function handleCheckboxChange(checkbox) {
-    stwCheckboxes.forEach(cb => {
-      if (cb !== checkbox) {
-        cb.checked = false;
-      }
-    });
-    updateCreateJobButton();
-  }
+
     
   stwCheckboxes.forEach(checkbox => {
     checkbox.addEventListener("change", () => {
-      handleCheckboxChange(checkbox); // Handle checkbox change
+      //handleCheckboxChange(checkbox); // Handle checkbox change
       updateCreateJobButton(); // Update the "Add Job" button
     });
   });
