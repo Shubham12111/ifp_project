@@ -52,21 +52,22 @@ urlpatterns = [
     path('members/form/', MemberFormView.as_view(), name='member_form'),
     path('members/add/<int:qoute_id>/', MemberFormView.as_view(), name='members_add'),
     path('members/edit/<int:pk>/', MemberEditView.as_view(), name='member_edit'),
-    path('members/delete/<int:member_id>/', MemberDeleteView.as_view(), name='member_delete'),
-    path('members/<int:member_id>/view/<int:pk>/', views.MemberDetailView.as_view(), name='member_detail'),
+    path('members/delete/<int:pk>/', MemberDeleteView.as_view(), name='member_delete'),
 
 
     # Teams URLs
     path('teams/', TeamsListView.as_view(), name='teams_list'),
-    path('teams/create/', TeamAddView.as_view(), name='team_create'),
-    path('team_edit/<int:team_id>/', views.TeamEditView.as_view(), name='team_edit'),
-    path('teams/<int:pk>/', views.TeamDeleteView.as_view(), name='team_delete'),
-    path('teams/<int:pk>/', views.TeamDetailView.as_view(), name='team_detail'),
+    path('teams/add/', TeamAddView.as_view(), name='team_add'),
+    path('teams/edit/<int:team_id>/', views.TeamEditView.as_view(), name='team_edit'),
+    path('teams/delete/<int:pk>/', views.TeamDeleteView.as_view(), name='team_delete'),
+    path('teams/view/<int:pk>/', views.TeamDetailView.as_view(), name='team_detail'),
 
 
 
     # add job for stw
     path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
+    path('stw/job_assign/',AssignJobView.as_view(),name='job_assign_stw'),
+
 
     # RLO views:-
     path('RLO/list/', RLOListView.as_view(), name='rlo_list'),
@@ -80,7 +81,7 @@ urlpatterns = [
     path('sitepack/document/list/', DocumentListView.as_view(), name='sitepack_document_list'),
     path('sitepack/document/add/',DocumentAddView.as_view(),name="document_add"),
     path('sitepack/document/delete/<int:pk>/',DocumentDeleteView.as_view(),name="document_delete"),
-    path('sitepack/document/view/<int:pk>/',DocumentView.as_view(),name="document_view")
+    path('sitepack/document/view/<int:pk>/',DocumentView.as_view(),name="document_view"),
 
 
 ]

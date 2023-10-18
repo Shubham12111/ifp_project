@@ -33,15 +33,6 @@ class STWDefectDocumentAdmin(admin.ModelAdmin):
     """
     list_display = ('stw_id', 'defect_id', 'document_path')
 
-class STWJobAdmin(admin.ModelAdmin):
-    """
-    Admin class for the stw JOB model.
-
-    Attributes:
-        list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
-    """
-    list_display = ('stw', 'created_at', 'updated_at')
-
 
 class RLOAdmin(admin.ModelAdmin):
     """
@@ -81,7 +72,6 @@ admin.site.register(STWRequirements,STWRequirementsAdmin)
 admin.site.register(STWAsset)
 admin.site.register(STWDefect, STWDefectAdmin)
 admin.site.register(STWDefectDocument, STWDefectDocumentAdmin)
-admin.site.register(STWJob,STWJobAdmin)
 admin.site.register(SitepackDocument)
 admin.site.register(SitepackAsset) 
 admin.site.register(Job, JobAdmin)

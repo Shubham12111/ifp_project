@@ -31,7 +31,6 @@
             <table class="table table-flush text-dark" id="job-list">
               <thead class="thead-light">
                 <tr>
-                  <th class="custom-last-column"></th>
                   <th>UPRN</th>
                   <th>RBNO</th>
                   <th>Action</th>
@@ -47,9 +46,6 @@
               <tbody class="ml-4">
                 {% for job in queryset %}
                   <tr class="text-sm">
-                    <td class="text-sm">
-                      <input type="checkbox" class="quotation-checkbox" name="quotation_checkbox" value="{{ item.id }}">
-                    </td>
                     <td class="text-sm">{{ job.quotation.requirement_id.UPRN}}</td>
                     <td class="text-sm">{{ job.quotation.requirement_id.RBNO }}</td>
                     <td class="text-sm">{{ job.quotation.requirement_id.action| safe|truncatechars:20 }}</td>
