@@ -6,6 +6,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from django.contrib.auth.decorators import login_required
+from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,DocumentView
 from .rlo_views import *
 
 
@@ -24,7 +25,7 @@ urlpatterns = [
 
 
 
-
+    # stw
     path('stw_customers/', STWCustomerListView.as_view(), name='stw_customers_list'),
     path('stw_customers/<int:customer_id>/list/', STWRequirementListView.as_view(), name='customer_stw_list'),
     path('stw_customers/<int:customer_id>/add/', STWRequirementAddView.as_view(), name='customer_stw_add'),
@@ -63,10 +64,23 @@ urlpatterns = [
     path('teams/<int:pk>/', views.TeamDetailView.as_view(), name='team_detail'),
 
 
+
+    # add job for stw
+    path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
+
     # RLO views:-
     path('RLO/list/', RLOListView.as_view(), name='rlo_list'),
     path('RLO/add/',RLOAddView.as_view(),name='rlo_add'),
     path('RLO/delete/<int:pk>/',RLODeleteView.as_view(),name='rlo_delete'),
     path('RLO/view/<int:pk>/', RLOpdfView.as_view(), name='rlo_detail'),
     path('RLO/get_template_content/', get_template_content, name='get_template_content'),
+
+
+    # sitepack 
+    path('sitepack/document/list/', DocumentListView.as_view(), name='sitepack_document_list'),
+    path('sitepack/document/add/',DocumentAddView.as_view(),name="document_add"),
+    path('sitepack/document/delete/<int:pk>/',DocumentDeleteView.as_view(),name="document_delete"),
+    path('sitepack/document/view/<int:pk>/',DocumentView.as_view(),name="document_view")
+
+
 ]

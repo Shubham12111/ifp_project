@@ -32,6 +32,7 @@ RLO_STATUS_CHOICES = (
     ('pending', 'Pending'),
     ('rejected', 'Rejected')
 )
+
 class STWRequirements(models.Model):
     """
     Model for storing STW.
@@ -148,16 +149,49 @@ class Job(models.Model):
 
     def __str__(self):
         return f" Job {self.id} for {self.quotation.id}"
+
+
+
+class STWJob(models.Model):
+    stw = models.ForeignKey(STWRequirements,on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('STW Job')
+        verbose_name_plural = _('STW Job')
+    def __str__(self):
+        return f" Job {self.id} for STW{self.stw.id}"
+        
+
+class SitepackDocument(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_pack_user')
+    name = models.CharField(max_length=255, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"name -{self.name}"
     
+
+class SitepackAsset(models.Model):
+    sitepack_id = models.ForeignKey(SitepackDocument, on_delete=models.CASCADE)
+    document_path = models.CharField(max_length=256)
+    create_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = _('Sitepack Asset')
+        verbose_name_plural = _('Sitepack Asset')
+
+
 class RLOLetterTemplate(models.Model):
     name = models.CharField(max_length=100, null=True)
     site_address_info = models.TextField(null=True)
     company_info = models.TextField(null=True)
     main_content_block = models.TextField(null=True)
     complete_template = models.TextField(null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
         verbose_name = _('RLO Letter Template')
         verbose_name_plural = _('RLO Letter Templates')
@@ -182,21 +216,3 @@ class RLO(models.Model):
     def __str__(self):
         return self.name
 
-
-class Member(models.Model):
-    name = models.CharField(max_length=100)
-    address = models.TextField()
-    trade_type = models.CharField(max_length=50)
-    mobile_number = models.CharField(max_length=15)
-    email = models.EmailField()
-    job_title = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.name
-
-class Team(models.Model):
-    team_name = models.CharField(max_length=100)
-    members = models.ManyToManyField(Member)  
-
-    def __str__(self):
-        return self.team_name
