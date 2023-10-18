@@ -20,6 +20,7 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
 from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer
+
 from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
 from django.http.response import JsonResponse
@@ -1753,4 +1754,633 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
             return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
+        
+
+
+class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
+    """
+    View for listing job Requirement customers.
+    This view lists job Requirement customers, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+    Attributes:
+        serializer_class (JOBCustomerSerializer): The serializer class.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        filter_backends (list): The filter backends, including search filter.
+        search_fields (list): The fields for search.
+        template_name (str): The template name for HTML rendering.
+        ordering_fields (list): The fields for ordering.
+    """
+
+    serializer_class = CustomerSerializer
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    template_name = 'job_customer_list.html'
+    ordering_fields = ['created_at'] 
+
+    def get_queryset(self):
+            """
+        Get the queryset of stw Requirement customers.
+        Returns:
+            QuerySet: A queryset of stw Requirement customers.
+        """
+            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+            return queryset
+
+
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for listing STW Requirement customers.
+        Args:
+            request (HttpRequest): The HTTP request object.
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        queryset = self.get_queryset()
+        all_stw = STWRequirements.objects.filter()
+
+        customers_with_counts = []  # Create a list to store customer objects with counts
+
+        for customer in queryset:
+            stw_counts = all_stw.filter(customer_id=customer).count()
+            customers_with_counts.append({'customer': customer, 'stw_counts': stw_counts})
+
+        if request.accepted_renderer.format == 'html':
+            context = {'customers_with_counts': customers_with_counts}  # Pass the list of customers with counts to the template
+            return render_html_response(context, self.template_name)
+        else:
+            serializer = self.serializer_class(queryset, many=True)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
+
+
+class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+    """
+    View for deleting a single job.
+    This view provides both HTML and JSON rendering.
+    """
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    serializer_class = JobListSerializer 
+    template_name = 'job_delete.html'
+
+    def get_queryset(self):
+        return Job.objects.filter()
+
+    def get(self, request, *args, **kwargs):
+        job_id = self.kwargs.get('job_id')
+        queryset = self.get_queryset()
+
+        try:
+            job = queryset.get(id=job_id)
+        except Job.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if request.accepted_renderer.format == 'html':
+            context = {'job': job}
+            return render(request, self.template_name, context)
+        else:
+            serializer = self.serializer_class(job)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                       message="Data retrieved",
+                                       data=serializer.data)
+
+    def delete(self, request, *args, **kwargs):
+        job_id = self.kwargs.get('job_id')
+        queryset = self.get_queryset()
+
+        try:
+            job = queryset.get(id=job_id)
+        except Job.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+
+
+        job.delete()
+
+        if request.accepted_renderer.format == 'html':
+            messages.success(request, "Job has been deleted successfully.")
+            return redirect(reverse('job_list'))
+        else:
+            return create_api_response(status_code=status.HTTP_204_NO_CONTENT,
+                                       message="Job deleted successfully.")
+
+
+class MembersListView(CustomAuthenticationMixin, generics.ListAPIView):
+    """
+    API view for listing members in the "Members" tab.
+    This view returns a list of members, and the user can view, edit, or delete them.
+    The following request methods are supported:
+    - GET: Lists members.
+    Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'members_list.html'
+    serializer_class = MemberSerializer
+    def get_queryset(self):
+        """
+        Get the queryset for listing members.
+        Returns:
+            QuerySet: A queryset of Member items filtered based on the authenticated user's ID.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return Member.objects.none()  # Return an empty queryset if not authenticated
+
+        queryset = Member.objects.all()
+        # Customize queryset filtering based on your requirements, e.g., filtering by user ID
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        # This method handles GET requests for listing members.
+        queryset = self.get_queryset()
+        if request.accepted_renderer.format == 'html':
+            context = {'members': queryset}
+            return render(request, self.template_name, context)
+        else:
+            serializer = self.serializer_class(queryset, many=True)
+            return Response(serializer.data)
+
+class MemberFormView(generics.CreateAPIView):
+    """
+    API view for creating a new member.
+    This view allows users to create a new member.
+    The following request methods are supported:
+    - POST: Creates a new member.
+    - GET: Displays a form for adding a new member.
+    Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'members_form.html'
+    serializer_class = MemberSerializer
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for adding a new member.
+        If the member exists, retrieve the serialized data and render the HTML template.
+        If the member does not exist, render the HTML template with an empty serializer.
+        """
+        # You can customize this part to retrieve existing member data if needed.
+        serializer = self.serializer_class()
+
+        if request.accepted_renderer.format == 'html':
+            context = {'serializer': serializer}
+            return render_html_response(context, self.template_name)
+        else:
+            return create_api_response(status_code=status.HTTP_200_OK, message="GET Method Not Allowed")
+
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, "Member has been created successfully!")
+            return redirect('member_form')  # Use the correct URL pattern name 'member_form' here
+        else:
+            if request.accepted_renderer.format == 'html':
+                messages.error(request, "Failed to create member. Please check the form.")
+                return render(request, self.template_name, {'serializer': serializer})
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class   MemberDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    View to get member details.
+    Supports both HTML and JSON response formats.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'member_details.html'  # Update with your actual template name
+    serializer_class = MemberSerializer
+
+    def get_queryset(self):
+        """
+        Get the queryset for listing STW Requirement items.
+        Returns:
+            QuerySet: A queryset of STW Requirements items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasViewDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        queryset = Member.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        if request.accepted_renderer.format == 'html':
+                instance = self.get_queryset()
+                if instance:
+
+                 # The next line might be where the error occurs
+                #  team = Team.objects.filter(team_id=instance.team_id)
+                    serializer = self.serializer_class(instance=instance, context={'request': request})
+                    context = {
+                        'serializer': serializer, 
+                        'member_instance': instance,
+                    }
+                return render_html_response(context, self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('member_list', kwargs={'member_id': kwargs.get('member_id')}))
+
+
+class MemberEditView(generics.UpdateAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'members_form.html'
+    serializer_class = MemberSerializer
+    queryset = Member.objects.all()
+
+    def get_queryset(self):
+        # Define your dynamic queryset here based on your requirements
+        return Member.objects.filter()
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if queryset:
+            instance = queryset.first()
+            serializer = self.serializer_class(instance=instance,context={'request': request})
+            context = {'serializer': serializer, 'member_instance': instance}
+            return render_html_response(context, self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('member_list'))
+
+    def post(self, request, *args, **kwargs):
+        instance = self.get_object()  # Get the instance to update
+        serializer = MemberSerializer(instance=instance, context={'request': request})
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Member details updated successfully'}, status=status.HTTP_200_OK)
+        else:
+            context = {'serializer': serializer, 'member_instance': instance}
+            return render(request, self.template_name, context)
+
+
+class MemberDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    serializer_class = MemberSerializer 
+    template_name = 'members_form.html'
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Handle DELETE request to delete a MEMBER.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            request, "survey", HasUpdateDataPermission, 'delete'
+        )
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user 
+
+        # Get the Member instance from the database.
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(member_id__user=request.user),  # Changed member_id__user_id to member_id__user
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        # Get the appropriate filter from the mapping based on the data access value,
+        queryset = Member.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
+        member_instance = queryset.first()
+        if member_instance:
+            # Proceed with the deletion
+            member_instance.delete()
+            messages.success(request, "Your Member has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_204_NO_CONTENT)  # Changed status code to 204 No Content
+        else:
+            messages.error(request, "Member not found OR You are not authorized to perform this action.")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Member not found OR You are not authorized to perform this action.")
+
+# Ensure that the required imports for CustomAuthenticationMixin and other necessary modules are in place.
+
+class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding a team.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = TeamSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'team_form.html'
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for creating a team.
+        Render the HTML template with an empty serializer.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        serializer = self.serializer_class(context={'request': request})
+
+        if request.accepted_renderer.format == 'html':
+            context = {'serializer': serializer}
+            return render(request, self.template_name, context)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Allowed")
+
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to create a team.
+        """
+        data = request.data  # Get the data from the POST request
+        serializer = self.serializer_class(data=data, context={'request': request})
+        message = "saved"
+        if serializer.is_valid():
+            # Create the team if the serializer is valid
+            team = serializer.save()
+            members_data = request.data.get('members', [])
+            print(members_data)
+            for member_id in members_data:
+
+                member = Member.objects.get(id=member_id)
+                print(member)
+                # Assuming Member model has a 'team' field for the team relationship
+                member.team = team
+                member.save()
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    return redirect(reverse('teams_list'))
+                else:
+                    # Return JSON response with success message and serialized data.
+                    return create_api_response(status_code=status.HTTP_201_CREATED,
+                                        message=message,
+                                        data=serializer.data
+                                        )
+        else:
+                # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data
+                context = {'serializer': serializer}
+                return render(request, self.template_name, context)
+            else:
+                # Return JSON response with error message
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
+    """
+    API view for listing teams in the "Teams" tab.
+    This view returns a list of teams, and the user can view, edit, or delete them.
+    The following request methods are supported:
+    - GET: Lists teams.
+    Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'teams_list.html'
+    serializer_class = TeamSerializer
+
+    def get_queryset(self):
+        """
+        Get the queryset for listing teams.
+        Returns:
+            QuerySet: A queryset of Team items filtered based on the authenticated user's ID.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  
+
+        queryset = Team.objects.all()  
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        # This method handles GET requests for listing teams.
+        if request.accepted_renderer.format == 'html':
+            queryset = self.get_queryset()
+            context = {'teams': queryset}
+            return render_html_response(context, self.template_name)
+
+
+class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
+
+    """
+    API view for editing a member.
+    This view allows users to retrieve and edit member details.
+    The following request methods are supported:
+    - GET: Retrieves member details.
+    - PUT/PATCH: Updates member details.
+    Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
+    """
+    serializer_class = TeamSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'team_form.html'
+
+    def get_queryset(self):
+        """
+        Get the queryset for listing Conatct items.
+        Returns:
+            QuerySet: A queryset of Conatct items filtered based on the authenticated user's ID.
+        """
+
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "stock_management", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        queryset = Team.objects.filter(filter_mapping.get(data_access_value, Q()))
+
+        # Filter the queryset based on the provided 'team_id'
+        team_id = self.kwargs.get('team_id')
+        instance = queryset.filter(pk=team_id).first()
+        return instance
+
+    def get(self, request, *args, **kwargs):
+        # This method handles GET requests for updating an existing vendor object.
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            print(instance)
+            if instance:
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                context = {'serializer': serializer, 'team_instance': instance}
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('teams_list'))
+
+    common_put_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Team has been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "You are not authorized to perform this action",
+                ),
+
+    }
+
+    @swagger_auto_schema(auto_schema=None) 
+    def put(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(auto_schema=None) 
+    def patch(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(operation_id='Edit Team', responses={**common_put_response})
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to update a vendor instance.
+        Args:
+            request (rest_framework.request.Request): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        Returns:
+            rest_framework.response.Response: HTTP response object.
+                If successful, the vendor is updated, and the appropriate response is returned.
+                If unsuccessful, an error response is returned.
+        """
+        data = request.data
+        instance = self.get_queryset()
+        if instance:
+            # If the vendor instance exists, initialize the serializer with instance and provided data.
+            serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
+
+            if serializer.is_valid():
+                # If the serializer data is valid, save the updated vendor instance.
+                serializer.save()
+                message = "Team has been updated successfully!"
+
+                if request.accepted_renderer.format == 'html':
+
+                    # For HTML requests, display a success message and redirect to vendor.
+
+                    messages.success(request, message)
+                    return redirect(reverse('team_edit', kwargs={'team_id': kwargs['team_id']}))
+                else:
+                    # For API requests, return a success response with serialized data.
+                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+            else:
+                if request.accepted_renderer.format == 'html':
+                    # For HTML requests with invalid data, render the template with error messages.
+                    context = {'serializer': serializer, 'team_instance': instance}
+                    return render(request, self.template_name, context)
+                else:
+                    # For API requests with invalid data, return an error response with serializer errors.
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            error_message = "You are not authorized to perform this action"
+            if request.accepted_renderer.format == 'html':
+
+                # For HTML requests with no instance, display an error message and redirect to vendor.
+
+                messages.error(request, error_message)
+                return redirect('teams_list')
+
+            else:
+                # For API requests with no instance, return an error response with an error message.
+                return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TeamDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+    serializer_class = TeamSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'teams_list.html'
+
+    def delete(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasUpdateDataPermission, 'delete'
+        )
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value
+        queryset = Team.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
+
+        instance = queryset.first()
+
+        if instance:
+            # Proceed with the deletion
+            instance.delete()
+            messages.success(request, "Your Team has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_204_NO_CONTENT, message="Your Team has been deleted successfully!")
+        else:
+            messages.error(request, "Team not found OR You are not authorized to perform this action.")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND, message="Team not found OR You are not authorized to perform this action.")
+
+
+class TeamDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    renderer_classes = [renderers.TemplateHTMLRenderer, renderers.JSONRenderer]
+    template_name = 'team_detail.html'
+    serializer_class = TeamSerializer
+
+    def get_queryset(self):
+        # Check authentication and permissions
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasViewDataPermission, 'view'
+        )      
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        queryset = Team.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            if instance:
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                context = {
+                        'serializer': serializer, 
+                        'team_instance': instance, 
+                    }
+                return render_html_response(context, self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('teams_list', kwargs={'team_id': kwargs.get('team_id')}))
+
+
+
 

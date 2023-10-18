@@ -1,0 +1,81 @@
+<!-- teams.html -->
+{% extends 'base.html' %}
+{% block title %} Teams {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+
+
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex">
+            <div>
+              <h5 class="mb-0">Teams</h5>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              <button id="add-team-button" class="btn bg-gradient-primary btn-sm mb-0">
+                <a href="{% url 'team_create' %}">+ New Team</a>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-0">
+          <!-- Teams Table -->
+          <div class="table-responsive">
+            <table class="table table-flush text-dark" id="teams-list">
+              <thead class="thead-light">
+                <tr>
+                  <th class="table-headers">Team Name</th>
+                  <th class="table-headers">Members Count</th>
+                  <th class="table-headers">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for team in teams %}
+                <tr>
+                  <td>{{ team.team_name }}</td>
+                  <td>{{ team.members.count }}</td>
+                  <td>
+                    {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                      <div class="dropstart ms-auto pe-0">
+                        <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
+                        </a>
+                        <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
+                          {% if request.user|has_view_permission:"survey" %}
+                            <li>
+                              <a href="{% url 'team_detail' team.id %}" class="dropdown-item border-radius-md">View</a>
+                            </li>
+                          {% endif %}
+                          {% if request.user|has_update_permission:"survey" %}
+                            <li>
+                              <a href="{% url 'team_edit' team.id %}" class="dropdown-item border-radius-md">Edit</a>
+                            </li>
+                          {% endif %}
+                          {% if request.user|has_delete_permission:"survey" %}
+                            <li>
+                              <a href="{% url 'team_delete' team.id %}" type="button" class="dropdown-item border-radius-md" 
+                                onclick="CustomconfirmDelete({{team.id}}, 'Are you sure you want to delete this STW Requirement?','The STW Requirement has been deleted successfully.','{% url 'team_delete' team.id %}')">
+                                Delete
+                              </a>
+                            </li>
+                          {% endif %}
+                        </ul>
+                      </div>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

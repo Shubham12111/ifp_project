@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Team Detail {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex">
+            <div>
+              <h5 class="mb-0">Team Detail</h5>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              {% if request.user|has_update_permission:"survey" %}
+                {% if team.id %}
+                  <!-- Show the "Edit" button only if the user has the 'can_update_data' permission for 'team' module and team.id is valid -->
+                  <a href="{% url 'team_edit' team.id %}" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">Edit</a>
+                {% else %}
+                  <!-- Handle the case where team.id is empty or invalid -->
+                {% endif %}
+              {% else %}
+                <!-- The user doesn't have the permission to edit, so don't show the "Edit" button -->
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-0">
+          <div class="table-responsive">
+            <table class="table table-flush text-dark">
+              <tbody>
+                <tr>
+                  <td>Team Name:</td>
+                  <td>{{ team.team_name }}</td>
+                </tr>
+                <tr>
+                  <td>Members:</td>
+                  <td>
+                    {% for member in team.members.all %}
+                      {{ member.name }}<br>
+                    {% endfor %}
+                  </td>
+                </tr>
+                <!-- Add other details specific to the Team Detail view -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
