@@ -35,7 +35,7 @@
                 {% for query_obj  in customers_with_counts %}
                     <tr class="text-sm">
                       <td>
-                        <a class="font-weight-bolder" href="{% url 'jobs_list'  %}"  data-bs-toggle="tooltip" data-bs-original-title="Click For View Quotation">
+                        <a class="font-weight-bolder" href="{% url 'jobs_list' query_obj.customer.id  %}"  data-bs-toggle="tooltip" data-bs-original-title="Click For View Quotation">
                           {{ query_obj.customer.first_name|truncatechars:20|title }} {{ query_obj.customer.last_name|truncatechars:20|lower }}
                         </a>
                       </td>
