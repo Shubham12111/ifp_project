@@ -67,3 +67,5 @@ admin.site.register(Job, JobAdmin)
 admin.site.register(RLO, RLOAdmin)
 admin.site.register(RLOLetterTemplate)
 
+
+
