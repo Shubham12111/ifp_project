@@ -589,7 +589,7 @@ class MemberSerializer(serializers.ModelSerializer):
         label=('Address'),
         max_length=255,
         min_length=5,
-        required=False,
+        required=True,
         allow_blank=True,
         allow_null=True,
         style={'base_template': 'textarea.html'}  
@@ -611,7 +611,7 @@ class MemberSerializer(serializers.ModelSerializer):
         label=('Phone Number'),
         max_length=14,
         min_length=10,
-        required=False,
+        required=True,
         allow_null=True,
         allow_blank=True,
         style={
@@ -663,7 +663,6 @@ class TeamSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            'base_template': 'custom_input.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -699,7 +698,7 @@ class AddJobSerializer(serializers.ModelSerializer):
     Date = serializers.SerializerMethodField()
     
     class Meta:
-        model = STWJob
+        model = Job
         fields = ['UPRN', 'RBNO', 'Action', 'Description', 'Date','Site_address']
 
     def get_UPRN(self, obj):
@@ -721,6 +720,12 @@ class AddJobSerializer(serializers.ModelSerializer):
         return obj.stw.stw_id.date
 
    
+# class AssignJobSerializer(serializers.ModelSerializer):
+#     Member = serializers.SerializerMethodField()
+#     Team = serializers.SerializerMethodField()
+
+
     
+
     
 

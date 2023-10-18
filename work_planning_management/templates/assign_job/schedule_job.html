@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %} Member Summary {{ block.super }}{% endblock %}
+{% block title %} Assign Job {{ block.super }}{% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
 <div class="container-fluid my-3 py-3">
@@ -10,17 +10,18 @@
         <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
-              <h5>Member Summary</h5>
-              {% comment %} Include any additional content or information here {% endcomment %}
+              <h5>Assign Job</h5>
             </div>
             <div class="card-body pt-0">
              <form role="form"  method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
                   <div class='row'>
-                      {% csrf_token %}
-                      {% render_form serializer %}
+                    Assigned to job
+                      {% comment %} {% csrf_token %}
+                      {% render_form serializer %} {% endcomment %}
                   </div>
                 <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'members_list' %}">Back</a>
+                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="">Back</a>
+            
               </form>
               {% include 'components/loader.html' %}
         </div>
