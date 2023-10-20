@@ -1,7 +1,7 @@
 <!-- add_customer.html -->
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} STW List {{ block.super }}{% endblock %}
+{% block title %} Sitepack Job {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
@@ -14,18 +14,15 @@
         <div class="card-header pb-0">
           <div class="d-lg-flex">
             <div>
-              <h5 class="mb-0">Document List</h5>
+              <h5 class="mb-0">Sitepack Job</h5>
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
-              {% if request.user|has_add_permission:"survey" %}
+             
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'work planning' module -->
-                <a href="{% url 'document_add' %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;"> Upload File</a>
-             {% endif %}
-              {% comment %} <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">+&nbsp;Add Job</button>  {% endcomment %}
-              <a href="{% url 'approved_quotation_view' %}" class="btn bg-gradient-primary btn-sm mb-2 mx-2">+&nbsp;Add Job</a>  
+                <a href="{% url 'sitepack_document_list' %}" class="btn bg-gradient-secondary btn-sm mb-0"  style="float: right;">Back</a>
+
             </div>
           </div>
-          
           {% include 'components/table_search.html' %}
         </div>
         <div class="card-body px-0 pb-0">
@@ -33,32 +30,21 @@
             <table class="table table-flush text-dark" id="doc-list">
               <thead class="thead-light">
                 <tr>
-                {% comment %} <th class="custom-last-column"></th><!-- Add an empty th for the checkbox column --> {% endcomment %}
-                    <th>Name</th>
-                  <th>Document</th>
-                  <th>Created Date</th>
+                <th>Job Name</th>
+                  <th>Assigned Document</th>
+                 <th>Created Date</th>
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <th class="custom-last-column">Actions</th>
                   {% endif %}
                 </tr>
               </thead>
-              <tbody class="ml-4"> 
-                {% for doc in documents %}
-                <tr class="text-sm">
-                    {% comment %} <td class="text-sm">
-                        <input type="checkbox" name="doc_checkbox" value="{{ doc.id }}">
-                      </td> {% endcomment %}
-                      <td class="text-sm">{{doc.name}}</td>
-                  <td class="text-sm"> 
-                   {% for asset in doc.sitepackasset_set.all %}
-                    <span href="{{ asset.document_path }}" target="_blank" download="{{ asset.document_path}}">
-                        {{ asset.document_path}}
-                    </span>    
-                {% endfor %}
-            
 
-                </td>
-                  <td class="text-sm">{{doc.created_at|date:"d/m/Y"}}</td> 
+              <tbody class="ml-4"> 
+                {% for doc in jobs %}
+                <tr class="text-sm">
+                    <td>{{doc.job}}</td>
+                    <td>{{doc.sitepack_document}}</td>
+                    <td>{{ doc.created_at }}</td> 
 
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <td>
@@ -71,18 +57,11 @@
                         {% if request.user|has_delete_permission:"survey" %}
                         <li>
                          <a href="#" type="button" class="dropdown-item border-radius-md" 
-                            onclick="CustomconfirmDelete({{doc.id}}, 'Are you sure you want to delete this STW Requirement?','The STW Requirement has been deleted successfully.','{% url 'document_delete'  doc.id %}')">
+                            onclick="CustomconfirmDelete({{doc.id}}, 'Are you sure you want to delete this document assigned to job?','The document assigned to job has been deleted successfully.','{% url 'job_document_delete'  doc.id %}')">
                             Delete</a> 
-                        </li>
+                        </li> 
                           
                         {% endif %}
-
-                      
-                        <li> <a href="" class="dropdown-item border-radius-md">
-                         Download
-                         </a>
-                     </li>
-                     
                       </ul>
                     </div>
                    </td>
@@ -152,18 +131,7 @@
     // Initial check
     updateCreateJobButton();
 
- 
-  // Add an onclick event listener to the createJobButton button
-  createJobButton.addEventListener("click", function() {
-    // Get the stw_id of the checked checkbox
-    const stwId = Array.from(stwCheckboxes).filter(checkbox => checkbox.checked)[0].value;
 
-    // Construct the redirect URL with the stw_id
-    const redirectUrl = `/work_planning/approved_quotation/`;
-
-    // Redirect the user to the redirect URL
-    window.location.href = redirectUrl;
-});
 });
 
 

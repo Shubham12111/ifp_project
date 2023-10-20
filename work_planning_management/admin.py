@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,SitepackDocument,SitepackAsset,STWJob,Team,Member
+from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,SitepackDocument,SitepackAsset,STWJob,Team,Member,STWJobAssignment,JobDocument
 
 
 
@@ -59,24 +59,35 @@ class TeamAdmin(admin.ModelAdmin):
 
     members_list.short_description = 'Members'
 
-admin.site.register(Member, MemberAdmin)
-admin.site.register(Team, TeamAdmin)
+
 
 class JobAdmin(admin.ModelAdmin):
     list_display = ('quotation', 'created_at', 'updated_at') 
     list_filter = ('created_at', 'updated_at') 
     search_fields = ('quotation__title',)
 
+class SitepackAssetAdmin(admin.ModelAdmin):
+    list_display = ('id','sitepack_id','document_path' )
+
+
+class JobDocumentAdmin(admin.ModelAdmin):
+    list_display = ('job', 'sitepack_document', 'created_at', 'updated_at')
+  
 
 admin.site.register(STWRequirements,STWRequirementsAdmin)
 admin.site.register(STWAsset)
 admin.site.register(STWDefect, STWDefectAdmin)
 admin.site.register(STWDefectDocument, STWDefectDocumentAdmin)
 admin.site.register(SitepackDocument)
-admin.site.register(SitepackAsset) 
+admin.site.register(SitepackAsset,SitepackAssetAdmin) 
 admin.site.register(Job, JobAdmin)
 admin.site.register(RLO, RLOAdmin)
 admin.site.register(RLOLetterTemplate)
+admin.site.register(STWJob)
+admin.site.register(STWJobAssignment)
+admin.site.register(Member, MemberAdmin)
+admin.site.register(Team, TeamAdmin)
+admin.site.register(JobDocument,JobDocumentAdmin)
 
 
 

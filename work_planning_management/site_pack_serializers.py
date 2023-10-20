@@ -177,3 +177,25 @@ class DocumentSerializer(serializers.ModelSerializer):
         representation['document_paths'] = document_paths
 
         return representation
+ 
+class SitePackJobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobDocument
+        fields = ['job', 'sitepack_document']
+
+class DocumentSelectSerializer(serializers.ModelSerializer):
+    sitepack_document = serializers.PrimaryKeyRelatedField(
+        label=('Select Document'),
+        queryset = SitepackAsset.objects.all(),
+        style={'base_template': 'custom_select.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Name is required.",
+        },
+    )
+
+    class Meta:
+        model = JobDocument
+        fields = ['sitepack_document']
+
+
