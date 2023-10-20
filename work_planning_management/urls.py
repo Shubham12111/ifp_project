@@ -6,7 +6,8 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from django.contrib.auth.decorators import login_required
-from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,DocumentView
+from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,DocumentDownloadView,SitepackJobListView,DocumentSelectView,DocumentJobDeleteView
+
 from .rlo_views import *
 
 
@@ -81,7 +82,13 @@ urlpatterns = [
     path('sitepack/document/list/', DocumentListView.as_view(), name='sitepack_document_list'),
     path('sitepack/document/add/',DocumentAddView.as_view(),name="document_add"),
     path('sitepack/document/delete/<int:pk>/',DocumentDeleteView.as_view(),name="document_delete"),
-    path('sitepack/document/view/<int:pk>/',DocumentView.as_view(),name="document_view"),
+    path('sitepack/document/download/<int:document_id>/', DocumentDownloadView.as_view(), name='download_document'),
+    path('sitepack/job/list/', SitepackJobListView.as_view(), name='sitepack_job_list'),
+    path('sitepack/job_document/add/<int:job_id>/', DocumentSelectView.as_view(), name='job_document_add'),
+    path('sitepack/job_document/delete/<int:pk>/',DocumentJobDeleteView.as_view(),name="job_document_delete"),
+
+
+    path('oauth2callback/', views.oauth2callback, name='oauth2callback'),
 
 
 ]

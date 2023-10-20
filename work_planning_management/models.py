@@ -184,6 +184,9 @@ class SitepackAsset(models.Model):
         verbose_name = _('Sitepack Asset')
         verbose_name_plural = _('Sitepack Asset')
 
+    def __str__(self):
+        return f" {self.sitepack_id.name}-{self.document_path}"
+
 
 class RLOLetterTemplate(models.Model):
     name = models.CharField(max_length=100, null=True)
@@ -246,4 +249,37 @@ class Team(models.Model):
 
     def __str__(self):
         return self.team_name
+
+
+class JobDocument(models.Model):
+    job=models.ForeignKey(Job,on_delete=models.CASCADE)
+    sitepack_document=models.ForeignKey(SitepackAsset,on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at =models.DateTimeField(auto_now=True)
+    class Meta:
+        verbose_name = _('Job Document')
+        verbose_name_plural = _('Job Documents')
+
+class STWJobAssignment(models.Model):
+    stw_job = models.ForeignKey(STWJob, on_delete=models.CASCADE)
+    assigned_to_member = models.ManyToManyField(Member) 
+    assigned_to_team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.CASCADE)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('STW Job Assign')
+        verbose_name_plural = _('STW Job Assign')
+
+
+
+    
+    
+
+
+
 

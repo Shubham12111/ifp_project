@@ -13,10 +13,12 @@ from infinity_fire_solutions.response_schemas import create_api_response, conver
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.utils import docs_schema_response_new
+from django.http import FileResponse, Http404
 
 from .models import *
-from .site_pack_serializers import DocumentSerializer
-
+from .site_pack_serializers import DocumentSerializer,DocumentSelectSerializer
+from rest_framework.response import Response
+from django.http import QueryDict
 
 def sitepack_image(sitepack_instance):
     """
@@ -176,10 +178,11 @@ class DocumentAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         # Filter the queryset based on the user ID
+       
         serializer = self.serializer_class(context={'request': request})
             
         if request.accepted_renderer.format == 'html':
-            context = {'serializer':serializer, 
+            context = {'serializer':serializer
                           }
                 
             return render_html_response(context,self.template_name)
@@ -294,72 +297,238 @@ class DocumentDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             messages.error(request, "Site Pack Document not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Site Pack Document not found OR You are not authorized to perform this action.", )
-    
-class DocumentView(CustomAuthenticationMixin,generics.RetrieveAPIView):
-    
+            
+
+       
+class DocumentDownloadView(generics.RetrieveAPIView):
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    template_name = 'site_packs/document_list.html'
     """
+    View for downloading a document.
+    """
+    
+    def get(self, request, *args, **kwargs):
+        document_id = kwargs.get('document_id')
+        print(document_id)
 
-    View to get the stw.
+        try:
+            sitepack_asset = SitepackAsset.objects.get(sitepack_id=document_id)
+            print(sitepack_asset)
+            file_path = sitepack_asset.document_path  # Adjust for your file storage configuration
+            print(file_path)
+            response = FileResponse(open(file_path, 'rb'))
+            response['Content-Disposition'] = f'attachment; filename="{file_path.split("/")[-1]}"'  # Force download
+             # Generate a presigned URL for the S3 object
+            presigned_url = generate_presigned_url(file_path)
 
+            # Create a dictionary containing the presigned URL and other information
+            context = {
+                'presigned_url': presigned_url,
+                'filename': file_path.split('/')[-1],  # Extract the filename from the S3 object key
+            }
+
+            return render(request, self.template_name, context)
+        except SitepackAsset.DoesNotExist:
+            return Response({'error': 'Document not found'}, status=404)
+
+
+class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
+    """
+    View to get the listing of all sitepack jobs.
     Supports both HTML and JSON response formats.
     """
-    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
-    template_name = 'site_packs/document_details.html'
-    serializer_class = DocumentSerializer
-
+    serializer_class = DocumentSerializer  # Replace with your serializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    template_name = 'site_packs/sitepack_job_list.html'
+    ordering_fields = ['created_at']
+    common_get_response = {
+        status.HTTP_200_OK:
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message="Data retrieved",
+            )
+    }
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 10
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If the page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If the page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        return current_page
     def get_queryset(self):
         """
-        Get the queryset for listing document.
-
-        Returns:
-            QuerySet: A queryset of document filtered based on the authenticated user's ID.
+        Get the queryset based on filtering parameters from the request.
         """
-        # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "survey", HasViewDataPermission, 'view'
+            self, "survey", HasListDataPermission, 'list'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),
+        }
+        base_queryset = JobDocument.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        return base_queryset
+    
+    common_get_response = {
+        status.HTTP_200_OK:
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message="Data retrieved",
+            )
+    }
+    @swagger_auto_schema(operation_id='Sitepack Job listing', responses={**common_get_response})
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        queryset = self.get_queryset()
+        if request.accepted_renderer.format == 'html':
+            context = {'jobs': queryset}
+            return render_html_response(context, self.template_name)
+        else:
+            serializer = self.serializer_class(queryset, many=True)
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Data retrieved",
+                data=serializer.data
+            )
+        
+
+class DocumentSelectView(CustomAuthenticationMixin, generics.CreateAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'site_packs/job_form_sitepack.html'
+    serializer_class = DocumentSelectSerializer
+
+    @swagger_auto_schema(auto_schema=None) 
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form  to add the new documnet in job.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasCreateDataPermission, 'add'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        job_id = kwargs.get('job_id')
+
+        if request.accepted_renderer.format == 'html':
+            context = {'serializer':self.serializer_class(),'job_id':job_id}
+            return render_html_response(context,self.template_name)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                message="GET Method Not Alloweded",)
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add a document to a job.
+        """
+        # Retrieve the Job instance using job_id from the URL.
+        job_id = kwargs.get('job_id')
+        print(job_id)
+        job = get_object_or_404(Job, id=job_id)  # Retrieve the Job instance using its ID
+        print(job)
+
+        serializer_data = request.data
+
+        serializer = self.serializer_class(data=serializer_data, context={'request': request})
+
+        message = "Document is assigned to the job successfully!"
+        if serializer.is_valid():
+            serializer.validated_data['job'] = job  # Assign the current user instance.
+            serializer.save()
+
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('sitepack_job_list'))
+
+            else:
+                # Return JSON response with success message and serialized data.
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                           message=message,
+                                           data=serializer.data
+                                           )
+        else:
+            # Invalid serializer data.
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data.
+                context = {'serializer': serializer}
+                return render_html_response(context, self.template_name)
+            else:
+                # Return JSON response with an error message.
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                           message="We apologize for the inconvenience, but please review the below information.",
+                                           data=convert_serializer_errors(serializer.errors))
+
+
+class DocumentJobDeleteView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for deleting a Document assigned to job.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = DocumentSelectSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    
+    common_delete_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Assigned Document has been deleted successfully!",
+                ),
+        status.HTTP_404_NOT_FOUND: 
+            docs_schema_response_new(
+                status_code=status.HTTP_404_NOT_FOUND,
+                serializer_class=serializer_class,
+                message = "Assigned Document not found OR You are not authorized to perform this action.",
+                ),
+
+    }
+    @swagger_auto_schema(operation_id='JOb Document Delete', responses={**common_delete_response})
+    
+    def delete(self, request, *args, **kwargs):
+        """
+        Handle DELETE request to delete a Document.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasUpdateDataPermission, 'delete'
+        )
+
+        # Get the stw requirement instance from the database.
         # Define a mapping of data access values to corresponding filters
         filter_mapping = {
-            "self": Q(user_id=self.request.user ),
+            "self": Q(user_id=request.user ),
             "all": Q(),  # An empty Q() object returns all data
         }
 
-
-        queryset = SitepackDocument.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
-        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        # Get the appropriate filter from the mapping based on the data access value,
+        queryset = JobDocument.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
         
-        return queryset
+        job_document_instance = queryset.first()
+        print(job_document_instance)
 
-
-    @swagger_auto_schema(auto_schema=None)
-    def get(self, request, *args, **kwargs):
-        """
-        Handle GET requests for displaying document.
-
-        Args:
-            request (HttpRequest): The HTTP request object.
-
-        Returns:
-            HttpResponse: The response, either HTML or JSON.
-        """
-       
-        if request.accepted_renderer.format == 'html':
-            instance = self.get_queryset()
-            if instance:
-                document_paths = []
-                serializer = self.serializer_class(instance=instance, context={'request': request})
-                document_paths = sitepack_image(instance) 
-                context = {
-                        'serializer': serializer, 
-                        'sitepack_instance': instance, 
-                        'document_paths': document_paths,
-                       
-                        }
-
-                return render_html_response(context, self.template_name)
-            else:
-                messages.error(request, "You are not authorized to perform this action")
-                return redirect(reverse('sitepack_document_list'))
-            
+        if job_document_instance:
+            # Proceed with the deletion
+            job_document_instance.delete()
+            messages.success(request, "Assigned Document has been deleted successfully!")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Assigned Document has been deleted successfully!", )
+        else:
+            messages.error(request, "Assigned Document not found OR You are not authorized to perform this action.")
+            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                        message="Assigned Document not found OR You are not authorized to perform this action.", )

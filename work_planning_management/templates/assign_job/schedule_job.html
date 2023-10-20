@@ -3,37 +3,100 @@
 {% load rest_framework %}
 {% block title %} Assign Job {{ block.super }}{% endblock %}
 {% block content %}
-{% include 'components/alert.html' %}
-<div class="container-fluid my-3 py-3">
-  <div class="row">
-    <div class="col-lg-12">
-        <!-- Card Basic Info -->
+  <!-- Your existing content -->
+
+  <div class="container-fluid my-3 py-3">
+    <div class="row">
+      <div class="col-lg-12">
         <div class="card" id="basic-info">
-            <div class="card-header">
-              <h5>Assign Job</h5>
-            </div>
-            <div class="card-body pt-0">
-             <form role="form"  method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
-                  <div class='row'>
-                    Assigned to job
-                      {% comment %} {% csrf_token %}
-                      {% render_form serializer %} {% endcomment %}
+          <div class="card-header">
+            <h5>Assign Job</h5>
+          </div>
+          <div class="card-body pt-0">
+            <form role="form" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+              <div class="row">
+                <div class="col-12">
+                  {% csrf_token %}
+                {% render_form serializer %} 
+                
                   </div>
-                <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="">Back</a>
-            
-              </form>
-              {% include 'components/loader.html' %}
+                </div>
+                  {% comment %} <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="show-calendar">Show Calendar</button> {% endcomment %}
+                  <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Submit</button>
+                  <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
+                </div>
+                <div id="google-calendar" class="mt-4">
+                  <!-- Calendar will be displayed here -->
+                </div>
+          </div>
         </div>
+      </div>
     </div>
   </div>
-</div>
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_country.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="https://apis.google.com/js/api.js"></script>
+<script>
+  // Replace with your Google Calendar API credentials
+  {% comment %} const CLIENT_ID = '293843007280-em7q7ksmcvq6e455onor3pvfr0r55spu.apps.googleusercontent.com';
+  const API_KEY = 'AIzaSyCMuz4RVvB0RRjBZmT4VxD1z_xmV1q_WFc';
+  const CALENDAR_ID = 'anjali.rana@crossml.com'; 
 
+  gapi.load('client', () => {
+    gapi.client.init({
+      apiKey: API_KEY,
+      clientId: CLIENT_ID,
+      discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
+      scope: 'https://www.googleapis.com/auth/calendar.readonly'
+    }).then(() => {
+      // Authorize the API
+      gapi.auth2.getAuthInstance().signIn();
+    });
+  });
 
+  // Add a click event listener to the "Show Calendar" button
+  document.getElementById('show-calendar').addEventListener('click', () => {
+    
+   
+
+    // Make an API call to fetch and display the member's Google Calendar events
+    fetchCalendarEvents(CALENDAR_ID);
+  });
+
+  // Function to fetch and display Google Calendar events
+  function fetchCalendarEvents(calendarId) {
+    gapi.client.calendar.events.list({
+      calendarId: calendarId,
+      timeMin: new Date().toISOString(), // Fetch events starting from the current date
+      showDeleted: false,
+      singleEvents: true,
+      maxResults: 10,  // Adjust as needed
+      orderBy: 'startTime'
+    }).then((response) => {
+      const events = response.result.items;
+      displayEvents(events);
+    });
+  }
+
+  // Function to display Google Calendar events
+  function displayEvents(events) {
+    const calendarDiv = document.getElementById('google-calendar');
+    if (events.length === 0) {
+      calendarDiv.innerHTML = 'No upcoming events.';
+    } else {
+      const eventList = document.createElement('ul');
+      events.forEach((event) => {
+        const eventItem = document.createElement('li');
+        eventItem.innerHTML = `${event.summary} - ${event.start.dateTime}`;
+        eventList.appendChild(eventItem);
+      });
+      calendarDiv.innerHTML = '';
+      calendarDiv.appendChild(eventList);
+    }
+  } {% endcomment %}
+</script>
 {% endblock %}

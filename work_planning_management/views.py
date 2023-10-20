@@ -20,11 +20,21 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer
+from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer
 
 from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
 from django.http.response import JsonResponse
+from django.db import IntegrityError
+
+
+def oauth2callback(request):
+    # Your OAuth2 callback handling logic goes here
+    # This view should handle the response from Google after the user authorizes your app
+    # You can obtain the user's authorization code or access token here
+
+    # Example: Redirect to a success page or display a success message
+    return redirect(request,'assign_job/schedule_job.html')
 
 class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.ListAPIView):
     
@@ -117,11 +127,14 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
         customer_id = self.request.query_params.get('customer_id')
         queryset = self.get_queryset()
         customer_data = {}
+         # Retrieve the list of Sitepack documents
+        sitepack_documents = SitepackDocument.objects.all()
         if request.accepted_renderer.format == 'html':
             context = {
                 'approved_quotation': queryset,
                 'customer_id': customer_id,
-                'customer_data': customer_data
+                'customer_data': customer_data,
+                'sitepack_documents': sitepack_documents,
                 }
             return render(request, self.template_name, context)
         else:
@@ -2568,8 +2581,79 @@ class TeamDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
 
 
 
-class AssignJobView(View):
+class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
+    renderer_classes = [renderers.TemplateHTMLRenderer, renderers.JSONRenderer]
     template_name = 'assign_job/schedule_job.html'  # Replace with the actual path to your template
+    serializer_class = JobAssignmentSerializer
 
-    def get(self, request):
-        return render(request, self.template_name)
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for creating a assigned job.
+        Render the HTML template with an empty serializer.
+        """
+
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+         # Retrieve the members data
+        members = Member.objects.all()
+        serializer = self.serializer_class(context={'request': request})
+
+        if request.accepted_renderer.format == 'html':
+            context = {'serializer': serializer,
+                       'members': members
+                       }
+            return render(request, self.template_name, context)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Allowed")
+        
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add or update a job.
+        """
+        serializer_data = request.data
+        serializer = self.serializer_class(data=serializer_data, context={'request': request})
+
+        if serializer.is_valid():
+            try:
+                stw_requirements = STWRequirements.objects.get(pk=serializer.data.get('stw_id'))
+                stw_job = STWJob.objects.create(stw=stw_requirements)
+                serializer.save(stw_job=stw_job)  # Assign the created STWJob instance
+
+                message = "Job assignment created successfully."
+            except STWRequirements.DoesNotExist:
+                message = "STW Requirements not found."
+            except IntegrityError:
+                message = "Job assignment already exists."
+
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('job_assign_stw'))
+            else:
+                return create_api_response(
+                    status_code=status.HTTP_201_CREATED,
+                    message=message,
+                    data=serializer.data
+                )
+        else:
+            # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                context = {'serializer': serializer}
+                return render_html_response(context, self.template_name)
+            else:
+                return create_api_response(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message="Please review the provided information.",
+                    data=convert_serializer_errors(serializer.errors)
+                )
+
+    
+        
+
+
+
+

@@ -698,7 +698,7 @@ class AddJobSerializer(serializers.ModelSerializer):
     Date = serializers.SerializerMethodField()
     
     class Meta:
-        model = Job
+        model = STWJob
         fields = ['UPRN', 'RBNO', 'Action', 'Description', 'Date','Site_address']
 
     def get_UPRN(self, obj):
@@ -720,9 +720,32 @@ class AddJobSerializer(serializers.ModelSerializer):
         return obj.stw.stw_id.date
 
    
-# class AssignJobSerializer(serializers.ModelSerializer):
-#     Member = serializers.SerializerMethodField()
-#     Team = serializers.SerializerMethodField()
+class JobAssignmentSerializer(serializers.ModelSerializer):
+    assigned_to_member = serializers.PrimaryKeyRelatedField(
+        queryset=Member.objects.all(),
+        many=True,
+        required=False,
+        label="Select Individual Members",
+        style={
+            "autofocus": False,
+            "autocomplete": "off"
+            },
+    )
+    assigned_to_team = serializers.PrimaryKeyRelatedField(
+        queryset=Team.objects.all(),
+        required=False,
+        label="Select Team",
+        style={
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_checkbox.html'
+        },
+    )
+
+
+    class Meta:
+        model = STWJobAssignment
+        fields = ['assigned_to_member', 'assigned_to_team']
 
 
     

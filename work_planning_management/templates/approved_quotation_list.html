@@ -16,8 +16,17 @@
             </div>
 
             <div class="d-flex justify-content-between">
+             
+              {% comment %} <button type="button" class="btn bg-gradient-primary btn-sm mb-2 mx-2" data-bs-toggle="modal" data-bs-target="#sitepackDropdownModal" id="data1" disabled>
+               Assign Document
+            </button> {% endcomment %}
+            <button type="button" class="btn bg-gradient-primary btn-sm mb-2 mx-2" id="data1" disabled>
+               Assign Document
+            </button> 
+
               <a class="btn bg-gradient-secondary btn-sm mb-2 mx-2" href="{% url 'approved_quotation_view' %}">Back</a>
              <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Add Job</button>
+
             </div>
         </div>
         <div class="card-body px-0 pb-0">
@@ -57,17 +66,24 @@
     </div>
   </div>
 </div>
+
+
+
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/custom_convert.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const addSurveyorButton = document.getElementById("addSurveyorButton");
+    const assignDocumentButton = document.getElementById("data1"); // Assign Document button
     const checkboxItems = document.querySelectorAll(".checkbox-item");
+
+
 
     // Function to update the button state based on checkbox selection
     function updateButtonState() {
@@ -76,6 +92,9 @@
 
       // Enable or disable the "Create Job" button based on checkbox selection
       addSurveyorButton.disabled = !isChecked;
+
+      // Enable or disable the "Assign Document" button based on checkbox selection
+    assignDocumentButton.disabled = !isChecked;
 
       // Disable all other checkboxes when one is checked
       checkboxItems.forEach(function (checkbox) {
@@ -88,6 +107,7 @@
       checkbox.addEventListener("change", updateButtonState);
     });
 
+
     // Add event listener to the "Create Job" button
     addSurveyorButton.addEventListener("click", function () {
       const selectedCheckbox = document.querySelector(".checkbox-item:checked");
@@ -99,13 +119,28 @@
       }
     });
 
+
+     // Add event listener to the "Create Job" button
+     assignDocumentButton.addEventListener("click", function () {
+      const selectedCheckbox = document.querySelector(".checkbox-item:checked");
+      if (selectedCheckbox) {
+        const selectedItemID = selectedCheckbox.value;
+        const createJobURL = window.location.origin + "/work_planning/sitepack/job_document/add/"
+        const newURL = createJobURL + selectedItemID;
+        window.location.href = newURL;
+      }
+    });
+
     // Initial button state update
     updateButtonState();
   });
+
+ 
+
 </script>
 
-
 <script>
+
 if (document.getElementById('contact-list')) {
   const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
     searchable: false,
@@ -135,5 +170,9 @@ if (document.getElementById('contact-list')) {
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
+
+
+
+    
 </script>
 {% endblock %}
