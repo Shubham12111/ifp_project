@@ -12,11 +12,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='sitepackasset',
-            old_name='create_at',
-            new_name='created_at',
-        ),
+        # migrations.RenameField(
+        #     model_name='sitepackasset',
+        #     old_name='create_at',
+        #     new_name='created_at',
+        # ),
         migrations.AddField(
             model_name='member',
             name='created_at',
