@@ -77,7 +77,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
     def get_queryset(self):
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "todo", HasListDataPermission, 'list'
+            self, "task", HasListDataPermission, 'list'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -159,7 +159,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             Response: The response containing the list of TODO items.
         """
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "todo", HasListDataPermission, 'list'
+            self, "task", HasListDataPermission, 'list'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -198,7 +198,7 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     @swagger_auto_schema(auto_schema=None) 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"todo", HasCreateDataPermission, 'add'
+            self,"task", HasCreateDataPermission, 'add'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -228,7 +228,7 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     @swagger_auto_schema(operation_id='Todo Add', responses={**common_post_response})
     def post(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"todo", HasCreateDataPermission, 'add'
+           self,"task", HasCreateDataPermission, 'add'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -286,7 +286,7 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         """
         # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "todo", HasUpdateDataPermission, 'change'
+            self, "task", HasUpdateDataPermission, 'change'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -418,7 +418,7 @@ class ToDoDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     @swagger_auto_schema(operation_id='Todo Delete', responses={**common_delete_response})
     def delete(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"todo", HasDeleteDataPermission, 'delete'
+            self,"task", HasDeleteDataPermission, 'delete'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -461,7 +461,7 @@ class ToDoRetrieveAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         """
         # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self,"todo", HasViewDataPermission, 'view'
+            self,"task", HasViewDataPermission, 'view'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect

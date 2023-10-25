@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Team Detail {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+
+
+<div class="container-fluid py-4">
+  <div class="row align-items-center mb-2">
+    <div class="col-lg-12 col-sm-8">
+        <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'teams_list' %}">Back</a>
+    </div>
+</div>
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-primary"> <!-- Add the 'border-primary' class for a primary color border -->
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex">
+            <div>
+              <h5 class="mb-0">Team Detail</h5>
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-0">
+          <div class="table-responsive">
+            <table class="table table-flush text-dark table-border">
+              <tbody>
+                <tr>
+                  <td>Team Name</td>
+                  <td>{{ team_instance.team_name }}</td>
+                </tr>
+               
+                  <td>Total Team Members</td>
+                  <td>{{ team_instance.members.count }}</td>
+                </tr>
+                <tr>
+
+                  <tr>
+                    <td>Members</td>
+                    <td>
+                      {% if team_instance %}
+                      {% for member in team_instance.members.all %}
+                        {{ member.name }}<br>
+                      {% endfor %}
+                    {% endif %}
+                    </td>
+                  </tr>
+                  <tr>
+                <!-- Add other details specific to the Team Detail view -->
+              </tbody>
+            </table>
+            
+          </div>
+         
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

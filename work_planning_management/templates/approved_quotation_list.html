@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Approved Quotation List {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex justify-content-between">
+            <div>
+              <h4 class="mb-0">Approved Quotation List</h4>
+            </div>
+
+            <div class="d-flex justify-content-between">
+             
+              {% comment %} <button type="button" class="btn bg-gradient-primary btn-sm mb-2 mx-2" data-bs-toggle="modal" data-bs-target="#sitepackDropdownModal" id="data1" disabled>
+               Assign Document
+            </button> {% endcomment %}
+            <button type="button" class="btn bg-gradient-primary btn-sm mb-2 mx-2" id="data1" disabled>
+               Assign Document
+            </button> 
+
+              <a class="btn bg-gradient-secondary btn-sm mb-2 mx-2" href="{% url 'approved_quotation_view' %}">Back</a>
+             <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Add Job</button>
+
+            </div>
+        </div>
+        <div class="card-body px-0 pb-0">
+         <div class="table-responsive">
+            <table class="table table-flush text-dark" id="contact-list">
+              <thead class="thead-light">
+                <tr>
+                  <th class="custom-last-column"></th>
+                  <th>Action</th>
+                  <th>Description</th>
+                  <th>Date</th>
+                  <th>Surveyor name</th>
+                  <th>No of Defects</th>
+                </tr>
+              </thead>
+              <tbody class="ml-4">
+                {% for item in approved_quotation %}
+                  <tr class="text-sm">
+                    <td class="text-sm">
+                      <input type="checkbox" class="checkbox-item" name="requirement_checkbox" value="{{ item.id }}">
+                    </td>
+                    <td class="text-sm">{{ item.requirement_id.action| safe|truncatechars:20}}</td>
+                    <td class="text-sm">{{ item.requirement_id.description | safe|truncatechars:20 }}</td>
+                    <td class="text-sm">{{ item.created_at }}</td>
+                    <td class="text-sm">{{ item.requirement_id.surveyor.email }}</td>
+                    <td class="text-sm">{{ item.defect_id.count }}</td>
+                    {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                      <td class="custom-last-column">
+                      </td>
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/custom_convert.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const addSurveyorButton = document.getElementById("addSurveyorButton");
+    const assignDocumentButton = document.getElementById("data1"); // Assign Document button
+    const checkboxItems = document.querySelectorAll(".checkbox-item");
+
+
+
+    // Function to update the button state based on checkbox selection
+    function updateButtonState() {
+      const selectedCheckboxes = document.querySelectorAll(".checkbox-item:checked");
+      const isChecked = selectedCheckboxes.length > 0;
+
+      // Enable or disable the "Create Job" button based on checkbox selection
+      addSurveyorButton.disabled = !isChecked;
+
+      // Enable or disable the "Assign Document" button based on checkbox selection
+    assignDocumentButton.disabled = !isChecked;
+
+      // Disable all other checkboxes when one is checked
+      checkboxItems.forEach(function (checkbox) {
+        checkbox.disabled = isChecked && checkbox !== selectedCheckboxes[0];
+      });
+    }
+
+    // Add event listeners to each checkbox
+    checkboxItems.forEach(function (checkbox) {
+      checkbox.addEventListener("change", updateButtonState);
+    });
+
+
+    // Add event listener to the "Create Job" button
+    addSurveyorButton.addEventListener("click", function () {
+      const selectedCheckbox = document.querySelector(".checkbox-item:checked");
+      if (selectedCheckbox) {
+        const selectedItemID = selectedCheckbox.value;
+        const createJobURL = window.location.origin + "/work_planning/jobs/add/"
+        const newURL = createJobURL + selectedItemID;
+        window.location.href = newURL;
+      }
+    });
+
+
+     // Add event listener to the "Create Job" button
+     assignDocumentButton.addEventListener("click", function () {
+      const selectedCheckbox = document.querySelector(".checkbox-item:checked");
+      if (selectedCheckbox) {
+        const selectedItemID = selectedCheckbox.value;
+        const createJobURL = window.location.origin + "/work_planning/sitepack/job_document/add/"
+        const newURL = createJobURL + selectedItemID;
+        window.location.href = newURL;
+      }
+    });
+
+    // Initial button state update
+    updateButtonState();
+  });
+
+ 
+
+</script>
+
+<script>
+
+if (document.getElementById('contact-list')) {
+  const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
+    searchable: false,
+    fixedHeight: false,
+    perPage: 25,
+    perPageSelect: false,
+  });
+  const dataTableTop = document.querySelector('.dataTable-top');
+  if (dataTableTop) {
+    dataTableTop.parentNode.removeChild(dataTableTop);
+  }
+  const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+      const searchText = searchInput.value.toLowerCase();
+      dataTableSearch.search(searchText).draw();
+    });
+}
+  // JavaScript code to handle removing the contact_type filter
+  const removeContactTypeFilter = () => {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete('contact_type');
+    window.location.href = currentUrl.toString(); // Redirect to the URL without the contact_type parameter
+  };
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+
+
+
+    
+</script>
+{% endblock %}

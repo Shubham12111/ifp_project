@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Job Details {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex justify-content-between">
+            <div>
+              <h4 class="mb-0">Job Details</h4>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-3" href="{% url 'job_customers_list' %}">Back</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-4">
+          {% comment %} <div class="table-responsive">
+            <table class="table table-flush text-dark">
+              <tbody>
+                <tr> {% endcomment %}
+                    <div class="row mt-3">
+                        <div class="col-6">
+                          <label>UPRN </label>
+                          <p>{{ job.quotation.requirement_id.UPRN }}</p>
+                        </div>
+
+                            <div class="col-6">
+                              <label>RBNO </label>
+                              <p>{{ job.quotation.requirement_id.RBNO }}</p>
+                            </div>
+                        </div>
+
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                  <label>Action </label>
+                                  <p>{{ job.quotation.requirement_id.action|safe }}</p>
+                                </div>
+
+
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                      <label>Description </label>
+                                      <p>{{ job.quotation.requirement_id.description|safe }}</p>
+                                    </div>
+
+                                    <div class="row mt-3">
+                                        <div class="col-12">
+                                          <label>Date </label>
+                                          <p>{{ job.created_at }}</p>
+                                        </div>
+
+                                        <div class="row mt-3">
+                                            <div class="col-12">
+                                              <label>Number of Defects</label>
+                                              <p>{{ job.quotation.defect_id.count }}</p>
+                                            </div>
+                                        <div class="row mt-3">
+                                                <div class="col-12">
+                                                  <label>Surveyor Name</label>
+                                                  <p>{{ job.quotation.requirement_id.surveyor.first_name }} {{ job.quotation.requirement_id.surveyor.last_name }}</p>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+                  {% comment %} <th class="w-25">UPRN</th>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>RBNO</th>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>Action</th>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>Description</th>
+                  <td></td>
+                </tr>
+                <tr>
+                  <th>Date</th>
+                  <td>{{ job.created_at }}</td>
+                </tr>
+                  <th>Number of Defects</th>
+                  <td>{{ job.quotation.defect_id.count }}</td>
+                </tr>
+                <tr>
+                    <th>Surveyor Name</th>
+                    <td></td>
+                  </tr>
+                  <tr>
+                <!-- Add more job details here as needed -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> {% endcomment %}
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/custom.js' %}"></script>
+{% endblock %}

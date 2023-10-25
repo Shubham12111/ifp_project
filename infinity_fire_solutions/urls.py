@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
+from schedule.urls import *
 
 # swagger settings
 schema_view = get_schema_view(
@@ -49,6 +50,8 @@ urlpatterns = [
     path('fra/',include('requirement_management.urls')),
     path('purchase_order/',include('purchase_order_management.urls')),
     path('work_planning/',include('work_planning_management.urls')),
+
+
 
 
     #swagger links for the api documentation

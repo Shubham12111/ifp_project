@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} {% if instance %}Edit {% else %} Add {% endif %} Job {{ block.super }}{% endblock %}
+{% block content %}
+<!-- base.html -->
+
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12  m-auto">
+      <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8"  onsubmit="showLoader()">
+        <!--single form panel-->
+        <div class="card  p-3 bg-white js-active" data-animation="FadeIn">
+          <h4 class="font-weight-bolder"> Add STW Job</h4>
+          <div class="multisteps-form__content">
+            <input type="hidden" name="csrfmiddlewaretoken" value="YGBlr0kYTWpc1VnYRQ1kHNJQmMBj8Qi1uckBJliWBh7ZaNsUAUwvpXtGu86xKw1P"> 
+            <div class="row mt-3">
+              <div class="form-group col-4">
+                <label>UPRN </label>
+                <p>{{ query_object.UPRN }}</p>
+              </div>
+
+              <div class="form-group col-4">
+                <label>RBNO </label>
+                <p>{{ query_object.RBNO }}</p>
+              </div>
+
+              <div class="form-group col-4">
+                <label>Date </label>
+                <p>{{ query_object.updated_at }}</p>
+              </div>
+            </div>
+
+              <div class="form-group">
+                <label>Action</label> 
+                <p>{{ query_object.action }}</p>
+              </div>
+
+              <div class="form-group">
+                <label>Description</label> 
+                <p>{{ query_object.description }}</p>
+              </div>
+
+        
+              <div class="row mt-3">
+               <div class="form-group col-6">
+                <label>Infinity Address</label> 
+                <p>Infinity Fire Prevention Ltd
+                    <p> Infinity House</p>
+                    <p> 38 Riverside</p>
+                    <p> Sir Thomas Longley Road</p>
+                    <p> Medway City Estate,Rochester</p>
+                    <p> ME2 4DP</p>
+              </div>
+              <div class="form-group col-6">
+                <label>Site Address</label> 
+                <p>{{ query_object.site_address }}</p>
+              </div>
+
+            
+              </div>
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-6 col-lg-6 m-auto text-end"></div>
+              <div class="col-md-6 m-auto text-center text-md-end">
+                <a class="btn bg-gradient-secondary btn-sm mb-0 js-btn-prev" href="{% url 'stw_customers_list' %}" title="Back">Back</a>
+                <a class="btn btn-md bg-gradient-primary btn-sm ms-2 mb-0 js-btn-next" href="{% url 'job_assign_stw' %}"  title="Submit">Submit</a>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </form>
+      <div id="loaderOverlay" class="loader-overlay d-none">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/custom_button.js' %}"></script>
+
+{% endblock %}

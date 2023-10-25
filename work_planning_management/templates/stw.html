@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Approved Quotation List {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+{% include 'work_planning/work_action.html'%}
+<div class="container-fluid py-4">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <!-- Card header -->
+          <div class="card-header pb-0">
+            <div class="d-lg-flex justify-content-between">
+              <div>
+                <h4 class="mb-0">STW list</h4>
+              </div>
+            </div>
+          </div>
+          
+          {% endblock %} 
