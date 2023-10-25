@@ -403,4 +403,61 @@ class RLOpdfView(CustomAuthenticationMixin, generics.RetrieveAPIView):
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('rlo_list'))
     
+class RejectRLOView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for rejecting an RLO.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = RLOAddSerializer  # Replace with the appropriate serializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
 
+    @swagger_auto_schema(auto_schema=None)
+    def post(self, request, rlo_id):
+        """
+        Handle POST request to reject an RLO.
+        Update the RLO's status to 'Rejected' and return a response.
+        """
+        rlo = get_object_or_404(RLO, pk=rlo_id)
+        rlo.status = 'Rejected'  # Update the status as needed
+        rlo.save()
+
+        message = "RLO rejected successfully."
+
+        if request.accepted_renderer.format == 'html':
+            messages.success(request, message)
+            return redirect(reverse('rlo_list'))
+        else:
+            return create_api_response(
+                status_code=status.HTTP_201_CREATED,
+                message=message,
+            )
+
+class ApproveRLOView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for approving an RLO.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = RLOAddSerializer  # Replace with the appropriate serializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+
+
+    @swagger_auto_schema(auto_schema=None)
+    def post(self, request, rlo_id):
+        """
+        Handle POST request to approve an RLO.
+        Update the RLO's status to 'Approved' and return a response.
+        """
+        rlo = get_object_or_404(RLO, pk=rlo_id)
+        rlo.status = 'Approved'  # Update the status as needed
+        rlo.save()
+
+        message = "RLO approved successfully."
+
+        if request.accepted_renderer.format == 'html':
+            messages.success(request, message)
+            return redirect(reverse('rlo_list'))
+        else:
+            return create_api_response(
+                status_code=status.HTTP_201_CREATED,
+                message=message,
+            )

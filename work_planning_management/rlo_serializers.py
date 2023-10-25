@@ -47,7 +47,9 @@ class RLOAddSerializer(serializers.ModelSerializer):
     name = serializers.CharField(
         label=('RLO Name'),
         required=True, 
-        style={'base_template': 'custom_input.html'},
+        style={
+            'base_template': 'custom_input.html'
+            },
         error_messages={
             "required": "This field is required.",
             "blank": "RLO Name is required.",
@@ -75,4 +77,7 @@ class RLOLetterTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = RLOLetterTemplate
         fields = '__all__'
+
+
+
 
