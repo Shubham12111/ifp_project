@@ -199,6 +199,13 @@
         xhr.send();
     }
 
+
+    // Function to strip HTML tags from a string
+function stripHtmlTags(html) {
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText;
+  }
     //handle the on change of both div of preview and editable format.
     function change() {
         var iFrame = document.getElementById('target');
@@ -209,7 +216,9 @@
           iFrameBody = iFrame.contentWindow.document.getElementsByTagName('body')[0];
         }
         iFrameBody.innerHTML = document.getElementById('src').value;
+
       } 
+
    
       
     // update the edited content in the edited_content in model.
@@ -221,7 +230,9 @@
         var editedContent = srcTextarea.value;
     
         // Set the edited content in the hidden input field
-        editedContentField.value = editedContent;
+       editedContentField.value = editedContent;
+
+ 
     }
 
     function updateEditedContentAndChange() {

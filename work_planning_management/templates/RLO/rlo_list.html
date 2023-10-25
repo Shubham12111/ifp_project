@@ -68,6 +68,26 @@
                         </li>
                           
                         {% endif %}
+
+                        <li>
+                          <!-- Form for rejecting an RLO -->
+                          <form method="post" action="{% url 'rlo_reject' data.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item border-radius-md reject-button">
+                              Reject
+                            </button>
+                          </form>
+                        </li>
+
+                        <li>
+                          <!-- Form for approving an RLO -->
+                          <form method="post" action="{% url 'rlo_approve' data.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="dropdown-item border-radius-md approve-button">
+                              Approve
+                            </button>
+                          </form>
+                        </li>
                       </ul>
                     </div>
                    </td>
