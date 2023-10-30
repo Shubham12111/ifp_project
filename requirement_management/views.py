@@ -63,7 +63,7 @@ def get_selected_defect_data(request, customer_id, pk):
             requirement_id=pk, requirement_id__customer_id=customer_id, pk__in =selected_defect_ids
         )
 
-        # Create a list to store serialized defect data
+        # Create a list to store serialized dedocumentsfect data
         defect_data = []
 
         from django.core import serializers

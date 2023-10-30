@@ -671,7 +671,21 @@ class TeamSerializer(serializers.ModelSerializer):
             "blank": "Team Name is required.",
         }
     )
-
+    members = serializers.PrimaryKeyRelatedField(
+        label= 'Team Name',
+        queryset = Member.objects.all(),
+        many = True,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Team Name is required.",
+        }
+    )
 
     class Meta:
         model = Team
@@ -700,7 +714,7 @@ class AddJobSerializer(serializers.ModelSerializer):
     Date = serializers.SerializerMethodField()
     
     class Meta:
-        model = STWJob
+        model = Job
         fields = ['UPRN', 'RBNO', 'Action', 'Description', 'Date','Site_address']
 
     def get_UPRN(self, obj):
@@ -723,16 +737,16 @@ class AddJobSerializer(serializers.ModelSerializer):
 
    
 class JobAssignmentSerializer(serializers.ModelSerializer):
-    assigned_to_member = serializers.PrimaryKeyRelatedField(
-        queryset=Member.objects.all(),
-        many=True,
-        required=False,
-        label="Select Individual Members",
-        style={
-            "autofocus": False,
-            "autocomplete": "off"
-            },
-    )
+    # assigned_to_member = serializers.PrimaryKeyRelatedField(
+    #     queryset=Member.objects.all(),
+    #     many=True,
+    #     required=False,
+    #     label="Select Individual Members",
+    #     style={
+    #         "autofocus": False,
+    #         "autocomplete": "off"
+    #         },
+    # )
     assigned_to_team = serializers.PrimaryKeyRelatedField(
         queryset=Team.objects.all(),
         required=False,
@@ -740,14 +754,15 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
         style={
             "autofocus": False,
             "autocomplete": "off",
-            'base_template': 'custom_checkbox.html'
+            "base_template":'custom_select.html'
         },
     )
 
 
     class Meta:
         model = STWJobAssignment
-        fields = ['assigned_to_member', 'assigned_to_team']
+        fields = ['assigned_to_team']
+
 
 
     
