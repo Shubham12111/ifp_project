@@ -8,6 +8,8 @@ from django.views import View
 from rest_framework.response import Response
 from rest_framework import generics, permissions, filters, status, renderers
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+
 import json
 from drf_yasg.utils import swagger_auto_schema
 
@@ -2240,80 +2242,76 @@ class MemberDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
    
 
 
+
 class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
-    """
-    View for adding a team.
-    Supports both HTML and JSON response formats.
-    """
     serializer_class = TeamSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'team_form.html'
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
-        """
-        Handle GET request to display a form for creating a team.
-        Render the HTML template with an empty serializer.
-        """
+        # Handle GET request to display a form for creating a team.
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "survey", HasCreateDataPermission, 'add'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+            return authenticated_user
 
         serializer = self.serializer_class(context={'request': request})
+        members = Member.objects.all()
 
         if request.accepted_renderer.format == 'html':
+
             context = {'serializer': serializer,'members': Member.objects.all() }
+
             return render(request, self.template_name, context)
         else:
-            return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Allowed")
+            return create_api_response(status_code=HTTP_201_CREATED, message="GET Method Not Allowed")
 
     def post(self, request, *args, **kwargs):
-        """
-        Handle POST request to create a team.
-        """
-        data = request.data  # Get the data from the POST request
+        data = request.data
         serializer = self.serializer_class(data=data, context={'request': request})
-        message = "Team added successfully"
+        message = "Team added successfully!"
+
         if serializer.is_valid():
-            # Create the team if the serializer is valid
             team = serializer.save()
-            members_data = request.data.getlist('members', [])
-            if 2 <= len(members_data) <= 6:
-                # Ensure there are between 2 and 6 members
-                for member_id in members_data:
-                    member = Member.objects.get(id=member_id)
-                    member.team = team
-                    member.save()
+            selected_member_ids = request.POST.getlist("selected_members")
+
+            if 2 <= len(selected_member_ids) <= 6:
+                associated_members = []
+
+                for member_id in selected_member_ids:
+                    try:
+                        member = Member.objects.get(id=member_id)
+                        member.team = team  # Associate the member with the team
+                        member.save()
+                        associated_members.append(member)
+                    except Member.DoesNotExist:
+                        print(f"Member with ID {member_id} does not exist.")
+                
+                team.member_count = len(associated_members)
+                team.save()
+
                 if request.accepted_renderer.format == 'html':
                     messages.success(request, message)
                     return redirect(reverse('teams_list'))
                 else:
-                    # Return JSON response with success message and serialized data.
-                    return create_api_response(status_code=status.HTTP_201_CREATED, message=message, data=serializer.data)
+                    return create_api_response(status_code=HTTP_201_CREATED, message=message, data=serializer.data)
             else:
-                # Team doesn't have the required number of members
                 error_message = "A team must have between 2 and 6 members."
                 if request.accepted_renderer.format == 'html':
                     messages.error(request, error_message)
-                    context = {'serializer':serializer}
+                    context = {'serializer': serializer, 'members': Member.objects.all()}
                     return render(request, self.template_name, context)
                 else:
-                    # Return JSON response with error message
-                    return create_api_response(status_code=status.HTTP_400_BAD_REQUEST, message=error_message)
-
+                    return create_api_response(status_code=HTTP_400_BAD_REQUEST, message=error_message)
         else:
-                # Invalid serializer data
             if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                context = {'serializer': serializer}
+                context = {'serializer': serializer, 'members': Member.objects.all()}
                 return render(request, self.template_name, context)
             else:
-                # Return JSON response with error message
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
+                return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+            
 class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
     """
     API view for listing teams in the "Teams" tab.
