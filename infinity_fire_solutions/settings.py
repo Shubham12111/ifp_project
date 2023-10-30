@@ -50,7 +50,11 @@ INSTALLED_APPS = [
     'requirement_management',
     'stock_management',
     'purchase_order_management',
-    'work_planning_management'
+    'work_planning_management',
+
+     # for calendar setup
+    'schedule',
+    'djangobower',
     
 ]
 
@@ -206,3 +210,15 @@ CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
 
 # Include data for the United Kingdom (UK)
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']
+
+
+STATICFILES_FINDERS = [
+    'djangobower.finders.BowerFinder',
+]
+
+
+BOWER_INSTALLED_APPS = (
+    'jquery',
+    'jquery-ui',
+    'bootstrap'
+)   
