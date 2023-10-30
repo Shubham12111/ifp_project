@@ -63,7 +63,7 @@ def get_selected_defect_data(request, customer_id, pk):
             requirement_id=pk, requirement_id__customer_id=customer_id, pk__in =selected_defect_ids
         )
 
-        # Create a list to store serialized defect data
+        # Create a list to store serialized dedocumentsfect data
         defect_data = []
 
         from django.core import serializers
@@ -359,7 +359,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             
             serializer = self.serializer_class(data=serializer_data, context={'request': request})
             
-            message = "Congratulations! your requirement has been added successfully."
+            message = "Your requirement has been added successfully."
             if serializer.is_valid():
                 serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
                 serializer.validated_data['customer_id'] = customer_data
@@ -621,9 +621,9 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
                 
                 
-            messages.success(request, "Congratulations! your requirement report has been added successfully. ")
+            messages.success(request, "Your requirement report has been added successfully. ")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Congratulations! your requirement report has been added successfully.", )
+                                        message="Your requirement report has been added successfully.", )
             
         except Exception as e:
             message = "Something went wrong"
@@ -914,7 +914,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         serializer_data = request.data if any(file_list) else data
         
-        message = "Congratulations! your requirement defect has been added successfully."
+        message = "Your requirement defect has been added successfully."
         
         # Check if the site address instance exists for the customer
         if defect_instance:

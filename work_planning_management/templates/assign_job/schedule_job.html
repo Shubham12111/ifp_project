@@ -4,8 +4,7 @@
 {% block title %} Assign Job {{ block.super }}{% endblock %}
 {% block content %}
   <!-- Your existing content -->
-
-  <div class="container-fluid my-3 py-3">
+<div class="container-fluid my-3 py-3">
     <div class="row">
       <div class="col-lg-12">
         <div class="card" id="basic-info">
@@ -20,83 +19,92 @@
                 {% render_form serializer %} 
                 
                   </div>
-                </div>
-                  {% comment %} <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="show-calendar">Show Calendar</button> {% endcomment %}
-                  <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Submit</button>
-                  <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
-                </div>
-                <div id="google-calendar" class="mt-4">
-                  <!-- Calendar will be displayed here -->
-                </div>
+                  
+  <div class="container-fluid py-3">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <!-- Card header -->
+          <div class="card-header pb-0">
+            <div class="d-lg-flex">
+              <div>
+                <h5 class="mb-0">RLO List</h5>
+              </div>
+            
+            </div>
+          
+          </div>
+          <div class="card-body px-0 pb-0">
+           <div class="table-responsive">
+              <table class="table table-flush text-dark" id="rlo-list">
+                <thead class="thead-light">
+                  <tr>
+                    <th class="custom-last-column text-sm text-secondary"></th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Email</th>
+                    <th>Trade Type</th>
+                    <th>Phone number</th>
+                    <th>Created Date</th>
+                  
+                  </tr>
+                </thead>
+                <tbody class="ml-4">
+                  {% for item in members %}
+                    <tr class="text-sm">
+                      <td class="text-sm">
+                          <input type="checkbox" name="doc_checkbox" value="{{ item.members.id  }}"  data-job-id="{{ item.members.id }}">
+                        </td>
+                  <td class="text-sm">{{ item.name}}</td>
+                  <td class="text-sm">{{ item.address}}</td>
+                  <td class="text-sm">{{ item.email}}</td>
+                  <td class="text-sm">{{ item.trade_type }}</td>
+                  <td class="text-sm">{{ item.mobile_number }}</td>
+                  <td class="text-sm">{{ item.created_at }}</td>
+                </tr>
+                  {% endfor %}
+              </table>
+              </table>
+            </div>
+          
           </div>
         </div>
+          <!-- Add a button to show/hide the calendar -->
+          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" onclick="$('#calendar').fullCalendar('open')">Assign Job</a>
+          <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
       </div>
     </div>
   </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-<script src="{% static 'assets/js/custom_country.js' %}"></script>
+<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script src="https://apis.google.com/js/api.js"></script>
+
 <script>
-  // Replace with your Google Calendar API credentials
-  {% comment %} const CLIENT_ID = '293843007280-em7q7ksmcvq6e455onor3pvfr0r55spu.apps.googleusercontent.com';
-  const API_KEY = 'AIzaSyCMuz4RVvB0RRjBZmT4VxD1z_xmV1q_WFc';
-  const CALENDAR_ID = 'anjali.rana@crossml.com'; 
-
-  gapi.load('client', () => {
-    gapi.client.init({
-      apiKey: API_KEY,
-      clientId: CLIENT_ID,
-      discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'],
-      scope: 'https://www.googleapis.com/auth/calendar.readonly'
-    }).then(() => {
-      // Authorize the API
-      gapi.auth2.getAuthInstance().signIn();
+  if (document.getElementById('rlo-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#rlo-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25,
+      perPageSelect: false,
     });
-  });
-
-  // Add a click event listener to the "Show Calendar" button
-  document.getElementById('show-calendar').addEventListener('click', () => {
-    
-   
-
-    // Make an API call to fetch and display the member's Google Calendar events
-    fetchCalendarEvents(CALENDAR_ID);
-  });
-
-  // Function to fetch and display Google Calendar events
-  function fetchCalendarEvents(calendarId) {
-    gapi.client.calendar.events.list({
-      calendarId: calendarId,
-      timeMin: new Date().toISOString(), // Fetch events starting from the current date
-      showDeleted: false,
-      singleEvents: true,
-      maxResults: 10,  // Adjust as needed
-      orderBy: 'startTime'
-    }).then((response) => {
-      const events = response.result.items;
-      displayEvents(events);
-    });
-  }
-
-  // Function to display Google Calendar events
-  function displayEvents(events) {
-    const calendarDiv = document.getElementById('google-calendar');
-    if (events.length === 0) {
-      calendarDiv.innerHTML = 'No upcoming events.';
-    } else {
-      const eventList = document.createElement('ul');
-      events.forEach((event) => {
-        const eventItem = document.createElement('li');
-        eventItem.innerHTML = `${event.summary} - ${event.start.dateTime}`;
-        eventList.appendChild(eventItem);
-      });
-      calendarDiv.innerHTML = '';
-      calendarDiv.appendChild(eventList);
+  
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
     }
-  } {% endcomment %}
-</script>
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+  }
+  </script>
+  
+
+
+
 {% endblock %}

@@ -400,9 +400,9 @@ class ReportEdit(CustomAuthenticationMixin,generics.ListAPIView):
                     attachment_path = generate_presigned_url(report_instance.pdf_path)
                     email.send_mail(report_instance.requirement_id.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
 
-                messages.success(request, "Congratulations! your requirement report has been added successfully. ")
+                messages.success(request, "Your requirement report has been added successfully. ")
                 return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                            message="Congratulations! your requirement report has been added successfully.", )
+                                            message="Your requirement report has been added successfully.", )
         
         else:
             messages.error(request, "You are not authorized to perform this action")

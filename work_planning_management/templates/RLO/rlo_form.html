@@ -27,6 +27,11 @@
                         {% csrf_token %}
                        {% render_form serializer %} 
                     </div>
+
+                    <div class="error-message">
+                        <p class="text-secondary text-sm">Hint: You must select the sample template to add the RLO.</p>
+                      </div>
+                  
                     <!-- Add a hidden input field for template_id -->
                 <input type="hidden" name="template_id" id="templateId">
                  <input type="hidden" name="edited_content" id="editedContent">
@@ -34,11 +39,13 @@
                     data-bs-toggle="modal" data-bs-target="#templateModal">
                     Sample Template
                 </button>
+                
                 <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
                 <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'rlo_list' %}">Back</a>
-                
+               
                 
               </form>
+              
               {% include 'components/loader.html' %}
             </div>
         </div>
@@ -198,14 +205,13 @@
     
         xhr.send();
     }
-
-
-    // Function to strip HTML tags from a string
-function stripHtmlTags(html) {
-    const tmp = document.createElement("div");
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText;
+  // Function to strip HTML tags from a string
+  function stripHtmlTags(html) {
+    var div = document.createElement("div");
+    div.innerHTML = html;
+    return div.textContent || div.innerText;
   }
+
     //handle the on change of both div of preview and editable format.
     function change() {
         var iFrame = document.getElementById('target');

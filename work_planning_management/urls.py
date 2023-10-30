@@ -6,7 +6,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from django.contrib.auth.decorators import login_required
-from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,DocumentDownloadView,SitepackJobListView,DocumentSelectView,DocumentJobDeleteView
+from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,DocumentDownloadView,SitepackJobListView,DocumentJobDeleteView
 
 from .rlo_views import *
 
@@ -16,6 +16,7 @@ from .rlo_views import *
 urlpatterns = [
     path('approved_quotation/', ApprovedQuotationCustomerListView.as_view(), name='approved_quotation_view'),
     path('approved_list/<int:customer_id>/list/', ApprovedQuotationListView.as_view(), name='approved_quotation_list'),
+    # path('all_approved_list/list/', AllApprovedQuotationListView.as_view(), name='all_jobs'),
 
 
     path('job_customers/', JobCustomerListView.as_view(), name='job_customers_list'),
@@ -68,6 +69,8 @@ urlpatterns = [
     # add job for stw
     path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
     path('stw/job_assign/',AssignJobView.as_view(),name='job_assign_stw'),
+    path('member_calendar/', member_calendar, name='member_calendar'),
+
 
 
     # RLO views:-
@@ -76,6 +79,8 @@ urlpatterns = [
     path('RLO/delete/<int:pk>/',RLODeleteView.as_view(),name='rlo_delete'),
     path('RLO/view/<int:pk>/', RLOpdfView.as_view(), name='rlo_detail'),
     path('RLO/get_template_content/', get_template_content, name='get_template_content'),
+    path('rlo/<int:rlo_id>/reject/', RejectRLOView.as_view(), name='rlo_reject'),
+    path('rlo/<int:rlo_id>/approve/', ApproveRLOView.as_view(), name='rlo_approve'),
 
 
     # sitepack 
@@ -84,11 +89,10 @@ urlpatterns = [
     path('sitepack/document/delete/<int:pk>/',DocumentDeleteView.as_view(),name="document_delete"),
     path('sitepack/document/download/<int:document_id>/', DocumentDownloadView.as_view(), name='download_document'),
     path('sitepack/job/list/', SitepackJobListView.as_view(), name='sitepack_job_list'),
-    path('sitepack/job_document/add/<int:job_id>/', DocumentSelectView.as_view(), name='job_document_add'),
+    # path('sitepack/job_document/add/', DocumentSelectView.as_view(), name='job_document_add'),
     path('sitepack/job_document/delete/<int:pk>/',DocumentJobDeleteView.as_view(),name="job_document_delete"),
 
 
-    path('oauth2callback/', views.oauth2callback, name='oauth2callback'),
 
 
 ]

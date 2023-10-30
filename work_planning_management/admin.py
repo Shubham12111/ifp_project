@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,SitepackDocument,SitepackAsset,STWJob,Team,Member,STWJobAssignment,JobDocument
+from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,SitepackDocument,SitepackAsset,STWJob,Team,Member,JobDocument,STWJobAssignment
 
 
 

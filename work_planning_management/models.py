@@ -7,6 +7,7 @@ from requirement_management.models import Quotation
 
 from authentication.models import User
 from customer_management.models import SiteAddress
+from schedule.models import Event
 
 
 STW_CHOICES = (
@@ -148,7 +149,13 @@ class Job(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f" Job {self.id} for {self.quotation.id}"
+        max_length = 30  # Adjust this to your desired character count
+        action_text = self.quotation.requirement_id.action[:max_length]
+
+        if len(self.quotation.requirement_id.action) > max_length:
+            action_text += "..."
+        
+        return action_text
 
 
 
@@ -264,6 +271,7 @@ class STWJobAssignment(models.Model):
     stw_job = models.ForeignKey(STWJob, on_delete=models.CASCADE)
     assigned_to_member = models.ManyToManyField(Member) 
     assigned_to_team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
     start_time = models.TimeField()

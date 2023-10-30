@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h6>Calendar</h6>
+
+<div id="calendar"></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script type="text/javascript">
+    
+    $(document).ready(function() {
+        $('#calendar').fullCalendar({
+            events: [
+                {% for event in events %}
+                    {
+                        title: '{{ event.title }}',
+                        start: '{{ event.start_time }}',
+                        end: '{{ event.end_time }}'
+                    },
+                {% endfor %}
+            ]
+        });
+    });
+</script>
+
+{% endblock %}

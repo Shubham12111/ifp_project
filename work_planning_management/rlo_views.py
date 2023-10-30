@@ -189,7 +189,7 @@ class RLOAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             else:
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST, message="Please select a template.")
                 
-        message = "Congratulations! Your RLO has been added successfully."
+        message = "Your RLO has been added successfully."
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance
             rlo = serializer.save()

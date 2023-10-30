@@ -64,8 +64,7 @@
             <table class="table table-flush text-dark" id="contact-list">
               <thead class="thead-light">
                 <tr>
-                  <th>First Name</th>
-                  <th>Last Name</th>
+                  <th>Name</th>
                   <th>Email</th>
                   <th>Company Name</th>
                   <th>Contact Type</th>
@@ -80,8 +79,7 @@
               <tbody class="ml-4"> 
                 {% for contact in contacts %}
                 <tr>
-                  <td  class="text-sm">{{contact.first_name|default:''|truncatechars:20|title}}</td>
-                  <td  class="text-sm">{{contact.last_name|default:''|truncatechars:20|title}}</td>
+                  <td  class="text-sm">{{contact.first_name|default:''|truncatechars:20|title}} {{contact.last_name|default:''|truncatechars:20|title}}</td>
                   <td  class="text-sm">{{contact.email}}</td>
                   <td  class="text-sm">{{contact.company_name}}</td>
                   <td  class="text-sm">{{contact.contact_type|title}}</td>

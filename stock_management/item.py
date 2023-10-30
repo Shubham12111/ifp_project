@@ -142,11 +142,11 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
             if item_instance:
                 # If the site address instance exists, update it.
                 serializer = self.serializer_class(data=serializer_data, instance=item_instance, context={'request': request})
-                message = "Congratulations! item has been added successfully."
+                message = "Item has been added successfully."
             else: 
                 # If the site address instance does not exist, create a new one.
                 serializer = self.serializer_class(data=serializer_data, context={'request': request})
-                message = "Congratulations! item has been updated successfully."
+                message = "Item has been updated successfully."
 
             if serializer.is_valid():
                 if not item_instance:
@@ -207,7 +207,7 @@ class ItemAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "Congratulations! item has been added successfully.",
+                message = "Item has been added successfully.",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -223,7 +223,7 @@ class ItemAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         Handle POST request to add a item.
         """
-        message = "Congratulations! item has been added successfully."
+        message = "Item has been added successfully."
         
         data = request.data
         # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
