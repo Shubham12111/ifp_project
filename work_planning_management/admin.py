@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,SitepackDocument,SitepackAsset,STWJob,Team,Member,STWJobAssignment,JobDocument
+from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,SitepackDocument,SitepackAsset,STWJob,Team,Member,JobDocument
 
 
 
@@ -84,7 +84,7 @@ admin.site.register(Job, JobAdmin)
 admin.site.register(RLO, RLOAdmin)
 admin.site.register(RLOLetterTemplate)
 admin.site.register(STWJob)
-admin.site.register(STWJobAssignment)
+# admin.site.register(STWJobAssignment)
 admin.site.register(Member, MemberAdmin)
 admin.site.register(Team, TeamAdmin)
 admin.site.register(JobDocument,JobDocumentAdmin)
