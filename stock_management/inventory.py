@@ -94,7 +94,7 @@ class InventoryView(CustomAuthenticationMixin, generics.CreateAPIView):
                     inventory.assigned_inventory = float(assigned_inventory.strip())
                 inventory.save()
 
-        message = "Congratulations! your inventory has been added successfully."
+        message = "Your inventory has been added successfully."
         if request.accepted_renderer.format == 'html':
             messages.success(request, message)
             return redirect(reverse('inventory_view', kwargs={'item_id': self.kwargs.get('item_id')}))

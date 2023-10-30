@@ -31,8 +31,7 @@
             <table class="table table-flush text-dark" id="vendor-list">
               <thead class="thead-light">
                 <tr>
-                  <th>First Name</th>
-                  <th>Last Name</th>
+                  <th>Name</th>
                   <th>Email</th>
                   <th>Phone</th>
 
@@ -44,8 +43,7 @@
               <tbody class="ml-4"> 
                 {% for vendor in vendors %}
                 <tr class="text-sm">
-                  <td >{{vendor.first_name|default:''|truncatechars:20|title}}</td>
-                  <td >{{vendor.last_name|default:''|truncatechars:20|title}}</td>
+                  <td >{{vendor.first_name|default:''|truncatechars:20|title}} {{vendor.last_name|default:''|truncatechars:20|title}}</td>
                   <td >{{vendor.email}}</td>
                   <td >{{vendor.phone_number}}</td>
 

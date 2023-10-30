@@ -4,8 +4,7 @@
 {% block title %} Assign Job {{ block.super }}{% endblock %}
 {% block content %}
   <!-- Your existing content -->
-
-  <div class="container-fluid my-3 py-3">
+<div class="container-fluid my-3 py-3">
     <div class="row">
       <div class="col-lg-12">
         <div class="card" id="basic-info">
@@ -20,73 +19,73 @@
                 {% render_form serializer %} 
                 
                   </div>
-                  <div class="container-fluid my-3 py-3">
-                    <div class="row">
-                      <div class="col-lg-12">
-                        <div class="card" id="basic-info">
-                          <div class="card-header">
-                            <h5>Select Members</h5>
-                          </div>
-                          <div class="card-body pt-0">
-                            <!-- Display the data as a list -->
-                            <div class="table-responsive">
-                              <table class="table table-flush text-dark" id="contact-list">
-                                <thead class="thead-light">
-                                  <tr>
-                                    <th class="custom-last-column text-sm text-secondary">Select</th>
-                                    <th class="text-xs text-secondary text-left" >Name</th>
-                                    <th class="text-xs text-secondary text-left">Address</th>
-                                    <th class="text-xs text-secondary text-left">Email</th>
-                                    <th class="text-xs text-secondary text-left">Trade Type</th>
-                                    <th class="text-xs text-secondary text-left">Phone number</th>
-                                    <th class="text-xs text-secondary text-left">Created Date</th>
-                                  </tr>
-                                </thead>
-                                <tbody class="ml-4">
-                                  {% for item in members %}
-                                    <tr class="text-sm">
-                                      <td class="text-sm">
-                                          <input type="checkbox" name="doc_checkbox" value="{{ item.members.id  }}"  data-job-id="{{ item.members.id }}">
-                                        </td>
-                                      <td class="text-sm text-left">{{ item.name}}</td>
-                                      <td class="text-sm text-left">{{ item.address}}</td>
-                                      <td class="text-sm text-left">{{ item.email}}</td>
-                                      <td class="text-sm text-left">{{ item.trade_type }}</td>
-                                      <td class="text-sm text-left">{{ item.mobile_number }}</td>
-                                      <td class="text-sm text-left">{{ item.created_at }}</td>
-                                    </tr>
-                                  {% endfor %}
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  </div>
-                </div>
-               
+                  
+  <div class="container-fluid py-3">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <!-- Card header -->
+          <div class="card-header pb-0">
+            <div class="d-lg-flex">
+              <div>
+                <h5 class="mb-0">RLO List</h5>
+              </div>
+            
+            </div>
           
+          </div>
+          <div class="card-body px-0 pb-0">
+           <div class="table-responsive">
+              <table class="table table-flush text-dark" id="rlo-list">
+                <thead class="thead-light">
+                  <tr>
+                    <th class="custom-last-column text-sm text-secondary"></th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Email</th>
+                    <th>Trade Type</th>
+                    <th>Phone number</th>
+                    <th>Created Date</th>
+                  
+                  </tr>
+                </thead>
+                <tbody class="ml-4">
+                  {% for item in members %}
+                    <tr class="text-sm">
+                      <td class="text-sm">
+                          <input type="checkbox" name="doc_checkbox" value="{{ item.members.id  }}"  data-job-id="{{ item.members.id }}">
+                        </td>
+                  <td class="text-sm">{{ item.name}}</td>
+                  <td class="text-sm">{{ item.address}}</td>
+                  <td class="text-sm">{{ item.email}}</td>
+                  <td class="text-sm">{{ item.trade_type }}</td>
+                  <td class="text-sm">{{ item.mobile_number }}</td>
+                  <td class="text-sm">{{ item.created_at }}</td>
+                </tr>
+                  {% endfor %}
+              </table>
+              </table>
+            </div>
+          
+          </div>
         </div>
-     
           <!-- Add a button to show/hide the calendar -->
-          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Assign Job</a>
+          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" onclick="$('#calendar').fullCalendar('open')">Assign Job</a>
           <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
-        </div>
       </div>
     </div>
   </div>
-
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-<script src="{% static 'assets/js/custom_country.js' %}"></script>
+<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 
 <script>
-  if (document.getElementById('contact-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
+  if (document.getElementById('rlo-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#rlo-list", {
       searchable: true,
       fixedHeight: false,
       perPage: 25,

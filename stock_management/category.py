@@ -102,7 +102,7 @@ class CategoryAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "Congratulations! category has been added successfully.",
+                message = "Category has been added successfully.",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -118,7 +118,7 @@ class CategoryAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         Handle POST request to add a category.
         """
-        message = "Congratulations! category has been added successfully."
+        message = "Category has been added successfully."
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance.

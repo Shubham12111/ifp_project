@@ -162,7 +162,7 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "Congratulations! your contact has been added successfully.",
+                message = "your contact has been added successfully.",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -185,7 +185,7 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        message = "Congratulations! your contact has been added successfully."
+        message = "your contact has been added successfully."
         serializer = self.serializer_class(data=request.data)
         
         if serializer.is_valid():
@@ -512,10 +512,10 @@ class ConversationView(CustomAuthenticationMixin, generics.RetrieveAPIView):
                 if conversation_id:
                     conversation_data = self.get_conversation_queryset().filter(contact_id = contact_data, pk=conversation_id).first() 
                     serializer = self.serializer_class(data=request.data,instance=conversation_data)
-                    success = "Congratulations! your conversation has been updated successfully."
+                    success = "Your conversation has been updated successfully."
                 else:
                     serializer = self.serializer_class(data=request.data)
-                    success = "Congratulations! your conversation has been added successfully."
+                    success = "Your conversation has been added successfully."
                 
                 if serializer.is_valid():
                     serializer.validated_data['user_id'] = request.user  # Assign the current user instance

@@ -7,7 +7,7 @@ from requirement_management.models import Quotation
 
 from authentication.models import User
 from customer_management.models import SiteAddress
-# from schedule.models import Event
+from schedule.models import Event
 
 
 STW_CHOICES = (
@@ -271,7 +271,7 @@ class STWJobAssignment(models.Model):
     stw_job = models.ForeignKey(STWJob, on_delete=models.CASCADE)
     assigned_to_member = models.ManyToManyField(Member) 
     assigned_to_team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.CASCADE)
-    #event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
     start_time = models.TimeField()

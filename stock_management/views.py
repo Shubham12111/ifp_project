@@ -226,7 +226,7 @@ class VendorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "Congratulations! vendor has been added successfully.",
+                message = "Vendor has been added successfully.",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -246,7 +246,7 @@ class VendorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"stock_management", HasCreateDataPermission, 'add'
         )
-        message = "Congratulations! vendor has been added successfully."
+        message = "Vendor has been added successfully."
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
