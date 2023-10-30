@@ -8,7 +8,7 @@ python3 manage.py migrate work_planning_management
 
 #echo "[+] ------ Check for SuperUser and if not than create ------ [+]"
 
-#python3 manage.py makesuper
+# python3 manage.py makesuper
 
 echo "Starting server"
 
