@@ -69,6 +69,8 @@ urlpatterns = [
     # add job for stw
     path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
     path('stw/job_assign/',AssignJobView.as_view(),name='job_assign_stw'),
+    path('member_calendar/', views.member_calendar, name='member_calendar'),
+
 
 
     # RLO views:-
@@ -89,6 +91,7 @@ urlpatterns = [
     path('sitepack/job/list/', SitepackJobListView.as_view(), name='sitepack_job_list'),
     # path('sitepack/job_document/add/', DocumentSelectView.as_view(), name='job_document_add'),
     path('sitepack/job_document/delete/<int:pk>/',DocumentJobDeleteView.as_view(),name="job_document_delete"),
+
 
 
 

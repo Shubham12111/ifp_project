@@ -1,0 +1,30 @@
+<!-- member_calendar.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} RLO List {{ block.super }}{% endblock %}
+<link href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.0/main.min.css' rel='stylesheet' />
+
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<h4>Member's Calendar</h4>
+<div id="calendar"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.0/main.min.js'></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var calendarEl = document.getElementById('calendar');
+      var my_events = {{ events_json|safe }};
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth', // You can change the initial view as needed
+        events: my_events, 
+      });
+
+      calendar.render();
+    });
+</script>
+{% endblock %}

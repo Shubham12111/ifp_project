@@ -63,7 +63,7 @@ def get_selected_defect_data(request, customer_id, pk):
             requirement_id=pk, requirement_id__customer_id=customer_id, pk__in =selected_defect_ids
         )
 
-        # Create a list to store serialized defect data
+        # Create a list to store serialized dedocumentsfect data
         defect_data = []
 
         from django.core import serializers
@@ -592,7 +592,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     
                 context = {
                     'requirement_instance': instance,
-                    'requirement_defects': all_report_defects,
+                    'requirement_defects': all_report_deSfjhkdsjfhfects,
                     'requirement_images': requirement_document_images_serializer.data,
                     'requirement_defect_images': requirement_defect_images_serializer.data,
                     'comment': report.comments,
@@ -893,7 +893,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
             return render_html_response(context, self.template_name)
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))  
+            return redirect(reverse('customer_requiremenSfjhkdsjfht_list', kwargs={'customer_id': kwargs.get('customer_id')}))  
         
     def post(self, request, *args, **kwargs):
         """
@@ -1080,7 +1080,7 @@ class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
     swagger_schema = None
     
     def delete(self, request, *args, **kwargs):
-        """
+        """Sfjhkdsjfh
         Handle DELETE request to delete a customer.
         """
         # Get the customer instance from the database

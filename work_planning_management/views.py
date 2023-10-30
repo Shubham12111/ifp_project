@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404,HttpResponse
 from django.urls import reverse
 from django.contrib import messages
 from decimal import Decimal
@@ -26,15 +26,11 @@ from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
 from django.http.response import JsonResponse
 from django.db import IntegrityError
+from schedule.models import Event
+from datetime import datetime
+from .site_pack_views import SitePackJobSerializer
 
 
-def oauth2callback(request):
-    # Your OAuth2 callback handling logic goes here
-    # This view should handle the response from Google after the user authorizes your app
-    # You can obtain the user's authorization code or access token here
-
-    # Example: Redirect to a success page or display a success message
-    return redirect(request,'assign_job/schedule_job.html')
 
 class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.ListAPIView):
     
@@ -2268,7 +2264,7 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         serializer = self.serializer_class(context={'request': request})
 
         if request.accepted_renderer.format == 'html':
-            context = {'serializer': serializer}
+            context = {'serializer': serializer,'members': Member.objects.all() }
             return render(request, self.template_name, context)
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Allowed")
@@ -2601,11 +2597,15 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
 
          # Retrieve the members data
         members = Member.objects.all()
+        team = Team.objects.all()
+        events = Event.objects.all()
         serializer = self.serializer_class(context={'request': request})
 
         if request.accepted_renderer.format == 'html':
             context = {'serializer': serializer,
-                       'members': members
+                       'members': members,
+                       'teams':team,
+                       'events': events
                        }
             return render(request, self.template_name, context)
         else:
@@ -2615,6 +2615,7 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         Handle POST request to add or update a job.
         """
+      
         serializer_data = request.data
         serializer = self.serializer_class(data=serializer_data, context={'request': request})
 
@@ -2651,9 +2652,29 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
                     data=convert_serializer_errors(serializer.errors)
                 )
 
-    
-        
+# def member_calendar(request):
+#     # Get the member's events
+#     events = Event.objects.all()
+
+#     return render(request, 'assign_job/member_calendar.html', {'events': events})
 
 
+import json
+from datetime import date
+def member_calendar(request):
+    # Replace this with your actual event data retrieval logic from your data source (e.g., database)
+    events = [
+        {
+            'title': 'Event 1',
+            'start': date(2023, 11, 1).isoformat(),
+        },
+        {
+            'title': 'Event 2',
+            'start': date(2023, 11, 5).isoformat(),
+        },
+        # Add more events here
+    ]
 
+    events_json = json.dumps(events)
 
+    return render(request, 'assign_job/member_calendar.html', {'events_json': events_json})
