@@ -663,6 +663,8 @@ class TeamSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
+            'base_template': 'custom_input.html',   
+
         },
         error_messages={
             "required": "This field is required.",
@@ -673,7 +675,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Team
-        fields = "__all__"  # You can specify the fields you want explicitly if needed
+        fields = ["team_name"]  # You can specify the fields you want explicitly if needed
 
 class AddJobSerializer(serializers.ModelSerializer):
     """
