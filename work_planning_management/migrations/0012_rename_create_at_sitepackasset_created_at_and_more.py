@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='member',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=1),
+            field=models.DateTimeField(auto_now_add=True, default=datetime.datetime(2023, 10, 18, 5, 24, 28, 437687, tzinfo=datetime.timezone.utc)),
             preserve_default=False,
         ),
         migrations.AddField(
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='rlolettertemplate',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
+            field=models.DateTimeField(auto_now_add=True, default=datetime.datetime(2023, 10, 18, 5, 24, 28, 437687, tzinfo=datetime.timezone.utc)),
             preserve_default=False,
         ),
         migrations.AddField(
