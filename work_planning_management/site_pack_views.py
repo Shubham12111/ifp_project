@@ -411,8 +411,10 @@ class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user
         queryset = self.get_queryset()
+        job_data = Quotation.objects.filter(status="approved")
         if request.accepted_renderer.format == 'html':
-            context = {'jobs': queryset}
+            context = {'jobs': queryset,
+                       'job_data':job_data}
             return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -422,9 +424,7 @@ class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
                 data=serializer.data
             )
     def post(self, request, *args, **kwargs):
-        serializer_data = request.data
-
-        serializer = self.serializer_class(data=serializer_data, context={'request': request})
+        
         queryset = self.get_queryset()
         context = {'jobs': queryset}
 
@@ -438,18 +438,16 @@ class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
         
             documents = SitepackAsset.objects.filter(sitepack_id__pk__in=ast.literal_eval(doc_ids))
 
-                 
-            #save to job document 
-            for document in documents:
-                print(get_job_data, document)
-                if get_job_data is not None:
+            if get_job_data is not None:    
+                #save to job document 
+                for document in documents:
+                    print(get_job_data, document)
                     JobDocument.objects.create(job=get_job_data, sitepack_document=document)
-                
+
                 return render_html_response(context, self.template_name)
-        else:
-            return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                           message="We apologize for the inconvenience, but please review the below information.",
-                                           data=convert_serializer_errors(serializer.errors))
+            else:
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                           message="We apologize for the inconvenience, but please review the below information.")
 
         
         
