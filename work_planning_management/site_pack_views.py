@@ -422,102 +422,106 @@ class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
                 data=serializer.data
             )
     def post(self, request, *args, **kwargs):
-        
+        serializer_data = request.data
+
+        serializer = self.serializer_class(data=serializer_data, context={'request': request})
         queryset = self.get_queryset()
         context = {'jobs': queryset}
 
         doc_ids = request.data.get('selectedIds')
-        print(doc_ids,"+++++++++++")
+        print(doc_ids)
         job_id = request.data.get('jobSelect')
-        print(job_id,"-----")
+        print(job_id)
         
         if job_id:
             get_job_data = Job.objects.filter(quotation__id=job_id).first()
         
             documents = SitepackAsset.objects.filter(sitepack_id__pk__in=ast.literal_eval(doc_ids))
 
-            if get_job_data is not None:     
-                #save to job document 
-                for document in documents:
-                    print(get_job_data, document,"***********")
+                 
+            #save to job document 
+            for document in documents:
+                print(get_job_data, document)
+                if get_job_data is not None:
                     JobDocument.objects.create(job=get_job_data, sitepack_document=document)
-
+                
                 return render_html_response(context, self.template_name)
-            else:
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                           message="We apologize for the inconvenience, but please review the below information.")
-
-        
-        
-
-class DocumentSelectView(CustomAuthenticationMixin, generics.CreateAPIView):
-    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'site_packs/all_jobs.html'
-    serializer_class = SitePackJobSerializer
-
-    def get_queryset(self):
-        queryset = Quotation.objects.filter(status="approved")
-        return queryset
-    
-    def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-         # Retrieve the list of Sitepack documents
-        # Get the document_id from the URL parameters
-        document_id = request.GET.get('document_id')
-
-        print(document_id)
-        sitepack_documents = SitepackDocument.objects.all()
-        if request.accepted_renderer.format == 'html':
-            context = {
-                'approved_quotation': queryset,
-                'sitepack_documents': sitepack_documents,
-                "document_id":document_id,
-
-                }
-            return render(request, self.template_name, context)
         else:
-            messages.error(request, "You are not authorized to perform this action")
-            return Response(status=status.HTTP_403_FORBIDDEN)
-    
-    def post(self, request, *args, **kwargs):
-        """
-        Handle POST request to add a document to a job.
-        """
-        # Retrieve the Job instance using job_id from the URL.
-        # instance = self.get_queryset()
-        # Get the document_id from the URL parameters
-    
-        serializer_data = request.data
-
-        serializer = self.serializer_class(data=serializer_data, context={'request': request})
-
-    
-
-        message = "Document is assigned to the job successfully!"
-        if serializer.is_valid():
-            serializer.save()
-
-            if request.accepted_renderer.format == 'html':
-                messages.success(request, message)
-                return redirect(reverse('sitepack_job_list'))
-
-            else:
-                # Return JSON response with success message and serialized data.
-                return create_api_response(status_code=status.HTTP_201_CREATED,
-                                           message=message,
-                                           data=serializer.data
-                                           )
-        else:
-            # Invalid serializer data.
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data.
-                context = {'serializer': serializer}
-                return render_html_response(context, self.template_name)    
-            else:
-                # Return JSON response with an error message.
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+            return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                            message="We apologize for the inconvenience, but please review the below information.",
                                            data=convert_serializer_errors(serializer.errors))
+
+        
+        
+
+# class DocumentSelectView(CustomAuthenticationMixin, generics.CreateAPIView):
+#     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+#     template_name = 'site_packs/all_jobs.html'
+#     serializer_class = SitePackJobSerializer
+
+#     def get_queryset(self):
+#         queryset = Quotation.objects.filter(status="approved")
+#         return queryset
+    
+#     def get(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
+#          # Retrieve the list of Sitepack documents
+#         # Get the document_id from the URL parameters
+#         document_id = request.GET.get('document_id')
+
+#         print(document_id)
+#         sitepack_documents = SitepackDocument.objects.all()
+#         if request.accepted_renderer.format == 'html':
+#             context = {
+#                 'approved_quotation': queryset,
+#                 'sitepack_documents': sitepack_documents,
+#                 "document_id":document_id,
+
+#                 }
+#             return render(request, self.template_name, context)
+#         else:
+#             messages.error(request, "You are not authorized to perform this action")
+#             return Response(status=status.HTTP_403_FORBIDDEN)
+    
+#     def post(self, request, *args, **kwargs):
+#         """
+#         Handle POST request to add a document to a job.
+#         """
+#         # Retrieve the Job instance using job_id from the URL.
+#         # instance = self.get_queryset()
+#         # Get the document_id from the URL parameters
+    
+#         serializer_data = request.data
+
+#         serializer = self.serializer_class(data=serializer_data, context={'request': request})
+
+    
+
+#         message = "Document is assigned to the job successfully!"
+#         if serializer.is_valid():
+#             serializer.save()
+
+#             if request.accepted_renderer.format == 'html':
+#                 messages.success(request, message)
+#                 return redirect(reverse('sitepack_job_list'))
+
+#             else:
+#                 # Return JSON response with success message and serialized data.
+#                 return create_api_response(status_code=status.HTTP_201_CREATED,
+#                                            message=message,
+#                                            data=serializer.data
+#                                            )
+#         else:
+#             # Invalid serializer data.
+#             if request.accepted_renderer.format == 'html':
+#                 # Render the HTML template with invalid serializer data.
+#                 context = {'serializer': serializer}
+#                 return render_html_response(context, self.template_name)    
+#             else:
+#                 # Return JSON response with an error message.
+#                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+#                                            message="We apologize for the inconvenience, but please review the below information.",
+#                                            data=convert_serializer_errors(serializer.errors))
 
 
 class DocumentJobDeleteView(CustomAuthenticationMixin, generics.CreateAPIView):
