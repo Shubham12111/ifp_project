@@ -671,22 +671,7 @@ class TeamSerializer(serializers.ModelSerializer):
             "blank": "Team Name is required.",
         }
     )
-    members = serializers.PrimaryKeyRelatedField(
-        label= 'Team Name',
-        queryset = Member.objects.all(),
-        many = True,
-        style={
-            "input_type": "text",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Team Name is required.",
-        }
-    )
-
+    
     class Meta:
         model = Team
         fields = ["team_name"]  # You can specify the fields you want explicitly if needed

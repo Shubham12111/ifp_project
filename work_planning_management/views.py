@@ -28,7 +28,7 @@ from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
 from django.http.response import JsonResponse
 from django.db import IntegrityError
-from schedule.models import Event
+# from schedule.models import Event
 from datetime import datetime
 from .site_pack_views import SitePackJobSerializer
 
@@ -2596,14 +2596,14 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
          # Retrieve the members data
         members = Member.objects.all()
         team = Team.objects.all()
-        events = Event.objects.all()
+        # events = Event.objects.all()
         serializer = self.serializer_class(context={'request': request})
 
         if request.accepted_renderer.format == 'html':
             context = {'serializer': serializer,
                        'members': members,
                        'teams':team,
-                       'events': events
+                    #    'events': events
                        }
             return render(request, self.template_name, context)
         else:
