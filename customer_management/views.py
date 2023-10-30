@@ -159,7 +159,7 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_201_CREATED,
                 serializer_class=serializer_class,
-                message = "Congratulations! your customer has been added successfully.",
+                message = "Your customer has been added successfully.",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -179,7 +179,7 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"customer", HasCreateDataPermission, 'add'
         )
-        message = "Congratulations! your customer has been added successfully."
+        message = "Your customer has been added successfully."
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             user = serializer.save()

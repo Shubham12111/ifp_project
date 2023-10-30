@@ -69,7 +69,7 @@ urlpatterns = [
     # add job for stw
     path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
     path('stw/job_assign/',AssignJobView.as_view(),name='job_assign_stw'),
-    path('member_calendar/', views.member_calendar, name='member_calendar'),
+    path('member_calendar/', member_calendar, name='member_calendar'),
 
 
 

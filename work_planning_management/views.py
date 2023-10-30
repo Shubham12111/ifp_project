@@ -26,8 +26,8 @@ from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
 from django.http.response import JsonResponse
 from django.db import IntegrityError
-from schedule.models import Event
 from datetime import datetime
+from schedule.models import Event
 from .site_pack_views import SitePackJobSerializer
 
 
@@ -447,7 +447,7 @@ class STWRequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             
             serializer = self.serializer_class(data=serializer_data, context={'request': request})
             
-            message = "Congratulations! your STW Requirement has been added successfully."
+            message = "Your STW Requirement has been added successfully."
             if serializer.is_valid():
                 serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
                 serializer.validated_data['customer_id'] = customer_data
@@ -880,7 +880,7 @@ class STWDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         serializer_data = request.data if any(file_list) else data
         
-        message = "Congratulations! your  STW requirement defect has been added successfully."
+        message = "Your  STW requirement defect has been added successfully."
         
         # Check if the site address instance exists for the customer
         if defect_instance:
@@ -1159,7 +1159,7 @@ class STWSORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "Congratulations! SOR has been added successfully.",
+                message = "SOR has been added successfully.",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -1177,7 +1177,7 @@ class STWSORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         # Check authentication and permissions here if needed
 
-        message = "Congratulations! SOR has been added successfully."
+        message = "SOR has been added successfully."
 
         data = request.data
         print(data)
@@ -1459,7 +1459,7 @@ class QuoteJobView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add or update a job.
         """
 
-        message = "Congratulations! your job has been added successfully."
+        message = "Your job has been added successfully."
         job_data = Quotation.objects.get(id=self.kwargs.get('qoute_id'))
 
         # Create a serializer instance with the request data
@@ -1605,7 +1605,7 @@ class AddJobView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add or update a stw job.
         """
 
-        message = "Congratulations! your STW Job has been added successfully."
+        message = "Your STW Job has been added successfully."
         # Get the STWRequirement object based on the stw_id
         stw_requirement = STWRequirements.objects.get(id=self.kwargs.get('stw_id'))
 
@@ -2598,14 +2598,14 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
          # Retrieve the members data
         members = Member.objects.all()
         team = Team.objects.all()
-        events = Event.objects.all()
+        # events = Event.objects.all()
         serializer = self.serializer_class(context={'request': request})
 
         if request.accepted_renderer.format == 'html':
             context = {'serializer': serializer,
                        'members': members,
                        'teams':team,
-                       'events': events
+                    #    'events': events
                        }
             return render(request, self.template_name, context)
         else:
@@ -2652,29 +2652,38 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
                     data=convert_serializer_errors(serializer.errors)
                 )
 
-# def member_calendar(request):
-#     # Get the member's events
-#     events = Event.objects.all()
-
-#     return render(request, 'assign_job/member_calendar.html', {'events': events})
-
-
-import json
-from datetime import date
 def member_calendar(request):
-    # Replace this with your actual event data retrieval logic from your data source (e.g., database)
-    events = [
-        {
-            'title': 'Event 1',
-            'start': date(2023, 11, 1).isoformat(),
-        },
-        {
-            'title': 'Event 2',
-            'start': date(2023, 11, 5).isoformat(),
-        },
-        # Add more events here
-    ]
+    # Get the member's events
+    events = Event.objects.all()
 
-    events_json = json.dumps(events)
+    return render(request, 'assign_job/member_calendar.html', {'events': events})
 
-    return render(request, 'assign_job/member_calendar.html', {'events_json': events_json})
+
+# class MyCalendarView(generics.CreateAPIView):
+#     template_name = 'assign_job/member_calendar.html'
+
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context['events'] = Event.objects.all()
+#         return context
+
+# import json
+# from datetime import date
+# def member_calendar(request):
+#     # Replace this with your actual event data retrieval logic from your data source (e.g., database)
+#     events = [
+#         {
+#             'title': 'Event 1',
+#             'start': date(2023, 11, 1).isoformat(),
+#         },
+#         {
+#             'title': 'Event 2',
+#             'start': date(2023, 11, 5).isoformat(),
+#         },
+#         # Add more events here
+#     ]
+
+#     events_json = json.dumps(events)
+
+#     return render(request, 'assign_job/member_calendar.html', {'events_json': events_json})

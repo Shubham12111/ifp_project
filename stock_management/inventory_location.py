@@ -123,7 +123,7 @@ class InventoryLocationAddView(CustomAuthenticationMixin, generics.CreateAPIView
             docs_schema_response_new(
                 status_code=status.HTTP_200_OK,
                 serializer_class=serializer_class,
-                message = "Congratulations! inventory location has been added successfully.",
+                message = "Inventory location has been added successfully.",
                 ),
         status.HTTP_400_BAD_REQUEST: 
             docs_schema_response_new(
@@ -139,7 +139,7 @@ class InventoryLocationAddView(CustomAuthenticationMixin, generics.CreateAPIView
         """
         Handle POST request to add a inventory_location.
         """
-        message = "Congratulations! inventory location has been added successfully."
+        message = "Inventory location has been added successfully."
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
