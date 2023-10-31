@@ -1,0 +1,29 @@
+kubectl delete secret generic infinity-fire-systems-secret-beta -n infinity-fire-systems-namespace-uat
+
+kubectl delete configmap infinity-fire-systems-config-uat -n infinity-fire-systems-namespace-uat
+
+# "!"" cannot be used as a varibale because bash will convert that to history expansion
+
+kubectl create secret generic infinity-fire-systems-secret-uat -n infinity-fire-systems-namespace-uat \
+--from-literal=DB_USER="admin" \
+--from-literal=DB_PASSWORD="InfinityUAT2023" \
+--from-literal=DB_HOST="ifp-cluster-rds-uat.cluster-ca74dkiozvba.eu-west-2.rds.amazonaws.com" \
+--from-literal=DB_PORT="3306" \
+--from-literal=DB_NAME="ifp_database_uat" \
+--from-literal=SU_EMAIL="admin@gmail.com" \
+--from-literal=SU_PASSWORD="Admin@1234"
+
+
+    kubectl create configmap infinity-fire-systems-config-uat -n infinity-fire-systems-namespace-uat \
+    --from-literal=DB_HOST=$(kubectl get secret infinity-fire-systems-secret-uat -n infinity-fire-systems-namespace-uat -o jsonpath="{.data.DB_HOST}" | base64 --decode) \
+    --from-literal=DB_PORT=$(kubectl get secret infinity-fire-systems-secret-uat -n infinity-fire-systems-namespace-uat -o jsonpath="{.data.DB_PORT}" | base64 --decode) \
+    --from-literal=DB_NAME=$(kubectl get secret infinity-fire-systems-secret-uat -n infinity-fire-systems-namespace-uat -o jsonpath="{.data.DB_NAME}" | base64 --decode) \
+    --from-literal=DB_USER=$(kubectl get secret infinity-fire-systems-secret-uat -n infinity-fire-systems-namespace-uat -o jsonpath="{.data.DB_USER}" | base64 --decode) \
+    --from-literal=DB_PASSWORD=$(kubectl get secret infinity-fire-systems-secret-uat -n infinity-fire-systems-namespace-uat -o jsonpath="{.data.DB_PASSWORD}" | base64 --decode) \
+    --from-literal=SU_EMAIL=$(kubectl get secret infinity-fire-systems-secret-uat -n infinity-fire-systems-namespace-uat -o jsonpath="{.data.SU_EMAIL}" | base64 --decode) \
+    --from-literal=SU_PASSWORD=$(kubectl get secret infinity-fire-systems-secret-uat -n infinity-fire-systems-namespace-uat -o jsonpath="{.data.SU_PASSWORD}" | base64 --decode)
+
+
+
+
+
