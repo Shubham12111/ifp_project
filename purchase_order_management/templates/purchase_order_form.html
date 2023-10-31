@@ -51,6 +51,7 @@
 
                                     {% for vendor in vendor_list %}
                                         <option value="{{vendor.id}}">{{vendor.email}}</option>
+                                        <option value="{{vendor.id}}">{{vendor.first_name}} {{vendor.last_name}}</option>
                                     {% endfor %}
                                 </select>
                                 <div id ="vendor-card" class="mt-3">

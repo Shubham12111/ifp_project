@@ -34,6 +34,39 @@ from datetime import datetime
 from schedule.models import Event
 from .site_pack_views import SitePackJobSerializer
 
+# calendar imports
+from schedule.models import Calendar, Event, Occurrence
+from django.views.generic.detail import DetailView
+
+from schedule.utils import (
+    check_calendar_permissions,
+     check_event_permissions,
+    check_occurrence_permissions,
+    coerce_date_dict,
+ 
+)
+
+from schedule.periods import Day, Month, Week, Year  
+from django.urls import reverse
+from django.utils import timezone
+from schedule.settings import (
+    CHECK_EVENT_PERM_FUNC,
+    CHECK_OCCURRENCE_PERM_FUNC,
+    EVENT_NAME_PLACEHOLDER,
+    GET_EVENTS_FUNC,
+    OCCURRENCE_CANCEL_REDIRECT,
+    USE_FULLCALENDAR,
+)
+from schedule.periods import weekday_names
+import datetime
+from urllib.parse import quote
+
+from django.http import (
+    Http404,
+    HttpResponseBadRequest,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 
 
 class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.ListAPIView):
@@ -91,7 +124,7 @@ class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.List
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = self.get_queryset()
-        all_quotes = Quotation.objects.filter()
+        all_quotes = Quotation.objects.filter(status="approved")
         
         customers_with_counts = []  # Create a list to store customer objects with counts
 
@@ -2652,38 +2685,72 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
                     data=convert_serializer_errors(serializer.errors)
                 )
 
-def member_calendar(request):
-    # Get the member's events
-    events = Event.objects.all()
 
-    return render(request, 'assign_job/member_calendar.html', {'events': events})
+class CalendarViewPermissionMixin:
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super().as_view(**initkwargs)
+        return check_calendar_permissions(view)
+class CalendarMixin(CalendarViewPermissionMixin):
+    model = Calendar
+    slug_url_kwarg = "calendar_slug"
 
 
-# class MyCalendarView(generics.CreateAPIView):
-#     template_name = 'assign_job/member_calendar.html'
+class CalendarView(CalendarMixin, DetailView):
+    template_name = "schedule/calendar.html"
+class FullCalendarView(CalendarMixin, DetailView):
+    template_name = "fullcalendar.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context["calendar_slug"] = self.kwargs.get("calendar_slug")
+        return context
 
 
-#     def get_context_data(self, **kwargs):
-#         context = super().get_context_data(**kwargs)
-#         context['events'] = Event.objects.all()
-#         return context
+class CalendarByPeriodsView(CalendarMixin, DetailView):
+    template_name = "schedule/calendar_by_period.html"
 
-# import json
-# from datetime import date
-# def member_calendar(request):
-#     # Replace this with your actual event data retrieval logic from your data source (e.g., database)
-#     events = [
-#         {
-#             'title': 'Event 1',
-#             'start': date(2023, 11, 1).isoformat(),
-#         },
-#         {
-#             'title': 'Event 2',
-#             'start': date(2023, 11, 5).isoformat(),
-#         },
-#         # Add more events here
-#     ]
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        calendar = self.object
+        period_class = self.kwargs["period"]
+        try:
+            date = coerce_date_dict(self.request.GET)
+        except ValueError:
+            raise Http404
+        if date:
+            try:
+                date = datetime.datetime(**date)
+            except ValueError:
+                raise Http404
+        else:
+            date = timezone.now()
+        event_list = GET_EVENTS_FUNC(self.request, calendar)
 
-#     events_json = json.dumps(events)
+        local_timezone = timezone.get_current_timezone()
+        period = period_class(event_list, date, tzinfo=local_timezone)
 
-#     return render(request, 'assign_job/member_calendar.html', {'events_json': events_json})
+        context.update(
+            {
+                "date": date,
+                "period": period,
+                "calendar": calendar,
+                "weekday_names": weekday_names,
+                "here": quote(self.request.get_full_path()),
+            }
+        )
+        return context
+    
+
+from .serializers import EventSerializer
+from rest_framework.decorators import api_view
+@api_view(['GET'])
+def get_events_api(request):
+    selected_ids = request.GET.getlist('selected_ids')  # Assuming 'selected_ids' are the selected team or member IDs
+    events = Event.objects.filter(team_or_member_id__in=selected_ids)
+    serializer = EventSerializer(events, many=True)
+    return Response(serializer.data)
+
+
+
+

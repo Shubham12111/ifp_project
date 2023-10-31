@@ -722,20 +722,11 @@ class AddJobSerializer(serializers.ModelSerializer):
 
    
 class JobAssignmentSerializer(serializers.ModelSerializer):
-    # assigned_to_member = serializers.PrimaryKeyRelatedField(
-    #     queryset=Member.objects.all(),
-    #     many=True,
-    #     required=False,
-    #     label="Select Individual Members",
-    #     style={
-    #         "autofocus": False,
-    #         "autocomplete": "off"
-    #         },
-    # )
     assigned_to_team = serializers.PrimaryKeyRelatedField(
         queryset=Team.objects.all(),
         required=False,
         label="Select Team",
+        allow_null=True,  # Set allow_null to True
         style={
             "autofocus": False,
             "autocomplete": "off",
@@ -747,6 +738,12 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = STWJobAssignment
         fields = ['assigned_to_team']
+
+
+class EventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Event
+        fields = ['title', 'start', 'end', 'description'] 
 
 
 

@@ -20,6 +20,8 @@ from .site_pack_serializers import DocumentSerializer,SitePackJobSerializer,Docu
 from rest_framework.response import Response
 from django.http import QueryDict
 
+
+
 def sitepack_image(sitepack_instance):
     """
     Get document paths and types (image or video) associated with a sitepack_image.
@@ -316,36 +318,46 @@ class DocumentDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             
 
        
-class DocumentDownloadView(generics.RetrieveAPIView):
-    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
-    template_name = 'site_packs/document_list.html'
-    """
-    View for downloading a document.
-    """
+# class DocumentDownloadView(generics.RetrieveAPIView):
+#     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+#     template_name = 'site_packs/document_list.html'
+#     """
+#     View for downloading a document.
+#     """
     
-    def get(self, request, *args, **kwargs):
-        document_id = kwargs.get('document_id')
-        print(document_id)
+#     def get(self, request, *args, **kwargs):
+#         document_id = kwargs.get('document_id')
+#         print(document_id)
 
-        try:
-            sitepack_asset = SitepackAsset.objects.get(sitepack_id=document_id)
-            print(sitepack_asset)
-            file_path = sitepack_asset.document_path  # Adjust for your file storage configuration
+#         try:
+#             sitepack_asset = SitepackAsset.objects.get(sitepack_id=document_id)
+#             print(sitepack_asset)
+#             file_path = sitepack_asset.document_path  # Adjust for your file storage configuration
             
-            response = FileResponse(open(file_path, 'rb'))
-            response['Content-Disposition'] = f'attachment; filename="{file_path.split("/")[-1]}"'  # Force download
-             # Generate a presigned URL for the S3 object
-            presigned_url = generate_presigned_url(file_path)
+#             response = FileResponse(open(file_path, 'rb'))
+#             response['Content-Disposition'] = f'attachment; filename="{file_path.split("/")[-1]}"'  # Force download
+#              # Generate a presigned URL for the S3 object
+#             presigned_url = generate_presigned_url(file_path)
 
-            # Create a dictionary containing the presigned URL and other information
-            context = {
-                'presigned_url': presigned_url,
-                'filename': file_path.split('/')[-1],  # Extract the filename from the S3 object key
-            }
+#             # Create a dictionary containing the presigned URL and other information
+#             context = {
+#                 'presigned_url': presigned_url,
+#                 'filename': file_path.split('/')[-1],  # Extract the filename from the S3 object key
+#             }
 
-            return render(request, self.template_name, context)
-        except SitepackAsset.DoesNotExist:
-            return Response({'error': 'Document not found'}, status=404)
+#             return render(request, self.template_name, context)
+#         except SitepackAsset.DoesNotExist:
+#             return Response({'error': 'Document not found'}, status=404)
+        
+
+def download_document(request, asset_id):
+    asset = get_object_or_404(SitepackAsset, id=asset_id)
+    file_path = asset.document_path  # Replace this with the actual file path
+
+    with open(file_path, 'rb') as file:
+        response = FileResponse(file)
+        response['Content-Disposition'] = f'attachment; filename="{asset.document_path}"'
+        return response
 
 
 class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
@@ -448,78 +460,6 @@ class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
             else:
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                            message="We apologize for the inconvenience, but please review the below information.")
-
-        
-        
-
-# class DocumentSelectView(CustomAuthenticationMixin, generics.CreateAPIView):
-#     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-#     template_name = 'site_packs/all_jobs.html'
-#     serializer_class = SitePackJobSerializer
-
-#     def get_queryset(self):
-#         queryset = Quotation.objects.filter(status="approved")
-#         return queryset
-    
-#     def get(self, request, *args, **kwargs):
-#         queryset = self.get_queryset()
-#          # Retrieve the list of Sitepack documents
-#         # Get the document_id from the URL parameters
-#         document_id = request.GET.get('document_id')
-
-#         print(document_id)
-#         sitepack_documents = SitepackDocument.objects.all()
-#         if request.accepted_renderer.format == 'html':
-#             context = {
-#                 'approved_quotation': queryset,
-#                 'sitepack_documents': sitepack_documents,
-#                 "document_id":document_id,
-
-#                 }
-#             return render(request, self.template_name, context)
-#         else:
-#             messages.error(request, "You are not authorized to perform this action")
-#             return Response(status=status.HTTP_403_FORBIDDEN)
-    
-#     def post(self, request, *args, **kwargs):
-#         """
-#         Handle POST request to add a document to a job.
-#         """
-#         # Retrieve the Job instance using job_id from the URL.
-#         # instance = self.get_queryset()
-#         # Get the document_id from the URL parameters
-    
-#         serializer_data = request.data
-
-#         serializer = self.serializer_class(data=serializer_data, context={'request': request})
-
-    
-
-#         message = "Document is assigned to the job successfully!"
-#         if serializer.is_valid():
-#             serializer.save()
-
-#             if request.accepted_renderer.format == 'html':
-#                 messages.success(request, message)
-#                 return redirect(reverse('sitepack_job_list'))
-
-#             else:
-#                 # Return JSON response with success message and serialized data.
-#                 return create_api_response(status_code=status.HTTP_201_CREATED,
-#                                            message=message,
-#                                            data=serializer.data
-#                                            )
-#         else:
-#             # Invalid serializer data.
-#             if request.accepted_renderer.format == 'html':
-#                 # Render the HTML template with invalid serializer data.
-#                 context = {'serializer': serializer}
-#                 return render_html_response(context, self.template_name)    
-#             else:
-#                 # Return JSON response with an error message.
-#                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-#                                            message="We apologize for the inconvenience, but please review the below information.",
-#                                            data=convert_serializer_errors(serializer.errors))
 
 
 class DocumentJobDeleteView(CustomAuthenticationMixin, generics.CreateAPIView):
