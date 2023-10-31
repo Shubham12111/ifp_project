@@ -901,8 +901,8 @@ class SORSerializer(serializers.ModelSerializer):
             raise ValidationError("Price is invalid.")
 
         # Ensure that the price is not negative
-        if value < 0:
-            raise ValidationError("Price cannot be negative.")
+        if value <= 0:
+            raise ValidationError("Price cannot be negative or zero")
 
         # Ensure that the price has at most 10 digits in total
         if len(str(value)) > 10:
