@@ -28,7 +28,7 @@
           <div class="card-header pb-0">
             <div class="d-lg-flex">
               <div>
-                <h5 class="mb-0">RLO List</h5>
+                <h5 class="mb-0">Select Members</h5>
               </div>
             
             </div>
@@ -70,7 +70,8 @@
           </div>
         </div>
           <!-- Add a button to show/hide the calendar -->
-          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" onclick="$('#calendar').fullCalendar('open')">Assign Job</a>
+          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href=" {% url 'calendar_home'  calendar_slug='calendar-1'%}">Assign Job</a>
+          {% comment %} {% endcomment %}
           <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
       </div>
     </div>
@@ -102,6 +103,29 @@
         dataTableSearch.search(searchText).draw();
       });
   }
+  </script>
+
+  <script>
+   // Function to retrieve events for selected teams or members
+function getSelectedIds() {
+  var selectedIds = [];
+  var checkboxes = document.querySelectorAll('input[name="doc_checkbox"]:checked');
+
+  checkboxes.forEach(function (checkbox) {
+    selectedIds.push(checkbox.value);
+  });
+
+  console.log("Selected IDs: " + selectedIds.join(', '));
+}
+
+// Add a click event handler to the "Assign Job" button
+document.addEventListener("DOMContentLoaded", function () {
+  var assignJobButton = document.getElementById("assignJobButton");
+
+  assignJobButton.addEventListener("click", function () {
+    getSelectedIds(); // Call the function to get and print selected IDs
+  });
+});
   </script>
   
 

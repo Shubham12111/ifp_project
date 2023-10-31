@@ -46,7 +46,7 @@ class CustomFileValidator(FileExtensionValidator):
     Attributes:
         allowed_extensions (list): The list of allowed file extensions.
     """
-    def __init__(self, allowed_extensions=settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS, *args, **kwargs):
+    def __init__(self, allowed_extensions=settings.SUPPORTED_EXTENSIONS, *args, **kwargs):
         """
         Initialize the CustomFileValidator.
 
@@ -312,11 +312,11 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             'base_template': 'custom_multiple_file.html',
             'help_text': True,
             'multiple': True,
-            'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),
+            'accept': ','.join(settings.SUPPORTED_EXTENSIONS),
             'allow_null': True,
              'custom_class':'col-6'
         },
-        help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
+        help_text=('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
     )
     
     class Meta:
@@ -546,11 +546,11 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         'base_template': 'custom_multiple_file.html',
         'help_text': True,
         'multiple': True,
-        'accept': ','.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
+        'accept': ','.join(settings.SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
         'allow_null': True,  # Allow None values
         'custom_class': 'col-6'
     },
-    help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_VIDEO_SUPPORTED_EXTENSIONS))
+    help_text=('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
     )
     
     defect_type = serializers.ChoiceField(
@@ -883,7 +883,7 @@ class SORSerializer(serializers.ModelSerializer):
             'accept': ".png, .jpg, .jpeg",
             'allow_null': True,  # Allow None values
         },
-        help_text=('Supported file extensions: ' + ', '.join(settings.IMAGE_SUPPORTED_EXTENSIONS))
+        help_text=('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
         )
         
     class Meta:
@@ -901,8 +901,10 @@ class SORSerializer(serializers.ModelSerializer):
             raise ValidationError("Price is invalid.")
 
         # Ensure that the price is not negative
-        if value < 0:
-            raise ValidationError("Price cannot be negative.")
+
+        if value <=0:
+
+            raise ValidationError("Price cannot be negative or zero")
 
         # Ensure that the price has at most 10 digits in total
         if len(str(value)) > 10:

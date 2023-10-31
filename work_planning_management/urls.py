@@ -6,9 +6,13 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
 from django.contrib.auth.decorators import login_required
-from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,DocumentDownloadView,SitepackJobListView,DocumentJobDeleteView
+from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,download_document,SitepackJobListView,DocumentJobDeleteView
 
 from .rlo_views import *
+from schedule.models import Calendar
+from schedule.views import (
+    FullCalendarView,CalendarView,CalendarByPeriodsView
+)
 
 
 
@@ -16,7 +20,6 @@ from .rlo_views import *
 urlpatterns = [
     path('approved_quotation/', ApprovedQuotationCustomerListView.as_view(), name='approved_quotation_view'),
     path('approved_list/<int:customer_id>/list/', ApprovedQuotationListView.as_view(), name='approved_quotation_list'),
-    # path('all_approved_list/list/', AllApprovedQuotationListView.as_view(), name='all_jobs'),
 
 
     path('job_customers/', JobCustomerListView.as_view(), name='job_customers_list'),
@@ -69,7 +72,36 @@ urlpatterns = [
     # add job for stw
     path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
     path('stw/job_assign/',AssignJobView.as_view(),name='job_assign_stw'),
-    path('member_calendar/', member_calendar, name='member_calendar'),
+
+    # calendar urls
+    path('calendar/<str:calendar_slug>/', CalendarView.as_view(), name='calendar_home'),
+    path('fullcalendar/<str:calendar_slug>/', FullCalendarView.as_view(), name='fullcalendar'),
+    path("calendar/compact_month/<calendar_slug>/",CalendarByPeriodsView.as_view(template_name="schedule/calendar_compact_month.html"),
+        name="compact_calendar",
+        kwargs={"period": Month},
+    ),
+    path("calendar/month/<calendar_slug>/",CalendarByPeriodsView.as_view(template_name="schedule/calendar_month.html"),
+         name="month_calendar",
+        kwargs={"period": Month},
+    ),
+    path("calendar/year/<calendar_slug>",CalendarByPeriodsView.as_view(template_name="schedule/calendar_year.html"),
+        name="year_calendar",
+        kwargs={"period": Year},
+    ),
+    path("calendar/tri_month/<calendar_slug>",CalendarByPeriodsView.as_view(template_name="schedule/calendar_tri_month.html"),
+        name="tri_month_calendar",
+        kwargs={"period": Month},
+    ),
+    path("calendar/week/<calendar_slug>",CalendarByPeriodsView.as_view(template_name="schedule/calendar_week.html"),
+        name="week_calendar",
+        kwargs={"period": Week},
+    ),
+    path("calendar/daily/<calendar_slug>",CalendarByPeriodsView.as_view(template_name="schedule/calendar_day.html"),
+        name="day_calendar",
+        kwargs={"period": Day},
+    ),
+    path("calendar/<calendar_slug>",CalendarView.as_view(),name="calendar_home"),
+    path('api/get_events/', views.get_events_api, name='get_events_api'),
 
 
 
@@ -87,12 +119,9 @@ urlpatterns = [
     path('sitepack/document/list/', DocumentListView.as_view(), name='sitepack_document_list'),
     path('sitepack/document/add/',DocumentAddView.as_view(),name="document_add"),
     path('sitepack/document/delete/<int:pk>/',DocumentDeleteView.as_view(),name="document_delete"),
-    path('sitepack/document/download/<int:document_id>/', DocumentDownloadView.as_view(), name='download_document'),
+    path('sitepack/document_download/<int:asset_id>/', download_document, name='download_document'),
     path('sitepack/job/list/', SitepackJobListView.as_view(), name='sitepack_job_list'),
     # path('sitepack/job_document/add/', DocumentSelectView.as_view(), name='job_document_add'),
     path('sitepack/job_document/delete/<int:pk>/',DocumentJobDeleteView.as_view(),name="job_document_delete"),
-
-
-
 
 ]

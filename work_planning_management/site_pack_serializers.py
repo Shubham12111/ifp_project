@@ -199,3 +199,52 @@ class DocumentSelectSerializer(serializers.ModelSerializer):
         fields = ['sitepack_document']
 
 
+# class DocumentViewSerializer(serializers.ModelSerializer):
+#     """
+#     Serializer for Document View.
+#     """
+#     presigned_url = serializers.SerializerMethodField()
+#     filename = serializers.SerializerMethodField()
+
+#     class Meta:
+#         model = SitepackAsset
+#         fields = ['sitepack_id', 'document_path', 'created_at', 'presigned_url', 'filename']
+
+#     def get_presigned_url(self, document):
+#         """
+#         Get the pre-signed URL for the document.
+
+#         Parameters:
+#             document (document): The document instance.
+
+#         Returns:
+#             str: The pre-signed URL for the document or None if it doesn't exist.
+#         """
+#         # Check if 'document_path' exists and generate the pre-signed URL
+#         if document.document_path:
+#             presigned_url = generate_presigned_url(document.document_path)
+#             return presigned_url
+#         else:
+#             return None
+
+#     def get_filename(self, document):
+#         """
+#         Get the filename from the 'document_path'.
+
+#         Parameters:
+#             document (document): The document instance.
+
+#         Returns:
+#             str: The filename or None if it doesn't exist.
+#         """
+#         # Extract the filename from the 'document_path'
+#         if document.document_path:
+#             return document.document_path.split('/')[-1]
+#         else:
+#             return None
+        
+
+
+
+
+

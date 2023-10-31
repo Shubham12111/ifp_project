@@ -23,6 +23,7 @@ from drf_yasg import openapi
 from rest_framework import permissions
 
 
+
 # swagger settings
 schema_view = get_schema_view(
    openapi.Info(
@@ -50,6 +51,10 @@ urlpatterns = [
     path('fra/',include('requirement_management.urls')),
     path('purchase_order/',include('purchase_order_management.urls')),
     path('work_planning/',include('work_planning_management.urls')),
+    path('schedule/', include('schedule.urls')),
+
+
+
 
 
 
