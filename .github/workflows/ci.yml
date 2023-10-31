@@ -4,7 +4,7 @@ name: Deploy to ECR & EKS
 
 on:
   push:
-    # Trigger the workflow on push events, but only when beta is updated.
+    # Trigger the workflow on push events, but only when  beta is updated.
     branches: [beta]
 
 env:
