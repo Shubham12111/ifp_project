@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start betaelopment settings - unsuitable for production
+# Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -169,11 +169,11 @@ USE_TZ = True
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
 STATIC_URL= 'https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/'
-#STATIC_URL = '/static/'
-# STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+# STATIC_URL = '/static/'
+# # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 
-#STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # if not DEBUG:
 #     STATICFILES_DIRS = (
@@ -212,13 +212,24 @@ CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
 CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']
 
 
-STATICFILES_FINDERS = [
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'djangobower.finders.BowerFinder',
-]
-
+)
 
 BOWER_INSTALLED_APPS = (
     'jquery',
     'jquery-ui',
-    'bootstrap'
-)   
+    'bootstrap',
+    'fullcalendar#3.8.2'
+)
+
+BOWER_COMPONENTS_ROOT = '/BASE_DIR/components/'
+
+requires_system_checks = [
+    'some_check',
+    'another_check',
+    # ... other checks ...
+]
+

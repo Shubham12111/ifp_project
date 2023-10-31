@@ -1,25 +1,19 @@
 {% extends 'base.html' %}
+{% load i18n %}
+
+
+{% block extra_js %}
+    {% comment %} {% include "fullcalendar_script.html" %} {% endcomment %}
+{% endblock %}
 
 {% block content %}
-<h6>Calendar</h6>
+    <a class="btn btn-primary gradient" href="{% url 'calendar_create_event' calendar_slug %}">
+        <span class='glyphicon glyphicon-plus'></span>
+        {% trans "Add New Session" %}
+    </a>
+    <br>
+    <br>
+    <div id='calendar'></div>
 
-<div id="calendar"></div>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script type="text/javascript">
-    
-    $(document).ready(function() {
-        $('#calendar').fullCalendar({
-            events: [
-                {% for event in events %}
-                    {
-                        title: '{{ event.title }}',
-                        start: '{{ event.start_time }}',
-                        end: '{{ event.end_time }}'
-                    },
-                {% endfor %}
-            ]
-        });
-    });
-</script>
-
+    {% include "fullcalendar_modal.html" %}
 {% endblock %}

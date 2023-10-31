@@ -60,9 +60,11 @@ class RLOAddSerializer(serializers.ModelSerializer):
     job = JobField(
         label=('RLO Job'),
         required=True,
+        allow_null=True,  # Set allow_null to True
         style={'base_template': 'custom_select.html',
                "autofocus": False,
-               "autocomplete": "off"
+               "autocomplete": "off",
+               
                },
         error_messages={
             "required": "This field is required.",

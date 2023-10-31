@@ -15,35 +15,34 @@
             <form role="form" method="POST" enctype="multipart/form-data" id="teamForm">
               {% csrf_token %}
               {% render_form serializer %}
-              <div class="no-scroll-container">
-                <h6>Select Members</h6>
-                <form role="form" method="POST" enctype="multipart/form-data" id="teamForm">
-                  <table class="table table-bordered">
-                    <thead>
+              <div class="card-body px-0 pb-0">
+                <div class="table-responsive">
+                  <table class="table table-flush text-dark" id="members-list">
+                    <thead class="thead-light">
                       <tr>
-                        <th class="text-sm text-left">Select</th>
-                        <th class="text-sm text-left">Name</th>
-                        <th class="text-sm text-left">Address</th>
-                        <th class="text-sm text-left">Trade Type</th>
-                        <th class="text-sm text-left">Mobile Number</th>
-                        <th class="text-sm text-left">Email</th>
-                        <th class="text-sm text-left">Job Title</th>
+                        <th></th>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>Trade Type</th>
+                        <th>Mobile Number</th>
+                        <th>Email</th>
+                        <th>Job Title</th>
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="ml-4">
                       {% for member_obj in members %}
                       <tr class="text-sm">
-                        <td class="text-left">
-                          <input type="checkbox" class="small-checkbox" name="selected_members" value="{{ member_obj.id }}">
-                        </td>
-                        <td>{{ member_obj.name|title }}</td>
-                        <td>{{ member_obj.address }}</td>
-                        <td>{{ member_obj.trade_type }}</td>
-                        <td>{{ member_obj.mobile_number }}</td>
-                        <td>{{ member_obj.email }}</td>
-                        <td>{{ member_obj.job_title }}</td>
+                          <td>
+                            <input type="checkbox" class="small-checkbox" name="selected_members" value="{{ member_obj.id }}">
+                          </td>
+                          <td>{{ member_obj.name|title }}</td>
+                          <td>{{ member_obj.address }}</td>
+                          <td>{{ member_obj.trade_type }}</td>
+                          <td>{{ member_obj.mobile_number }}</td>
+                          <td>{{ member_obj.email }}</td>
+                          <td>{{ member_obj.job_title }}</td>
                       </tr>
-                      {% endfor %}
+                  {% endfor %}
                     </tbody>
                   </table>
                 </form>
@@ -61,4 +60,33 @@
   </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+if (document.getElementById('members-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#members-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25,
+      perPageSelect: false,
+    });
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+    });
+}
+</script>
 {% endblock %}
+
+
+
+
+
+
+

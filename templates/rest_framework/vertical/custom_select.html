@@ -10,7 +10,7 @@
     {% if field.label == 'Priority' %}
     <select class="form-control custom-select" name="{{ field.name }}" id="choices-Priority">
       {% if field.allow_null or field.allow_blank %}
-        <option value="" {% if not field.value %}selected{% endif %}>--------</option>
+        <option value="" {% if not field.value %}selected{% endif %}>----</option>
       {% endif %}
       {% for select in field.iter_options %}
           {% if select.start_option_group %}
