@@ -436,6 +436,47 @@
 
 
 
+  document.addEventListener("DOMContentLoaded", function () {
+    const addQuantitySurveyorButton = document.getElementById("addQuantitySurveyorButton");
+    const addSurveyorButton = document.getElementById("addSurveyorButton");
+
+    function updateButtonsState() {
+      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+      let isAnyCheckboxChecked = false;
+
+      checkboxes.forEach(function (checkbox) {
+        if (checkbox.checked) {
+          isAnyCheckboxChecked = true;
+          return;
+        }
+      });
+
+      addQuantitySurveyorButton.disabled = !isAnyCheckboxChecked;
+      addSurveyorButton.disabled = !isAnyCheckboxChecked || !hasAssignedQuantitySurveyor();
+    }
+
+    function hasAssignedQuantitySurveyor() {
+      // You can implement your own logic to check if Quantity Surveyor has been assigned.
+      // If Quantity Surveyor has been assigned, return true; otherwise, return false.
+      // Replace the following line with your actual logic.
+      return false;
+    }
+
+    const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+    checkboxes.forEach(function (checkbox) {
+      checkbox.addEventListener("change", function () {
+        updateButtonsState();
+      });
+    });
+
+    addQuantitySurveyorButton.addEventListener("click", function () {
+      // Implement logic to submit the form for assigning Quantity Surveyor
+      // After successful submission, enable the "Assign Surveyor" button as follows:
+      if (hasAssignedQuantitySurveyor()) {
+        addSurveyorButton.disabled = false;
+      }
+    });
+  });
 </script>
 
 
