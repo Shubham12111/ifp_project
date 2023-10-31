@@ -225,11 +225,11 @@ BOWER_INSTALLED_APPS = (
     'fullcalendar#3.8.2'
 )
 
-BOWER_COMPONENTS_ROOT = '/BASE_DIR/components/'
+# BOWER_COMPONENTS_ROOT = BASE_DIR + '/components/'
 
-requires_system_checks = [
-    'some_check',
-    'another_check',
-    # ... other checks ...
-]
+# requires_system_checks = [
+#     'some_check',
+#     'another_check',
+#     # ... other checks ...
+# ]
 
