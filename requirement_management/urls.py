@@ -46,8 +46,9 @@ urlpatterns = [
     path('customer/sor/<int:customer_id>/add/', SORAddView.as_view(), name='add_sor_customer'),
     
     path('customer/sor/<int:customer_id>/edit/<int:sor_id>/', SORUpdateView.as_view(), name='edit_sor_customer'),
+    path('customer/sor/<int:sor_id>/view/', SORDetailView.as_view(), name='sor_customers_detail'),
     path('customer/sor/delete/<int:sor_id>/', SORDeleteView.as_view(), name='delete_sor'),
-    path('customer/sor/delete/document/<int:customer_id>/<int:sor_id>/<int:document_id>', SORRemoveImageView.as_view(), name='delete_sor_document'),
+    # path('customer/sor/delete/document/<int:customer_id>/<int:sor_id>/<int:document_id>', SORRemoveImageView.as_view(), name='delete_sor_document'),
 
 
     
