@@ -68,9 +68,9 @@
                     </li>
                     {% if request.user|has_view_permission:"fire_risk_assessment" %}
                     <li>
-                      <a href="{% url 'sor_customers_detail' customer_id item.id %}" class="dropdown-item border-radius-md">
-                          View
-                      </a>
+                      <a href="{% url 'view_sor_customer' sor_id=item.id %}">
+                        View
+                    </a>
                     </li>
                   {% endif %}
                         

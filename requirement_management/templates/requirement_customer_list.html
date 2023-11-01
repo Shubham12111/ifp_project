@@ -81,6 +81,27 @@ if (document.getElementById('requirement-customer-list')) {
   }
 
 
+  if (document.getElementById('requirement-customer-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#requirement-customer-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 25,
+      perPageSelect: false,
+    });
 
+    const dataTableTop = document.querySelector('.dataTable-top');
+    if (dataTableTop) {
+      dataTableTop.parentNode.removeChild(dataTableTop);
+    }
+
+    const searchInput = document.getElementById('searchInput');
+
+    searchInput.addEventListener('input', function() {
+        // Remove extra spaces within the search text
+        const searchText = searchInput.value.replace(/\s+/g, ' ').toLowerCase().trim();
+        dataTableSearch.search(searchText).draw();
+    });
+}
+</script>
 </script>
 {% endblock %}
