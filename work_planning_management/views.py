@@ -2309,10 +2309,11 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         message = "Team added successfully!"
 
         if serializer.is_valid():
-            team = serializer.save()
             selected_member_ids = request.POST.getlist("selected_members")
 
             if 2 <= len(selected_member_ids) <= 6:
+                # Only create the team if it has between 2 and 6 members
+                team = serializer.save()
                 associated_members = []
 
                 for member_id in selected_member_ids:
@@ -2346,7 +2347,7 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return render(request, self.template_name, context)
             else:
                 return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
-            
+                
 class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
     """
     API view for listing teams in the "Teams" tab.
