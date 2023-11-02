@@ -66,6 +66,13 @@
                       {% endif %}
                       {% endif %}
                     </li>
+                    {% if request.user|has_view_permission:"fire_risk_assessment" %}
+                    <li>
+                      <a href="{% url 'view_sor_customer' sor_id=item.id %}"class="dropdown-item border-radius-md">
+                      View
+                    </a>
+                    </li>
+                  {% endif %}
                         
                     {% if request.user|has_delete_permission:"fire_risk_assessment" %}
                     <li>
