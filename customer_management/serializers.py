@@ -253,6 +253,10 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         style={
             'base_template': 'custom_input.html'
         },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Vat Number is required.",
+        },
     )
     
     tax_preference = serializers.ChoiceField(
