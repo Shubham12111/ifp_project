@@ -185,26 +185,26 @@
 
 <!-- Modal for importing csv -->
 <div class="modal fade" id="createcsvModal" tabindex="-1" aria-labelledby="createcsvModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="createcsvModalLabel">Import CSV</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <!-- Your form content goes here -->
         <form id="csvForm" method="POST" action="{% url 'import_csv' customer_id %}" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="form-group">
             <label for="fileInput">Select File:</label>
             <input type="file" class="form-control-file" id="fileInput" name="csv_file">
             <p class="text-sm mt-2">Supported file formats: xls, xlsx, csv</p>
-            <div class="modal-footer mt-4">
-            <a href="#" class="btn bg-gradient-primary" id="downloadSampleButton">Download Sample Template</a>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
-            </div>
+          </div>
         </form>
+      </div>
+      <div class="modal-footer">
+        <a href="downloadSampleButton" id="downloadSampleButton" style="margin-right: 85px; color: blue;">Download Sample Template</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
       </div>
     </div>
   </div>
@@ -349,76 +349,40 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    // Get the "Add Quantity Surveyor" button
-    const addQsButton = document.getElementById("addQuantitySurveyorButton");
+    const addQuantitySurveyorButton = document.getElementById("addQuantitySurveyorButton");
+    const addSurveyorButton = document.getElementById("addSurveyorButton");
 
-    // Get the modal
-    const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
+    function updateButtonsState() {
+      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+      let isAnyCheckboxChecked = false;
 
-    // Add an event listener to show the modal when the button is clicked
-    addQsButton.addEventListener("click", function () {
-      addQsModal.show();
-    });
-
-    // Add an event listener to submit the form when the "Submit" button is clicked
-    const submitButton = document.getElementById("submitButton");
-
-    submitButton.addEventListener("click", function () {
-      // Get all selected checkboxes
-      const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
-
-      // Create an array to store the selected IDs
-      const selectedIdsArray = [];
-
-      // Push the values of selected checkboxes into the array
-      selectedCheckboxes.forEach(function (checkbox) {
-        selectedIdsArray.push(checkbox.value);
+      checkboxes.forEach(function (checkbox) {
+        if (checkbox.checked) {
+          isAnyCheckboxChecked = true;
+          return;
+        }
       });
 
-      // Set the array as the value of the hidden input field
-      document.getElementById("selectedIds").value = JSON.stringify(selectedIdsArray);
+      addQuantitySurveyorButton.disabled = !isAnyCheckboxChecked;
+      addSurveyorButton.disabled = isAnyCheckboxChecked;
+    }
 
-      // Now, submit the form
-      const selectForm = document.getElementById("selectForm");
-      selectForm.submit();
-    });
-
-
-
-
-
-
-    // Add an event listener to submit the form when the "Submit" button is clicked
-    const submitQsButton = document.getElementById("submitQsForm");
-    submitQsButton.addEventListener("click", function () {
-      // Get all selected checkboxes
-      const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
-
-      // Create an array to store the selected IDs
-      const selectedIdsArray = [];
-
-      // Push the values of selected checkboxes into the array
-      selectedCheckboxes.forEach(function (checkbox) {
-        selectedIdsArray.push(checkbox.value);
+    const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+    checkboxes.forEach(function (checkbox) {
+      checkbox.addEventListener("change", function () {
+        updateButtonsState();
       });
-
-      // Set the array as the value of the hidden input field
-      document.getElementById("selectedReqIds").value = JSON.stringify(selectedIdsArray);
-
-      // Now, submit the form
-      const selectQsForm = document.getElementById("selectQsForm");
-      selectQsForm.submit();
     });
 
-
-    const saveButton = document.getElementById("saveButton");
-    saveButton.addEventListener("click", function () {
-      const csvForm = document.getElementById("csvForm");
-      csvForm.submit(); // Submit the form
+    addQuantitySurveyorButton.addEventListener("click", function () {
+      // Implement logic to submit the form for assigning Quantity Surveyor
+      // After successful submission, enable the "Assign Surveyor" button as follows:
+      // Add logic to enable the "Assign Surveyor" button here
+      addSurveyorButton.disabled = false;
     });
-
-
   });
+
+
 
   // JavaScript to open the modal when the button is clicked
   const openCreateCsvModalButton = document.getElementById("openCreateCsvModalButton");
@@ -435,6 +399,48 @@
   }
 
 
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const addQuantitySurveyorButton = document.getElementById("addQuantitySurveyorButton");
+    const addSurveyorButton = document.getElementById("addSurveyorButton");
+
+    function updateButtonsState() {
+      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+      let isAnyCheckboxChecked = false;
+
+      checkboxes.forEach(function (checkbox) {
+        if (checkbox.checked) {
+          isAnyCheckboxChecked = true;
+          return;
+        }
+      });
+
+      addQuantitySurveyorButton.disabled = !isAnyCheckboxChecked;
+      addSurveyorButton.disabled = !isAnyCheckboxChecked || !hasAssignedQuantitySurveyor();
+    }
+
+    function hasAssignedQuantitySurveyor() {
+      // You can implement your own logic to check if Quantity Surveyor has been assigned.
+      // If Quantity Surveyor has been assigned, return true; otherwise, return false.
+      // Replace the following line with your actual logic.
+      return false;
+    }
+
+    const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+    checkboxes.forEach(function (checkbox) {
+      checkbox.addEventListener("change", function () {
+        updateButtonsState();
+      });
+    });
+
+    addQuantitySurveyorButton.addEventListener("click", function () {
+      // Implement logic to submit the form for assigning Quantity Surveyor
+      // After successful submission, enable the "Assign Surveyor" button as follows:
+      if (hasAssignedQuantitySurveyor()) {
+        addSurveyorButton.disabled = false;
+      }
+    });
+  });
 
 </script>
 
