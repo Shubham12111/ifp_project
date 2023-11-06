@@ -15,6 +15,7 @@ from infinity_fire_solutions.custom_form_validation import *
 from datetime import datetime
 from infinity_fire_solutions.email import *
 import uuid
+from work_planning_management.models import Job
 
 
 class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -313,6 +314,12 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 
                 quotation_instance.pdf_path = f'requirement/{requirement_instance.id}/quotation/pdf/{unique_pdf_filename}'
                 quotation_instance.save()
+
+                if request.data.get('status') == "approved":
+                    # Ensure that the Quotation is saved before creating the Job
+                    quotation_instance.save()
+                    # Create a Job associated with this Quotation
+                    Job.objects.create(quotation=quotation_instance)
 
             if request.data.get('status') == "send_for_approval":
                 if customer_data.email:
