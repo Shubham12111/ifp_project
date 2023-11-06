@@ -538,13 +538,14 @@ class SORDetailView(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         # Get the SOR instance
+        customer_id = kwargs.get('customer_id')
         instance = self.get_object()
 
         if instance:
             if request.accepted_renderer.format == 'html':
                 # For HTML requests, render the template with the SOR instance
                 serializer = self.serializer_class(instance=instance, context={'request': request})
-                context = {'serializer': serializer, 'sor_instance': instance}
+                context = {'serializer': serializer, 'sor_instance': instance,'customer_id': customer_id}
                 return render(request, self.template_name, context)
             else:
                 # For API requests, return a serialized SOR instance
@@ -640,3 +641,31 @@ class SORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
             messages.error(self.request, "Something went wrong !")
         
         return redirect(reverse('customer_sor_list', kwargs={'customer_id': customer_id}))
+
+
+class SORRemoveImageView(generics.DestroyAPIView):
+    """
+    View to remove a document associated with a sor.
+    """
+    swagger_schema = None
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to remove the document associated with a sor.
+        """
+        sor_id = kwargs.get('sor_id')
+        if sor_id:
+            sor_instance = SORItemImage.objects.filter(sor_id=sor_id, pk=kwargs.get('pk') ).get()
+            if sor_instance and sor_instance.image_path: 
+                
+                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = sor_instance.image_path)
+                sor_instance.delete()
+            return Response(
+                {"message": "Your Sor Document has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "Sor Document not found OR you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )
