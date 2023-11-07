@@ -54,7 +54,7 @@ class CategoryListView(CustomAuthenticationMixin,generics.ListAPIView):
         }
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = Category.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = Category.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
         if request.accepted_renderer.format == 'html':
             context = {'categories':queryset}
             return render_html_response(context,self.template_name)
