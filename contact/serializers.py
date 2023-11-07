@@ -110,7 +110,7 @@ class ContactSerializer(serializers.ModelSerializer):
         label=('Phone'),
         max_length=14,
         min_length=10,
-        required= False,
+        required= True,
         allow_null=True,
         allow_blank=True,
         style={
@@ -133,7 +133,7 @@ class ContactSerializer(serializers.ModelSerializer):
     job_title = serializers.CharField(
         label=('Job Title'),
         max_length=100,
-        required= False,
+        required= True,
         allow_null=True,
         allow_blank=True,
         style={
@@ -212,7 +212,7 @@ class ContactSerializer(serializers.ModelSerializer):
     post_code = serializers.CharField(
         label=('Post Code'),
         max_length=7,
-        required=False,
+        required=True,
         allow_null=True,
         allow_blank=True,
         style={
@@ -220,6 +220,12 @@ class ContactSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             'base_template': 'custom_input.html'
+        },
+          error_messages={
+            "required": "This field is required.",
+            "blank": "Contact Type field cannot be blank.",
+            "invalid": "Contact Type can only contain characters.",
+
         },
 
         validators=[validate_uk_postcode]
