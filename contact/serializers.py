@@ -101,8 +101,36 @@ class ContactSerializer(serializers.ModelSerializer):
             "blank": "Email field is required.",
         },
     )
+    def validate_phone_number(value):
+        if not value:
+            return  # Allow empty values
+        if not (value.startswith("+0") and len(value) == 13) and not (value.startswith("+44") and len(value) == 14):
+            raise serializers.ValidationError("Phone number must start with '+0' and have 11 digits, or start with '+44' and have 12 digits.")
     phone_number = serializers.CharField(
         label=('Phone'),
+        max_length=14,
+        min_length=10,
+        required= True,
+        allow_null=True,
+        allow_blank=True,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            "base_template": 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Phone number field is required.",
+            "max_length": "Invalid Phone number and max limit should be 14.",
+            "min_length": "Invalid Phone number and min limit should be 10."
+        },
+        validators=[validate_phone_number]
+    )
+
+    mobile_number = serializers.CharField(
+        label=('Mobile_no'),
         max_length=14,
         min_length=10,
         required= False,
@@ -128,7 +156,7 @@ class ContactSerializer(serializers.ModelSerializer):
     job_title = serializers.CharField(
         label=('Job Title'),
         max_length=100,
-        required= False,
+        required= True,
         allow_null=True,
         allow_blank=True,
         style={
@@ -207,7 +235,7 @@ class ContactSerializer(serializers.ModelSerializer):
     post_code = serializers.CharField(
         label=('Post Code'),
         max_length=7,
-        required=False,
+        required=True,
         allow_null=True,
         allow_blank=True,
         style={
@@ -216,6 +244,12 @@ class ContactSerializer(serializers.ModelSerializer):
             "autocomplete": "off",
             'base_template': 'custom_input.html'
         },
+          error_messages={
+            "required": "This field is required.",
+            "blank": "Contact Type field cannot be blank.",
+            "invalid": "Contact Type can only contain characters.",
+
+        },
 
         validators=[validate_uk_postcode]
 
@@ -223,7 +257,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ['first_name','last_name', 'email', 'phone_number','company_name', 'job_title','contact_type','address','town','county','country','post_code',]
+        fields = ['first_name','last_name', 'email', 'phone_number','company_name', 'job_title','contact_type','mobile_number','address','town','county','country','post_code',]
 
         extra_kwargs={
             'name':{'required':True},

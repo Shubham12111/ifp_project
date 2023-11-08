@@ -63,8 +63,8 @@ def create_customer(customer, request):
     }
 
     # Send an email with the new account password
-    email = Email()  # Instantiate your Email class
-    email.send_mail(customer.email, 'email_templates/customer_password.html', context, 'Your New Account Password')
+    # email = Email()  # Instantiate your Email class
+    # email.send_mail(customer.email, 'email_templates/customer_password.html', context, 'Your New Account Password')
 
 class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -77,6 +77,9 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     search_fields = ['first_name','last_name', 'email','company_name']
     template_name = 'customer_list.html'
     ordering_fields = ['created_at'] 
+    ordering = ['-created_at']
+
+
 
     common_get_response = {
     status.HTTP_200_OK: 

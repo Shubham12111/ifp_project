@@ -211,7 +211,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
         for customer in queryset:
             fra_counts = all_fra.filter(customer_id=customer).count()
             customers_with_counts.append({'customer': customer, 'fra_counts': fra_counts})
-
+    
         if request.accepted_renderer.format == 'html':
             context = {'customers_with_counts': customers_with_counts}  # Pass the list of customers with counts to the template
             return render_html_response(context, self.template_name)
