@@ -2684,10 +2684,40 @@ def all_events(request):
     return JsonResponse(out, safe=False) 
 
 
+def add_event(request):
+    start = request.GET.get("start", None)
+    end = request.GET.get("end", None)
+    name = request.GET.get("title", None)
+    event = Events(name=str(name), start=start, end=end)
+    event.save()
+    data = {}
+    return JsonResponse(data)
+ 
+# def remove(request):
+#     id = request.GET.get("id", None)
+#     event = Events.objects.get(id=id)
+#     event.delete()
+#     data = {}
+#     return JsonResponse(data)
+
+
+
+def get_event_details(request, event_id):
+    try:
+        event = Events.objects.get(id=event_id)
+        event_data = {
+            'title': event.name,
+            'start': event.start,
+            'end': event.end,
+            'members': [member.name for member in event.members.all()],
+            'team': event.team.team_name if event.team else None,
+        }
+        return JsonResponse(event_data)
+    except Events.DoesNotExist:
+        return JsonResponse({'error': 'Event not found'}, status=404)
 
 
 
 
 
-    
 

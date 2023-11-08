@@ -73,6 +73,10 @@ urlpatterns = [
     # calendar urls
     path('member_calendar/', views.index, name='member_calendar'), 
     path('all_events/', views.all_events, name='all_events'), 
+    path('add_event/', views.add_event, name='add_event'), 
+    # path('remove/', views.remove, name='remove'),
+    path('get_event_details/<int:event_id>/', views.get_event_details, name='get_event_details'),
+
 
 
 
