@@ -70,8 +70,9 @@
           </div>
         </div>
           <!-- Add a button to show/hide the calendar -->
-          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href=" {% url 'calendar_home'  calendar_slug='calendar-1'%}">Assign Job</a>
+          {% comment %} <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href=" {% url 'calendar_home'  calendar_slug='calendar-1'%}">Assign Job</a> {% endcomment %}
           {% comment %} {% endcomment %}
+          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href=" {% url 'member_calendar' %}">Assign Job</a> 
           <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
       </div>
     </div>

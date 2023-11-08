@@ -294,6 +294,16 @@ class RequirementAddSerializer(serializers.ModelSerializer):
             "null": "Site Address is required."
         },
     )
+    due_date = serializers.DateField(
+        label='Due Date',
+        required=True,
+        input_formats=['%d/%m/%Y'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-4'
+        },
+        # Add any additional styles or validators if needed
+    )
     
     file_list = serializers.ListField(
         child=serializers.FileField(
@@ -321,7 +331,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Requirement
-        fields = ('RBNO', 'UPRN', 'action','description','site_address','file_list')
+        fields = ('RBNO', 'UPRN', 'action','description','site_address','due_date','file_list')
     
     def validate_RBNO(self, value):
         """
