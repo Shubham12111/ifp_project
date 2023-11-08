@@ -300,7 +300,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         input_formats=['%d/%m/%Y'],
         style={
             'base_template': 'custom_datepicker.html',
-            'custom_class': 'col-4'
+            'custom_class': 'col-6'
         },
         # Add any additional styles or validators if needed
     )
