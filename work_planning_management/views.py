@@ -2291,19 +2291,10 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             if 2 <= len(selected_member_ids) <= 6:
                 # Only create the team if it has between 2 and 6 members
                 team = serializer.save()
-                associated_members = []
 
-                for member_id in selected_member_ids:
-                    try:
-                        member = Member.objects.get(id=member_id)
-                        member.team = team  # Associate the member with the team
-                        member.save()
-                        associated_members.append(member)
-                    except Member.DoesNotExist:
-                        print(f"Member with ID {member_id} does not exist.")
-                
-                team.member_count = len(associated_members)
-                team.save()
+                # Fetch the selected members and associate them with the team
+                associated_members = Member.objects.filter(id__in=selected_member_ids)
+                team.members.set(associated_members)
 
                 if request.accepted_renderer.format == 'html':
                     messages.success(request, message)
@@ -2324,6 +2315,7 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return render(request, self.template_name, context)
             else:
                 return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
+
                 
 class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
     """
@@ -2421,15 +2413,22 @@ class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
         return instance
 
     def get(self, request, *args, **kwargs):
-        # This method handles GET requests for updating an existing vendor object.
-        if request.accepted_renderer.format == 'html':
-            instance = self.get_queryset()
-            print(instance)
-            if instance:
-                serializer = self.serializer_class(instance=instance, context={'request': request})
-                context = {'serializer': serializer, 'team_instance': instance}
-                return render_html_response(context, self.template_name)
+        instance = self.get_queryset()
+        if instance:
+            serializer = self.serializer_class(instance=instance, context={'request': request})
+
+            # Fetch member data associated with the team
+            members = Member.objects.filter(team=instance)
+
+            if request.accepted_renderer.format == 'html':
+                context = {
+                    'serializer': serializer,
+                    'team_instance': instance,
+                    'members': members,  # Pass the members data to the template
+                }
+                return render(request, self.template_name, context)
             else:
+                # Handle non-HTML formats as before
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('teams_list'))
 
