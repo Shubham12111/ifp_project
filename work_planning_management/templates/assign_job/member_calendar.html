@@ -1,19 +1,36 @@
-{% extends 'base.html' %}
-{% load i18n %}
 
+<html>
+    <head>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.css" />
 
-{% block extra_js %}
-    {% comment %} {% include "fullcalendar_script.html" %} {% endcomment %}
-{% endblock %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+   
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.js"></script>
 
-{% block content %}
-    <a class="btn btn-primary gradient" href="{% url 'calendar_create_event' calendar_slug %}">
-        <span class='glyphicon glyphicon-plus'></span>
-        {% trans "Add New Session" %}
-    </a>
-    <br>
-    <br>
-    <div id='calendar'></div>
+ </head>
+    <div class="container">
+        <div class="row">
+           <h4>Calendar Events</h4> 
+           {% block content %}{% endblock %}
+        </div>
+       </div>
+       <script>
+          $(document).ready(function () {
+              var calendar = $('#calendar').fullCalendar({
+                  header: {
+                      left: 'prev,next today',
+                      center: 'title',
+                      right: 'month,agendaWeek,agendaDay'
+                  },
+                    events: '/work_planning/all_events/'
+                   
+              });
+          });
+        
+       </script>
 
-    {% include "fullcalendar_modal.html" %}
-{% endblock %}
+ </body>
+</html>
+     

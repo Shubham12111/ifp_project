@@ -742,8 +742,8 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
 
 class EventSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Event
-        fields = ['title', 'start', 'end', 'description'] 
+        model = Events
+        fields = ['name', 'start', 'end', 'description'] 
 
 
 

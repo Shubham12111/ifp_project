@@ -9,10 +9,7 @@ from django.contrib.auth.decorators import login_required
 from .site_pack_views import DocumentListView,DocumentAddView,DocumentDeleteView,download_document,SitepackJobListView,DocumentJobDeleteView
 
 from .rlo_views import *
-from schedule.models import Calendar
-from schedule.views import (
-    FullCalendarView,CalendarView,CalendarByPeriodsView
-)
+
 
 
 
@@ -74,34 +71,8 @@ urlpatterns = [
     path('stw/job_assign/',AssignJobView.as_view(),name='job_assign_stw'),
 
     # calendar urls
-    path('calendar/<str:calendar_slug>/', CalendarView.as_view(), name='calendar_home'),
-    path('fullcalendar/<str:calendar_slug>/', FullCalendarView.as_view(), name='fullcalendar'),
-    path("calendar/compact_month/<calendar_slug>/",CalendarByPeriodsView.as_view(template_name="schedule/calendar_compact_month.html"),
-        name="compact_calendar",
-        kwargs={"period": Month},
-    ),
-    path("calendar/month/<calendar_slug>/",CalendarByPeriodsView.as_view(template_name="schedule/calendar_month.html"),
-         name="month_calendar",
-        kwargs={"period": Month},
-    ),
-    path("calendar/year/<calendar_slug>",CalendarByPeriodsView.as_view(template_name="schedule/calendar_year.html"),
-        name="year_calendar",
-        kwargs={"period": Year},
-    ),
-    path("calendar/tri_month/<calendar_slug>",CalendarByPeriodsView.as_view(template_name="schedule/calendar_tri_month.html"),
-        name="tri_month_calendar",
-        kwargs={"period": Month},
-    ),
-    path("calendar/week/<calendar_slug>",CalendarByPeriodsView.as_view(template_name="schedule/calendar_week.html"),
-        name="week_calendar",
-        kwargs={"period": Week},
-    ),
-    path("calendar/daily/<calendar_slug>",CalendarByPeriodsView.as_view(template_name="schedule/calendar_day.html"),
-        name="day_calendar",
-        kwargs={"period": Day},
-    ),
-    path("calendar/<calendar_slug>",CalendarView.as_view(),name="calendar_home"),
-    path('api/get_events/', views.get_events_api, name='get_events_api'),
+    path('member_calendar/', views.index, name='member_calendar'), 
+    path('all_events/', views.all_events, name='all_events'), 
 
 
 
