@@ -1,5 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect , get_object_or_404
 from django.conf import settings
+from django.http import Http404
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from .models import *
@@ -478,34 +479,81 @@ class SORDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             messages.error(request, "SOR not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="SOR not found OR You are not authorized to perform this action.", )
-
-
-class SORRemoveImageView(generics.DestroyAPIView):
+        
+class SORDetailView(generics.RetrieveAPIView):
     """
-    View to remove a document associated with sor.
+    API view for retrieving the details of a Single Object Request (SOR).
+
+    This view handles both HTML and API requests for retrieving SOR details.
     """
-    swagger_schema = None
-    
-    def destroy(self, request, *args, **kwargs):
+    serializer_class = SORSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'sor/sor_detail.html'
+
+    def get_queryset(self):
         """
-        Handles DELETE request to remove the document associated with a sor.
+        Get the queryset for retrieving a SOR instance.
+
+        Returns:
+            QuerySet: A queryset of SOR instances filtered based on the authenticated user's ID.
         """
-        sor_id = kwargs.get('sor_id')
-        if sor_id:
-            image_instance = SORItemImage.objects.filter(sor_id=sor_id, pk=kwargs.get('document_id') ).first()
-            if image_instance and image_instance.image_path: 
-                
-                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = image_instance.image_path)
-                image_instance.delete()
-            return Response(
-                {"message": "Your item image has been deleted successfully."},
-                status=status.HTTP_204_NO_CONTENT
-            )
+        # Implement your logic to filter SOR instances based on user permissions and data access.
+
+    def get_queryset(self):
+        """
+        Get the queryset for retrieving a SOR instance.
+
+        Returns:
+            QuerySet: A queryset of SOR instances filtered based on the authenticated user's ID.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasUpdateDataPermission, 'change'
+        )
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        queryset = SORItem.objects.filter(filter_mapping.get(data_access_value, Q()))
+
+        return queryset  # Make sure to return the queryset
+
+    def get_object(self):
+        """
+        Get the SOR instance.
+
+        Returns:
+            SORItem: A single SOR instance.
+        """
+        try:
+            sor_id = self.kwargs.get('sor_id')
+            return SORItem.objects.get(pk=sor_id)
+        except SORItem.DoesNotExist:
+            raise Http404("SOR not found")
+
+    def get(self, request, *args, **kwargs):
+        # Get the SOR instance
+        customer_id = kwargs.get('customer_id')
+        instance = self.get_object()
+
+        if instance:
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests, render the template with the SOR instance
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                context = {'serializer': serializer, 'sor_instance': instance,'customer_id': customer_id}
+                return render(request, self.template_name, context)
+            else:
+                # For API requests, return a serialized SOR instance
+                serializer = self.serializer_class(instance=instance)
+                return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response(
-                {"message": "SOR Image not found or you don't have permission to delete."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            messages.error(request, "SOR not found")
+            return redirect(reverse('sor_list'))  # Redirect to a SOR list view or other appropriate page
         
 class SORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
@@ -593,3 +641,31 @@ class SORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
             messages.error(self.request, "Something went wrong !")
         
         return redirect(reverse('customer_sor_list', kwargs={'customer_id': customer_id}))
+
+
+class SORRemoveImageView(generics.DestroyAPIView):
+    """
+    View to remove a document associated with a sor.
+    """
+    swagger_schema = None
+    
+    def destroy(self, request, *args, **kwargs):
+        """
+        Handles DELETE request to remove the document associated with a sor.
+        """
+        sor_id = kwargs.get('sor_id')
+        if sor_id:
+            sor_instance = SORItemImage.objects.filter(sor_id=sor_id, pk=kwargs.get('pk') ).get()
+            if sor_instance and sor_instance.image_path: 
+                
+                s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key = sor_instance.image_path)
+                sor_instance.delete()
+            return Response(
+                {"message": "Your Sor Document has been deleted successfully."},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response(
+                {"message": "Sor Document not found OR you don't have permission to delete."},
+                status=status.HTTP_404_NOT_FOUND
+            )

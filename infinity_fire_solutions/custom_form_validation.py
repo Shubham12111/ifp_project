@@ -71,14 +71,20 @@ def validate_phone_number(value):
     cleaned_number = re.sub(r'\D', '', value)
 
     # Check if the cleaned number has exactly 12 digits
-    if len(cleaned_number) != 12:
-        raise serializers.ValidationError("Phone number should have 12 digits, including the country code.")
-
-    # Check if the cleaned number starts with the country code +44
-    if not cleaned_number.startswith('44'):
-        raise serializers.ValidationError("Phone number should start with the country code +44.")
+    if len(cleaned_number) == 12:
+        # Check if the cleaned number starts with the country code +44
+        if not cleaned_number.startswith('44'):
+            raise serializers.ValidationError("Phone number should have 12 digits including country code and start with +44.")
+    elif len(cleaned_number) == 11:
+        # Check if the cleaned number starts with +0
+        if not cleaned_number.startswith('0'):
+            raise serializers.ValidationError("Phone number should have 11 digits including country code and start with +0.")
+    else:
+        raise serializers.ValidationError("Phone number should have 11 digits starting with +0 or 12 digits starting with +44.")
 
     return value
+    
+
 
 def validate_uk_postcode(value):
     """

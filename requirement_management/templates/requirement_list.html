@@ -86,7 +86,7 @@
                   <th>Quantity Surveyor</th>
                   <th>Surveyor</th>
                   <th>Status</th>
-                  <th class="custom-last-column">Created At</th>
+                  <th class="custom-last-column">Due Date</th>
                   <th class="custom-last-column">Actions</th>
                 </tr>
               </thead>
@@ -105,7 +105,7 @@
                   <td class="text-sm">{{requirement.quantity_surveyor|default:''}}</td>
                   <td class="text-sm">{{requirement.surveyor|default:''}}</td>
                   <td class="text-sm">{{requirement.get_status_display|default:''|title}}</td>
-                  <td class="text-sm">{{requirement.created_at|date:"d/m/Y"}}</td>
+                  <td class="text-sm">{{requirement.due_date|date:"d/m/Y"}}</td>
                   <td class="text-sm">
                     <div class="dropstart ms-auto pe-0">
                       <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
@@ -147,7 +147,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div>  
 </div>
 
 <!-- Modal for adding Quantity Surveyor -->
@@ -185,26 +185,26 @@
 
 <!-- Modal for importing csv -->
 <div class="modal fade" id="createcsvModal" tabindex="-1" aria-labelledby="createcsvModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="createcsvModalLabel">Import CSV</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <!-- Your form content goes here -->
         <form id="csvForm" method="POST" action="{% url 'import_csv' customer_id %}" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="form-group">
             <label for="fileInput">Select File:</label>
             <input type="file" class="form-control-file" id="fileInput" name="csv_file">
             <p class="text-sm mt-2">Supported file formats: xls, xlsx, csv</p>
-            <div class="modal-footer mt-4">
-            <a href="#" class="btn bg-gradient-primary" id="downloadSampleButton">Download Sample Template</a>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
-            </div>
+          </div>
         </form>
+      </div>
+      <div class="modal-footer">
+        <a href="#" id="downloadSampleButton" style="margin-right: 85px; color: blue;">Download Sample Template</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
       </div>
     </div>
   </div>

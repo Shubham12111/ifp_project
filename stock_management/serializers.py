@@ -134,7 +134,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "base_template": 'custom_input.html'
         },
-            help_text='Enter VAT Number',
+        
 
     )
     tax_preference = serializers.ChoiceField(
@@ -183,7 +183,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
     post_code = serializers.CharField(
         label=('Post Code'),
         max_length=7,
-        required=False,
+        required=True,
         style={
             "input_type": "text",
             "autofocus": False,

@@ -7,7 +7,6 @@ from requirement_management.models import Quotation
 
 from authentication.models import User
 from customer_management.models import SiteAddress
-from schedule.models import Event
 
 
 STW_CHOICES = (
@@ -267,11 +266,30 @@ class JobDocument(models.Model):
         verbose_name = _('Job Document')
         verbose_name_plural = _('Job Documents')
 
+
+class Events(models.Model):
+    name = models.CharField(max_length=255,null=True,blank=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True, blank=True)
+    members = models.ManyToManyField(Member,null=True, blank=True)
+    start = models.DateTimeField(null=True,blank=True)
+    end = models.DateTimeField(null=True,blank=True)
+    description = models.TextField(null=True,blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    class Meta:
+        verbose_name = _('Calendar Events')
+        verbose_name_plural = _('Calendar Events')
+        
+    
+
+
 class STWJobAssignment(models.Model):
     stw_job = models.ForeignKey(STWJob, on_delete=models.CASCADE)
     assigned_to_member = models.ManyToManyField(Member) 
     assigned_to_team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.CASCADE)
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, null=True, blank=True)
+    event = models.ForeignKey(Events, on_delete=models.CASCADE, null=True, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
     start_time = models.TimeField()
