@@ -134,7 +134,7 @@ class BillingDetailSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "base_template": 'custom_input.html'
         },
-            help_text='Enter VAT Number',
+        
 
     )
     tax_preference = serializers.ChoiceField(
