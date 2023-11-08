@@ -130,7 +130,7 @@ class ContactSerializer(serializers.ModelSerializer):
     )
 
     mobile_number = serializers.CharField(
-        label=('Mobile_no'),
+        label=('Mobile Number'),
         max_length=14,
         min_length=10,
         required= False,
@@ -145,11 +145,10 @@ class ContactSerializer(serializers.ModelSerializer):
         },
         error_messages={
             "required": "This field is required.",
-            "blank": "Phone number field is required.",
-            "max_length": "Invalid Phone number and max limit should be 14.",
-            "min_length": "Invalid Phone number and min limit should be 10."
+            "blank": "Mobile number field is required.",
+            "max_length": "Invalid Mobile number and max limit should be 14.",
+            "min_length": "Invalid Mobile number and min limit should be 10."
         },
-        validators=[validate_phone_number]
     )
    
 
