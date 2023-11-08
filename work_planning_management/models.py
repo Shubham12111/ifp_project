@@ -269,6 +269,8 @@ class JobDocument(models.Model):
 
 class Events(models.Model):
     name = models.CharField(max_length=255,null=True,blank=True)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True, blank=True)
+    members = models.ManyToManyField(Member,null=True, blank=True)
     start = models.DateTimeField(null=True,blank=True)
     end = models.DateTimeField(null=True,blank=True)
     description = models.TextField(null=True,blank=True)
@@ -280,9 +282,7 @@ class Events(models.Model):
         verbose_name = _('Calendar Events')
         verbose_name_plural = _('Calendar Events')
         
-        
-    def __str__(self):
-        return self.name
+    
 
 
 class STWJobAssignment(models.Model):

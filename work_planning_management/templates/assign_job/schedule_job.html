@@ -12,13 +12,23 @@
             <h5>Assign Job</h5>
           </div>
           <div class="card-body pt-0">
+            <div class="col-12 mb-4">
+              <label for="select-type">Select Type:</label>
+              <select id="select-type" name="select-type">
+                <option value="team">Team</option>
+                <option value="members">Members</option>
+              </select>
+            </div>
+            <div id="form-container"  style="display: block;">
             <form role="form" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
               <div class="row">
                 <div class="col-12">
                   {% csrf_token %}
                 {% render_form serializer %} 
-                
+              </div>
+            </form> 
                   </div>
+                </div>
                   
   <div class="container-fluid py-3">
     <div class="row">
@@ -72,7 +82,7 @@
           <!-- Add a button to show/hide the calendar -->
           {% comment %} <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href=" {% url 'calendar_home'  calendar_slug='calendar-1'%}">Assign Job</a> {% endcomment %}
           {% comment %} {% endcomment %}
-          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href=" {% url 'member_calendar' %}">Assign Job</a> 
+          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href="{% url 'member_calendar' %}">View Events</a> 
           <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
       </div>
     </div>
@@ -106,30 +116,60 @@
   }
   </script>
 
-  <script>
-   // Function to retrieve events for selected teams or members
-function getSelectedIds() {
-  var selectedIds = [];
-  var checkboxes = document.querySelectorAll('input[name="doc_checkbox"]:checked');
-
-  checkboxes.forEach(function (checkbox) {
-    selectedIds.push(checkbox.value);
+<script>
+  // Function to enable or disable the selection based on the user's choice
+  function toggleSelection() {
+    var selectType = document.getElementById("select-type").value;
+    var checkboxes = document.querySelectorAll('input[name="doc_checkbox"]');
+    var formContainer = document.getElementById("form-container");
+  
+    checkboxes.forEach(function (checkbox) {
+      checkbox.disabled = selectType === "members" ? false : true;
+    });
+  
+    // Hide or show the form container based on the selection
+    formContainer.style.display = selectType === "members" ? "none" : "block";
+  }
+  
+  // Add a change event handler to the select element
+  document.addEventListener("DOMContentLoaded", function () {
+    var selectType = document.getElementById("select-type");
+  
+    selectType.addEventListener("change", toggleSelection);
+  
+    // Initial call to set the initial state based on the user's choice
+    toggleSelection();
   });
+</script>
 
-  console.log("Selected IDs: " + selectedIds.join(', '));
-}
 
-// Add a click event handler to the "Assign Job" button
-document.addEventListener("DOMContentLoaded", function () {
-  var assignJobButton = document.getElementById("assignJobButton");
+<script>
+// Add an event listener to submit the form when the "Submit" button is clicked
+  const submitButton = document.getElementById("assignJobButton");
+  submitButton.addEventListener("click", function () {
+    
+  const selectedCheckboxes = document.querySelectorAll('input[name="doc_checkbox"]:checked');
+    // Create an array to store the selected IDs
+  const selectedIdsArray = [];
 
-  assignJobButton.addEventListener("click", function () {
-    getSelectedIds(); // Call the function to get and print selected IDs
+  // Push the values of selected checkboxes into the array
+  selectedCheckboxes.forEach(function (checkbox) {
+    selectedIdsArray.push(checkbox.value);
+  });
+   // Add a click event handler to the "View Events" button
+   document.addEventListener("DOMContentLoaded", function () {
+    var assignJobButton = document.getElementById("assignJobButton");
+
+    assignJobButton.addEventListener("click", function () {
+      var selectedIds = getSelectedIds();
+      if (selectedIds) {
+        alert("Please select at least two member to view events.");
+      }
+    });
   });
 });
-  </script>
-  
 
+</script>
 
 
 {% endblock %}

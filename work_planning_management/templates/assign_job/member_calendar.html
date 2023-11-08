@@ -9,27 +9,143 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.js"></script>
 
+
  </head>
+
     <div class="container">
         <div class="row">
            <h4>Calendar Events</h4> 
-           {% block content %}{% endblock %}
+
+           {% block content %}<!-- Modal -->
+<div class="modal fade" id="eventDetailsModal" tabindex="-1" role="dialog" aria-labelledby="eventDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventDetailsModalLabel">Event Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="eventTitle"></p>
+                <p id="eventStart"></p>
+                <p id="eventEnd"></p>
+                <!-- Add more fields for members, teams, etc. -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
         </div>
        </div>
        <script>
-          $(document).ready(function () {
-              var calendar = $('#calendar').fullCalendar({
-                  header: {
-                      left: 'prev,next today',
-                      center: 'title',
-                      right: 'month,agendaWeek,agendaDay'
+        $(document).ready(function () {
+          var calendar = $('#calendar').fullCalendar({
+            header: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'month,agendaWeek,agendaDay'
+            },
+            events: '/work_planning/all_events',
+            selectable: true,
+            selectHelper: true,
+            editable: true,
+            eventLimit: true,
+            select: function (start, end, allDay) {
+              var title = prompt("Enter Event Title");
+              if (title) {
+                var start = $.fullCalendar.formatDate(start, "Y-MM-DD HH:mm:ss");
+                var end = $.fullCalendar.formatDate(end, "Y-MM-DD HH:mm:ss");
+                $.ajax({
+                  type: "GET",
+                  url: '/work_planning/add_event',
+                  data: { 'title': title, 'start': start, 'end': end },
+                  dataType: "json",
+                  success: function (data) {
+                    calendar.fullCalendar('refetchEvents');
+                    alert("Added Successfully");
                   },
-                    events: '/work_planning/all_events/'
-                   
+                  error: function (data) {
+                    alert('There is a problem!!!');
+                  }
+                });
+              }
+            },
+            eventResize: function (event) {
+              var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
+              var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
+              var name = event.name;
+              var id = event.id;
+              $.ajax({
+                type: "GET",
+                url: '/work_planning/update',
+                data: { 'name': name, 'start': start, 'end': end, 'id': id },
+                dataType: "json",
+                success: function (data) {
+                  calendar.fullCalendar('refetchEvents');
+                  alert('Event Update');
+                },
+                error: function (data) {
+                  alert('There is a problem!!!');
+                }
               });
+            },
+      
+            eventDrop: function (event) {
+              var start = $.fullCalendar.formatDate(event.start, "Y-MM-DD HH:mm:ss");
+              var end = $.fullCalendar.formatDate(event.end, "Y-MM-DD HH:mm:ss");
+              var name = event.name;
+              var id = event.id;
+              $.ajax({
+                type: "GET",
+                url: '/work_planning/update',
+                data: { 'name': name, 'start': start, 'end': end, 'id': id },
+                dataType: "json",
+                success: function (data) {
+                  calendar.fullCalendar('refetchEvents');
+                  alert('Event Update');
+                },
+                error: function (data) {
+                  alert('There is a problem!!!');
+                }
+              });
+            },
+      
+            eventClick: function (event, jsEvent, view) {
+                // Send an AJAX request to retrieve event details, including members and teams
+                $.ajax({
+                    type: "GET",
+                    url: '/work_planning/get_event_details/' + event.id,  // Replace with the correct URL
+                    dataType: "json",
+                    success: function (data) {
+                        // Handle the response data here and display event details
+                        var eventDetails = 'Event Title: ' + data.title + 
+                        '\nStart: ' + event.start.format() + 
+                        '\nEnd: ' + event.end.format();
+            
+                        // Access related members and team data from the 'data' variable
+                    if (data.members.length > 0) {
+                        eventDetails += '\nMembers: ' + data.members.join(', ');
+                    }
+                    if (data.team) {
+                        eventDetails += '\nTeam: ' + data.team;
+                    }
+                    
+                    // Show the event details in a modal or another view as desired
+                    // You can replace this alert with your modal display logic
+                    alert(eventDetails);
+                            },
+                    error: function (data) {
+                        alert('There is a problem!!!');
+                    }
+                });
+            },
+            
           });
-        
-       </script>
+        });
+      </script>
+      
+       
 
  </body>
 </html>
