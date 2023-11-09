@@ -518,11 +518,6 @@ class ContactPersonSerializer(serializers.ModelSerializer):
             "blank": "Email is required.",
         },
     )
-    def validate_phone_number(value):
-        if not value:
-            return  # Allow empty values
-        if not (value.startswith("+0") and len(value) == 13) and not (value.startswith("+44") and len(value) == 14):
-            raise serializers.ValidationError(_("Phone number must start with '+0' and have 11 digits, or start with '+44' and have 12 digits."))
 
     phone_number = serializers.CharField(
         label=_('Phone Number'),
