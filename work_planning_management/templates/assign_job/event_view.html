@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Event Details {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex justify-content-between">
+            <div>
+              <h5 class="mb-0">Event Details </h5>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-3" href="{% url 'member_calendar' %}">Back</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-4">
+                    <div class="row mt-3">
+                        <div class="col-6">
+                          <label>Event Name</label>
+                          <p>{{ event.name}}</p>
+                        </div>
+
+                            <div class="col-6">
+                              <label>Event Description</label>
+                              <p>{{ event.description}}</p>
+                            </div>
+                        </div>
+
+
+                            <div class="row mt-3">
+                                <div class="col-6">
+                                  <label>Event Start Date</label>
+                                  <p>{{ event.start }}</p>
+                                </div>
+
+                                    <div class="col-6">
+                                      <label>Event End Date</label>
+                                      <p>{{ event.end}}</p>
+                                    </div>
+                                </div>
+
+                                    <div class="row mt-3">
+                                        <div class="col-6">
+                                          <label>Event Members</label>
+                                          {% for member in event.members.all %}
+                                            <li>{{ member.name }}</li>
+                                              {% endfor %}
+                                      </div>
+                                    
+
+                                            <div class="col-6">
+                                              <label>Event Team</label>
+                                              {% if team %}
+                                              <p>{{ event.team.team_name }}</p> 
+                                              {% endif%}
+                                            </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+               
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/custom.js' %}"></script>
+{% endblock %}

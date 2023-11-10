@@ -741,13 +741,132 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
 
 
 class EventSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(
+        label=('Name'),
+        required=True,
+        max_length=400,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html',
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Name is required.",
+            "invalid": "Invalid Name",
+        }, 
+    )
+    team = serializers.PrimaryKeyRelatedField(
+        label=('Team'),
+        required=False,
+        allow_null=True,
+        # allow_blank=True,
+        queryset=Team.objects.all(),
+        style={
+            'base_template': 'custom_select.html',
+             'custom_class':'col-6'
+        },
+    )
+    member = serializers.MultipleChoiceField(
+        label=('Member'),
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        choices=[member for member in Member.objects.all()]
+    )
+
+
+    start = serializers.DateTimeField(
+        label='Start Date',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+        # Add any additional styles or validators if needed
+    )
+    end = serializers.DateTimeField(
+        label='End Date',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+       
+    )
+
+    description  = serializers.CharField(
+        max_length=1000, 
+        required=False, 
+        style={'base_template': 'rich_textarea.html', 'rows': 3},
+        error_messages={
+            "required": "Description is required.",
+            "blank":"Description is required.",
+        },
+        validators=[validate_description]
+    )
     class Meta:
         model = Events
-        fields = ['name', 'start', 'end', 'description'] 
+        fields = ['name', 'team','description','member','start', 'end'] 
 
 
+class AssignJobSerializer(serializers.ModelSerializer):
+    start_date = serializers.DateField(
+        label='Start Date',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+        # Add any additional styles or validators if needed
+    )
+    end_date = serializers.DateField(
+        label='End Date',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+       
+    )
 
+    start_time = serializers.TimeField(
+        label='Start Time',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+        # Add any additional styles or validators if needed
+    )
+    end_time = serializers.TimeField(
+        label='End Time',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+       
+    )
     
 
-    
+    class Meta:
+        model = STWJobAssignment
+        fields = ['start_date', 'end_date','start_time','end_time'] 
 
+    def validate(self, data):
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        if start_date and end_date and start_date > end_date:
+            raise ValidationError({'end_date':'End date should be greater than the start date.'})
+
+        return data
