@@ -22,7 +22,7 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer
+from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,AssignJobSerializer,EventSerializer
 
 from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
@@ -2684,6 +2684,7 @@ def all_events(request):
     return JsonResponse(out, safe=False) 
 
 
+
 def add_event(request):
     start = request.GET.get("start", None)
     end = request.GET.get("end", None)
@@ -2715,8 +2716,402 @@ def get_event_details(request, event_id):
         return JsonResponse(event_data)
     except Events.DoesNotExist:
         return JsonResponse({'error': 'Event not found'}, status=404)
+    
+
+class AssignscheduleView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding or add job.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = AssignJobSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'assign_job/assign_schedule.html'
 
 
+    def get_queryset(self):
+        queryset = STWJobAssignment.objects.filter(pk=self.kwargs.get('pk')).order_by('-created_at').first()
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None) 
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for updating a  job.
+        If the  job exists, retrieve the serialized data and render the HTML template.
+        If the  job does not exist, render the HTML template with an empty serializer.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasCreateDataPermission, 'add'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+
+        if request.accepted_renderer.format == 'html':
+            context = {'serializer':self.serializer_class()}
+            return render_html_response(context,self.template_name)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                message="GET Method Not Alloweded",)
+        
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Job has been assigned successfully.",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "We apologize for the inconvenience, but please review the below information.",
+                ),
+
+    }  
+
+    @swagger_auto_schema(operation_id='Add Job', responses={**common_post_response})
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add a job.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasCreateDataPermission, 'add'
+        )
+        message = "Job has been assigned successfully."
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            stw_job_instance = STWJob.objects.get(pk=1)
+            serializer.validated_data['stw_job'] = stw_job_instance
+            user = serializer.save()
+            user.save()
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('job_list'))
+
+            else:
+                # Return JSON response with success message and serialized data
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message=message,
+                                    data=serializer.data
+                                    )
+        else:
+            # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data
+                context = {'serializer':serializer}
+                return render_html_response(context,self.template_name)
+            else:   
+                # Return JSON response with error message
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                    message="We apologize for the inconvenience, but please review the below information.",
+                                    data=convert_serializer_errors(serializer.errors))
+            
+class EventAddView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding or updating a event.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = EventSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'assign_job/event_edit.html'
+
+
+    def get_queryset(self):
+        """
+        Get the filtered queryset for vendors based on the authenticated user.
+        """
+        queryset = Events.objects.filter(pk=self.kwargs.get('pk')).order_by('-created_at').first()
+        return queryset
+
+    @swagger_auto_schema(auto_schema=None) 
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for updating a Event.
+        If the Event exists, retrieve the serialized data and render the HTML template.
+        If the Event does not exist, render the HTML template with an empty serializer.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasCreateDataPermission, 'add'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+
+        if request.accepted_renderer.format == 'html':
+            context = {'serializer':self.serializer_class()}
+            return render_html_response(context,self.template_name)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                message="GET Method Not Alloweded",)
+        
+    common_post_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Event has been added successfully.",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "We apologize for the inconvenience, but please review the below information.",
+                ),
+
+    }  
+
+    @swagger_auto_schema(operation_id='Add Event', responses={**common_post_response})
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to add a Event.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasCreateDataPermission, 'add'
+        )
+        message = "Event has been added successfully."
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.save()
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect('member_calendar')
+
+            else:
+                # Return JSON response with success message and serialized data
+                return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message=message,
+                                    data=serializer.data
+                                    )
+        else:
+            # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data
+                context = {'serializer':serializer}
+                return render_html_response(context,self.template_name)
+            else:   
+                # Return JSON response with error message
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+                                    message="We apologize for the inconvenience, but please review the below information.",
+                                    data=convert_serializer_errors(serializer.errors))
+class EventUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
+    """
+    API view for updating a event.
+
+    This view handles both HTML and API requests for updating a event instance.
+    If the event instance exists, it will be updated with the provided data.
+    Otherwise, an error message will be returned.
+
+    The following request methods are supported:
+    - POST: Updates the event instance.
+
+    Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
+    """
+    
+    serializer_class = EventSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'assign_job/event_edit.html'
+
+
+    
+    def get_queryset(self):
+        """
+        Get the queryset for listing Event items.
+
+        Returns:
+            QuerySet: A queryset of Event items filtered based on the authenticated user's ID.
+        """
+        
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        queryset = Events.objects.filter(filter_mapping.get(data_access_value, Q()))
+
+        # Filter the queryset based on the provided 'event_id'
+        event_id = self.kwargs.get('event_id')
+        instance = queryset.filter(pk=event_id).first()
+        return instance
+    
+    def update_members_and_team(self, event, members, team):
+        event.members.clear()
+        event.members.add(*members)
+        event.team = team
+        event.save()
+
+    @swagger_auto_schema(auto_schema=None) 
+    def get(self, request, *args, **kwargs):
+        event_id = self.kwargs.get('event_id')
+        # This method handles GET requests for updating an existing event object.
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            print(instance)
+            if instance:
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                context = {'serializer': serializer, 'event_instance': instance,'event_id':event_id}
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('member_calendar'))
+            
+    common_put_response = {
+        status.HTTP_200_OK: 
+            docs_schema_response_new(
+                status_code=status.HTTP_200_OK,
+                serializer_class=serializer_class,
+                message = "Event has been updated successfully!",
+                ),
+        status.HTTP_400_BAD_REQUEST: 
+            docs_schema_response_new(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                serializer_class=serializer_class,
+                message = "You are not authorized to perform this action",
+                ),
+
+    }
+
+    @swagger_auto_schema(auto_schema=None) 
+    def put(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(auto_schema=None) 
+    def patch(self, request, *args, **kwargs):
+        pass
+
+    @swagger_auto_schema(operation_id='Edit Event', responses={**common_put_response})
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to update a Event instance.
+
+        Args:
+            request (rest_framework.request.Request): The HTTP request object.
+            *args: Variable-length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            rest_framework.response.Response: HTTP response object.
+                If successful, the Event is updated, and the appropriate response is returned.
+                If unsuccessful, an error response is returned.
+        """
+        event_id = self.kwargs.get('event_id')
+        data = request.data.copy()
+        instance = self.get_queryset()
+        if instance:
+            # If the Event instance exists, initialize the serializer with instance and provided data.
+            serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
+
+            if serializer.is_valid():
+                # If the serializer data is valid, save the updated Event instance.
+                serializer.save()
+                members = request.data.get('members', [])
+                team_id = request.data.get('team', None)
+
+                try:
+                    team_id = int(team_id)
+                except (TypeError, ValueError):
+                    team_id = None
+
+                team_instance = Team.objects.filter(id=team_id).first()
+
+                if team_instance:
+                    self.update_members_and_team(instance, members, team_instance)
+                message = "Event has been updated successfully!"
+
+                if request.accepted_renderer.format == 'html':
+
+                    # For HTML requests, display a success message and redirect to Event.
+
+                    messages.success(request, message)
+                    return redirect('member_calendar')
+                else:
+                    # For API requests, return a success response with serialized data.
+                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+            else:
+                if request.accepted_renderer.format == 'html':
+                    # For HTML requests with invalid data, render the template with error messages.
+                    context = {'serializer': serializer, 'event_instance': instance}
+                    return render(request, self.template_name, context)
+                else:
+                    # For API requests with invalid data, return an error response with serializer errors.
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            error_message = "You are not authorized to perform this action"
+            if request.accepted_renderer.format == 'html':
+
+                # For HTML requests with no instance, display an error message and redirect to event.
+
+                messages.error(request, error_message)
+                return redirect('assign_job/event_edit')
+
+            else:
+                # For API requests with no instance, return an error response with an error message.
+                return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
+        
+class EventdetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    View for retrieving event.
+
+    This view retrieves details of a job, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class (JobSerializer): The serializer class for the event.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+    """
+
+    serializer_class = JobListSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'assign_job/event_view.html'
+
+    def get_queryset(self):
+        """
+        Get the queryset of event.
+
+        Returns:
+        QuerySet: A queryset of event.
+        """
+        # Your queryset logic to filter jobs goes here
+        queryset = Events.objects.all()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        event_id = self.kwargs.get('event_id')
+        queryset = self.get_queryset()
+
+        try:
+            event = queryset.get(id=event_id)
+        except Events.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Additional job data can be retrieved here based on your requirements
+
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'event': event,
+                # Add more job-related data to the context as needed
+            }
+            return render(request, self.template_name, context)
+        else:
+            serializer = self.serializer_class(event)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
 
 
 

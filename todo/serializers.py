@@ -70,7 +70,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
     start_date = serializers.DateField(
         label='Start Date',
         required=True,
-        input_formats=['iso-8601'],
+        input_formats=['%d/%m/%Y','iso-8601'],
         style={
             'base_template': 'custom_datepicker.html',
             'custom_class': 'col-4'
@@ -80,7 +80,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
     end_date = serializers.DateField(
         label='End Date',
         required=True,
-        input_formats=['iso-8601'],
+        input_formats=['%d/%m/%Y','iso-8601'],
         style={
             'base_template': 'custom_datepicker.html',
             'custom_class': 'col-4'

@@ -74,8 +74,15 @@ urlpatterns = [
     path('member_calendar/', views.index, name='member_calendar'), 
     path('all_events/', views.all_events, name='all_events'), 
     path('add_event/', views.add_event, name='add_event'), 
+    path('event_add/',EventAddView.as_view() , name='event_add'),
+    path('event_edit/<int:event_id>/',EventUpdateView.as_view() , name='event_edit'),
+    path('event_view/<int:event_id>/',EventdetailView.as_view() , name='event_view'),
     # path('remove/', views.remove, name='remove'),
     path('get_event_details/<int:event_id>/', views.get_event_details, name='get_event_details'),
+    path('stw/job_schedule',AssignscheduleView.as_view(),name='job_schedule'),
+
+
+
 
 
 
