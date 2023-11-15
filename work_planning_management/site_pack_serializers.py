@@ -141,8 +141,8 @@ class DocumentSerializer(serializers.ModelSerializer):
             for file in file_list:
                 unique_filename = f"{str(uuid.uuid4())}_{file.name}"
                 try:
-                    upload_file_to_s3(unique_filename, file, f'work_planning/site_packs/{instance.id}')
-                    file_path = f'work_planning/site_packs/{instance.id}/{unique_filename}'
+                    upload_file_to_s3(unique_filename, file, f'{instance.id}')
+                    file_path = f'{instance.id}/{unique_filename}'
                     
                     document = SitepackAsset.objects.create(sitepack_id=instance, document_path=file_path)
                 
