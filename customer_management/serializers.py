@@ -257,7 +257,8 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         label=_('VAT Number'),
         required=True,
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            "placeholder":"Vat Number must be of 9 digits"
         },
 
         error_messages={

@@ -132,7 +132,8 @@ class BillingDetailSerializer(serializers.ModelSerializer):
            "input_type": "text",
             "autocomplete": "off",
             "autofocus": False,
-            "base_template": 'custom_input.html'
+            "base_template": 'custom_input.html',
+            "placeholder":"Vat Number must be of 9 digits."
         },
         
 
