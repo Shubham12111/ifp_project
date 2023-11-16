@@ -156,8 +156,28 @@
     }
   
     window.location.href = `/work_planning/member_calendar/`;
-  }
 
+    const currentUrl = window.location.href; 
+    console.log(currentUrl); 
+    const match = currentUrl.match(/\/(\d+)\/?$/);
+    
+    // Check if a match is found
+    if (!match || match.length < 2) {
+      alert("Could not extract the last integer value from the URL.");
+      return;
+    }
+
+    const job_id = match[1];
+    console.log(job_id)
+
+   
+   
+
+    // Use the job_id in the URL for the redirect
+    const redirectUrl = `/work_planning/member_calendar/?job_id=${job_id}`;
+    window.location.href = redirectUrl;
+  }
+  
 </script>
 
 

@@ -286,7 +286,7 @@ class Events(models.Model):
 
 
 class STWJobAssignment(models.Model):
-    stw_job = models.ForeignKey(STWJob, on_delete=models.CASCADE)
+    stw_job = models.ForeignKey(Job, on_delete=models.CASCADE)
     assigned_to_member = models.ManyToManyField(Member) 
     assigned_to_team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.CASCADE)
     event = models.ForeignKey(Events, on_delete=models.CASCADE, null=True, blank=True)

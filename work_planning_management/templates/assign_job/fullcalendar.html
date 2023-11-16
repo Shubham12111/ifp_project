@@ -3,13 +3,42 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 {% block content %}
 <div class="col-md-12">   
-    <a class="btn bg-danger btn-sm float-end mt-2 mb-3 mx-2" href="{% url 'event_add' %}">Add Event</a> 
+    {% comment %} <a class="btn bg-danger btn-sm float-end mt-2 mb-3 mx-2" href="{% url 'event_add' %}">Add Event</a>  {% endcomment %}
     <div id='calendar'></div> 
         </div>
     </div>
     
-    <a class="btn bg-danger btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href="{% url 'job_schedule' %}">Assign Job</a> 
-    <a class="btn bg-danger btn-sm float-end mt-2 mb-4" href="{% url 'job_assign_stw' %}">Back</a>
+    <a class="btn bg-danger btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" onclick="viewEvents()">Assign Job</a> 
+    <a class="btn bg-danger btn-sm float-end mt-2 mb-4" href="{% url 'job_customers_list' %}">Back</a>
 
 </div>
+<script>
+    function viewEvents() {
+
+      const currentUrl = window.location.href; 
+      console.log(currentUrl); 
+      const match = currentUrl.match(/job_id=(\d+)$/);
+      
+      // Check if a match is found
+      if (!match || match.length < 2) {
+        alert("Could not extract the last integer value from the URL.");
+        return;
+      }
+  
+      const job_id = match[1];
+      console.log(job_id)
+  
+     
+     
+  
+      // Use the job_id in the URL for the redirect
+      const redirectUrl = `/work_planning/stw/job_schedule/?job_id=${job_id}`;
+      window.location.href = redirectUrl;
+    }
+    
+  </script>
 {% endblock content %} 
+
+
+
+

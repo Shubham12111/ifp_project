@@ -68,7 +68,7 @@ urlpatterns = [
 
     # add job for stw
     path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
-    path('stw/job_assign/',AssignJobView.as_view(),name='job_assign_stw'),
+    path('stw/job_assign/<int:job_id>/',AssignJobView.as_view(),name='job_assign_stw'),
 
     # calendar urls
     path('member_calendar/', views.index, name='member_calendar'), 
@@ -79,7 +79,7 @@ urlpatterns = [
     path('event_view/<int:event_id>/',EventdetailView.as_view() , name='event_view'),
     # path('remove/', views.remove, name='remove'),
     path('get_event_details/<int:event_id>/', views.get_event_details, name='get_event_details'),
-    path('stw/job_schedule',AssignscheduleView.as_view(),name='job_schedule'),
+    path('stw/job_schedule/',AssignscheduleView.as_view(),name='job_schedule'),
 
 
 
