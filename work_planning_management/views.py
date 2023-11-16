@@ -134,7 +134,7 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
         return queryset
     
     def get(self, request, *args, **kwargs):
-        customer_id = self.request.query_params.get('customer_id')
+        customer_id = self.request.get('customer_id')
         queryset = self.get_queryset()
         customer_data = {}
          # Retrieve the list of Sitepack documents
