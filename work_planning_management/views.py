@@ -126,16 +126,20 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
     template_name = 'approved_quotation_list.html'
 
-    def get_queryset(self):
-        customer_id = self.request.query_params.get('customer_id')
+    def get_queryset(self,**kwargs):
+        customer_id = self.kwargs.get('customer_id') 
+        print(customer_id)
+        print
         queryset = Quotation.objects.filter(status="approved")
         if customer_id:
             queryset = queryset.filter(customer_id=customer_id)
         return queryset
     
     def get(self, request, *args, **kwargs):
-        customer_id = self.request.get('customer_id')
         queryset = self.get_queryset()
+        customer_id = self.kwargs.get('customer_id')
+        print(customer_id)
+        print(queryset)
         customer_data = {}
          # Retrieve the list of Sitepack documents
         sitepack_documents = SitepackDocument.objects.all()
@@ -150,7 +154,6 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
         else:
             messages.error(request, "You are not authorized to perform this action")
             return Response(status=status.HTTP_403_FORBIDDEN)
-
 
 def get_customer_data(customer_id):
 
