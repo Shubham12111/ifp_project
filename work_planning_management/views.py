@@ -2608,6 +2608,10 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
+
+        job_id = kwargs.get('job_id') 
+        print(job_id) # Retrieve job_id from URL parameters
+        # job = get_object_or_404(Job, id=job_id)
          # Retrieve the members data
         members = Member.objects.all()
         team = Team.objects.all()
@@ -2618,6 +2622,7 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
             context = {'serializer': serializer,
                        'members': members,
                        'teams':team,
+                    #    'job': job,  # Add the job to the context
                     #    'events': events
                        }
             return render(request, self.template_name, context)
@@ -2666,9 +2671,11 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
                 )
 
 def index(request):  
+    job_id = request.GET.get('job_id')  # Retrieve job_id from query parameters
     all_events = Events.objects.all()
     context = {
         "events":all_events,
+        "job_id": job_id,
     }
     return render(request,'assign_job/fullcalendar.html',context)
 
@@ -2784,15 +2791,19 @@ class AssignscheduleView(CustomAuthenticationMixin, generics.CreateAPIView):
            self,"survey", HasCreateDataPermission, 'add'
         )
         message = "Job has been assigned successfully."
+        stw_job_id = self.request.query_params.get('job_id')
+        print(stw_job_id)
+        jobs_with_quotation = Job.objects.filter(quotation=int(stw_job_id)).first()
+        print(jobs_with_quotation)
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            stw_job_instance = STWJob.objects.get(pk=1)
-            serializer.validated_data['stw_job'] = stw_job_instance
+            # stw_job_instance = STWJob.objects.get(pk=1)
+            serializer.validated_data['stw_job'] = jobs_with_quotation
             user = serializer.save()
             user.save()
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
-                return redirect(reverse('job_list'))
+                return redirect(reverse('job_schedule'))
 
             else:
                 # Return JSON response with success message and serialized data
@@ -3020,9 +3031,10 @@ class EventUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated Event instance.
+                members = request.data.getlist('member', [])
                 serializer.save()
-                members = request.data.get('members', [])
-                team_id = request.data.get('team', None)
+                
+                team_id = serializer.validated_data.get('team', None)   
 
                 try:
                     team_id = int(team_id)
