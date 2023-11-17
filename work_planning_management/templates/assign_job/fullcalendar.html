@@ -2,33 +2,43 @@
 {% block title %}Fullcalendar{% endblock title %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 {% block content %}
-<div class="col-md-12">    
+<div class="col-md-12">   
+    {% comment %} <a class="btn bg-danger btn-sm float-end mt-2 mb-3 mx-2" href="{% url 'event_add' %}">Add Event</a>  {% endcomment %}
     <div id='calendar'></div> 
-    <div class="modal fade" id="eventDetailsModal" tabindex="-1" role="dialog" aria-labelledby="eventDetailsModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="eventDetailsModalLabel">Event Details</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- Display event details here -->
-                    <p><strong>Title:</strong> <span id="eventTitle"></span></p>
-                    <p><strong>Start:</strong> <span id="eventStart"></span></p>
-                    <p><strong>End:</strong> <span id="eventEnd"></span></p>
-                    <p><strong>Description:</strong> <span id="eventDescription"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
         </div>
     </div>
     
-    <a class="btn bg-danger btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href="{% url 'job_assign_stw' %}">Assign Job</a> 
-    <a class="btn bg-danger btn-sm float-end mt-2 mb-4" href="{% url 'job_assign_stw' %}">Back</a>
+    <a class="btn bg-danger btn-sm float-end mt-2 mb-0 mx-2 text-white" id="assignJobButton" onclick="viewEvents()" style="border-radius:4px;font-weight:bold;padding-left:20px; padding-right:20px;">Assign Job</a> 
+    <a class="btn btn-sm float-end mt-2 mb-4 text-white" href="{% url 'job_customers_list' %}" style="border-radius:4px; font-weight:bold;padding-left:20px; padding-right:20px; background-color:	#708090">Back</a>
 
 </div>
+<script>
+    function viewEvents() {
+
+      const currentUrl = window.location.href; 
+      console.log(currentUrl); 
+      const match = currentUrl.match(/job_id=(\d+)$/);
+      
+      // Check if a match is found
+      if (!match || match.length < 2) {
+        alert("Could not extract the last integer value from the URL.");
+        return;
+      }
+  
+      const job_id = match[1];
+      console.log(job_id)
+  
+     
+     
+  
+      // Use the job_id in the URL for the redirect
+      const redirectUrl = `/work_planning/stw/job_schedule/?job_id=${job_id}`;
+      window.location.href = redirectUrl;
+    }
+    
+  </script>
 {% endblock content %} 
+
+
+
+

@@ -81,11 +81,7 @@ class ContactCustomerSerializer(serializers.ModelSerializer):
             "blank": "Email is required.",
         },
     )
-    def validate_phone_number(value):
-        if not value:
-            return  # Allow empty values
-        if not (value.startswith("+0") and len(value) == 13) and not (value.startswith("+44") and len(value) == 14):
-            raise serializers.ValidationError(_("Phone number must start with '+0' and have 11 digits, or start with '+44' and have 12 digits."))
+
     phone_number = serializers.CharField(
         label=_('Phone Number'),
         max_length=14,
@@ -184,20 +180,22 @@ class CustomerSerializer(serializers.ModelSerializer):
             "blank": "Email is required.",
         },
     )
-    def validate_phone_number(value):
-        if not value:
-            return  # Allow empty values
-        if not (value.startswith("+0") and len(value) == 13) and not (value.startswith("+44") and len(value) == 14):
-            raise serializers.ValidationError(_("Phone number must start with '+0' and have 11 digits, or start with '+44' and have 12 digits."))
+   
     phone_number = serializers.CharField(
         label=_('Phone Number'),
         max_length=14,
         min_length=10,
-        required=False,
+        required=True,
         allow_null=True,
         allow_blank=True,
         style={
             'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Phone number field is required.",
+            "max_length": "Invalid Phone number and max limit should be 14.",
+            "min_length": "Invalid Phone number and min limit should be 10."
         },
         validators=[validate_phone_number] 
     )
@@ -259,7 +257,8 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         label=_('VAT Number'),
         required=True,
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            "placeholder":"Vat Number must be of 9 digits"
         },
 
         error_messages={
@@ -318,7 +317,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     post_code = serializers.CharField(
         label=_('Post Code'),
         max_length=7,
-        required=False,
+        required=True,
         allow_blank=True,
         allow_null=True,
         style={
@@ -518,23 +517,24 @@ class ContactPersonSerializer(serializers.ModelSerializer):
             "blank": "Email is required.",
         },
     )
-    def validate_phone_number(value):
-        if not value:
-            return  # Allow empty values
-        if not (value.startswith("+0") and len(value) == 13) and not (value.startswith("+44") and len(value) == 14):
-            raise serializers.ValidationError(_("Phone number must start with '+0' and have 11 digits, or start with '+44' and have 12 digits."))
 
     phone_number = serializers.CharField(
         label=_('Phone Number'),
         max_length=14,
         min_length=10,
-        required=False,
+        required=True,
         allow_null=True,
         allow_blank=True,
         style={
             'base_template': 'custom_input.html'
         },
-        validators=[validate_phone_number] 
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Phone number field is required.",
+            "max_length": "Invalid Phone number and max limit should be 14.",
+            "min_length": "Invalid Phone number and min limit should be 10."
+        },
+        validators=[validate_phone_number]
     )
     
     class Meta:

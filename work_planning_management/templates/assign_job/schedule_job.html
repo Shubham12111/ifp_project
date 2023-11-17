@@ -79,10 +79,8 @@
           
           </div>
         </div>
-          <!-- Add a button to show/hide the calendar -->
-          {% comment %} <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href=" {% url 'calendar_home'  calendar_slug='calendar-1'%}">Assign Job</a> {% endcomment %}
-          {% comment %} {% endcomment %}
-          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" href="{% url 'member_calendar' %}">View Events</a> 
+        
+          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" onclick="viewEvents()">View Events</a> 
           <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
       </div>
     </div>
@@ -144,32 +142,47 @@
 
 
 <script>
-// Add an event listener to submit the form when the "Submit" button is clicked
-  const submitButton = document.getElementById("assignJobButton");
-  submitButton.addEventListener("click", function () {
-    
-  const selectedCheckboxes = document.querySelectorAll('input[name="doc_checkbox"]:checked');
-    // Create an array to store the selected IDs
-  const selectedIdsArray = [];
-
-  // Push the values of selected checkboxes into the array
-  selectedCheckboxes.forEach(function (checkbox) {
-    selectedIdsArray.push(checkbox.value);
-  });
-   // Add a click event handler to the "View Events" button
-   document.addEventListener("DOMContentLoaded", function () {
-    var assignJobButton = document.getElementById("assignJobButton");
-
-    assignJobButton.addEventListener("click", function () {
-      var selectedIds = getSelectedIds();
-      if (selectedIds) {
-        alert("Please select at least two member to view events.");
-      }
+  function viewEvents() {
+    const selectedCheckboxes = document.querySelectorAll('input[name="doc_checkbox"]:checked');
+    const selectedIds = [];
+  
+    selectedCheckboxes.forEach(function (checkbox) {
+      selectedIds.push(checkbox.value);
     });
-  });
-});
 
+  
+    const selectType = document.getElementById("select-type").value;
+    
+    if (selectType === "members"  && selectedIds.length < 2)  {
+      alert("Select atleast 2 members.");
+      return;
+    }
+  
+    window.location.href = `/work_planning/member_calendar/`;
+
+    const currentUrl = window.location.href; 
+    console.log(currentUrl); 
+    const match = currentUrl.match(/\/(\d+)\/?$/);
+    
+    // Check if a match is found
+    if (!match || match.length < 2) {
+      alert("Could not extract the last integer value from the URL.");
+      return;
+    }
+
+    const job_id = match[1];
+    console.log(job_id)
+
+
+   
+    // Collect the selected member IDs and include them in the redirect URL
+    // Use the job_id in the URL for the redirect
+    const redirectUrl = `/work_planning/member_calendar/?job_id=${job_id}`;
+    window.location.href = redirectUrl;
+  }
+  
 </script>
+
 
 
 {% endblock %}
