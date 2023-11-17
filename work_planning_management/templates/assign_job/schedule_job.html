@@ -149,9 +149,12 @@
     selectedCheckboxes.forEach(function (checkbox) {
       selectedIds.push(checkbox.value);
     });
+
   
-    if (selectedIds.length < 2) {
-      alert("Please select at least two members to assign job.");
+    const selectType = document.getElementById("select-type").value;
+    
+    if (selectType === "members"  && selectedIds.length < 2)  {
+      alert("Select atleast 2 members.");
       return;
     }
   
@@ -170,9 +173,9 @@
     const job_id = match[1];
     console.log(job_id)
 
-   
-   
 
+   
+    // Collect the selected member IDs and include them in the redirect URL
     // Use the job_id in the URL for the redirect
     const redirectUrl = `/work_planning/member_calendar/?job_id=${job_id}`;
     window.location.href = redirectUrl;

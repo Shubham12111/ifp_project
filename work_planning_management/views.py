@@ -2792,7 +2792,7 @@ class AssignscheduleView(CustomAuthenticationMixin, generics.CreateAPIView):
         )
         message = "Job has been assigned successfully."
         stw_job_id = self.request.query_params.get('job_id')
-        stw_job_id = self.request.query_params.get('job_id')
+        print(stw_job_id)
         jobs_with_quotation = Job.objects.filter(quotation=int(stw_job_id)).first()
         print(jobs_with_quotation)
         serializer = self.serializer_class(data=request.data)
@@ -2803,7 +2803,7 @@ class AssignscheduleView(CustomAuthenticationMixin, generics.CreateAPIView):
             user.save()
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
-                return redirect(reverse('jobs_list'))
+                return redirect(reverse('job_schedule'))
 
             else:
                 # Return JSON response with success message and serialized data
@@ -3031,9 +3031,10 @@ class EventUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated Event instance.
+                members = request.data.getlist('member', [])
                 serializer.save()
-                members = request.data.get('members', [])
-                team_id = request.data.get('team', None)
+                
+                team_id = serializer.validated_data.get('team', None)   
 
                 try:
                     team_id = int(team_id)

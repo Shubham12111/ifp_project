@@ -82,11 +82,6 @@ urlpatterns = [
     path('stw/job_schedule/',AssignscheduleView.as_view(),name='job_schedule'),
 
 
-
-
-
-
-
     # RLO views:-
     path('RLO/list/', RLOListView.as_view(), name='rlo_list'),
     path('RLO/add/',RLOAddView.as_view(),name='rlo_add'),
