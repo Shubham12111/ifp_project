@@ -728,6 +728,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If unsuccessful, an error response is returned.
         """
         instance = self.get_queryset()
+        print(instance)
         if instance:
             data = request.data
     
@@ -738,8 +739,9 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 del data['file_list']
             
             serializer_data = request.data if any(file_list) else data
-            serializer_data['RBNO'] = instance.RBNO
-            serializer_data['UPRN'] = instance.UPRN
+            # serializer_data['RBNO'] = instance.RBNO
+            # serializer_data['UPRN'] = instance.UPRN
+
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
             if not any(file_list) and not any([i.document_path for i in RequirementAsset.objects.filter(requirement_id=instance)]):

@@ -297,7 +297,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     due_date = serializers.DateField(
         label='Due Date',
         required=True,
-        input_formats=['%d/%m/%Y'],
+        input_formats=['%d/%m/%Y','iso-8601'],
         style={
             'base_template': 'custom_datepicker.html',
             'custom_class': 'col-6'
