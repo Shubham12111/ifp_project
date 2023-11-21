@@ -359,7 +359,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             
             serializer = self.serializer_class(data=serializer_data, context={'request': request})
             
-            message = "Congratulations! your requirement has been added successfully."
+            message = "Your requirement has been added successfully."
             if serializer.is_valid():
                 serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
                 serializer.validated_data['customer_id'] = customer_data
