@@ -47,7 +47,7 @@
                     </td>
                     <td class="text-sm">{{ item.requirement_id.action| safe|truncatechars:20}}</td>
                     <td class="text-sm">{{ item.requirement_id.description | safe|truncatechars:20 }}</td>
-                    <td class="text-sm">{{ item.created_at ||date:"d/m/Y "}}</td>
+                    <td class="text-sm">{{ item.created_at |date:"d/m/Y "}}</td>
                     <td class="text-sm">{{ item.requirement_id.surveyor.email }}</td>
                     <td class="text-sm">{{ item.defect_id.count }}</td>
                     {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}

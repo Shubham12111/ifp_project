@@ -84,7 +84,7 @@ class Requirement(models.Model):
     description = models.TextField()
     action = models.TextField()
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
-    due_date = models.DateField(auto_now=True,null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
     quantity_surveyor = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='surveyor_requirement')
     surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor', null=True, blank=False)
     status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='active')
