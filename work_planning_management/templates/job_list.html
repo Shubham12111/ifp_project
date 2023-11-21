@@ -50,7 +50,7 @@
                     <td class="text-sm">{{ job.quotation.requirement_id.RBNO }}</td>
                     <td class="text-sm">{{ job.quotation.requirement_id.action| safe|truncatechars:20 }}</td>
                     <td class="text-sm">{{ job.quotation.requirement_id.description| safe|truncatechars:20 }}</td>
-                    <td class="text-sm">{{ job.created_at }}</td>
+                    <td class="text-sm">{{ job.created_at |date:"d/m/Y "}}</td>
                     <td class="text-sm">{{ job.quotation.requirement_id.surveyor.first_name}} {{ job.quotation.requirement_id.surveyor.last_name}}</td>
                     <td class="text-sm">{{ job.quotation.defect_id.count}}</td>
                     {% comment %} <td class="text-sm">{{ item.Defects description and option icon }}</td> {% endcomment %}

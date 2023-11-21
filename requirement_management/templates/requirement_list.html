@@ -28,11 +28,17 @@
                   class="btn bg-gradient-primary  btn-sm mb-2 mx-2">+&nbsp; New FRA Actions</a>
                 {% endif %}
 
-                {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor" %}
+                {% if request.user.roles.name == "projects_admin_(IT)" %}
                 <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>Assign
                   Surveyor</button>
-                <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>Assign
-                  Quantity Surveyor</button>
+
+                  <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>Assign
+                    Quantity Surveyor</button>
+                  {% endif %}
+
+                  {% if request.user.roles.name == "quantity_surveyor"  %}
+                  <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Assign
+                    Surveyor</button>
                 {% endif %}
 
               </div>

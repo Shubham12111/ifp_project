@@ -65,7 +65,14 @@ def generate_menu(request, menu_items):
                 'submenu': None,
                 'icon': item.icon
             }
+             # Check for submenus of the current item
+            submenu_items = MenuItem.objects.filter(parent=item)
+            if submenu_items:
+             #Generate submenus recursively
+                menu_item['submenu'] = generate_menu(request, submenu_items)
+
             menu_data.append(menu_item)
+            
         
         elif has_view_permission(request.user, re.sub(pattern, "", item.name.replace(" ", "_"))) and not has_view_permission(request.user, re.sub(pattern, "", item.name.replace(" ", "_"))) == 'none':
             # Add other menu items with view permission

@@ -390,7 +390,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                                         data=convert_serializer_errors(serializer.errors))
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))   
 
 class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     """
@@ -728,6 +728,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If unsuccessful, an error response is returned.
         """
         instance = self.get_queryset()
+        print(instance)
         if instance:
             data = request.data
     
@@ -738,8 +739,9 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 del data['file_list']
             
             serializer_data = request.data if any(file_list) else data
-            serializer_data['RBNO'] = instance.RBNO
-            serializer_data['UPRN'] = instance.UPRN
+            # serializer_data['RBNO'] = instance.RBNO
+            # serializer_data['UPRN'] = instance.UPRN
+
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
             if not any(file_list) and not any([i.document_path for i in RequirementAsset.objects.filter(requirement_id=instance)]):
@@ -1302,7 +1304,7 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
 
                 # Explicitly specify the encoding as ISO-8859-1 (latin1)
                 decoded_file = csv_file.read().decode('ISO-8859-1').splitlines()
-                print(decoded_file)
+                # print(decoded_file)
                 
                 if file_extension == 'csv':
                     csv_reader = csv.DictReader(decoded_file)
@@ -1337,6 +1339,7 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         'UPRN': uprn,
                         'description': row.get('description', ''),
                         'site_address': row.get('site_address', ''),
+                        'due_date':row.get('due_date'),
                         'file_list': [],  # Empty file_list since you want to pass null
                     }
                     # Retrieve the customer's site address using the related name
@@ -1355,9 +1358,11 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         serializer.validated_data['user_id'] = request.user 
                         serializer.validated_data['customer_id'] = customer_data
                         # print(serializer.data)
-                        requirement = serializer.save()  # Save the requirement
+                        requirement = serializer.save() 
+                        print(requirement) # Save the requirement
                         
                         requirement.update_created_at(csv_date)
+                        print(requirement)
                     else:
                         success = False
 
