@@ -2973,8 +2973,9 @@ class EventUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated Event instance.
-                
+                members = request.data.getlist('member', [])
                 serializer.save()
+
                 
                 team_id = serializer.validated_data.get('team', None)   
 
