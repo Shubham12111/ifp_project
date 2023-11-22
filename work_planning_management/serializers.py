@@ -870,3 +870,30 @@ class AssignJobSerializer(serializers.ModelSerializer):
             raise ValidationError({'end_date':'End date should be greater than the start date.'})
 
         return data
+    
+
+class STWJobListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = STWJobAssignment
+        fields = [
+            'id',
+            'stw_job',
+            'assigned_to_member',
+            'assigned_to_team',
+            'event',
+            'start_date',
+            'end_date',
+            'start_time',
+            'end_time',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    # If you want to provide custom representation for related fields, you can do so like this:
+    stw_job = STWRequirementSerializer()
+    assigned_to_member = MemberSerializer(many=True)
+    assigned_to_team = TeamSerializer()
+    event = EventSerializer()
+    
+

@@ -22,7 +22,7 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,AssignJobSerializer,EventSerializer
+from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,AssignJobSerializer,EventSerializer,STWJobListSerializer
 
 from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
@@ -1511,75 +1511,64 @@ class QuoteJobView(CustomAuthenticationMixin, generics.CreateAPIView):
 
 def filter_job(data_access_value, user, customer=None):
     # Define a base queryset that contains all jobs
-    base_queryset = Job.objects.all()
+    base_queryset = STWJobAssignment.objects.all()
 
     # Define a mapping of data access values to corresponding filters.
     filter_mapping = {
-        "self": Q(quotation__user_id=user),
+        "self": Q(stw_job__quotation__user_id=user.id),
         "all": Q(),  # An empty Q() object returns all data.
     }
 
     if customer:
         # Filter the base queryset based on customer
-        base_queryset = base_queryset.filter(quotation__customer_id=customer)
+        base_queryset = base_queryset.filter(stw_job__quotation__customer_id=customer.id)
     
     # Apply the filter based on data_access_value
     queryset = base_queryset.filter(filter_mapping.get(data_access_value, Q()))
-    
     return queryset
 class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
-    
+    serializer_class = STWJobListSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    serializer_class = JobListSerializer
     filter_backends = [filters.SearchFilter]
+    search_fields = ['stw_job__quotation__action', 'stw_job__quotation__description', 'stw_job__quotation__RBNO', 'stw_job__quotation__UPRN']
     template_name = 'job_list.html'
+    ordering_fields = ['created_at']
 
     common_get_response = {
-    status.HTTP_200_OK: 
-        docs_schema_response_new(
+        status.HTTP_200_OK: docs_schema_response_new(
             status_code=status.HTTP_200_OK,
             serializer_class=serializer_class,
-            message = "Data retrieved",
-            )
+            message="Data retrieved",
+        )
     }
-    
-    @swagger_auto_schema(operation_id='Job Listing', responses={**common_get_response})
-    def get(self, request, *args, **kwargs):
 
-        """
-        Handle both AJAX (JSON) and HTML requests.
-        """
+    @swagger_auto_schema(operation_id='STW Job Assignment Listing', responses={**common_get_response})
+    def get(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id', None)
-        
+
         customer_data = User.objects.filter(id=customer_id).first()
-        
+
         if customer_data:
             # Call the handle_unauthenticated method to handle unauthenticated access.
             authenticated_user, data_access_value = check_authentication_and_permissions(
-                self,"survey", HasListDataPermission, 'list'
+                self, "survey", HasListDataPermission, 'list'
             )
             if isinstance(authenticated_user, HttpResponseRedirect):
                 return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-
-            # Get the appropriate filter from the mapping based on the data access value,
             queryset = filter_job(data_access_value, self.request.user, customer_data)
-            print(queryset)
 
             if request.accepted_renderer.format == 'html':
-                context = {'queryset':queryset, 'customer_id':customer_id,
-                        'customer_data':customer_data,
-                     }
-                return render_html_response(context,self.template_name)
+                context = {'stw_job_assignments': queryset, 'customer_id': customer_id, 'customer_data': customer_data}
+                return render_html_response(context, self.template_name)
             else:
                 serializer = self.serializer_class(queryset, many=True)
                 return create_api_response(status_code=status.HTTP_200_OK,
-                                                message="Data retrieved",
-                                                data=serializer.data)
+                                           message="Data retrieved",
+                                           data=serializer.data)
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id})) 
-
+            return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id}))
 
         
 class AddJobView(CustomAuthenticationMixin, generics.CreateAPIView):
@@ -1732,19 +1721,21 @@ class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
 
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    serializer_class = JobListSerializer 
-    template_name = 'job_delete.html'
+    serializer_class = STWJobListSerializer
+    template_name = 'job_list.html'
 
     def get_queryset(self):
-        return Job.objects.filter()
+        return STWJobAssignment.objects.filter()
 
     def get(self, request, *args, **kwargs):
         job_id = self.kwargs.get('job_id')
+        print(job_id)
         queryset = self.get_queryset()
+        print(queryset)
 
         try:
             job = queryset.get(id=job_id)
-        except Job.DoesNotExist:
+        except STWJobAssignment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if request.accepted_renderer.format == 'html':
@@ -1758,11 +1749,14 @@ class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
     def delete(self, request, *args, **kwargs):
         job_id = self.kwargs.get('job_id')
+        print(job_id)
+        customer_id = self.kwargs.get('customer_id')
         queryset = self.get_queryset()
+        print(queryset)
 
         try:
             job = queryset.get(id=job_id)
-        except Job.DoesNotExist:
+        except STWJobAssignment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # You can add permission checks here to ensure the user has the right to delete the job.
@@ -1790,7 +1784,7 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         template_name (str): The template name for HTML rendering.
     """
 
-    serializer_class = JobListSerializer
+    serializer_class = STWJobListSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'job_detail.html'
 
@@ -1802,7 +1796,7 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         QuerySet: A queryset of jobs.
         """
         # Your queryset logic to filter jobs goes here
-        queryset = Job.objects.all()
+        queryset = STWJobAssignment.objects.all()
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -1894,58 +1888,6 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
-
-
-class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
-    """
-    View for deleting a single job.
-    This view provides both HTML and JSON rendering.
-    """
-
-    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    serializer_class = JobListSerializer 
-    template_name = 'job_delete.html'
-
-    def get_queryset(self):
-        return Job.objects.filter()
-
-    def get(self, request, *args, **kwargs):
-        job_id = self.kwargs.get('job_id')
-        queryset = self.get_queryset()
-
-        try:
-            job = queryset.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        if request.accepted_renderer.format == 'html':
-            context = {'job': job}
-            return render(request, self.template_name, context)
-        else:
-            serializer = self.serializer_class(job)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                       message="Data retrieved",
-                                       data=serializer.data)
-
-    def delete(self, request, *args, **kwargs):
-        job_id = self.kwargs.get('job_id')
-        queryset = self.get_queryset()
-
-        try:
-            job = queryset.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-
-
-        job.delete()
-
-        if request.accepted_renderer.format == 'html':
-            messages.success(request, "Job has been deleted successfully.")
-            return redirect(reverse('job_list'))
-        else:
-            return create_api_response(status_code=status.HTTP_204_NO_CONTENT,
-                                       message="Job deleted successfully.")
 
 
 class MembersListView(CustomAuthenticationMixin, generics.ListAPIView):
@@ -3031,7 +2973,7 @@ class EventUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
 
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated Event instance.
-                members = request.data.getlist('member', [])
+                
                 serializer.save()
                 
                 team_id = serializer.validated_data.get('team', None)   
