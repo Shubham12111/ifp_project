@@ -27,12 +27,12 @@
                     <div class="row mt-3">
                         <div class="col-6">
                           <label>UPRN </label>
-                          <p>{{ job.quotation.requirement_id.UPRN }}</p>
+                          <p>{{ job.stw_job.quotation.requirement_id.UPRN }}</p>
                         </div>
 
                             <div class="col-6">
                               <label>RBNO </label>
-                              <p>{{ job.quotation.requirement_id.RBNO }}</p>
+                              <p>{{ job.stw_job.quotation.requirement_id.RBNO }}</p>
                             </div>
                         </div>
 
@@ -40,32 +40,45 @@
                             <div class="row mt-3">
                                 <div class="col-12">
                                   <label>Action </label>
-                                  <p>{{ job.quotation.requirement_id.action|safe }}</p>
+                                  <p>{{ job.stw_job.quotation.requirement_id.action|safe }}</p>
                                 </div>
 
 
                                 <div class="row mt-3">
                                     <div class="col-12">
                                       <label>Description </label>
-                                      <p>{{ job.quotation.requirement_id.description|safe }}</p>
+                                      <p>{{ job.stw_job.quotation.requirement_id.description|safe }}</p>
                                     </div>
-
                                     <div class="row mt-3">
-                                        <div class="col-12">
-                                          <label>Date </label>
-                                          <p>{{ job.created_at }}</p>
-                                        </div>
+                                      <div class="col-6">
+                                        <label>Start Date </label>
+                                        <p>{{ job.start_date }}</p>
+                                      </div>
+              
+                                          <div class="col-6">
+                                            <label>End Date  </label>
+                                            <p>{{ job.end_date }}</p>
+                                          </div>
+                                      </div>
+
+                                      <div class="row mt-3">
+                                          <div class="col-6">
+                                            <label>Start Time </label>
+                                            <p>{{ job.start_time }}</p>
+                                          </div>
+                                      
+                                            <div class="col-6">
+                                              <label>End Time </label>
+                                              <p>{{ job.end_time }}</p>
+                                            </div>
+                                          </div>
 
                                         <div class="row mt-3">
                                             <div class="col-12">
                                               <label>Number of Defects</label>
-                                              <p>{{ job.quotation.defect_id.count }}</p>
+                                              <p>{{ job.stw_job.quotation.defect_id.count }}</p>
                                             </div>
-                                        <div class="row mt-3">
-                                                <div class="col-12">
-                                                  <label>Surveyor Name</label>
-                                                  <p>{{ job.quotation.requirement_id.surveyor.first_name }} {{ job.quotation.requirement_id.surveyor.last_name }}</p>
-                                                </div>
+                                        
 
                                             </div>
                                         </div>

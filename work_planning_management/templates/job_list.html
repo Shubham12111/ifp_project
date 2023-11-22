@@ -35,8 +35,9 @@
                   <th>RBNO</th>
                   <th>Action</th>
                   <th>Description</th>
-                  <th>Date</th>
-                  <th>Surveyor Name</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  {% comment %} <th>Surveyor Name</th> {% endcomment %}
                   <th>Number of Defects</th>
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <th class="custom-last-column">Actions</th>
@@ -44,15 +45,16 @@
                 </tr>
               </thead>
               <tbody class="ml-4">
-                {% for job in queryset %}
+                {% for job in stw_job_assignments %}
                   <tr class="text-sm">
-                    <td class="text-sm">{{ job.quotation.requirement_id.UPRN}}</td>
-                    <td class="text-sm">{{ job.quotation.requirement_id.RBNO }}</td>
-                    <td class="text-sm">{{ job.quotation.requirement_id.action| safe|truncatechars:20 }}</td>
-                    <td class="text-sm">{{ job.quotation.requirement_id.description| safe|truncatechars:20 }}</td>
-                    <td class="text-sm">{{ job.created_at |date:"d/m/Y "}}</td>
-                    <td class="text-sm">{{ job.quotation.requirement_id.surveyor.first_name}} {{ job.quotation.requirement_id.surveyor.last_name}}</td>
-                    <td class="text-sm">{{ job.quotation.defect_id.count}}</td>
+                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.UPRN}}</td>
+                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.RBNO }}</td>
+                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.action| safe|truncatechars:20 }}</td>
+                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.description| safe|truncatechars:20 }}</td>
+                    <td class="text-sm">{{ job.start_date|date:"d/m/Y" }}</td>
+                    <td class="text-sm">{{ job.end_date|date:"d/m/Y" }}</td>
+                    {% comment %} <td class="text-sm">{{ job.quotation.requirement_id.surveyor.first_name}} {{ job.quotation.requirement_id.surveyor.last_name}}</td> {% endcomment %}
+                    <td class="text-sm">{{ job.stw_job.quotation.defect_id.count}}</td>
                     {% comment %} <td class="text-sm">{{ item.Defects description and option icon }}</td> {% endcomment %}
                     {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                     <td class="align-middle">
