@@ -54,8 +54,8 @@ INSTALLED_APPS = [
     'work_planning_management',
 
      # for calendar setup
-    'schedule',
-    'djangobower',
+    # 'schedule',
+    # 'djangobower',
     
 ]
 
@@ -217,7 +217,6 @@ CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'djangobower.finders.BowerFinder',
 )
 
 BOWER_INSTALLED_APPS = (
