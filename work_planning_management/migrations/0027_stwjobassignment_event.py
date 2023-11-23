@@ -11,10 +11,10 @@ class Migration(migrations.Migration):
         ('work_planning_management', '0026_remove_stwjobassignment_event'),
     ]
 
-    operations = [
-        migrations.AddField(
-            model_name='stwjobassignment',
-            name='event',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='schedule.event'),
-        ),
-    ]
+    # operations = [
+    #     migrations.AddField(
+    #         model_name='stwjobassignment',
+    #         name='event',
+    #         field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='schedule.event'),
+    #     ),
+    # ]

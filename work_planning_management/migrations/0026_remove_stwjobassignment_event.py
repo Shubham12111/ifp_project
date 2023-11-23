@@ -9,9 +9,9 @@ class Migration(migrations.Migration):
         ('work_planning_management', '0025_stwjobassignment_event'),
     ]
 
-    operations = [
-        migrations.RemoveField(
-            model_name='stwjobassignment',
-            name='event',
-        ),
-    ]
+    # operations = [
+    #     migrations.RemoveField(
+    #         model_name='stwjobassignment',
+    #         name='event',
+    #     ),
+    # ]
