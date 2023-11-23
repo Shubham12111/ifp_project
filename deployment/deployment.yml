@@ -30,37 +30,37 @@ spec:
           - name: DB_NAME
             valueFrom:
               configMapKeyRef:
-                name: infinity-fire-systems-config-beta
+                name: ifs-config
                 key: DB_NAME
           - name: DB_USER
             valueFrom:
               configMapKeyRef:
-                name: infinity-fire-systems-config-beta
+                name: ifs-config
                 key: DB_USER
           - name: DB_PASSWORD
             valueFrom:
               configMapKeyRef:
-                name: infinity-fire-systems-config-beta
+                name: ifs-config
                 key: DB_PASSWORD
           - name: DB_HOST
             valueFrom:
               configMapKeyRef:
-                name: infinity-fire-systems-config-beta
+                name: ifs-config
                 key: DB_HOST
           - name: DB_PORT
             valueFrom:
               configMapKeyRef:
-                name: infinity-fire-systems-config-beta
+                name: ifs-config
                 key: DB_PORT
           - name: SU_EMAIL
             valueFrom:
               configMapKeyRef:
-                name: infinity-fire-systems-config-beta
+                name: ifs-config
                 key: SU_EMAIL
           - name: SU_PASSWORD
             valueFrom:
               configMapKeyRef:
-                name: infinity-fire-systems-config-beta
+                name: ifs-config
                 key: SU_PASSWORD
           
           
