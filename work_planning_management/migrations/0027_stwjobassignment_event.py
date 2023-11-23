@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('schedule', '0014_use_autofields_for_pk'),
+        # ('schedule', '0014_use_autofields_for_pk'),
         ('work_planning_management', '0026_remove_stwjobassignment_event'),
     ]
 
