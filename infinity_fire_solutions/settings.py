@@ -16,7 +16,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start uatelopment settings - unsuitable for production
+# Quick-start betaelopment settings - unsuitable for production
 
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -169,7 +169,7 @@ USE_TZ = True
 # AWS
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
-STATIC_URL= 'https://ifp-static-uat.s3.eu-west-2.amazonaws.com/static/'
+STATIC_URL= 'https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/'
 #STATIC_URL = '/static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
@@ -201,7 +201,7 @@ AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = '/auth/login/'
 
 #AWS
-AWS_BUCKET_NAME = 'ifp-assets-uat'
+AWS_BUCKET_NAME = 'ifp-assets-beta'
 #supported file
 SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
 IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg']
