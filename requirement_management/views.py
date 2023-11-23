@@ -753,6 +753,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated requirement instance.
                 serializer.update(instance, validated_data=serializer.validated_data)
+                print(serializer)
                 message = "Your requirement has been updated successfully!"
 
                 if request.accepted_renderer.format == 'html':
@@ -1252,8 +1253,19 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
                 
                 requirments = Requirement.objects.filter(pk__in=ast.literal_eval(requirement_ids))
                 sureveyor = User.objects.filter(pk=sureveyor_id).first()
+
+                # Check if quantity surveyor is assigned
+                if not all(requirement.quantity_surveyor for requirement in requirments):
+                    messages.error(request, "Quantity surveyor must be assigned before assigning a surveyor.")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
                 
                 for requirement in requirments:
+                    # Save the quantity surveyor if not already assigned
+                    if not requirement.quantity_surveyor:
+                        requirement.quantity_surveyor = sureveyor
+                        requirement.save()
+                
+                
                     requirement.surveyor = sureveyor
                     requirement.status = "assigned-to-surveyor"
                     requirement.save()
