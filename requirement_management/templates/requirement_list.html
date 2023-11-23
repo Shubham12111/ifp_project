@@ -1,466 +1,446 @@
-{% extends 'base.html' %}
-{% load static %}
-{% block title %} FRA Actions {{ block.super }}{% endblock %}
-{% block content %}
-{% load custom_tags %}
-{% include 'components/alert.html' %}
-<div class="container-fluid py-4">
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <!-- Card header -->
-        <div class="card-header pb-0">
-          <div class="row">
-            <div class="col-lg-5 col-12 mb-lg-0 mb-3">
-              <h4 class="mb-0">FRA Actions</h4>
-              {% include 'customer_info.html' %}
-            </div>
-            <div class="col-lg-7 col-12">
-              <div class="ms-auto my-auto mt-lg-0 mt-4 text-end">
+  {% extends 'base.html' %}
+  {% load static %}
+  {% block title %} FRA Actions {{ block.super }}{% endblock %}
+  {% block content %}
+  {% load custom_tags %}
+  {% include 'components/alert.html' %}
+  <div class="container-fluid py-4">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <!-- Card header -->
+          <div class="card-header pb-0">
+            <div class="row">
+              <div class="col-lg-5 col-12 mb-lg-0 mb-3">
+                <h4 class="mb-0">FRA Actions</h4>
+                {% include 'customer_info.html' %}
+              </div>
+              <div class="col-lg-7 col-12">
+                <div class="ms-auto my-auto mt-lg-0 mt-4 text-end">
 
-                <button id="openCreateCsvModalButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Import
-                  FRA</button>
-                {% if request.user|has_add_permission:"requirement" %}
-                <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
+                  <button id="openCreateCsvModalButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Import
+                    FRA</button>
+                  {% if request.user|has_add_permission:"requirement" %}
+                  <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
+                    
+                  <a href="{% url 'customer_requirement_add'    customer_id %}"
                   
-                <a href="{% url 'customer_requirement_add'    customer_id %}"
-                
-                  class="btn bg-gradient-primary  btn-sm mb-2 mx-2">+&nbsp; New FRA Actions</a>
-                {% endif %}
-
-                {% if request.user.roles.name == "projects_admin_(IT)" %}
-                <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>Assign
-                  Surveyor</button>
-
-                  <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>Assign
-                    Quantity Surveyor</button>
+                    class="btn bg-gradient-primary  btn-sm mb-2 mx-2">+&nbsp; New FRA Actions</a>
                   {% endif %}
 
-                  {% if request.user.roles.name == "quantity_surveyor"  %}
+                  {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor" %}
                   <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Assign
                     Surveyor</button>
-                {% endif %}
 
+                    <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" >Assign
+                      Quantity Surveyor</button>
+                    {% endif %}
+
+                  
+
+                </div>
+                {% include 'components/table_search.html' %}
               </div>
-              {% include 'components/table_search.html' %}
+
             </div>
 
           </div>
+          <div class="card-body px-0 pb-0">
 
-        </div>
-        <div class="card-body px-0 pb-0">
-
-          <div class="table-responsive">
-            <!-- Modal for adding Quantity Surveyor -->
-            <div class="modal fade" id="addQsModal" tabindex="-1" aria-labelledby="addQsModalLabel" aria-hidden="true">
-              <div class="modal-dialog ">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="addQsModalLabel">Assign Quantity Surveyor</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <!-- Form to select a QS -->
-                    <form id="selectQsForm" method="POST" action="{% url 'add_quantity_surveyor' customer_id %}">
-                      {% csrf_token %}
-                      <input type="hidden" id="selectedReqIds" name="selectedReqIds" value="">
-                      <div class="form-group">
-                        <label for="qsSelect">Select a Quantity Surveyor:</label>
-                        <select id="qsSelect" name="qsSelect" class="form-control">
-                          <option disabled selected value> Select Quantity Surveyor </option>
-                          {% for qs in quantity_sureveyors %}
-                          <option value="{{qs.id}}">{{qs.email}}</option>
-                          {% endfor %}
-                        </select>
-                      </div>
-                    </form>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" id="submitQsForm" class="btn bg-gradient-primary">Submit</button>
+            <div class="table-responsive">
+              <!-- Modal for adding Quantity Surveyor -->
+              <div class="modal fade" id="addQsModal" tabindex="-1" aria-labelledby="addQsModalLabel" aria-hidden="true">
+                <div class="modal-dialog ">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="addQsModalLabel">Assign Quantity Surveyor</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <!-- Form to select a QS -->
+                      <form id="selectQsForm" method="POST" action="{% url 'add_quantity_surveyor' customer_id %}">
+                        {% csrf_token %}
+                        <input type="hidden" id="selectedReqIds" name="selectedReqIds" value="">
+                        <div class="form-group">
+                          <label for="qsSelect">Select a Quantity Surveyor:</label>
+                          <select id="qsSelect" name="qsSelect" class="form-control">
+                            <option disabled selected value> Select Quantity Surveyor </option>
+                            {% for qs in quantity_sureveyors %}
+                            <option value="{{qs.id}}">{{qs.email}}</option>
+                            {% endfor %}
+                          </select>
+                        </div>
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" id="cancelQsForm" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="button" id="submitQsForm" class="btn bg-gradient-primary">Submit</button>
+                    </div>
                   </div>
                 </div>
               </div>
+              <table class="table table-flush text-dark" id="requirement-list">
+                <thead class="thead-light">
+                  <tr>
+                    <th class="custom-last-column"></th><!-- Add an empty th for the checkbox column -->
+                    <th>FRA Action</th>
+                    <th>Description</th>
+                    <th>Site Address</th>
+                    <th>Quantity Surveyor</th>
+                    <th>Surveyor</th>
+                    <th>Status</th>
+                    <th>Due Date</th>
+                    <th class="custom-last-column">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="ml-4">
+                  {% for requirement in requirements %}
+                  <tr>
+                    <td class="text-sm">
+                      <input type="checkbox" name="requirement_checkbox" value="{{ requirement.id }}">
+                    </td>
+                    <td class="text-sm">{{requirement.action|truncatechars:20|title}}<br>
+                    </td>
+                    <td class="text-sm">{{requirement.description|truncatechars:20|title}}<br>
+                    </td>
+                    <td class="text-sm">{{requirement.site_address|truncatechars:20|title}}<br>
+                    </td>
+                    <td class="text-sm">{{requirement.quantity_surveyor|default:''}}</td>
+                    <td class="text-sm">{{requirement.surveyor|default:''}}</td>
+                    <td class="text-sm">{{requirement.get_status_display|default:''|title}}</td>
+                    <td class="text-sm">{{requirement.due_date|date:"d/m/Y"}}</td>
+                    <td class="text-sm">
+                      <div class="dropstart ms-auto pe-0">
+                        <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
+                          aria-expanded="false">
+                          <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
+                        </a>
+                        <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
+                          {% if request.user|has_view_permission:"fire_risk_assessment" %}
+                          <li>
+                            <a href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                              class="dropdown-item border-radius-md">
+                              View
+                            </a>
+                          </li>
+                          {% endif %}
+                          {% if request.user|has_update_permission:"fire_risk_assessment" %}
+                          <li>
+                            <a href="{% url 'customer_requirement_edit' customer_id requirement.pk %}"
+                              class="dropdown-item border-radius-md">
+                              Edit
+                            </a>
+                          </li>
+                          {% endif %}
+                          {% if request.user|has_delete_permission:"fire_risk_assessment" %}
+                          <li>
+                            <a href="#" type="button" class="dropdown-item border-radius-md"
+                              onclick="CustomconfirmDelete({{requirement.id}}, 'Are you sure you want to delete this requirement?','The requirement has been deleted successfully.','{% url 'customer_requirement_delete' customer_id requirement.id %}')">
+                              Delete</a>
+                          </li>
+                          {% endif %}
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
-            <table class="table table-flush text-dark" id="requirement-list">
-              <thead class="thead-light">
-                <tr>
-                  <th class="custom-last-column"></th><!-- Add an empty th for the checkbox column -->
-                  <th>FRA Action</th>
-                  <th>Description</th>
-                  <th>Site Address</th>
-                  <th>Quantity Surveyor</th>
-                  <th>Surveyor</th>
-                  <th>Status</th>
-                  <th>Due Date</th>
-                  <th class="custom-last-column">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="ml-4">
-                {% for requirement in requirements %}
-                <tr>
-                  <td class="text-sm">
-                    <input type="checkbox" name="requirement_checkbox" value="{{ requirement.id }}">
-                  </td>
-                  <td class="text-sm">{{requirement.action|truncatechars:20|title}}<br>
-                  </td>
-                  <td class="text-sm">{{requirement.description|truncatechars:20|title}}<br>
-                  </td>
-                  <td class="text-sm">{{requirement.site_address|truncatechars:20|title}}<br>
-                  </td>
-                  <td class="text-sm">{{requirement.quantity_surveyor|default:''}}</td>
-                  <td class="text-sm">{{requirement.surveyor|default:''}}</td>
-                  <td class="text-sm">{{requirement.get_status_display|default:''|title}}</td>
-                  <td class="text-sm">{{requirement.due_date|date:"d/m/Y"}}</td>
-                  <td class="text-sm">
-                    <div class="dropstart ms-auto pe-0">
-                      <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="fa fa-ellipsis-h text-secondary" aria-hidden="true"></i>
-                      </a>
-                      <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                        {% if request.user|has_view_permission:"fire_risk_assessment" %}
-                        <li>
-                          <a href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
-                            class="dropdown-item border-radius-md">
-                            View
-                          </a>
-                        </li>
-                        {% endif %}
-                        {% if request.user|has_update_permission:"fire_risk_assessment" %}
-                        <li>
-                          <a href="{% url 'customer_requirement_edit' customer_id requirement.pk %}"
-                            class="dropdown-item border-radius-md">
-                            Edit
-                          </a>
-                        </li>
-                        {% endif %}
-                        {% if request.user|has_delete_permission:"fire_risk_assessment" %}
-                        <li>
-                          <a href="#" type="button" class="dropdown-item border-radius-md"
-                            onclick="CustomconfirmDelete({{requirement.id}}, 'Are you sure you want to delete this requirement?','The requirement has been deleted successfully.','{% url 'customer_requirement_delete' customer_id requirement.id %}')">
-                            Delete</a>
-                        </li>
-                        {% endif %}
-                      </ul>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
-    </div>
-  </div>  
-</div>
+    </div>  
+  </div>
 
-<!-- Modal for adding Quantity Surveyor -->
-<div class="modal fade" id="addSurveyorModal" tabindex="-1" aria-labelledby="addSurveyorModal" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addSurveyorModal">Assign Surveyor</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Form to select a QS -->
-        <form id="selectForm" method="POST" action="{% url 'add_surveyor' customer_id %}">
-          {% csrf_token %}
-          <input type="hidden" id="selectedIds" name="selectedIds" value="">
-          <div class="form-group">
-            <label for="qsSelect">Select Surveyor:</label>
-            <select id="sureveyorSelect" name="sureveyorselect" class="form-control">
-              <option disabled selected value>Select Surveyor</option>
-              {% for sureveyor in sureveyors %}
-              <option value="{{sureveyor.id}}">{{sureveyor.email}}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" id="submitButton" class="btn bg-gradient-primary">Submit</button>
+  <!-- Modal for adding Quantity Surveyor -->
+  <div class="modal fade" id="addSurveyorModal" tabindex="-1" aria-labelledby="addSurveyorModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addSurveyorModal">Assign Surveyor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Form to select a QS -->
+          <form id="selectForm" method="POST" action="{% url 'add_surveyor' customer_id %}">
+            {% csrf_token %}
+            <input type="hidden" id="selectedIds" name="selectedIds" value="">
+            <div class="form-group">
+              <label for="qsSelect">Select Surveyor:</label>
+              <select id="sureveyorSelect" name="sureveyorselect" class="form-control">
+                <option disabled selected value>Select Surveyor</option>
+                {% for sureveyor in sureveyors %}
+                <option value="{{sureveyor.id}}">{{sureveyor.email}}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" id="submitButton" class="btn bg-gradient-primary">Submit</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
 
-<!-- Modal for importing csv -->
-<div class="modal fade" id="createcsvModal" tabindex="-1" aria-labelledby="createcsvModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="createcsvModalLabel">Import CSV</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="csvForm" method="POST" action="{% url 'import_csv' customer_id %}" enctype="multipart/form-data">
-          {% csrf_token %}
-          <div class="form-group">
-            <label for="fileInput">Select File:</label>
-            <input type="file" class="form-control-file" id="fileInput" name="csv_file">
-            <p class="text-sm mt-2">Supported file formats: xls, xlsx, csv</p>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <a href="#" id="downloadSampleButton" class="text-sm" style="margin-right: 105px; color: blue; text-decoration:underline" onMouseOver="this.style.color='#000080'"
-        onMouseOut="this.style.color='blue'">Download Sample Template</a>
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
+  <!-- Modal for importing csv -->
+  <div class="modal fade" id="createcsvModal" tabindex="-1" aria-labelledby="createcsvModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="createcsvModalLabel">Import CSV</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="csvForm" method="POST" action="{% url 'import_csv' customer_id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+              <label for="fileInput">Select File:</label>
+              <input type="file" class="form-control-file" id="fileInput" name="csv_file">
+              <p class="text-sm mt-2">Supported file formats: xls, xlsx, csv</p>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <a href="#" id="downloadSampleButton" class="text-sm" style="margin-right: 105px; color: blue; text-decoration:underline" onMouseOver="this.style.color='#000080'"
+          onMouseOut="this.style.color='blue'">Download Sample Template</a>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
 
-{% endblock %}
-{% block extra_js %}
-<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
-<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
-<script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-<script>
-  // Initialize Choices.js
-  if (document.getElementById('qsSelect')) {
-    var element = document.getElementById('qsSelect');
-    const vendor_choices = new Choices(element, {
-      default: false,
-      items: [],
-      choices: [],
-      renderChoiceLimit: 1,
-      searchEnabled: true,
-      searchChoices: true,
-      searchFloor: 1,
-      searchResultLimit: 10,
-      resetScrollPosition: true,
-      shouldSort: true,
-      shouldSortItems: false,
-      searchPlaceholderValue: "Search Quantity Surveyor",
-    });
-
-  }
-  // Initialize Choices.js
-  if (document.getElementById('sureveyorSelect')) {
-    var element = document.getElementById('sureveyorSelect');
-    const vendor_choices = new Choices(element, {
-      default: false,
-      items: [],
-      choices: [],
-      renderChoiceLimit: 1,
-      searchEnabled: true,
-      searchChoices: true,
-      searchFloor: 1,
-      searchResultLimit: 10,
-      resetScrollPosition: true,
-      shouldSort: true,
-      shouldSortItems: false,
-      searchPlaceholderValue: "Search Surveyor",
-    });
-
-  }
-
-
-
-  if (document.getElementById('requirement-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 25,
-      perPageSelect: false,
-    });
-
-    const dataTableTop = document.querySelector('.dataTable-top');
-    if (dataTableTop) {
-      dataTableTop.parentNode.removeChild(dataTableTop);
-    }
-
-    const searchInput = document.getElementById('searchInput');
-    const selectedReqIdsInput = document.getElementById('selectedReqIds');
-
-    const selectedIdsInput = document.getElementById('selectedIds');
-
-
-    const addQuantitySurveyorButton = document.getElementById('addQuantitySurveyorButton');
-    const addSurveyorButton = document.getElementById('addSurveyorButton');
-
-
-    searchInput.addEventListener('input', function () {
-      const searchText = searchInput.value.toLowerCase();
-      dataTableSearch.search(searchText).draw();
-    });
-
-    // Listen for checkbox changes and update the selectedReqIdsInput
-    const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
-    checkboxes.forEach(function (checkbox) {
-      checkbox.addEventListener('change', function () {
-        const selectedReqIds = Array.from(checkboxes)
-          .filter(checkbox => checkbox.checked)
-          .map(checkbox => checkbox.value);
-
-        selectedReqIdsInput.value = JSON.stringify(selectedReqIds);
-        selectedIdsInput.value = JSON.stringify(selectedReqIds);
-        // Enable/disable the button based on whether any row is selected
-        addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
-        addSurveyorButton.disabled = selectedReqIds.length === 0;
+  {% endblock %}
+  {% block extra_js %}
+  <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+  <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+  <script>
+    // Initialize Choices.js
+    if (document.getElementById('qsSelect')) {
+      var element = document.getElementById('qsSelect');
+      const vendor_choices = new Choices(element, {
+        default: false,
+        items: [],
+        choices: [],
+        renderChoiceLimit: 1,
+        searchEnabled: true,
+        searchChoices: true,
+        searchFloor: 1,
+        searchResultLimit: 10,
+        resetScrollPosition: true,
+        shouldSort: true,
+        shouldSortItems: false,
+        searchPlaceholderValue: "Search Quantity Surveyor",
       });
-    });
-  }
-
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    // Get the "Add Quantity Surveyor" button
-    const addSurveyorButton = document.getElementById("addSurveyorButton");
-
-    // Get the modal
-    const addSurveyorModal = new bootstrap.Modal(document.getElementById("addSurveyorModal"));
-
-    // Add an event listener to show the modal when the button is clicked
-    addSurveyorButton.addEventListener("click", function () {
-      addSurveyorModal.show();
-    });
-
-
-    const addQsButton = document.getElementById("addQuantitySurveyorButton");
-
-    // Get the modal
-    const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
-
-    // Add an event listener to show the modal when the button is clicked
-    addQsButton.addEventListener("click", function () {
-      addQsModal.show();
-    });
-
-    // Add an event listener to submit the form when the "Submit" button is clicked
-    const submitQsButton = document.getElementById("submitQsForm");
-    submitQsButton.addEventListener("click", function () {
-      const selectQsForm = document.getElementById("selectQsForm");
-      selectQsForm.submit(); // Submit the form
-    });
-
-    // Add an event listener to submit the form when the "Submit" button is clicked
-    const submitButton = document.getElementById("submitButton");
-    submitButton.addEventListener("click", function () {
-      const selectForm = document.getElementById("selectForm");
-      selectForm.submit(); // Submit the form
-    });
-
-  });
-</script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const addQuantitySurveyorButton = document.getElementById("addQuantitySurveyorButton");
-    const addSurveyorButton = document.getElementById("addSurveyorButton");
-
-    function updateButtonsState() {
-      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
-      let isAnyCheckboxChecked = false;
-
-      checkboxes.forEach(function (checkbox) {
-        if (checkbox.checked) {
-          isAnyCheckboxChecked = true;
-          return;
-        }
-      });
-
-      addQuantitySurveyorButton.disabled = !isAnyCheckboxChecked;
-      addSurveyorButton.disabled = isAnyCheckboxChecked;
-    }
-
-    const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
-    checkboxes.forEach(function (checkbox) {
-      checkbox.addEventListener("change", function () {
-        updateButtonsState();
-      });
-    });
-
-    addQuantitySurveyorButton.addEventListener("click", function () {
-      // Implement logic to submit the form for assigning Quantity Surveyor
-      // After successful submission, enable the "Assign Surveyor" button as follows:
-      // Add logic to enable the "Assign Surveyor" button here
-      addSurveyorButton.disabled = false;
-    });
-  });
-
-  const saveButton = document.getElementById("saveButton");
-    saveButton.addEventListener("click", function () {
-      const csvForm = document.getElementById("csvForm");
-      csvForm.submit(); // Submit the form
-    });
   
-
-
-
-  // JavaScript to open the modal when the button is clicked
-  const openCreateCsvModalButton = document.getElementById("openCreateCsvModalButton");
-  const createCsvModal = new bootstrap.Modal(document.getElementById("createcsvModal"));
-
-  if (openCreateCsvModalButton) {
-    openCreateCsvModalButton.addEventListener('click', function () {
-      createCsvModal.show();
-
-      // Clear the file input when the modal is shown
-      const fileInput = document.getElementById("fileInput");
-      fileInput.value = ""; // Clear the selected file
-    });
-  }
-
+    }
+    // Initialize Choices.js
+    if (document.getElementById('sureveyorSelect')) {
+      var element = document.getElementById('sureveyorSelect');
+      const vendor_choices = new Choices(element, {
+        default: false,
+        items: [],
+        choices: [],
+        renderChoiceLimit: 1,
+        searchEnabled: true,
+        searchChoices: true,
+        searchFloor: 1,
+        searchResultLimit: 10,
+        resetScrollPosition: true,
+        shouldSort: true,
+        shouldSortItems: false,
+        searchPlaceholderValue: "Search Surveyor",
+      });
   
-</script>
-
-
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const addQuantitySurveyorButton = document.getElementById("addQuantitySurveyorButton");
-    const addSurveyorButton = document.getElementById("addSurveyorButton");
-
-    function updateButtonsState() {
-      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
-      let isAnyCheckboxChecked = false;
-
-      checkboxes.forEach(function (checkbox) {
-        if (checkbox.checked) {
-          isAnyCheckboxChecked = true;
-          return;
-        }
-      });
-
-      addQuantitySurveyorButton.disabled = !isAnyCheckboxChecked;
-      addSurveyorButton.disabled = !isAnyCheckboxChecked || !hasAssignedQuantitySurveyor();
     }
-
-    function hasAssignedQuantitySurveyor() {
-      // You can implement your own logic to check if Quantity Surveyor has been assigned.
-      // If Quantity Surveyor has been assigned, return true; otherwise, return false.
-      // Replace the following line with your actual logic.
-      return false;
-    }
-
-    const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
-    checkboxes.forEach(function (checkbox) {
-      checkbox.addEventListener("change", function () {
-        updateButtonsState();
+  
+  
+  
+    if (document.getElementById('requirement-list')) {
+      const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
+        searchable: true,
+        fixedHeight: false,
+        perPage: 25,
+        perPageSelect: false,
       });
-    });
-
-    addQuantitySurveyorButton.addEventListener("click", function () {
-      // Implement logic to submit the form for assigning Quantity Surveyor
-      // After successful submission, enable the "Assign Surveyor" button as follows:
-      if (hasAssignedQuantitySurveyor()) {
-        addSurveyorButton.disabled = false;
+  
+      const dataTableTop = document.querySelector('.dataTable-top');
+      if (dataTableTop) {
+        dataTableTop.parentNode.removeChild(dataTableTop);
       }
+  
+      const searchInput = document.getElementById('searchInput');
+      const selectedReqIdsInput = document.getElementById('selectedReqIds');
+  
+      const selectedIdsInput = document.getElementById('selectedIds');
+  
+  
+      const addQuantitySurveyorButton = document.getElementById('addQuantitySurveyorButton');
+      const addSurveyorButton = document.getElementById('addSurveyorButton');
+  
+  
+      searchInput.addEventListener('input', function () {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+  
+      // Listen for checkbox changes and update the selectedReqIdsInput
+      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+      checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+          const selectedReqIds = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+  
+          selectedReqIdsInput.value = JSON.stringify(selectedReqIds);
+          selectedIdsInput.value = JSON.stringify(selectedReqIds);
+          // Enable/disable the button based on whether any row is selected
+          addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
+          addSurveyorButton.disabled = selectedReqIds.length === 0;
+        });
+      });
+    }
+  
+  </script>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Get the "Add Quantity Surveyor" button
+      const addSurveyorButton = document.getElementById("addSurveyorButton");
+  
+      // Get the modal
+      const addSurveyorModal = new bootstrap.Modal(document.getElementById("addSurveyorModal"));
+  
+      // Add an event listener to show the modal when the button is clicked
+      addSurveyorButton.addEventListener("click", function () {
+        addSurveyorModal.show();
+      });
+  
+  
+      const addQsButton = document.getElementById("addQuantitySurveyorButton");
+  
+      // Get the modal
+      const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
+  
+      // Add an event listener to show the modal when the button is clicked
+      addQsButton.addEventListener("click", function () {
+        addQsModal.show();
+      });
+  
+      // Add an event listener to submit the form when the "Submit" button is clicked
+      const submitQsButton = document.getElementById("submitQsForm");
+      submitQsButton.addEventListener("click", function () {
+        const selectQsForm = document.getElementById("selectQsForm");
+        selectQsForm.submit(); // Submit the form
+      });
+  
+      // Add an event listener to submit the form when the "Submit" button is clicked
+      const submitButton = document.getElementById("submitButton");
+      submitButton.addEventListener("click", function () {
+        const selectForm = document.getElementById("selectForm");
+        selectForm.submit(); // Submit the form
+      });
+  
     });
-  });
-
-</script>
-
-
-{% endblock %}
+  </script>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Get the "Add Quantity Surveyor" button
+      const addQsButton = document.getElementById("addQuantitySurveyorButton");
+  
+      // Get the modal
+      const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
+  
+      // Add an event listener to show the modal when the button is clicked
+      addQsButton.addEventListener("click", function () {
+        addQsModal.show();
+      });
+  
+      // Add an event listener to submit the form when the "Submit" button is clicked
+      const submitButton = document.getElementById("submitButton");
+  
+      submitButton.addEventListener("click", function () {
+        // Get all selected checkboxes
+        const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
+  
+        // Create an array to store the selected IDs
+        const selectedIdsArray = [];
+  
+        // Push the values of selected checkboxes into the array
+        selectedCheckboxes.forEach(function (checkbox) {
+          selectedIdsArray.push(checkbox.value);
+        });
+  
+        // Set the array as the value of the hidden input field
+        document.getElementById("selectedIds").value = JSON.stringify(selectedIdsArray);
+  
+        // Now, submit the form
+        const selectForm = document.getElementById("selectForm");
+        selectForm.submit();
+      });
+  
+  
+  
+  
+  
+  
+      // Add an event listener to submit the form when the "Submit" button is clicked
+      const submitQsButton = document.getElementById("submitQsForm");
+      submitQsButton.addEventListener("click", function () {
+        // Get all selected checkboxes
+        const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
+  
+        // Create an array to store the selected IDs
+        const selectedIdsArray = [];
+  
+        // Push the values of selected checkboxes into the array
+        selectedCheckboxes.forEach(function (checkbox) {
+          selectedIdsArray.push(checkbox.value);
+        });
+  
+        // Set the array as the value of the hidden input field
+        document.getElementById("selectedReqIds").value = JSON.stringify(selectedIdsArray);
+  
+        // Now, submit the form
+        const selectQsForm = document.getElementById("selectQsForm");
+        selectQsForm.submit();
+      });
+  
+  
+      const saveButton = document.getElementById("saveButton");
+      saveButton.addEventListener("click", function () {
+        const csvForm = document.getElementById("csvForm");
+        csvForm.submit(); // Submit the form
+      });
+  
+  
+    });
+  
+    // JavaScript to open the modal when the button is clicked
+    const openCreateCsvModalButton = document.getElementById("openCreateCsvModalButton");
+    const createCsvModal = new bootstrap.Modal(document.getElementById("createcsvModal"));
+  
+    if (openCreateCsvModalButton) {
+      openCreateCsvModalButton.addEventListener('click', function () {
+        createCsvModal.show();
+  
+        // Clear the file input when the modal is shown
+        const fileInput = document.getElementById("fileInput");
+        fileInput.value = ""; // Clear the selected file
+      });
+    }
+  
+  
+  
+  </script>
+  
+  
+  {% endblock %}
