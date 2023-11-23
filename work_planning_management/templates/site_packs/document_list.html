@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load requirement_tag %}
 {% block title %} STW List {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
@@ -42,6 +43,7 @@
                 </tr>
               </thead>
               <tbody class="ml-4"> 
+                
                 {% for doc in documents %}
                 <tr class="text-sm">
                     <td class="text-sm">
@@ -50,9 +52,9 @@
                       <td class="text-sm">{{doc.name}}</td>
                   <td class="text-sm"> 
                    {% for asset in doc.sitepackasset_set.all %}
-                    <span href="{{ asset.document_path }}" target="_blank" download="{{ asset.document_path}}">
-                        {{ asset.document_path}}
-                    </span>    
+                    <a href="{{asset.document_path|get_quotation_pdf_path}}" download>
+                        {{ asset.document_path }}
+                    </a>    
                 {% endfor %}
             
 
@@ -76,13 +78,7 @@
                           
                         {% endif %}
         
-                          {% if doc.document_path %}
-                        <li> <a href="{{ doc.presigned_url }}" download="{{ doc.filename }}" class="dropdown-item border-radius-md">
-                         Download
-                         </a>
-
-                     </li>
-                     {% endif %}
+                    
                      
                       </ul>
                     </div>
