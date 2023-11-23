@@ -141,8 +141,8 @@ class DocumentSerializer(serializers.ModelSerializer):
             for file in file_list:
                 unique_filename = f"{str(uuid.uuid4())}_{file.name}"
                 try:
-                    upload_file_to_s3(unique_filename, file, f'{instance.id}')
-                    file_path = f'{instance.id}/{unique_filename}'
+                    upload_file_to_s3(unique_filename, file, f'sitepack_doc/{instance.id}')
+                    file_path = f'sitepack_doc/{instance.id}/{unique_filename}'
                     
                     document = SitepackAsset.objects.create(sitepack_id=instance, document_path=file_path)
                 
@@ -151,7 +151,8 @@ class DocumentSerializer(serializers.ModelSerializer):
                     pass
 
         return instance
-
+    
+ 
     
     def to_representation(self, instance):
         """
@@ -177,6 +178,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         representation['document_paths'] = document_paths
 
         return representation
+
  
 class SitePackJobSerializer(serializers.ModelSerializer):
     class Meta:
