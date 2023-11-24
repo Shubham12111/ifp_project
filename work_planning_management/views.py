@@ -359,6 +359,26 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
             message = "Data retrieved",
             )
     }
+    def get_queryset(self):
+        """
+        Get the queryset based on filtering parameters from the request.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),
+        }
+        base_queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            base_queryset = base_queryset.order_by(ordering)
+
+        return base_queryset.order_by('-created_at')
     
     @swagger_auto_schema(operation_id='STW Requirement Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
@@ -1541,6 +1561,26 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             message="Data retrieved",
         )
     }
+    def get_queryset(self):
+        """
+        Get the queryset based on filtering parameters from the request.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),
+        }
+        base_queryset = STWJobAssignment.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            base_queryset = base_queryset.order_by(ordering)
+
+        return base_queryset.order_by('-created_at')
 
     @swagger_auto_schema(operation_id='STW Job Assignment Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
@@ -1805,6 +1845,7 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
 
         try:
             job = queryset.get(id=job_id)
+            print(job)
         except Job.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1814,6 +1855,7 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         if request.accepted_renderer.format == 'html':
             context = {
                 'job': job,
+                'job_id':job_id,
                 # Add more job-related data to the context as needed
             }
             return render(request, self.template_name, context)
