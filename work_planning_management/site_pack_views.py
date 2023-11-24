@@ -110,13 +110,14 @@ class DocumentListView(CustomAuthenticationMixin,generics.ListAPIView):
         # or use an empty Q() object if the value is not in the mapping
 
         base_queryset = SitepackDocument.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        base_queryset
 
         # Order the queryset based on the 'ordering_fields'
         ordering = self.request.GET.get('ordering')
         if ordering in self.ordering_fields:
             base_queryset = base_queryset.order_by(ordering)
 
-        return base_queryset 
+        return base_queryset.order_by('-created_at')
 
     common_get_response = {
         status.HTTP_200_OK: 
@@ -372,7 +373,14 @@ class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
             "all": Q(),
         }
         base_queryset = JobDocument.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
-        return base_queryset
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            base_queryset = base_queryset.order_by(ordering)
+
+        return base_queryset.order_by('-created_at')
+
+    
     
     common_get_response = {
         status.HTTP_200_OK:
