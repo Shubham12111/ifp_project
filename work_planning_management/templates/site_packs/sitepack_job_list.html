@@ -106,34 +106,5 @@
     });
 }
 
-
-
- document.addEventListener("DOMContentLoaded", function () {
-    const createJobButton = document.getElementById("createJobButton");
-    const stwCheckboxes = document.querySelectorAll('input[name="doc_checkbox"]');
-    
-    // Function to check if at least one checkbox is selected
-    function updateCreateJobButton() {
-      const atLeastOneSelected = Array.from(stwCheckboxes).some(checkbox => checkbox.checked);
-      createJobButton.disabled = !atLeastOneSelected;
-    }
-    
-    // Function to handle checkbox change and allow only a single checkbox to be selected
-
-    
-  stwCheckboxes.forEach(checkbox => {
-    checkbox.addEventListener("change", () => {
-      //handleCheckboxChange(checkbox); // Handle checkbox change
-      updateCreateJobButton(); // Update the "Add Job" button
-    });
-  });
-    
-    // Initial check
-    updateCreateJobButton();
-
-
-});
-
-
 </script>
 {% endblock %}     
