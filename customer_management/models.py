@@ -23,6 +23,8 @@ class BillingAddress(models.Model):
     post_code = models.CharField(max_length=10, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    class Meta:
+        ordering =['id']
     
 class SiteAddress(models.Model):
     
@@ -43,6 +45,9 @@ class SiteAddress(models.Model):
    
     def __str__(self):
         return self.site_name
+    
+    class Meta:
+        ordering =['id']
 
 class ContactPerson(models.Model):
     
@@ -57,4 +62,7 @@ class ContactPerson(models.Model):
     phone_number = models.CharField(max_length=127)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering =['id']
     

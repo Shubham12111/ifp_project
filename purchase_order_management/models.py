@@ -36,6 +36,9 @@ class PurchaseOrder(models.Model):
 
     def __str__(self):
         return self.po_number
+    
+    class Meta:
+        ordering =['id']
 
 class PurchaseOrderItem(models.Model):
     """
@@ -53,6 +56,9 @@ class PurchaseOrderItem(models.Model):
 
     def __str__(self):
         return f"{self.item_name} - {self.purchase_order_id.po_number}"
+    
+    class Meta:
+        ordering =['id']
 
 class PurchaseOrderInvoice(models.Model):
     """
@@ -91,3 +97,6 @@ class PurchaseOrderReceivedInventory(models.Model):
 
     def __str__(self):
         return f"Received Inventory for {self.purchase_order_item_id}"
+
+    class Meta:
+        ordering =['id']

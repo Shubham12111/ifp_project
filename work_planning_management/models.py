@@ -64,6 +64,7 @@ class STWRequirements(models.Model):
     class Meta:
         verbose_name = _('STW Requirements')
         verbose_name_plural = _('STW Requirements')
+        ordering =['id']
 
     def __str__(self):
         return f"{self.user_id.first_name} {self.user_id.last_name}'s STW Requirement"
@@ -119,6 +120,7 @@ class STWDefect(models.Model):
     class Meta:
         verbose_name = _('STW Defect')
         verbose_name_plural = _('STW Defect')
+        ordering =['id']
 
 class STWDefectDocument(models.Model):
     """
@@ -155,6 +157,9 @@ class Job(models.Model):
             action_text += "..."
         
         return action_text
+    
+    class Meta:
+        ordering =['id']
 
 
 
@@ -166,6 +171,8 @@ class STWJob(models.Model):
     class Meta:
         verbose_name = _('STW Job')
         verbose_name_plural = _('STW Job')
+        ordering =['id']
+
     def __str__(self):
         return f" Job {self.id} for STW{self.stw.id}"
         
@@ -179,6 +186,9 @@ class SitepackDocument(models.Model):
     def __str__(self):
         return f"name -{self.name}"
     
+    class Meta:
+        ordering =['id']
+    
 
 class SitepackAsset(models.Model):
     sitepack_id = models.ForeignKey(SitepackDocument, on_delete=models.CASCADE)
@@ -189,6 +199,7 @@ class SitepackAsset(models.Model):
     class Meta:
         verbose_name = _('Sitepack Asset')
         verbose_name_plural = _('Sitepack Asset')
+        ordering =['id']
 
     def __str__(self):
         return f" {self.sitepack_id.name}-{self.document_path}"
@@ -221,6 +232,7 @@ class RLO(models.Model):
     class Meta:
         verbose_name = _('RLO')
         verbose_name_plural = _('RLO')
+        ordering =['id']
 
     def __str__(self):
         return self.name
@@ -239,6 +251,7 @@ class Member(models.Model):
     class Meta:
         verbose_name = _('Member')
         verbose_name_plural = _('Members')
+        ordering =['id']
 
     def __str__(self):
         return self.name
@@ -252,6 +265,7 @@ class Team(models.Model):
     class Meta:
         verbose_name = _('Team')
         verbose_name_plural = _('Teams')
+        ordering =['id']
 
     def __str__(self):
         return self.team_name
@@ -265,6 +279,7 @@ class JobDocument(models.Model):
     class Meta:
         verbose_name = _('Job Document')
         verbose_name_plural = _('Job Documents')
+        ordering =['id']
 
 
 class Events(models.Model):
@@ -281,6 +296,7 @@ class Events(models.Model):
     class Meta:
         verbose_name = _('Calendar Events')
         verbose_name_plural = _('Calendar Events')
+        ordering =['id']
         
     
 
@@ -300,6 +316,7 @@ class STWJobAssignment(models.Model):
     class Meta:
         verbose_name = _('STW Job Assign')
         verbose_name_plural = _('STW Job Assign')
+        ordering =['id']
 
 
 

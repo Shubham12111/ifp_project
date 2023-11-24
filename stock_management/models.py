@@ -68,6 +68,9 @@ class Vendor(models.Model):
 
     def __str__(self):
         return self.email
+    
+    class Meta:
+        ordering =['id']
 
 class VendorContactPerson(models.Model):
     """
@@ -84,6 +87,9 @@ class VendorContactPerson(models.Model):
 
     def __str__(self):
         return self.email
+    
+    class Meta:
+        ordering =['id']
 
 class Category(models.Model):
     """
@@ -99,6 +105,9 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering =['id']
 
 class Item(models.Model):
     """
@@ -119,6 +128,9 @@ class Item(models.Model):
 
     def __str__(self):
         return self.item_name
+    
+    class Meta:
+        ordering =['id']
 
 class ItemImage(models.Model):
     """
@@ -149,6 +161,9 @@ class InventoryLocation(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        ordering =['id']
 
 class Inventory(models.Model):
     """
@@ -160,3 +175,6 @@ class Inventory(models.Model):
     assigned_inventory = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering =['id']

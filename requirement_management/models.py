@@ -94,6 +94,7 @@ class Requirement(models.Model):
     class Meta:
         verbose_name = _('FRA Action')
         verbose_name_plural = _('FRA Action')
+        ordering = ['-id']  # Order by the default primary key in descending order
 
     def __str__(self):
         return f"{self.customer_id.first_name} {self.customer_id.last_name}'s requirement"
@@ -169,6 +170,7 @@ class RequirementDefect(models.Model):
     class Meta:
         verbose_name = _('Fire Risk Assessment Defect')
         verbose_name_plural = _('Fire Risk Assessment Defect')
+        ordering = ['-id']  # Order by the default primary key in descending order
 
 class RequirementDefectDocument(models.Model):
     """
@@ -217,6 +219,9 @@ class Report(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['-id']  # Order by the default primary key in descending order
+
 class SORCategory(models.Model):
     """
         Represents a category for Service Order Requests (SOR).
@@ -243,6 +248,9 @@ class SORCategory(models.Model):
         Returns a string representation of the category, which is its name.
         """
         return self.name
+    
+    class Meta:
+        ordering = ['-id']  # Order by the default primary key in descending order
 
 class SORItem(models.Model):
     """
@@ -320,4 +328,7 @@ class Quotation(models.Model):
     pdf_path = models.CharField(max_length=500,null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering =['id']
     

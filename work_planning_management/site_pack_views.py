@@ -317,39 +317,6 @@ class DocumentDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
                                         message="Site Pack Document not found OR You are not authorized to perform this action.", )
             
 
-       
-# class DocumentDownloadView(generics.RetrieveAPIView):
-#     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
-#     template_name = 'site_packs/document_list.html'
-#     """
-#     View for downloading a document.
-#     """
-    
-#     def get(self, request, *args, **kwargs):
-#         document_id = kwargs.get('document_id')
-#         print(document_id)
-
-#         try:
-#             sitepack_asset = SitepackAsset.objects.get(sitepack_id=document_id)
-#             print(sitepack_asset)
-#             file_path = sitepack_asset.document_path  # Adjust for your file storage configuration
-            
-#             response = FileResponse(open(file_path, 'rb'))
-#             response['Content-Disposition'] = f'attachment; filename="{file_path.split("/")[-1]}"'  # Force download
-#              # Generate a presigned URL for the S3 object
-#             presigned_url = generate_presigned_url(file_path)
-
-#             # Create a dictionary containing the presigned URL and other information
-#             context = {
-#                 'presigned_url': presigned_url,
-#                 'filename': file_path.split('/')[-1],  # Extract the filename from the S3 object key
-#             }
-
-#             return render(request, self.template_name, context)
-#         except SitepackAsset.DoesNotExist:
-#             return Response({'error': 'Document not found'}, status=404)
-        
-
 def download_document(request, asset_id):
     asset = get_object_or_404(SitepackAsset, id=asset_id)
     file_path = asset.document_path  # Replace this with the actual file path
@@ -454,20 +421,31 @@ class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
                 #save to job document 
                 for document in documents:
                     print(get_job_data, document)
-                    JobDocument.objects.create(job=get_job_data, sitepack_document=document)
+                    data = JobDocument.objects.create(job=get_job_data, sitepack_document=document)
+                    data.save()
+                    message = "Your Site Pack Document has been added successfully."
+                    if request.accepted_renderer.format == 'html':
+                        messages.success(request, message)
+                        return redirect(reverse('sitepack_job_list'))
 
-                return render_html_response(context, self.template_name)
+                    else:
+                     # Return JSON response with success message and serialized data.
+                        return create_api_response(status_code=status.HTTP_201_CREATED,
+                                        message=message,
+                                        )
             else:
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                           message="We apologize for the inconvenience, but please review the below information.")
+                messages.error(request, "Document not assigned OR You are not authorized to perform this action.")
+                return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
+                                       message="Document not assigned OR You are not authorized to perform this action.", )
 
-
-class DocumentJobDeleteView(CustomAuthenticationMixin, generics.CreateAPIView):
+        
+   
+class DocumentJobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
-    View for deleting a Document assigned to job.
+     View for deleting a Document assigned to job.
     Supports both HTML and JSON response formats.
     """
-    serializer_class = DocumentSelectSerializer
+    serializer_class = SitePackJobSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     
     common_delete_response = {
@@ -489,7 +467,7 @@ class DocumentJobDeleteView(CustomAuthenticationMixin, generics.CreateAPIView):
     
     def delete(self, request, *args, **kwargs):
         """
-        Handle DELETE request to delete a Document.
+        Handle DELETE request to delete a JOb Document.
         """
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "survey", HasUpdateDataPermission, 'delete'
@@ -504,7 +482,8 @@ class DocumentJobDeleteView(CustomAuthenticationMixin, generics.CreateAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         queryset = JobDocument.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
-        
+        print(queryset)
+
         job_document_instance = queryset.first()
         print(job_document_instance)
 
@@ -512,13 +491,10 @@ class DocumentJobDeleteView(CustomAuthenticationMixin, generics.CreateAPIView):
             # Proceed with the deletion
             job_document_instance.delete()
             messages.success(request, "Assigned Document has been deleted successfully!")
-            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Assigned Document has been deleted successfully!", )
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                       message="Assigned Document has been deleted successfully!", )
         else:
             messages.error(request, "Assigned Document not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Assigned Document not found OR You are not authorized to perform this action.", )
-        
-   
-        
+                                       message="Assigned Document not found OR You are not authorized to perform this action.", )   
        
