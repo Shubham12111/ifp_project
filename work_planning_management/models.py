@@ -279,7 +279,7 @@ class JobDocument(models.Model):
     class Meta:
         verbose_name = _('Job Document')
         verbose_name_plural = _('Job Documents')
-        ordering =['id']
+        ordering =['created_at']
 
 
 class Events(models.Model):
@@ -316,7 +316,7 @@ class STWJobAssignment(models.Model):
     class Meta:
         verbose_name = _('STW Job Assign')
         verbose_name_plural = _('STW Job Assign')
-        ordering =['id']
+        ordering =['created_at']
 
 
 
