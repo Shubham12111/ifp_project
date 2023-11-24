@@ -48,6 +48,9 @@ class Todo(models.Model):
     def __str__(self):
         return self.title
     
+    class Meta:
+        ordering =['id']
+    
 
 class Comment(models.Model):
     """
@@ -63,3 +66,6 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment #{self.id} for {self.todo_id.title}"
+    
+    class Meta:
+        ordering =['id']
