@@ -56,6 +56,26 @@ class InventoryLocationListView(CustomAuthenticationMixin,generics.ListAPIView):
             message = "Data retrieved",
             )
     }
+    def get_queryset(self):
+        """
+        Get the queryset based on filtering parameters from the request.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),
+        }
+        base_queryset = InventoryLocation.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            base_queryset = base_queryset.order_by(ordering)
+
+        return base_queryset.order_by('-created_at')
     
     @swagger_auto_schema(operation_id='Inventory Location Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
@@ -76,7 +96,7 @@ class InventoryLocationListView(CustomAuthenticationMixin,generics.ListAPIView):
         }
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
-        queryset = InventoryLocation.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('created_at')
+        queryset = self.get_queryset()
         if request.accepted_renderer.format == 'html':
             context = {'inventory_location_list':queryset}
             return render_html_response(context,self.template_name)

@@ -359,6 +359,7 @@ class SitepackJobListView(CustomAuthenticationMixin, generics.ListAPIView):
             # If the page is out of range, deliver the last page of results.
             current_page = paginator.page(paginator.num_pages)
         return current_page
+    
     def get_queryset(self):
         """
         Get the queryset based on filtering parameters from the request.
