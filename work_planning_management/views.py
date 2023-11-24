@@ -1596,7 +1596,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             if isinstance(authenticated_user, HttpResponseRedirect):
                 return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-            queryset = filter_job(data_access_value, self.request.user, customer_data)
+            queryset = self.get_queryset()
 
             if request.accepted_renderer.format == 'html':
                 context = {'stw_job_assignments': queryset, 'customer_id': customer_id, 'customer_data': customer_data}
@@ -1943,6 +1943,8 @@ class MembersListView(CustomAuthenticationMixin, generics.ListAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'members_list.html'
     serializer_class = MemberSerializer
+    ordering_fields = ['created_at']
+    
     common_get_response = {
     status.HTTP_200_OK: 
         docs_schema_response_new(
@@ -1951,7 +1953,27 @@ class MembersListView(CustomAuthenticationMixin, generics.ListAPIView):
             message = "Data retrieved",
             )
     }
-    
+    def get_queryset(self):
+        """
+        Get the queryset based on filtering parameters from the request.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),
+        }
+        base_queryset = Member.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            base_queryset = base_queryset.order_by(ordering)
+
+        return base_queryset.order_by('-created_at')
+
     @swagger_auto_schema(operation_id='Member Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
 
@@ -1971,7 +1993,7 @@ class MembersListView(CustomAuthenticationMixin, generics.ListAPIView):
         }
 
 
-        queryset = Member.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = self.get_queryset()
         if request.accepted_renderer.format == 'html':
             context = {'members':queryset, 
                      }
@@ -2314,7 +2336,8 @@ class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
     """
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'teams_list.html'
-    serializer_class = TeamSerializer 
+    serializer_class = TeamSerializer
+    ordering_fields = ['created_at'] 
 
     common_get_response = {
     status.HTTP_200_OK: 
@@ -2324,6 +2347,27 @@ class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
             message = "Data retrieved",
             )
     }
+    def get_queryset(self):
+        """
+        Get the queryset based on filtering parameters from the request.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),
+        }
+        base_queryset = Team.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            base_queryset = base_queryset.order_by(ordering)
+
+        return base_queryset.order_by('-created_at')
+
     
     @swagger_auto_schema(operation_id='Teams Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
@@ -2345,7 +2389,7 @@ class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
         }
 
 
-        queryset = Team.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = self.get_queryset()
         if request.accepted_renderer.format == 'html':
             context = {'teams':queryset, 
                      }
