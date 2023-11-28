@@ -1736,7 +1736,7 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = self.get_queryset()
-        all_stw = STWRequirements.objects.filter()
+        all_stw = Quotation.objects.filter(status="approved")
         
         customers_with_counts = []  # Create a list to store customer objects with counts
 
@@ -1914,13 +1914,13 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = self.get_queryset()
-        all_stw = STWRequirements.objects.filter()
-
+        all_quotes = Quotation.objects.filter(status="approved")
+        
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
-            stw_counts = all_stw.filter(customer_id=customer).count()
-            customers_with_counts.append({'customer': customer, 'stw_counts': stw_counts})
+            quote_counts = all_quotes.filter(customer_id=customer).count()
+            customers_with_counts.append({'customer': customer, 'quote_counts': quote_counts})
 
         if request.accepted_renderer.format == 'html':
             context = {'customers_with_counts': customers_with_counts}  # Pass the list of customers with counts to the template

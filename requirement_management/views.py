@@ -205,12 +205,21 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
 
         queryset = self.get_queryset()
         all_fra = Requirement.objects.filter()
+        fra_for_surveyor = Requirement.objects.filter(quantity_surveyor=True)
+        fra_for_qs = Requirement.objects.filter(surveyor=True)
         
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
             fra_counts = all_fra.filter(customer_id=customer).count()
-            customers_with_counts.append({'customer': customer, 'fra_counts': fra_counts})
+            fra_counts_for_surveyor = fra_for_surveyor.filter(customer_id=customer).count()
+            fra_counts_for_qs = fra_for_qs.filter(customer_id=customer).count()
+            customers_with_counts.append({'customer': customer, 
+                                          'fra_counts': fra_counts,
+                                          'fra_counts_for_surveyor':fra_counts_for_surveyor,
+                                          'fra_counts_for_qs':fra_counts_for_qs
+                                          })
+            print(customers_with_counts)
     
         if request.accepted_renderer.format == 'html':
             context = {'customers_with_counts': customers_with_counts}  # Pass the list of customers with counts to the template
