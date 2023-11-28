@@ -2831,7 +2831,7 @@ class AssignscheduleView(CustomAuthenticationMixin, generics.CreateAPIView):
             user.save()
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
-                return redirect(reverse('job_schedule'))
+                return redirect(reverse('job_customers_list'))
 
             else:
                 # Return JSON response with success message and serialized data
