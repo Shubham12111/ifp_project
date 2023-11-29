@@ -1180,7 +1180,7 @@ class RequirementDefectRemoveDocumentView(generics.DestroyAPIView):
                 {"message": "Requirement Defect not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
-
+        
 
 class RequirementQSAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -1229,7 +1229,7 @@ class RequirementQSAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         except Exception as e:
             print(e)
             messages.error(request, "Something went wrong !")
-            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))    
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))     
 
 class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -1258,23 +1258,19 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
             customer_data = get_customer_data(customer_id)
             if customer_data:
                 requirement_ids = request.data.get('selectedIds')
+                print(requirement_ids)
                 sureveyor_id = request.data.get('sureveyorselect')
+                print(sureveyor_id)
+
+                # Check if a quantity surveyor is assigned to any of the selected requirements
+                if not Requirement.objects.filter(pk__in=ast.literal_eval(requirement_ids), quantity_surveyor__isnull=False).exists():
+                    messages.error(request, "Quantity Surveyor must be assigned first.")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
                 
                 requirments = Requirement.objects.filter(pk__in=ast.literal_eval(requirement_ids))
                 sureveyor = User.objects.filter(pk=sureveyor_id).first()
-
-                # Check if quantity surveyor is assigned
-                if not all(requirement.quantity_surveyor for requirement in requirments):
-                    messages.error(request, "Quantity surveyor must be assigned before assigning a surveyor.")
-                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
                 
                 for requirement in requirments:
-                    # Save the quantity surveyor if not already assigned
-                    if not requirement.quantity_surveyor:
-                        requirement.quantity_surveyor = sureveyor
-                        requirement.save()
-                
-                
                     requirement.surveyor = sureveyor
                     requirement.status = "assigned-to-surveyor"
                     requirement.save()
