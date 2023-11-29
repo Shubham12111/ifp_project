@@ -49,17 +49,18 @@
                       <td>{{query_obj.customer.company_name|default:''|title}}</td>
                       <td>{{query_obj.customer.email}}</td>
                       <td >{{query_obj.customer.phone_number|default:''}}</td>
-                      {% if request.user.roles.name == "projects_admin_(IT)" %}
-                      <td >{{query_obj.fra_counts}}</td>
-                      {% endif %}
-
                       {% if request.user.roles.name == "quantity_surveyor" %}
-                      <td >{{query_obj.fra_counts_for_qs}}</td>
-                      {% endif %}
-
-                      {% if request.user.roles.name == "surveyor" %}
-                      <td >{{query_obj.fra_counts_for_surveyor}}</td>
-                      {% endif %}
+                      <td>{{ query_obj.fra_counts_for_qs }}</td>
+                  {% endif %}
+              
+                  {% if request.user.roles.name == "surveyor" %}
+                      <td>{{ query_obj.fra_counts_for_surveyor }}</td>
+                  {% endif %}
+              
+                  {% if request.user.roles.name == "projects_admin_(IT)" %}
+                      <td>{{ query_obj.fra_counts }}</td>
+                  {% endif %}
+                  
 
                      
                       
