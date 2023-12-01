@@ -61,8 +61,8 @@
                               <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
                                   {% if request.user|has_view_permission:"survey" %}
                                       <li>
-                                          {% comment %} <a href="{% url 'member_detail' members_id=member_obj.members_id pk=member_obj.pk %}" class="dropdown-item border-radius-md"> {% endcomment %}
-                                              {% comment %} View {% endcomment %}
+                                           <a href="{% url 'member_details' member_obj.id %}" class="dropdown-item border-radius-md"> 
+                                             View 
                                           </a>
                                       </li>
                                   {% endif %}

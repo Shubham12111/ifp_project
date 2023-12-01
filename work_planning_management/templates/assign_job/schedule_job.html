@@ -70,7 +70,7 @@
                   <td class="text-sm">{{ item.email}}</td>
                   <td class="text-sm">{{ item.trade_type }}</td>
                   <td class="text-sm">{{ item.mobile_number }}</td>
-                  <td class="text-sm">{{ item.created_at }}</td>
+                  <td class="text-sm">{{ item.created_at|date:"d/m/Y"}}</td>
                 </tr>
                   {% endfor %}
               </table>

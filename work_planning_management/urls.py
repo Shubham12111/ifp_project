@@ -55,6 +55,8 @@ urlpatterns = [
     path('members/add/<int:qoute_id>/', MemberFormView.as_view(), name='members_add'),
     path('members/edit/<int:pk>/', MemberEditView.as_view(), name='member_edit'),
     path('members/delete/<int:pk>/', MemberDeleteView.as_view(), name='member_delete'),
+    path('members/details/<int:pk>/', MemberDetailView.as_view(), name='member_details'),
+
 
 
     # Teams URLs
