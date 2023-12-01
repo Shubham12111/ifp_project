@@ -19,6 +19,7 @@ urlpatterns = [
    
    path('vendor/item/<int:vendor_id>/', ItemListView.as_view(), name='item_list'),
    path('vendor/item/edit/<int:vendor_id>/<int:item_id>/', ItemListView.as_view(), name='item_list'),
+   path('vendor/item/view/<int:vendor_id>/<int:item_id>/', ItemDetailView.as_view(), name='item_view'),
 
    path('item/delete/<int:item_id>/', ItemDeleteView.as_view(), name='item_delete'),
    path('inventory/<int:item_id>/', InventoryView.as_view(), name='inventory_view'),
@@ -34,6 +35,7 @@ urlpatterns = [
 
    path('vendor/contact_person/<int:vendor_id>/', VendorContactPersonView.as_view(), name='vendor_contact_person'),
    path('vendor/contact_person/edit/<int:vendor_id>/<int:contact_id>/', VendorContactPersonView.as_view(), name='vendor_contact_person_edit'),
+   path('vendor/contact_person/view/<int:vendor_id>/<int:contact_id>/', VendorContactDetailView.as_view(), name='vendor_contact_person_view'),
    path('vendor/contact_person/delete/<int:vendor_id>/<int:contact_id>/', VendorRemoveContactPersonView.as_view(), name='vendor_contact_person_delete'),
 
    path('vendor/remarks/<int:vendor_id>/',VendorRemarkView.as_view(), name='vendor_remarks'),
