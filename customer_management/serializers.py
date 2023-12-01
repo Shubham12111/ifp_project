@@ -440,10 +440,29 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         },
         validators=[validate_uk_postcode] 
     )
+    full_address = serializers.SerializerMethodField()  # New field for combined address
+
     
     class Meta:
         model = SiteAddress
-        fields = ['site_name', 'address', 'country', 'town', 'county', 'post_code']
+        fields = ['site_name', 'address', 'country', 'town', 'county', 'post_code','full_address']
+
+    def get_full_address(self, instance):
+        # Create a dictionary with label names and corresponding values
+        address_components = {
+            'Country': instance.country.name if instance.country else '',
+            'County': instance.county.name if instance.county else '',
+            'Town': instance.town.name if instance.town else '',
+        }
+
+        # Filter out empty values and create a string with labels and values
+        formatted_address = ', '.join(f'{label} - {value}' for label, value in address_components.items() if value)
+
+        return formatted_address
+
+
+
+
 
 # Define a serializer for ContactPerson model
 class ContactPersonSerializer(serializers.ModelSerializer):

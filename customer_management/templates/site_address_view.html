@@ -39,8 +39,6 @@
                             </div>
                         </div>
                      
-                        
-                         
                                         <div class="row">
                                             <div class="col-2">
                                             <label>Post Code:</label>
@@ -50,10 +48,42 @@
                                           </div>
                                         </div>
 
-                                            </div>
+                    
+                                    <div class="row">
+                                        <div class="col-2">
+                                        <label>Complete Address:</label>
                                         </div>
+                                        <div class="col-6">
+                                        <p>{{ serializer.data.full_address }}</p>
+                                      </div>
                                     </div>
 
+                                 
+                                {% comment %} <div class="row">
+                                    <div class="col-2">
+                                    <label>County:</label>
+                                    </div>
+                                    <div class="col-6">
+                                    <p>{{ serializer.data.county }}</p>
+                                  </div>
+                                </div>
+
+                             
+                            <div class="row">
+                                <div class="col-2">
+                                <label>Town:</label>
+                                </div>
+                                <div class="col-6">
+                                <p>{{ serializer.data.town }}</p>
+                              </div>
+                            </div> {% endcomment %}
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
                 
 {% endblock %}
 {% block extra_js %}
