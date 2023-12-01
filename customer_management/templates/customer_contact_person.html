@@ -59,6 +59,15 @@
                               </a>
                               </li>
                               {% endif %}
+
+                              {% if request.user|has_view_permission:"customer" %}
+                              <li>
+                                <a href="{% url 'customer_contact_person_view' customer_instance.id contact_person.id %}" class="dropdown-item border-radius-md"> 
+                                  View
+                                </a>
+                              </li>
+                              {% endif %}
+
                                 {% if request.user|has_delete_permission:"customer" %}
                                 <li>
                                 <a href="#" type="button" class="dropdown-item border-radius-md"

@@ -200,4 +200,96 @@ class CustomerRemoveContactPersonView(CustomAuthenticationMixin, generics.Destro
                                         message=error_message, )
 
 
+class CustomerContactPersonDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding or updating a contact.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = ContactPersonSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'customer_contact_view.html'
+    swagger_schema = None
+    def get_contact_person(self):
+        contact_person_list = ContactPerson.objects.filter(user_id__id=self.kwargs.get('customer_id'))
+    
+        return contact_person_list
+    
+    def get_queryset(self):
+        """
+        Get the queryset for listing Conatct items.
+
+        Returns:
+            QuerySet: A queryset of Conatct items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='customer')
+        queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
+        return queryset
+
+    def get_contact_person_instance(self):
         
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'view'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        
+        contact_person = ContactPerson.objects.filter(filter_mapping.get(data_access_value, Q()))
+        contact_person = contact_person.filter(user_id__id=self.kwargs.get('customer_id'),
+                                                       pk=self.kwargs.get('address_id')).first()
+        return contact_person
+        
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for updating a contact.
+        If the contact exists, retrieve the serialized data and render the HTML template.
+        If the contact does not exist, render the HTML template with an empty serializer.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+
+        customer_id = self.kwargs.get('customer_id')
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"customer", HasUpdateDataPermission, 'view'
+        )
+        if request.accepted_renderer.format == 'html':
+            address_instance = self.get_contact_person_instance()
+            if address_instance:
+                serializer = self.serializer_class(instance=address_instance)
+            else:
+                serializer = self.serializer_class()
+            
+            queryset = self.get_queryset()
+            if queryset:
+                context = {'serializer':serializer, 
+                        'customer_instance':queryset,
+                        'customer_id':customer_id,
+                        'contact_person_list':self.get_contact_person()}
+                return render_html_response(context,self.template_name)
+            
+            else:
+                messages.error(request, "Customer not found OR You are not authorized to perform this action. ")
+                return redirect(reverse('customer_list'))
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                message="GET Method Not Alloweded",)     
