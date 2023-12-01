@@ -263,7 +263,9 @@ class CustomerSiteDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView
             address_instance = self.get_site_address_instance()
             if address_instance:
                 serializer = self.serializer_class(instance=address_instance)
-                print(serializer)
+                print(serializer.data)
+                country = address_instance.country
+                county = address_instance.county
             else:
                 serializer = self.serializer_class()
             
@@ -273,6 +275,8 @@ class CustomerSiteDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView
                 context = {'serializer':serializer, 
                            'customer_id':customer_id,
                         'customer_instance':self.get_queryset(),
+                         'country': country,
+                    'county': county,
                         }
                 return render_html_response(context,self.template_name)
             else:
