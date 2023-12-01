@@ -2262,7 +2262,49 @@ class MemberDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         
    
 
+class MemberDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'member_details.html'
+    serializer_class = MemberSerializer
 
+    def get_queryset(self):
+        """
+        Get the queryset for details OF MEMBERS.
+
+        Returns:
+            QuerySet: A queryset of MEMBERS filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+
+        queryset = Member.objects.filter(filter_mapping.get(data_access_value, Q())).distinct().order_by('-created_at')
+        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
+        return queryset
+    
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
+        instance = self.kwargs.get('pk')
+        # This method handles GET requests for updating an existing STW Requirement object.
+        if request.accepted_renderer.format == 'html':
+            instance = self.get_queryset()
+            if instance:
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                context = {'serializer': serializer, 'instance': instance}
+                return render_html_response(context, self.template_name)
+            else:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('members_list'))
+    
 
 class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     serializer_class = TeamSerializer
