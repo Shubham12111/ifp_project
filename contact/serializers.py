@@ -13,6 +13,7 @@ from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
 import re
 from bs4 import BeautifulSoup
+from customer_management.constants import POST_CODE_LIST
 
 
 # Custom validation function for validating file size
