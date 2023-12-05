@@ -239,7 +239,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "required": "This field is required.",
         },
 
-        validators=[validate_uk_postcode]
+        # validators=[validate_uk_postcode]
 
     )
 
