@@ -50,13 +50,13 @@
               </div>
             </div>
             </div>
-            <div class="col-3"></div>
+            {% comment %} <div class="col-3"></div>
             <div class="col-xs-12 col-sm-12 col-lg-3 col-md-3  text-end">
               <div class="search">
                 <input type="text" id="searchInput" class="form-control" placeholder="Search...">
               </div>
             </div>
-          </div>
+          </div> {% endcomment %}
           
         </div>
         <div class="card-body px-0 pb-0">
@@ -150,16 +150,12 @@
 <script>
 if (document.getElementById('contact-list')) {
   const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
-    searchable: false,
+    searchable: true,
     fixedHeight: false,
-    perPage: 25,
-    perPageSelect: false,
+    perPage:10,
   });
 
-  const dataTableTop = document.querySelector('.dataTable-top');
-  if (dataTableTop) {
-    dataTableTop.parentNode.removeChild(dataTableTop);
-  }
+
   const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', function() {
       const searchText = searchInput.value.toLowerCase();
@@ -178,6 +174,8 @@ if (document.getElementById('contact-list')) {
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
+
+
 
 </script>
 {% endblock %}     

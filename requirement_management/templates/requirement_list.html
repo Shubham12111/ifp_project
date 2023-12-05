@@ -20,7 +20,7 @@
 
                   <button id="openCreateCsvModalButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Import
                     FRA</button>
-                  {% if request.user|has_add_permission:"requirement" %}
+                  {% if request.user|has_add_permission:"fire_risk_assessment" %}
                   <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
                     
                   <a href="{% url 'customer_requirement_add'    customer_id %}"
@@ -39,7 +39,7 @@
                   
 
                 </div>
-                {% include 'components/table_search.html' %}
+                {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
               </div>
 
             </div>
@@ -268,14 +268,10 @@
       const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
         searchable: true,
         fixedHeight: false,
-        perPage: 25,
-        perPageSelect: false,
+        perPage: 10,
       });
   
-      const dataTableTop = document.querySelector('.dataTable-top');
-      if (dataTableTop) {
-        dataTableTop.parentNode.removeChild(dataTableTop);
-      }
+     
   
       const searchInput = document.getElementById('searchInput');
       const selectedReqIdsInput = document.getElementById('selectedReqIds');
