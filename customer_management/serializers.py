@@ -322,7 +322,6 @@ class BillingAddressSerializer(serializers.ModelSerializer):
             "required": "This field is required.",
             "blank": "Post Code is required.",
         },
-        validators=[validate_uk_postcode] 
     )
     
     def validate_vat_number(self, value):
