@@ -19,6 +19,7 @@ from infinity_fire_solutions.email import *
 from contact.models import Contact
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
+from customer_management.constants import POST_CODES_INFO
 
 from django.contrib.auth.hashers import make_password
 
@@ -681,3 +682,27 @@ class ConvertToCustomerView(CustomAuthenticationMixin,generics.CreateAPIView):
 
             # Redirect back to the contact list page
             return redirect(reverse('contact_list'))
+        
+class BillingAddressInfoView(CustomAuthenticationMixin, APIView):
+    """
+    View to get the country county and town based on given post code query_params.
+    """
+    serializer_class = PostCodeInfoSerializer
+    renderer_classes = [JSONRenderer]
+    swagger_schema = None
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        post_code = request.query_params.get('post_code')
+        post_code_info = POST_CODES_INFO[post_code]
+        data = {
+            "post_code": post_code,
+            "town": post_code_info[0] if post_code_info[0] else "Not Available",  # some towns are not available in post.
+            "county": post_code_info[1],
+            "country": post_code_info[2]
+        }
+        serialize = self.serializer_class(data=data)
+        serialize.is_valid(raise_exception=True)
+        return Response({"data": serialize.data})

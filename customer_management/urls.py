@@ -28,6 +28,8 @@ urlpatterns = [
     path('contact_person/edit/<int:customer_id>/<int:address_id>/', CustomerContactPersonView.as_view(), name='customer_contact_person_edit'),
     path('contact_person/view/<int:customer_id>/<int:address_id>/', CustomerContactPersonDetailView.as_view(), name='customer_contact_person_view'),
     path('contact_person/delete/<int:customer_id>/<int:address_id>/', CustomerRemoveContactPersonView.as_view(), name='customer_contact_person_delete'),
+    path('billing_address_info/', BillingAddressInfoView.as_view(), name="billing_address_info")
+
 ]
 
 

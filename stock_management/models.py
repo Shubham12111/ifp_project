@@ -2,6 +2,7 @@ from django.db import models
 from ckeditor.fields import RichTextField
 from cities_light.models import City, Country, Region
 from authentication.models import User
+from customer_management.constants import POST_CODE_LIST
 
 # Choices for Tax Preference
 TAX_PREFERENCE_CHOICES = (
@@ -56,10 +57,10 @@ class Vendor(models.Model):
     pan_number = models.CharField(max_length=20,null=True,blank=True)
     tax_preference = models.CharField(max_length=30, choices=TAX_PREFERENCE_CHOICES,null=True, blank=True)
     address = models.CharField(max_length=255,null=True,blank=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
-    town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
-    post_code = models.CharField(max_length=10, null=True, blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    town = models.CharField(max_length=255, null=True, blank=True)
+    county = models.CharField(max_length=255, null=True, blank=True)
+    post_code = models.CharField(max_length=10, choices=POST_CODE_LIST, null=True, blank=True)
     billing_phone_number = models.CharField(max_length=20, null=True, blank=True)
     vendor_status = models.CharField(max_length=30, choices=VENDOR_STATUS_CHOICES,null=True, blank=True)
     remarks = RichTextField(null=True, blank=True)

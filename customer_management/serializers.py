@@ -7,6 +7,8 @@ from authentication.models import CUSTOMER_TYPES, User
 from rest_framework.validators import UniqueValidator
 from .models import *
 import re
+from customer_management.constants import POST_CODE_LIST
+
 
 # Define a serializer for ContactCustomer model
 class ContactCustomerSerializer(serializers.ModelSerializer):
@@ -287,47 +289,39 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
     
-    country = serializers.PrimaryKeyRelatedField(
+    country = serializers.CharField(
         label=_('Country'),
-        queryset=Country.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    
-    town = serializers.PrimaryKeyRelatedField(
-        label=_('Town'),
-        queryset=City.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    
-    county = serializers.PrimaryKeyRelatedField(
-        label=_('County'),
-        queryset=Region.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    
-    post_code = serializers.CharField(
-        label=_('Post Code'),
-        max_length=7,
-        required=True,
-        allow_blank=True,
-        allow_null=True,
         style={
             'base_template': 'custom_input.html'
+        },
+    )
+    
+    town = serializers.CharField(
+        label=_('Town'),
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    
+    county = serializers.CharField(
+        label=_('County'),
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    
+    post_code = serializers.ChoiceField(
+        label=_('Post Code'),
+        required = True,
+        choices=POST_CODE_LIST,
+
+        style={
+            'base_template': 'custom_select.html'
         },
         error_messages={
             "required": "This field is required.",
             "blank": "Post Code is required.",
         },
-        validators=[validate_uk_postcode] 
     )
     
     def validate_vat_number(self, value):
@@ -401,38 +395,34 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         },
     )
     
-    country = serializers.PrimaryKeyRelatedField(
-        queryset=Country.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    
-    town = serializers.PrimaryKeyRelatedField(
-        queryset=City.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    
-    county = serializers.PrimaryKeyRelatedField(
-        queryset=Region.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    
-    post_code = serializers.CharField(
-        label=_('Post Code'),
-        max_length=7,
-        required=True,
-        allow_blank=False,
-        allow_null=False,
+    country = serializers.CharField(
+        label=_('Country'),
         style={
             'base_template': 'custom_input.html'
+        },
+    )
+    
+    town = serializers.CharField(
+        label=_('Town'),
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    
+    county = serializers.CharField(
+        label=_('County'),
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    
+    post_code = serializers.ChoiceField(
+        label=_('Post Code'),
+        required = True,
+        choices=POST_CODE_LIST,
+
+        style={
+            'base_template': 'custom_select.html'
         },
         error_messages={
             "required": "This field is required.",
@@ -559,3 +549,9 @@ class ContactPersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactPerson
         fields = ['first_name', 'last_name', 'email', 'phone_number']
+        
+class PostCodeInfoSerializer(serializers.Serializer):
+    post_code = serializers.CharField(max_length=255)
+    town = serializers.CharField(max_length=255)
+    county = serializers.CharField(max_length=255)
+    country = serializers.CharField(max_length=255)
