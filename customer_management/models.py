@@ -1,6 +1,7 @@
 from django.db import models
 from authentication.models import User
 from cities_light.models import City, Country, Region
+from customer_management.constants import POST_CODE_LIST
 
 TAX_PREFERENCE_CHOICES = (
     ('taxable', 'Taxable'),
@@ -10,17 +11,16 @@ class BillingAddress(models.Model):
     """
     Billing Addresss model    
     """
-
     user_id = models.ForeignKey("authentication.User", on_delete=models.CASCADE)
     vat_number= models.CharField(max_length=200, null=True, blank=True)
     #pan_number = models.CharField(max_length=200, null=True, blank=True)
     place_to_supply = models.CharField(max_length=200, null=True, blank=True)
     tax_preference = models.CharField(max_length=20, choices=TAX_PREFERENCE_CHOICES, null=True, blank=True)
     address = models.CharField(max_length=255 , null=True, blank=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
-    town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
-    post_code = models.CharField(max_length=10, null=True, blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    town = models.CharField(max_length=255, null=True, blank=True)
+    county = models.CharField(max_length=255, null=True, blank=True)
+    post_code = models.CharField(max_length=10, choices=POST_CODE_LIST, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:
@@ -36,10 +36,10 @@ class SiteAddress(models.Model):
     
     address = models.CharField(max_length=255 , null=True, blank=True)
     site_name = models.CharField(max_length=255 , null=True, blank=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
-    town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
-    post_code = models.CharField(max_length=10, null=True, blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    town = models.CharField(max_length=255, null=True, blank=True)
+    county = models.CharField(max_length=255, null=True, blank=True)
+    post_code = models.CharField(max_length=10, choices=POST_CODE_LIST, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
    
