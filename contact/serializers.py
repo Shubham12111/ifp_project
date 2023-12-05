@@ -204,46 +204,38 @@ class ContactSerializer(serializers.ModelSerializer):
         },
     )
      
-    country = serializers.PrimaryKeyRelatedField(
-        queryset=Country.objects.all(),
-        default=None,
+    country = serializers.CharField(
+        label=_('Country'),
         style={
-            'base_template': 'custom_select.html'
+            'base_template': 'custom_input.html'
         },
     )
-    town = serializers.PrimaryKeyRelatedField(
-        queryset=City.objects.all(),
-        default=None,
+    town = serializers.CharField(
+        label=_('Town'),
         style={
-            'base_template': 'custom_select.html'
+            'base_template': 'custom_input.html'
         },
     )
-    county = serializers.PrimaryKeyRelatedField(
-        queryset=Region.objects.all(),
-        default=None,
+    county = serializers.CharField(
+        label=_('County'),
         style={
-            'base_template': 'custom_select.html'
+            'base_template': 'custom_input.html'
         },
     )
 
     
-    post_code = serializers.CharField(
+    post_code = serializers.ChoiceField(
         label=('Post Code'),
-        max_length=7,
-        required=True,
-        allow_null=True,
-        allow_blank=True,
+        required=True,        
+        choices=POST_CODE_LIST,
         style={
             "input_type": "text",
             "autofocus": False,
             "autocomplete": "off",
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_select.html'
         },
           error_messages={
             "required": "This field is required.",
-            "blank": "Contact Type field cannot be blank.",
-            "invalid": "Contact Type can only contain characters.",
-
         },
 
         validators=[validate_uk_postcode]
@@ -536,3 +528,9 @@ class ConversationSerializer(serializers.ModelSerializer):
         instance.save()
         
         return instance
+    
+class PostCodeInfoSerializer(serializers.Serializer):
+    post_code = serializers.CharField(max_length=255)
+    town = serializers.CharField(max_length=255)
+    county = serializers.CharField(max_length=255)
+    country = serializers.CharField(max_length=255)
