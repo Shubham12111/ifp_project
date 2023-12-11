@@ -31,10 +31,10 @@
             <table class="table table-flush text-dark" id="customer-list">
               <thead class="thead-light">
                 <tr>
-                  <th>Name</th>
                   <th>Company Name</th>
-                  <th>Email</th>
+                  <th>Name</th>
                   <th>Phone</th>
+                  <th>Email</th>
                   {% if request.user|has_update_permission:"customer" or request.user|has_add_permission:"customer" or request.user|has_delete_permission:"customer" or request.user|has_view_permission:"customer" %}
                   <th class="custom-last-column">Actions</th>
                   {% endif %}
@@ -43,10 +43,10 @@
               <tbody class="ml-4"> 
                 {% for customer in customers %}
                 <tr class="text-sm">
-                  <td >{{customer.first_name|default:''|truncatechars:20|title}} {{customer.last_name|default:''|truncatechars:20|title}}</td>
                   <td >{{customer.company_name|default:''|truncatechars:20|title}}</td>
-                  <td >{{customer.email}}</td>
+                  <td >{{customer.first_name|default:''|truncatechars:20|title}} {{customer.last_name|default:''|truncatechars:20|title}}</td>
                   <td >{% if customer.phone_number %}{{customer.phone_number}}{% endif %}</td>
+                  <td >{{customer.email}}</td>
 
                   {% if request.user|has_update_permission:"customer" or request.user|has_add_permission:"customer" or request.user|has_delete_permission:"customer" or request.user|has_view_permission:"customer" %}
                   <td>
