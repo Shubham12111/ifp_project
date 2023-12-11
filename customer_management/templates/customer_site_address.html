@@ -64,6 +64,15 @@
                               </a>
                               </li>
                               {% endif %}
+
+                              {% if request.user|has_view_permission:"customer" %}
+                              <li>
+                                <a href="{% url 'customer_site_address_view' customer_instance.id site_address.id %}" class="dropdown-item border-radius-md"> 
+                                  View
+                                </a>
+                              </li>
+                              {% endif %}
+                              
                               {% if request.user|has_delete_permission:"customer" %}
                               <li>
                                 <a href="#" type="button" class="dropdown-item border-radius-md"
@@ -100,5 +109,42 @@
     });
 
   };
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", async function () {
+  var postCodeDropdown = document.getElementById("choices-post_code");
+  const countryField = document.querySelector('input[name="country"]');
+
+  const countyField = document.querySelector('input[name="county"]');
+  const townField = document.querySelector('input[name="town"]');
+
+  postCodeDropdown.addEventListener("change", async function () {
+    var selectedPostCode = postCodeDropdown.value;
+    if (selectedPostCode===""){
+      selectedPostCode = localStorage.getItem("paramPostCode")
+      postCodeDropdown.value = localStorage.getItem("paramPostCode")
+    }
+    // Make an API request using the selected post code
+    const apiResponse = await fetch(`/customer/billing_address_info/?post_code=${selectedPostCode}`);
+    const data = await apiResponse.json();
+
+    // Update country, county, and town fields with fetched data
+
+    countryField.value = data.data.country || 'Not Available';
+    countyField.value = data.data.county || 'Not Available';
+    townField.value = data.data.town || 'Not Available';
+
+    // Update the URL with the selected post code as a query parameter
+    const newUrl = `${window.location.origin}${window.location.pathname}?post_code=${selectedPostCode}`;
+    history.replaceState({}, document.title, newUrl);
+    localStorage.setItem("paramPostCode", selectedPostCode);
+    });
+
+  const storedPostCode = localStorage.getItem("paramPostCode");
+  if (storedPostCode) {
+    postCodeDropdown.value = storedPostCode;
+    postCodeDropdown.dispatchEvent(new Event("change"));
+    }
+  });
 </script>
 {% endblock %}

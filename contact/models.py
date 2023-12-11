@@ -2,6 +2,7 @@ from django.db import models
 from cities_light.models import City, Country, Region
 from authentication.models import User
 from ckeditor.fields import RichTextField
+from customer_management.constants import POST_CODE_LIST
 
 class ConversationType(models.Model):
     """
@@ -39,10 +40,10 @@ class Contact(models.Model):
     job_title = models.CharField(max_length=255, null=True, blank=True)
     company_name = models.CharField(max_length=255,null=True, blank=True)
     address = models.CharField(max_length=255 , null=True, blank=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
-    town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True)
-    county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
-    post_code = models.CharField(max_length=10, null=True, blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    town = models.CharField(max_length=255, null=True, blank=True)
+    county = models.CharField(max_length=255, null=True, blank=True)
+    post_code = models.CharField(max_length=10, choices=POST_CODE_LIST, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

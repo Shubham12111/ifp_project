@@ -16,7 +16,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
+# Quick-start betaelopment settings - unsuitable for production
+
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -53,8 +54,8 @@ INSTALLED_APPS = [
     'work_planning_management',
 
      # for calendar setup
-    'schedule',
-    'djangobower',
+    # 'schedule',
+    # 'djangobower',
     
 ]
 
@@ -168,9 +169,10 @@ USE_TZ = True
 # AWS
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
-STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
-# STATIC_URL = '/static/'
-# # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_URL= 'https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/'
+#STATIC_URL = '/static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
 
 
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
@@ -199,7 +201,7 @@ AUTH_USER_MODEL = 'authentication.User'
 LOGIN_URL = '/auth/login/'
 
 #AWS
-AWS_BUCKET_NAME = 'ifp-assets-dev'
+AWS_BUCKET_NAME = 'ifp-assets-beta'
 #supported file
 SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg', 'txt', 'pdf', 'doc', 'docx', 'csv', 'xls', 'xlsx', 'zip']
 IMAGE_VIDEO_SUPPORTED_EXTENSIONS = ['png', 'jpg', 'jpeg']
@@ -215,7 +217,6 @@ CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'djangobower.finders.BowerFinder',
 )
 
 BOWER_INSTALLED_APPS = (
@@ -225,11 +226,11 @@ BOWER_INSTALLED_APPS = (
     'fullcalendar#3.8.2'
 )
 
-BOWER_COMPONENTS_ROOT = '/BASE_DIR/components/'
+# BOWER_COMPONENTS_ROOT = BASE_DIR + '/components/'
 
-requires_system_checks = [
-    'some_check',
-    'another_check',
-    # ... other checks ...
-]
+# requires_system_checks = [
+#     'some_check',
+#     'another_check',
+#     # ... other checks ...
+# ]
 

@@ -232,14 +232,8 @@
     const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
       searchable: true,
       fixedHeight: false,
-      perPage: 25,
-      perPageSelect: false,
+      perPage: 10,
     });
-
-    const dataTableTop = document.querySelector('.dataTable-top');
-    if (dataTableTop) {
-      dataTableTop.parentNode.removeChild(dataTableTop);
-    }
 
     const searchInput = document.getElementById('searchInput');
     const selectedReqIdsInput = document.getElementById('selectedReqIds');

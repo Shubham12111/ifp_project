@@ -22,10 +22,14 @@ urlpatterns = [
     path('site_address/<int:customer_id>/', CustomerSiteAddressView.as_view(), name='customer_site_address'),
     path('site_address/edit/<int:customer_id>/<int:address_id>/', CustomerSiteAddressView.as_view(), name='customer_site_address_edit'),
     path('site_address/delete/<int:customer_id>/<int:address_id>/', CustomerRemoveSiteAddressView.as_view(), name='customer_site_address_delete'),
+    path('site_address/view/<int:customer_id>/<int:address_id>/', CustomerSiteDetailView.as_view(), name='customer_site_address_view'),
     
     path('contact_person/<int:customer_id>/', CustomerContactPersonView.as_view(), name='customer_contact_person'),
     path('contact_person/edit/<int:customer_id>/<int:address_id>/', CustomerContactPersonView.as_view(), name='customer_contact_person_edit'),
+    path('contact_person/view/<int:customer_id>/<int:address_id>/', CustomerContactPersonDetailView.as_view(), name='customer_contact_person_view'),
     path('contact_person/delete/<int:customer_id>/<int:address_id>/', CustomerRemoveContactPersonView.as_view(), name='customer_contact_person_delete'),
+    path('billing_address_info/', BillingAddressInfoView.as_view(), name="billing_address_info")
+
 ]
 
 
