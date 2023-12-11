@@ -4,6 +4,7 @@ from rest_framework.validators import UniqueValidator
 from infinity_fire_solutions.custom_form_validation import *
 from .models import *
 import re
+from customer_management.constants import POST_CODE_LIST
 
 class VendorSerializer(serializers.ModelSerializer):
     """
@@ -158,41 +159,35 @@ class BillingDetailSerializer(serializers.ModelSerializer):
             
         },
     )
-    country = serializers.PrimaryKeyRelatedField(
-        queryset=Country.objects.all(),
+    country = serializers.CharField(
+        label=_('Country'),
         default=None,
         style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    town = serializers.PrimaryKeyRelatedField(
-        queryset=City.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    county = serializers.PrimaryKeyRelatedField(
-        queryset=Region.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-
-    
-    post_code = serializers.CharField(
-        label=('Post Code'),
-        max_length=7,
-        required=True,
-        style={
-            "input_type": "text",
-            "autofocus": False,
-            "autocomplete": "off",
             'base_template': 'custom_input.html'
         },
+    )
+    town = serializers.CharField(
+        label=_('Town'),
+        default=None,
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    county = serializers.CharField(
+        label=_('County'),
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
 
-        validators=[validate_uk_postcode]
+    post_code = serializers.ChoiceField(
+        label=('Post Code'),
+        required=True,
+        choices=POST_CODE_LIST,
+        style={
+            'base_template': 'custom_select.html'
+        },
+
 
     )
   

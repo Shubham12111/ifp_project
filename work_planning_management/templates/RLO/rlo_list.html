@@ -23,7 +23,7 @@
             </div>
           </div>
           
-          {% include 'components/table_search.html' %}
+          {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
         </div>
         <div class="card-body px-0 pb-0">
          <div class="table-responsive">
@@ -115,14 +115,10 @@
   const dataTableSearch = new simpleDatatables.DataTable("#rlo-list", {
     searchable: true,
     fixedHeight: false,
-    perPage: 25,
-    perPageSelect: false,
+    perPage: 10,
   });
 
-  const dataTableTop = document.querySelector('.dataTable-top');
-  if (dataTableTop) {
-    dataTableTop.parentNode.removeChild(dataTableTop);
-  }
+  
   const searchInput = document.getElementById('searchInput');
     searchInput.addEventListener('input', function() {
       const searchText = searchInput.value.toLowerCase();

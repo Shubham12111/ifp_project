@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Item Details{{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex justify-content-between">
+            <div>
+              <h4 class="mb-0">Item Details</h4>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-3" href="{% url 'item_list' vendor_id %}">Back</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-4">
+                 <div class="row">
+                        <div class="col-2">
+                          <label>Item Name:</label>
+                        </div>
+                        <div class="col-6">
+                          <p>{{ serializer.data.item_name }}</p>
+                        </div>
+                    </div>
+               
+
+                    <div class="row">
+                        <div class="col-2">
+                              <label>Description:</label>
+                            </div>
+                            <div class="col-6">
+                              <p>{{ serializer.data.description}}</p>
+                            </div>
+                        </div>
+                     
+                                        <div class="row">
+                                            <div class="col-2">
+                                            <label>Price:</label>
+                                            </div>
+                                            <div class="col-6">
+                                            <p>£{{ serializer.data.price}}</p>
+                                          </div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="col-2">
+                                            <label>Reference Number:</label>
+                                            </div>
+                                            <div class="col-6">
+                                            <p>{{ serializer.data.reference_number}}</p>
+                                          </div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="col-2">
+                                            <label>Units:</label>
+                                            </div>
+                                            <div class="col-6">
+                                            <p>{{ serializer.data.units }}</p>
+                                          </div>
+                                        </div>
+                                        
+
+
+                                        <div class="row">
+                                            <div class="col-2">
+                                            <label>Quanitity per box:</label>
+                                            </div>
+                                            <div class="col-6">
+                                            <p>{{ serializer.data.quantity_per_box }}</p>
+                                          </div>
+                                        </div>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/custom.js' %}"></script>
+{% endblock %}

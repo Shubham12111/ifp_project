@@ -17,6 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
+
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -53,8 +54,8 @@ INSTALLED_APPS = [
     'work_planning_management',
 
      # for calendar setup
-    'schedule',
-    'djangobower',
+    # 'schedule',
+    # 'djangobower',
     
 ]
 
@@ -169,8 +170,9 @@ USE_TZ = True
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
 STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
-# STATIC_URL = '/static/'
-# # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+#STATIC_URL = '/static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
 
 
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
@@ -215,7 +217,6 @@ CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'djangobower.finders.BowerFinder',
 )
 
 BOWER_INSTALLED_APPS = (
@@ -225,11 +226,11 @@ BOWER_INSTALLED_APPS = (
     'fullcalendar#3.8.2'
 )
 
-BOWER_COMPONENTS_ROOT = '/BASE_DIR/components/'
+# BOWER_COMPONENTS_ROOT = BASE_DIR + '/components/'
 
-requires_system_checks = [
-    'some_check',
-    'another_check',
-    # ... other checks ...
-]
+# requires_system_checks = [
+#     'some_check',
+#     'another_check',
+#     # ... other checks ...
+# ]
 

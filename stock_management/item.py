@@ -102,6 +102,7 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
+        vendor_id = self.kwargs.get('vendor_id')
         vendor_instance = self.get_queryset()
         if vendor_instance:
            
@@ -115,6 +116,7 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
                 
                 context = {'item_list':self.get_item_queryset(),
                 'vendor_instance':vendor_instance,
+                'vendor_id':vendor_id,
                 'serializer':serializer}
                 return render_html_response(context,self.template_name)
         else:
@@ -193,7 +195,6 @@ class ItemAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
 
         if request.accepted_renderer.format == 'html':
             context = {'serializer':self.serializer_class()}
@@ -504,3 +505,110 @@ class ItemRemoveImageView(generics.DestroyAPIView):
                 {"message": "Requirement Defect not found or you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+
+class ItemDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    API view for View a Item.
+
+    This view handles both HTML and API requests for updating a Item instance.
+    If the Item instance exists, it will be updated with the provided data.
+    Otherwise, an error message will be returned.
+
+    The following request methods are supported:
+    - POST: Updates the Item instance.
+
+    Note: Make sure to replace 'your_template_name.html' with the appropriate HTML template name.
+    """
+    
+    serializer_class = ItemSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'item_detail.html'
+
+    def get_queryset(self):
+        """
+        Get the queryset for listing vendor items.
+
+        Returns:
+            QuerySet: A queryset of vendor items filtered based on the authenticated user's ID.
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "stock_management", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        queryset = Vendor.objects.filter(filter_mapping.get(data_access_value, Q()))
+        queryset = queryset.filter(pk=self.kwargs.get('vendor_id')).first()
+        return queryset
+
+    def get_item_queryset(self):
+         # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "stock_management", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        vendor_instance = self.get_queryset()
+        if vendor_instance:
+            # Define a mapping of data access values to corresponding filters
+            filter_mapping = {
+                "self": Q(user_id=self.request.user ),
+                "all": Q(),  # An empty Q() object returns all data
+            }
+
+            # Get the appropriate filter from the mapping based on the data access value,
+            # or use an empty Q() object if the value is not in the mapping
+            queryset = Item.objects.filter(filter_mapping.get(data_access_value, Q())).order_by('-created_at')
+            queryset = queryset.filter(vendor_id=vendor_instance )
+
+        return queryset
+
+
+    def get_item_instancee(self):
+        item_data = Item.objects.filter(vendor_id=self.kwargs.get('vendor_id'),
+                                        pk=self.kwargs.get('item_id')).first()
+        return item_data
+
+
+   
+    def get(self, request, *args, **kwargs):
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "stock_management", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        vendor_id = self.kwargs.get('vendor_id')
+        vendor_instance = self.get_queryset()
+        if vendor_instance:
+           
+            if request.accepted_renderer.format == 'html':
+                
+                item_instance = self.get_item_instancee()
+                if item_instance:
+                    serializer = self.serializer_class(instance=item_instance)
+                else:
+                    serializer = self.serializer_class()
+                
+                context = {'item_list':self.get_item_queryset(),
+                'vendor_instance':vendor_instance,
+                'serializer':serializer,
+                    'vendor_id':vendor_id}
+                return render_html_response(context,self.template_name)
+        else:
+            messages.error(request, "Item not found OR You are not authorized to perform this action.")
+            return redirect(reverse('vendor_list'))

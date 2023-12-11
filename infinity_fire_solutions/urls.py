@@ -51,7 +51,6 @@ urlpatterns = [
     path('fra/',include('requirement_management.urls')),
     path('purchase_order/',include('purchase_order_management.urls')),
     path('work_planning/',include('work_planning_management.urls')),
-    path('schedule/', include('schedule.urls')),
 
 
 

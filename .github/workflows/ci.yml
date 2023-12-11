@@ -7,6 +7,7 @@ on:
     # Trigger the workflow on push events, but only when dev is updated.
     branches: [dev]
 
+
 env:
   AWS_REGION: eu-west-2  # The AWS region in which the ECR and EKS resources are located.
   ECR_REGISTRY: 591836277216.dkr.ecr.eu-west-2.amazonaws.com  # The URL of the ECR registry.

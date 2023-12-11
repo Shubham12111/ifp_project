@@ -775,6 +775,7 @@ class EventSerializer(serializers.ModelSerializer):
         allow_null=True,
         allow_blank=True,
         choices=[member for member in Member.objects.all()]
+        # choices = []
     )
 
 

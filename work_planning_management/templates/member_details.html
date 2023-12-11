@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Member Details{{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pb-0">
+          <div class="d-lg-flex justify-content-between">
+            <div>
+              <h4 class="mb-0">Member Details</h4>
+            </div>
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
+              <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-3" href="{% url 'members_list' %}">Back</a>
+            </div>
+          </div>
+        </div>
+        <div class="card-body px-4">
+                 <div class="row">
+                        <div class="col-2">
+                          <label>Name:</label>
+                        </div>
+                        <div class="col-6">
+                          <p>{{ serializer.data.name }}</p>
+                        </div>
+                    </div>
+               
+
+                    <div class="row">
+                        <div class="col-2">
+                              <label>Address:</label>
+                            </div>
+                            <div class="col-6">
+                              <p>{{ serializer.data.address}}</p>
+                            </div>
+                        </div>
+                     
+                                        <div class="row">
+                                            <div class="col-2">
+                                            <label>Trade Type:</label>
+                                            </div>
+                                            <div class="col-6">
+                                            <p>{{ serializer.data.trade_type}}</p>
+                                          </div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="col-2">
+                                            <label>Email:</label>
+                                            </div>
+                                            <div class="col-6">
+                                            <p>{{ serializer.data.email}}</p>
+                                          </div>
+                                        </div>
+
+
+                                        <div class="row">
+                                            <div class="col-2">
+                                            <label>Phone Number:</label>
+                                            </div>
+                                            <div class="col-6">
+                                            <p>{{ serializer.data.mobile_number}}</p>
+                                          </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-2">
+                                            <label>Job Title:</label>
+                                            </div>
+                                            <div class="col-6">
+                                            <p>{{ serializer.data.job_title}}</p>
+                                          </div>
+                                        </div>
+                                        
+
+                                            </div>
+                                        </div>
+                                    </div>
+
+                
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/custom.js' %}"></script>
+{% endblock %}

@@ -198,5 +198,91 @@ class CustomerRemoveSiteAddressView(CustomAuthenticationMixin, generics.DestroyA
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message=error_message, )
 
+class CustomerSiteDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    View to display and manage siteaddressview.
+    """
+    serializer_class = SiteAddressSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'site_address_view.html'
+    ordering_fields = ['created_at'] 
+    swagger_schema = None
+    
+    
+    def get_queryset(self):
+        """
+        Get the queryset of contacts filtered by the current user.
+        """
+         # Get the model class using the provided module_name string
+    
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasDeleteDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
         
+        site_address = SiteAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
+        site_address = site_address.filter(user_id__id=self.kwargs.get('customer_id'),
+                                                       pk=self.kwargs.get('address_id')).first()
+        return site_address
+    
+
+    def get_site_address_instance(self):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id__created_by=self.request.user ),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+        
+        site_address = SiteAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
+        
+        site_address = site_address.filter(user_id__id=self.kwargs.get('customer_id'),
+                                                       pk=self.kwargs.get('address_id')).first()
+        return site_address
+
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handles GET request for the conversation view.
+        If a conversation_id is provided in the URL kwargs, it means we are viewing/editing an existing conversation.
+        """
+        customer_id = self.kwargs.get('customer_id')
+        if request.accepted_renderer.format == 'html':
+            address_instance = self.get_site_address_instance()
+            if address_instance:
+                serializer = self.serializer_class(instance=address_instance)
+                print(serializer.data)
+                country = address_instance.country
+                county = address_instance.county
+            else:
+                serializer = self.serializer_class()
+            
+            
+            queryset = self.get_queryset()
+            if queryset:
+                context = {'serializer':serializer, 
+                           'customer_id':customer_id,
+                        'customer_instance':self.get_queryset(),
+                         'country': country,
+                    'county': county,
+                        }
+                return render_html_response(context,self.template_name)
+            else:
+                messages.error(request, "Customer not found OR You are not authorized to perform this action.")
+                return redirect(reverse('customer_list'))
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                message="GET Method Not Alloweded",)
+  

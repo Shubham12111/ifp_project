@@ -41,7 +41,7 @@ display: inline-block;
             </div>
           </div>
           {% include 'filter.html' %}
-          <div class="row mt-4">
+          {% comment %} <div class="row mt-4">
             <div class="col-md-6"></div>
           <div class="col-3"></div>
           <div class="col-xs-12 col-sm-12 col-lg-3 col-md-3  text-end">
@@ -49,7 +49,7 @@ display: inline-block;
               <input type="text" id="searchInput" class="form-control" placeholder="Search...">
             </div>
           </div>
-        </div>
+        </div> {% endcomment %}
         <div class="card-body px-0 pb-0">
           <div class="table-responsive">
              <table class="table table-flush text-dark" id="todo-list">
@@ -182,14 +182,10 @@ display: inline-block;
     const dataTableSearch = new simpleDatatables.DataTable("#todo-list", {
       searchable: true,
       fixedHeight: false,
-      perPage: 25,
-      perPageSelect: false,
+      perPage: 10,
     });
 
-    const dataTableTop = document.querySelector('.dataTable-top');
-    if (dataTableTop) {
-      dataTableTop.parentNode.removeChild(dataTableTop);
-    }
+   
     const searchInput = document.getElementById('searchInput');
       searchInput.addEventListener('input', function() {
         const searchText = searchInput.value.toLowerCase();
