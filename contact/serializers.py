@@ -246,7 +246,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
         },
 
-        validators=[validate_uk_postcode]
+        # validators=[validate_uk_postcode]
 
     )
 
