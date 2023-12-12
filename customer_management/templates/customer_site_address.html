@@ -47,8 +47,8 @@
                         <td>{{ site_address.id}}</td>
                         <td>{{ site_address.site_name|default:''|truncatechars:20 }}</td>
                         <td >{{ site_address.address|default:''|truncatechars:20|title }}</td>
-                        <td>{% if site_address.town %}{{ site_address.town.name|title }}{% endif %}</td>
-                        <td>{% if site_address.county %}{{ site_address.county.name|title}}{% endif %}</td>
+                        <td>{% if site_address.town %}{{ site_address.town|title }}{% endif %}</td>
+                        <td>{% if site_address.county %}{{ site_address.county|title}}{% endif %}</td>
                         <td>{{ site_address.country|default:''|title }}</td>
                         <td>{{ site_address.post_code|default:'' }}</td>
                         <td> 
