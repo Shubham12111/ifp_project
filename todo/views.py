@@ -36,10 +36,10 @@ class ToDoUserSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         data = {}
         if search_term:
             # Filter users whose email contains the search term
-            user_list = User.objects.filter(email__icontains=search_term)
+            user_list = User.objects.filter(Q(first_name__icontains=search_term))
 
             # Get the usernames from the user_list
-            results = [user.email for user in user_list]
+            results = [user.first_name for user in user_list]
 
             data = {'results': results}
             return create_api_response(status_code=status.HTTP_200_OK,
@@ -116,7 +116,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                         'status': 'status',
                         'priority': 'priority',
                         'module': 'module__name',
-                        'assigned_to': 'assigned_to__email',
+                        'assigned_to':'assigned_to__first_name',
                     }
                     base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
 
@@ -134,7 +134,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         Get a list of all unique assigned_to users from the User model.
         """
-        return User.objects.values_list('email', flat=True).distinct()
+        return User.objects.values_list('first_name', flat=True).distinct()
     
     common_list_response = {
     status.HTTP_200_OK: 

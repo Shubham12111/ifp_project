@@ -41,7 +41,7 @@ display: inline-block;
             </div>
           </div>
           {% include 'filter.html' %}
-          {% comment %} <div class="row mt-4">
+          <div class="row mt-4">
             <div class="col-md-6"></div>
           <div class="col-3"></div>
           <div class="col-xs-12 col-sm-12 col-lg-3 col-md-3  text-end">
@@ -49,18 +49,19 @@ display: inline-block;
               <input type="text" id="searchInput" class="form-control" placeholder="Search...">
             </div>
           </div>
-        </div> {% endcomment %}
+        </div>
         <div class="card-body px-0 pb-0">
           <div class="table-responsive">
              <table class="table table-flush text-dark" id="todo-list">
                <thead class="thead-light">
                  <tr>
-                   <th>Title</th>
-                   <th>Module</th>
+                  <th>Assigned By</th>
                    <th>Assigned To</th>
-                   <th>Status</th>
+                   <th>Module</th>
+                   <th>Description</th>
                    <th>Priority</th>
-                   <th>Date</th>
+                   <th>Status</th>
+                   <th>Assigned Date</th>
 
                    {% if request.user|has_update_permission:"task" or request.user|has_add_permission:"task" or request.user|has_delete_permission:"task" or request.user|has_view_permission:"task" %}
                    <th class="custom-last-column">Actions</th>
@@ -70,11 +71,12 @@ display: inline-block;
                <tbody class="ml-4"> 
                 {% for todo_data in todo_list %}
                   <tr class="text-sm">
-                    <td>{{ todo_data.title|default:''|truncatechars:20}}</td>
-                    <td>{{ todo_data.module.name|title }}</td>
+                    <td>{{ todo_data.user_id.first_name}} {{todo_data.user_id.last_name}}</td>
                     <td>{{ todo_data.assigned_to}}</td>
-                    <td>{{ todo_data.status|title }}</td>
+                    <td>{{ todo_data.module.name|title }}</td>
+                    <td>{{ todo_data.description|default:''|truncatewords:1 }}</td>
                     <td>{{ todo_data.priority|title }}</td>
+                    <td>{{ todo_data.status|title }}</td>
                     <td>{{ todo_data.start_date|date:"d/m/Y " }} - {{ todo_data.end_date|date:" d/m/Y" }}</td>
 
                     {% if request.user|has_update_permission:"task" or request.user|has_add_permission:"task" or request.user|has_delete_permission:"task" or request.user|has_view_permission:"task" %}
@@ -180,7 +182,7 @@ display: inline-block;
 <script>
   if (document.getElementById('todo-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#todo-list", {
-      searchable: true,
+      searchable: false,
       fixedHeight: false,
       perPage: 10,
     });
