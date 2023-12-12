@@ -116,7 +116,8 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                         'status': 'status',
                         'priority': 'priority',
                         'module': 'module__name',
-                        'assigned_to':'assigned_to__first_name',
+                        'assigned_to': 'assigned_to__first_name',
+
                     }
                     base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
 
