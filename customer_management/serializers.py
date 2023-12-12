@@ -428,7 +428,7 @@ class SiteAddressSerializer(serializers.ModelSerializer):
             "required": "This field is required.",
             "blank": "Post Code is required.",
         },
-        validators=[validate_uk_postcode] 
+        # validators=[validate_uk_postcode] 
     )
     full_address = serializers.SerializerMethodField()  # New field for combined address
 
@@ -440,9 +440,9 @@ class SiteAddressSerializer(serializers.ModelSerializer):
     def get_full_address(self, instance):
         # Create a dictionary with label names and corresponding values
         address_components = {
-            'Country': instance.country.name if instance.country else '',
-            'County': instance.county.name if instance.county else '',
-            'Town': instance.town.name if instance.town else '',
+            'Country': instance.country if instance.country else '',
+            'County': instance.county  if instance.county else '',
+            'Town': instance.town if instance.town else '',
         }
 
         # Filter out empty values and create a string with labels and values

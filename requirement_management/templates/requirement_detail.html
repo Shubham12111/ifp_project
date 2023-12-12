@@ -58,14 +58,14 @@
           </div>
           {% endif %}
         </div>
- 
+        {% include 'components/table_search.html' %}
       </div>
 
       <div class="card-body px-0 pb-0">
         <table class="table table-flush text-dark" id="defect-requirement-list">
             <thead class="thead-light">
                 <tr class="text-sm">
-                    {% comment %} <th></th> {% endcomment %}
+                    <th></th>
                     <th class="col-3">Type</th>
                     <th class="col-3">Action</th>
                     <th>Description</th>
@@ -204,10 +204,16 @@
         const dataTableSearch = new simpleDatatables.DataTable("#defect-requirement-list", {
           searchable: true,
           fixedHeight: false,
-          perPage: 10,
+          perPage: 25,
+          perPageSelect: false,
       });
 
-    
+      const dataTableTop = document.querySelector('.dataTable-top');
+      if (dataTableTop) {
+          dataTableTop.parentNode.removeChild(dataTableTop);
+      }
+
+      
       const searchInput = document.getElementById('searchInput');
       const createreportButton = document.getElementById('createreportButton');
 
