@@ -24,53 +24,47 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
         
     )
     address = serializers.CharField(
+        label='Address',
         max_length=255,
-        min_length=5,
-        required=True,
+        required=False,
         style={
-            'base_template': 'custom_fullwidth_input.html'
+           "input_type": "text",
+            "autocomplete": "off",
+            "autofocus": False,
+            
         },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Address is required.",
-        },
-        
     )
     
-    country = serializers.PrimaryKeyRelatedField(
-        queryset=Country.objects.all(),
+    country = serializers.CharField(
+        label=('Country'),
         default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    town = serializers.PrimaryKeyRelatedField(
-        queryset=City.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    county = serializers.PrimaryKeyRelatedField(
-        queryset=Region.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    post_code = serializers.CharField(
-        max_length=7,
-        required=True,
-        allow_blank=True,
-        allow_null=True,
         style={
             'base_template': 'custom_input.html'
         },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Post Code is required.",
+    )
+
+    town = serializers.CharField(
+        label=('Town'),
+        default=None,
+        style={
+            'base_template': 'custom_input.html'
         },
-        validators=[validate_uk_postcode] 
+    )
+    county = serializers.CharField(
+        label=('County'),
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    post_code = serializers.ChoiceField(
+        label=('Post Code'),
+        required=True,
+        choices=POST_CODE_LIST,
+        style={
+            'base_template': 'custom_select.html'
+        },
+
+
     )
     description = serializers.CharField(
         max_length=1024, 
@@ -85,3 +79,8 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryLocation
         fields = ['name' ,'description','address','country', 'town', 'county', 'post_code']
+class PostCodeInfoSerializer(serializers.Serializer):
+    post_code = serializers.CharField(max_length=255)
+    town = serializers.CharField(max_length=255)
+    county = serializers.CharField(max_length=255)
+    country = serializers.CharField(max_length=255)
