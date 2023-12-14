@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from cities_light.models import City, Country, Region
 from ckeditor.fields import RichTextField
+from customer_management.constants import POST_CODE_LIST
 
 
 # Choices for the can_access field
@@ -181,11 +182,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     
     phone_number = models.CharField(max_length=20, null=True, blank=True)
-    address = models.CharField(max_length=255 , null=True, blank=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
-    town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True , verbose_name="Town" )
-    county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
-    post_code = models.CharField(max_length=10, null=True, blank=True)
+    address = models.CharField(max_length=255,null=True,blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    town = models.CharField(max_length=255, null=True, blank=True)
+    county = models.CharField(max_length=255, null=True, blank=True)
+    post_code = models.CharField(max_length=10, choices=POST_CODE_LIST, null=True, blank=True)
 
     # relationship with UserRole
     company_name = models.CharField(max_length=100, blank=True, null=True)

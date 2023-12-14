@@ -7,6 +7,8 @@ from infinity_fire_solutions.custom_form_validation import *
 from cities_light.models import City, Country, Region
 from .models import User
 import re
+from customer_management.constants import POST_CODE_LIST
+
 
 
 def custom_validate_password(value):
@@ -455,42 +457,45 @@ class UserProfileSerializer(serializers.ModelSerializer):
     )
     
     address = serializers.CharField(
+        label='Address',
         max_length=255,
         required=False,
-        allow_blank=True,
-        allow_null=True,
-        
-    )
-    country = serializers.PrimaryKeyRelatedField(
-        queryset=Country.objects.all(),
-        default=None,
         style={
-            'base_template': 'custom_select.html'
+           "input_type": "text",
+            "autocomplete": "off",
+            "autofocus": False,
+            
         },
     )
-    town = serializers.PrimaryKeyRelatedField(
-        queryset=City.objects.all(),
+    country = serializers.CharField(
+        label=('Country'),
         default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    county = serializers.PrimaryKeyRelatedField(
-        queryset=Region.objects.all(),
-        default=None,
-        style={
-            'base_template': 'custom_select.html'
-        },
-    )
-    post_code = serializers.CharField(
-        max_length=7,
-        required=False,
-        allow_blank=True,
-        allow_null=True,
         style={
             'base_template': 'custom_input.html'
         },
-        validators=[validate_uk_postcode],
+    )
+    town = serializers.CharField(
+        label=('Town'),
+        default=None,
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    county = serializers.CharField(
+        label=('County'),
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    post_code = serializers.ChoiceField(
+        label=('Post Code'),
+        required=True,
+        choices=POST_CODE_LIST,
+        style={
+            'base_template': 'custom_select.html'
+        },
+
+
     )
 
     class Meta:
