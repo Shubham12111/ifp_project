@@ -55,13 +55,25 @@ class CustomUserAdmin(UserAdmin):
  
 
 class InfinityLogsAdmin(admin.ModelAdmin):
-    list_display = ('api', 'access_type', 'ip_address', 'timestamp')
-    search_fields = ('api', 'ip_address', 'username')  # Add any other fields you want to search on
-    list_filter = ('access_type', 'outcome', 'module', 'action_type', 'method')
-    readonly_fields = ('timestamp',)  # You may add other fields as needed
+    list_display = ('module', 'action_type', 'user_role', 'outcome','status_code','ip_address',)
+    search_fields = ('module', 'outcome', ) 
+    search_help_text = 'search by: Module Name, Outcome, Status Code, IP Address'
+    list_filter = ('access_type', 'method')
+    readonly_fields = ('timestamp',)
+    list_per_page = 20 
+
+ 
+    def has_add_permission(self, request):
+        return False
+    def has_change_permission(self, request, obj=None):
+        # Disable the ability to change existing ContactType instances
+        return False
+    def has_delete_permission(self, request, obj=None):
+        # Disable the ability to delete existing ContactType instances
+        return False
 
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(InfinityLogs)
+admin.site.register(InfinityLogs,InfinityLogsAdmin)
 admin.site.register(UserRole, UserRoleAdmin)
 admin.site.register(UserRolePermission)
 admin.site.unregister(Group)
