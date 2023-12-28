@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from .models import User, UserRole,UserRolePermission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
+from .models import InfinityLogs
 
 
 
@@ -53,9 +54,14 @@ class CustomUserAdmin(UserAdmin):
 
  
 
-admin.site.register(User, CustomUserAdmin)
+class InfinityLogsAdmin(admin.ModelAdmin):
+    list_display = ('api', 'access_type', 'ip_address', 'timestamp')
+    search_fields = ('api', 'ip_address', 'username')  # Add any other fields you want to search on
+    list_filter = ('access_type', 'outcome', 'module', 'action_type', 'method')
+    readonly_fields = ('timestamp',)  # You may add other fields as needed
 
-# Register the models with the custom admin interface.
+admin.site.register(User, CustomUserAdmin)
+admin.site.register(InfinityLogs)
 admin.site.register(UserRole, UserRoleAdmin)
 admin.site.register(UserRolePermission)
 admin.site.unregister(Group)
