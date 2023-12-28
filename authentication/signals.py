@@ -158,6 +158,10 @@ def log_api_request(sender, **kwargs):
     method = request.method
     request_data = kwargs.get('request_data')
 
+    # Check if the request path starts with "auth" and, if true, remove request payload and body
+    if api_route.startswith("auth"):
+        request_data = None
+
     if response.get('content-type') in ('application/json', 'application/vnd.api+json', 'application/gzip', 'application/octet-stream', 'text/html; charset=utf-8'):
         if response.get('content-type') == 'application/gzip':
             response_body = '** GZIP Archive **'
@@ -171,11 +175,13 @@ def log_api_request(sender, **kwargs):
         username = [request.user.first_name if api_route not in routes else None]
         user_id = [request.user.id if api_route not in routes else 0][0]
 
-        if not isinstance(request_data, str) and not isinstance(request_data, bytes):
-            request_payload = json.loads(mask_sensitive_data(request_data.decode('utf-8')))
+        if request_data is not None:
+                if not isinstance(request_data, str) and not isinstance(request_data, bytes):
+                            request_payload = json.loads(mask_sensitive_data(request_data.decode('utf-8')))
+                else:
+                    request_payload = mask_sensitive_data(request_data)
         else:
-            request_payload = mask_sensitive_data(request_data)
-
+                request_payload = None
         api = request.build_absolute_uri()
         response_body = response.data if hasattr(response, 'data') else None
         outcome = f'{http_status_codes.get(response.status_code, "Unknown")}'
@@ -193,7 +199,6 @@ def log_api_request(sender, **kwargs):
                 response_payload = mask_sensitive_data(response_body)
         else:
             response_payload = 'No response body'
-
         data = dict(
             api=mask_sensitive_data(api, mask_api_parameters=True),
             access_type=headers['USER_AGENT'].split('/')[0],
@@ -278,3 +283,4 @@ def update_object(request, obj_id):
         # Add other fields as needed
     }
     
+
