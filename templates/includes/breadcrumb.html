@@ -1,68 +1,13 @@
 {% load static %}
 {% load custom_tags %}
 <nav class="navbar navbar-main navbar-expand-lg  mt-2 px-0 mx-4 shadow-none border-radius-xl z-index-sticky justify-content-xl-start justify-content-between d-fex d-xl-none">
-  <div class="sidenav-toggler sidenav-toggler-inner d-xl-block d-none ">
-    <a href="javascript:;" class="nav-link text-body p-0">
-      <div class="sidenav-toggler-inner">
-        <i class="sidenav-toggler-line"></i>
-        <i class="sidenav-toggler-line"></i>
-        <i class="sidenav-toggler-line"></i>
-      </div>
-    </a>
-  </div>
-  <div class="d-block d-xl-none ">
+  <div class="row">
     <a class="navbar-brand m-0" href="/ " target="">
       <img src="{% static 'assets/img/logo2.png' %}" class="navbar-brand-img h-500" alt="main_logo" style="
       max-height: 3rem;">
       <!-- <span class="ms-1 font-weight-bold">Infinity Fire Solutions </span> -->
     </a>
   </div>
-  <nav class="d-none d-xl-block" aria-label="breadcrumb">
-    <div class="container-fluid py-1 px-3">
-
-      <ol class="breadcrumb bg-transparent mb-0 pb-0 pt-1 px-0 me-sm-6 me-5">
-        {% for breadcrumb in breadcrumbs_data %}
-        {% if breadcrumb.url %}
-        <li class="breadcrumb-item text-sm">
-          <a class="opacity-3 text-dark" href="{{breadcrumb.url}}">
-            <i class="{{breadcrumb.icon}}"></i>
-            {% if 'Fra' in breadcrumb.name %}
-            {{breadcrumb.name|capitalize_fra}}
-            {% else %}
-            {{breadcrumb.name|title}}
-            {% endif %}
-          </a>
-        </li>
-        {% else %}
-        <li class="breadcrumb-item text-sm">
-          <a class="opacity-5 text-dark" href="javascript:;">
-
-            {% if 'Fra' in breadcrumb.name %}
-            {{breadcrumb.name|capitalize_fra}}
-            {% else %}
-            {{breadcrumb.name|title}}
-            {% endif %}
-
-          </a>
-        </li>
-        {% endif %}
-        {% endfor %}
-      </ol>
-
-      {% for breadcrumb in breadcrumbs_data %}
-        {% if forloop.last %}
-        <h6 class="font-weight-bolder mb-0">
-
-          {% if 'Fra' in breadcrumb.name %}
-            {{breadcrumb.name|capitalize_fra}}
-          {% else %}
-            {{breadcrumb.name|title}}
-          {% endif %}
-        </h6>
-        {% endif %}
-      {% endfor %}
-
-  </nav>
   <div class="sidenav-toggler sidenav-toggler-inner d-block d-xl-none me-3" id="navbar">
     <a href="javascript:;" class="nav-link text-body p-0" id="iconNavbarSidenav">
       <div class="sidenav-toggler-inner">
