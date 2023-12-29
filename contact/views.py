@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -81,6 +82,20 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         return ContactType.objects.all()
     
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+    
     common_get_response = {
         status.HTTP_200_OK: 
             docs_schema_response_new(
@@ -105,10 +120,14 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         queryset = self.get_queryset()
         contact_types = self.get_contact_types()
-        contact_type_filter = self.request.GET.get('contact_type')
+        contact_type_filter = self.request.GET.get('contact_type', '')
         if request.accepted_renderer.format == 'html':
-            context = {'contacts': queryset,
+            queryset = self.get_searched_queryset(queryset)
+            page_number = request.GET.get('page', 1)
+            context = {'contacts': Paginator(queryset, 20).get_page(page_number),
                        'contact_types': contact_types,
+                       'search_fields': ['name', 'email'],
+                       'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
                        'contact_type_filter':contact_type_filter}
             return render_html_response(context, self.template_name)
         else:
@@ -632,8 +651,8 @@ class ExportCSVView(View):
         # Create a CSV writer and write the header
         writer = csv.writer(response)
         header_row = [
-            'First_name', 'Last_name', 'Email', 'Phone_number', 'Mobile_number', 'Contact_type', 'ob_title',
-            'Company_name', 'Address', 'Country', 'Town', 'County', 'Post_code'
+            'First Name', 'Last Name', 'Email', 'Phone Number', 'Mobile Number', 'Contact Type', 'Job Title',
+            'Company Name', 'Address', 'Country', 'Town', 'County', 'Post Code'
         ]
         writer.writerow([smart_str(header) for header in header_row])
        
