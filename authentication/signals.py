@@ -3,6 +3,7 @@ import json
 import time
 import logging
 from functools import wraps
+from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 from django.urls import resolve
 from django.urls.exceptions import Resolver404
@@ -172,8 +173,8 @@ def log_api_request(sender, **kwargs):
 
         api = request.build_absolute_uri()
         routes = ['auth/login/', 'auth/verify-token/<str:token>/', 'auth/confirm-email-update/', 'auth/forgot-password/', 'auth/reset-password/<str:token>/', 'auth/admin/activate/<str:token>/', 'operations/timezones/']
-        username = [request.user.first_name if api_route not in routes else None]
-        user_id = [request.user.id if api_route not in routes else 0][0]
+        username = [request.user.first_name if api_route not in routes and not isinstance(request.user, AnonymousUser) and request.user else None]
+        user_id = [request.user.id if api_route not in routes and not isinstance(request.user, AnonymousUser) and request.user else 0][0]
 
         if request_data is not None:
                 if not isinstance(request_data, str) and not isinstance(request_data, bytes):
