@@ -3,7 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from .models import User, UserRole,UserRolePermission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
-
+from .models import InfinityLogs
+from django_admin_listfilter_dropdown.filters import RelatedDropdownFilter,DropdownFilter
 
 
 class UserRolePermissionInline(admin.TabularInline):
@@ -51,11 +52,39 @@ class CustomUserAdmin(UserAdmin):
     )
     autocomplete_fields = ['roles',]
 
+from admin_auto_filters.filters import AutocompleteFilter
+class UserFilter(AutocompleteFilter):
+    title = 'user_role' # display title
+    field_name = 'user_role' # name of the foreign key field
  
+class InfinityLogsAdmin(admin.ModelAdmin):
+    list_display = ('module', 'action_type', 'user_role', 'outcome', 'status_code', 'ip_address', 'username', 'timestamp')
+    search_fields = ('ip_address',)  # Add 'username' to search fields
+    search_help_text = 'search by: IP Address' # Update search help text
+    list_filter = (('module',DropdownFilter),
+                   ('action_type',DropdownFilter),
+                   ('user_role',DropdownFilter),
+                   ('outcome',DropdownFilter),
+                   ('username',DropdownFilter),
+                   ('timestamp',DropdownFilter),                      
+    )
+    # autocomplete_fields=['']
+    readonly_fields = ('timestamp',)
+    list_per_page = 20
+
+
+ 
+    def has_add_permission(self, request):
+        return False
+    def has_change_permission(self, request, obj=None):
+        # Disable the ability to change existing ContactType instances
+        return False
+    def has_delete_permission(self, request, obj=None):
+        # Disable the ability to delete existing ContactType instances
+        return False
 
 admin.site.register(User, CustomUserAdmin)
-
-# Register the models with the custom admin interface.
+admin.site.register(InfinityLogs,InfinityLogsAdmin)
 admin.site.register(UserRole, UserRoleAdmin)
 admin.site.register(UserRolePermission)
 admin.site.unregister(Group)

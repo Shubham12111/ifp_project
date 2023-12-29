@@ -1,49 +1,93 @@
 {% load static %}
 {% load custom_tags %}
-<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 " id="sidenav-main">
-    <div class="sidenav-header">
-      <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
-      <a class="navbar-brand m-0" href="/ " target="" style="padding: 0.5rem 1rem;">
-        <img src="{% static 'assets/img/logo2.png' %}" class="navbar-brand-img h-500" alt="main_logo" style="
-        max-height: 3rem;">
+<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl py-2 fixed-start ms-3 ms-lg-0" id="sidenav-main">
+    <div class="sidenav-header d-none d-xl-flex">
+        <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
+        <div class="sidenav-toggler sidenav-toggler-inner ms-3">
+            <a href="javascript:;" class="nav-link text-body p-0">
+              <div class="sidenav-toggler-inner">
+                <i class="sidenav-toggler-line"></i>
+                <i class="sidenav-toggler-line"></i>
+                <i class="sidenav-toggler-line"></i>
+              </div>
+            </a>
+        </div>
+        <a class="navbar-brand m-0" href="/ " target="" style="padding: 0.5rem 1rem;">
+            <img src="{% static 'assets/img/logo2.png' %}" class="navbar-brand-img h-500" alt="main_logo" style="
+        max-height: 3rem;" />
         <!-- <span class="ms-1 font-weight-bold">Infinity Fire Solutions </span> -->
-      </a>
+        </a>
     </div>
-    <hr class="horizontal dark mt-0">
-    <div class="collapse navbar-collapse  w-auto h-auto" id="sidenav-collapse-main">
-      <ul class="navbar-nav">
-        {% for item in menu_items %}
+    <hr class="horizontal d-none d-xl-block dark mt-0">
+    <div class="collapse navbar-collapse  w-auto" id="sidenav-collapse-main" style="overflow-x: hidden !important;">
+        <ul class="navbar-nav">
+            {% for item in menu_items %}
             <li class="nav-item">
                 {% if item.submenu %}
-                    <a data-bs-toggle="collapse" href="#submenu{{ forloop.counter }}" class="nav-link {% if item.url %}{% if request.path|get_active_menu in item.url %} active
+                <a data-bs-toggle="collapse" href="#submenu{{ forloop.counter }}" class="nav-link {% if item.url %}{% if request.path|get_active_menu in item.url %} active
                     {% endif %}{% endif %}" aria-controls="submenu{{ forloop.counter }}" role="button" aria-expanded="false">
-                        <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center d-flex align-items-center justify-content-center me-2">
-                            <i class="{{item.icon}}"></i>
-                        </div>
-                        <span class="nav-link-text ms-1">{{ item.name }} </span>
-                    </a>
-                    <div class="collapse" id="submenu{{ forloop.counter }}">
-                        <ul class="nav ms-4 ps-3">
-                            {% for subitem in item.submenu %}
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ subitem.url }}">
-                                        <span class="sidenav-mini-icon">{{ subitem.name|slice:":1" }}</span>
-                                        <span class="sidenav-normal text-dark text-md">{{ subitem.name }} </span>
-                                    </a>
-                                </li>
-                            {% endfor %}
-                        </ul>
+                    <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center d-flex align-items-center justify-content-center me-2">
+                        <i class="{{item.icon}}"></i>
                     </div>
+                    <span class="nav-link-text ms-1">{{ item.name }} </span>
+                </a>
+                <div class="collapse" id="submenu{{ forloop.counter }}">
+                    <ul class="nav ms-4 ps-3">
+                        {% for subitem in item.submenu %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ subitem.url }}">
+                                <span class="sidenav-mini-icon">{{ subitem.name|slice:":1" }}</span>
+                                <span class="sidenav-normal text-dark text-md">{{ subitem.name }} </span>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
                 {% else %}
-                    <a class="nav-link {% if item.url %}{% if request.path|get_active_menu in item.url %} active
-                    {% endif %}{% endif %}" href="{{item.url}}" target="">
+                <a class="nav-link {% if item.url %}{% if request.path|get_active_menu in item.url %} active
+                {% endif %}{% endif %}" href="{{item.url}}" target="">
                     <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center  me-2 d-flex align-items-center justify-content-center">
                         <i class="{{item.icon}}"></i>
                     </div>
                     <span class="nav-link-text ms-1">{{item.name}} </span>
-                  </a>
+                </a>
                 {% endif %}
+            </li>
             {% endfor %}
         </ul>
-      </div>
+    </div>
+    <div class="sidenav-footer">
+        <hr class="horizontal dark mt-0">
+        <div class="collapse navbar-collapse w-auto h-auto" id="sidenav-collapse-main" style="overflow-x: hidden !important;">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/auth/profile/' %} active
+                    {% endif %}" href="{% url 'profile' %}" target="">
+                        <div
+                            class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center  me-2 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">
+                            {% if request.user.first_name %}
+                            {{ request.user.first_name|title|truncatechars:10 }}
+                            {% endif %}
+
+                            {% if request.user.last_name %}
+                            {{ request.user.last_name|title|truncatechars:10 }}
+                            {% endif %}
+                        </span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}" target="">
+                        <div
+                            class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center  me-2 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <span class="nav-link-text ms-1">Logout </span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
 </aside>
