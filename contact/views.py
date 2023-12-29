@@ -24,7 +24,7 @@ class ContacttypeAutocomplete(View):
     def get(self, request):
         query = request.GET.get('term', '')
         contact_type = ContactType.objects.filter(Q(name__icontains=query))[:10]
-        results = [type.name for type in contact_type]
+        results = [{'id': type.pk, 'name': type.name} for type in contact_type]
         return JsonResponse(results, safe=False)
     
 class ConversationtypeAutocomplete(View):
