@@ -17,6 +17,35 @@ from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.http import HttpResponseRedirect
 from infinity_fire_solutions.utils import docs_schema_response_new
+from django.views import View
+
+
+class ContacttypeAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        contact_type = ContactType.objects.filter(Q(name__icontains=query))[:10]
+        results = [type.name for type in contact_type]
+        return JsonResponse(results, safe=False)
+    
+class ConversationtypeAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        conversation_type =ConversationType.objects.filter(Q(name__icontains=query))[:10]
+        print(conversation_type)
+        results = [type.name for type in conversation_type]
+        return JsonResponse(results, safe=False)
+    
+class PostcodeChoicesAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        # Filter choices based on the post_code field of the Contact model
+        choices_queryset = Contact.objects.filter(post_code__icontains=query)[:10]
+        print(choices_queryset)
+        choices = list(choices_queryset.values_list('post_code', flat=True))
+        return JsonResponse(choices, safe=False)
+    
+
+    
 
 class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
