@@ -52,8 +52,13 @@ INSTALLED_APPS = [
     'stock_management',
     'purchase_order_management',
     'work_planning_management',
+    'drf_api_logger',
+    'django_user_agents',
     'django_admin_listfilter_dropdown',
     'rangefilter',
+    'admin_auto_filters',
+  
+
 
      # for calendar setup
     # 'schedule',
@@ -65,14 +70,22 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'infinity_fire_solutions.custom_csrf.CustomCsrfMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'authentication.middleware.CheckAdminUserMiddleware',
     'authentication.middleware.ForcePasswordChangeBackend',
+    # 'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware', 
+    'authentication.middleware.SimpleAPILoggerMiddleware',
+    'django_user_agents.middleware.UserAgentMiddleware',
+
+
+
+
 ]
+DRF_API_LOGGER_DATABASE = True  # Default to False
 
 ROOT_URLCONF = 'infinity_fire_solutions.urls'
 
@@ -117,6 +130,7 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
 
 
 
