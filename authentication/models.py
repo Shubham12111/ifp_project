@@ -249,7 +249,7 @@ class InfinityLogs(models.Model):
     username = models.CharField(max_length=100, null=True)
     device_type = models.CharField(max_length=50)
     browser = models.CharField(max_length=100)
-    outcome = models.CharField(max_length=20)
+    outcome = models.CharField(max_length=100)
     request_payload = models.TextField(null=True)
     response_payload = models.TextField()
     status_code = models.PositiveSmallIntegerField(help_text='Response status code', db_index=True)
