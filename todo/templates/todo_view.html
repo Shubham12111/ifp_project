@@ -23,7 +23,7 @@
                 </a>
                 <div class="mx-3">
                 <a href="javascript:;" class="text-dark font-weight-600 text-sm">{{todo_data.user_id.first_name|title}} {{todo_data.user_id.last_name|title}}</a>
-                <small class="d-block text-muted">{{ todo_data.created_at|timesince }}</small>
+                <small class="d-block text-muted">{{ todo_data.created_at|date:"d/m/Y h:i A"}}</small>
               </div>
             </div>
           </div>
@@ -43,7 +43,7 @@
                         <img alt="Image placeholder" class="avatar rounded-circle" src="{% static 'assets/img/demo.png' %}">
                     </div>
                     <div class="flex-grow-1 ms-3">
-                        <h6 class="h5 mt-0 text-sm">{{ comment_data.user_id.first_name|title }} {{ comment_data.user_id.last_name|title }} <span class="text-sm text-muted">{{ comment_data.created_at|timesince }} ago</span></h6>
+                        <h6 class="h5 mt-0 text-sm">{{ comment_data.user_id.first_name|title }} {{ comment_data.user_id.last_name|title }} <span class="text-sm text-muted">{{ comment_data.created_at|date:"d/m/Y h:i A"  }} </span></h6>
                        {{ comment_data.comment|safe }}
                         <div class="d-flex">
                           {% if request.user == comment_data.user_id and todo_data.status != 'completed'  %}
@@ -76,8 +76,8 @@
                     <div class="row mt-2">
                         <div class="col-6 col-lg-6 m-auto text-end"></div>
                         <div class="col-md-6 m-auto text-center text-md-end">
-                            <a class="btn bg-gradient-secondary mb-0 js-btn-prev " href="{% url 'todo_list' %}" title="Back">Back</a>
-                            <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
+                            <a class="btn bg-gradient-secondary mb-0 js-btn-prev btn-sm " href="{% url 'todo_list' %}" title="Back">Back</a>
+                            <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next btn-sm" type="submit" title="Submit">Submit</button>
                         </div>
                       </div>
                     </form>
