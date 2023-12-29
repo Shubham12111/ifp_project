@@ -37547,4 +37547,10 @@ ul.pagination > li.page-item:last-child{
     height: calc(100vh - 250px) !important;
   }
 }
+
+@media screen and (min-width: 1200px){
+  #sidenav-main{
+    overflow-y: hidden;
+  }
+}
 /*# sourceMappingURL=dashboard-pro.css.map */
