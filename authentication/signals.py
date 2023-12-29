@@ -199,6 +199,8 @@ def log_api_request(sender, **kwargs):
                 response_payload = mask_sensitive_data(response_body)
         else:
             response_payload = 'No response body'
+            logging.basicConfig(level=logging.DEBUG)
+
         data = dict(
             api=mask_sensitive_data(api, mask_api_parameters=True),
             access_type=headers['USER_AGENT'].split('/')[0],
@@ -217,13 +219,14 @@ def log_api_request(sender, **kwargs):
             elapsed_time=time.time() - start_time,
             affected_modules=module_name,
             change_description=[previous_states['description'] if 'description' in previous_states else None][0],
-            previous_state=[
-                previous_states['prev_state']
-                if 'prev_state' in previous_states and response_body and response_body.get('status') != 'error'
-                else None
-            ][0],
+            previous_state = (
+            previous_states['prev_state']
+            if 'prev_state' in previous_states and response_body and response_body.get('status') != 'error'
+            else None
+            ),
+
             user_role='admin',
-            body=request_payload,
+            body=api_route,
             method=method,
             status_code=response.status_code,
         )
@@ -250,6 +253,9 @@ def log_api_request(request, response):
     # Log the request and response or relevant information
     logging.debug(f"Request: {request}")
     logging.debug(f"Response: {response}")
+    logging.basicConfig(level=logging.DEBUG)
+
+
 
     # Log the index and list length before accessing the index
     logging.debug(f"Index: {InfinityLogs}, List length: {len(50)}")

@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'django_user_agents',
     'django_admin_listfilter_dropdown',
     'rangefilter',
+    'admin_auto_filters',
+  
 
 
      # for calendar setup
