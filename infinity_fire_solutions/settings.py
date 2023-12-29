@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'stock_management',
     'purchase_order_management',
     'work_planning_management',
+    'django_admin_listfilter_dropdown',
+    'rangefilter',
 
      # for calendar setup
     # 'schedule',
