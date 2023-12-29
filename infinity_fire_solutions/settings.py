@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     'work_planning_management',
     'drf_api_logger',
     'django_user_agents',
-  
+    'django_admin_listfilter_dropdown',
+    'rangefilter',
 
 
      # for calendar setup

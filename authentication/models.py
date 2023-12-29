@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from cities_light.models import City, Country, Region
 from ckeditor.fields import RichTextField
 from customer_management.constants import POST_CODE_LIST
+from django.utils.safestring import mark_safe
 
 
 # Choices for the can_access field
@@ -169,6 +170,7 @@ class UserManager(BaseUserManager):
         
         return self.create_user(email, password, **extra_fields)
 
+
 class User(AbstractBaseUser, PermissionsMixin):
     """
     Custom User model with email as the unique identifier.
@@ -201,7 +203,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
-        return self.first_name
+        return mark_safe(f"{self.first_name} {self.last_name} - <i>{self.roles}</i>")
     
     class Meta:
         ordering = ['-id']  # Order by the default primary key in descending order

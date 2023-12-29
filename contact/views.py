@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -17,7 +18,39 @@ from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.http import HttpResponseRedirect
 from infinity_fire_solutions.utils import docs_schema_response_new
+from django.views import View
 
+
+class ContacttypeAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        contact_type = ContactType.objects.filter(Q(name__icontains=query))[:10]
+        results = [type.name for type in contact_type]
+        return JsonResponse(results, safe=False)
+    
+class ConversationtypeAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        conversation_type =ConversationType.objects.filter(Q(name__icontains=query))[:10]
+        print(conversation_type)
+        results = [type.name for type in conversation_type]
+        return JsonResponse(results, safe=False)
+    
+class PostcodeChoicesAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        # Filter choices based on the post_code field of the Contact model
+        choices_queryset = Contact.objects.filter(post_code__icontains=query)[:10]
+        print(choices_queryset)
+        choices = list(choices_queryset.values_list('post_code', flat=True))
+        return JsonResponse(choices, safe=False)
+    
+
+    
+
+from django.views import View
+import csv
+from django.utils.encoding import smart_str
 class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     View to get the listing of all contacts.
@@ -78,6 +111,20 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         return ContactType.objects.all()
     
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+    
     common_get_response = {
         status.HTTP_200_OK: 
             docs_schema_response_new(
@@ -102,10 +149,14 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         queryset = self.get_queryset()
         contact_types = self.get_contact_types()
-        contact_type_filter = self.request.GET.get('contact_type')
+        contact_type_filter = self.request.GET.get('contact_type', '')
         if request.accepted_renderer.format == 'html':
-            context = {'contacts': queryset,
+            queryset = self.get_searched_queryset(queryset)
+            page_number = request.GET.get('page', 1)
+            context = {'contacts': Paginator(queryset, 20).get_page(page_number),
                        'contact_types': contact_types,
+                       'search_fields': ['name', 'email'],
+                       'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
                        'contact_type_filter':contact_type_filter}
             return render_html_response(context, self.template_name)
         else:
@@ -213,6 +264,8 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
+            
+
 
 class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
@@ -608,3 +661,47 @@ class ConversationCommentView(generics.DestroyAPIView):
             messages.error(request, "Conversation not found OR You are not authorized to perform this action. ")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Conversation not found OR You are not authorized to perform this action. ", )
+
+class ExportCSVView(View):
+    def get(self, request, *args, **kwargs):
+        selected_ids_str = request.GET.get('stw_ids', '')
+        selected_ids = selected_ids_str.split(',') if selected_ids_str else []
+
+        # Fetch the selected data from the database
+        selected_data = Contact.objects.filter(id__in=selected_ids).values(
+            'first_name', 'last_name', 'email', 'phone_number','mobile_number','contact_type', 'job_title',
+            'company_name','address','country','town','county','post_code'
+        )
+
+        # Create a CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+        # Create a CSV writer and write the header
+        writer = csv.writer(response)
+        header_row = [
+            'First Name', 'Last Name', 'Email', 'Phone Number', 'Mobile Number', 'Contact Type', 'Job Title',
+            'Company Name', 'Address', 'Country', 'Town', 'County', 'Post Code'
+        ]
+        writer.writerow([smart_str(header) for header in header_row])
+       
+
+        # Write data rows
+        for data_row in selected_data:
+            writer.writerow([
+                data_row['first_name'],
+                data_row['last_name'],
+                data_row['email'],
+                data_row['phone_number'], 
+                data_row['mobile_number'], 
+                data_row['contact_type'],
+                data_row['job_title'],
+                data_row['company_name'], 
+                data_row['address'], 
+                data_row['country'],
+                data_row['town'],
+                data_row['county'],
+                data_row['post_code']
+            ])
+
+        return response
