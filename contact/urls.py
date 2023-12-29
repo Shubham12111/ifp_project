@@ -16,4 +16,7 @@ urlpatterns = [
     path('conversation/delete/<int:contact_id>/<int:conversation_id>', login_required(ConversationCommentView.as_view()), name='delete_conversation'),
     path('conversation/delete/document/<int:contact_id>/<int:conversation_id>', login_required(ConversationRemoveDocumentView.as_view()), name='document_conversation'),
     path('export_csv/', ExportCSVView.as_view(), name='export_csv'),
+    path('autocomplete_contact/', ContacttypeAutocomplete.as_view(), name='contact-autocomplete'),
+    path('autocomplete_conversation/', ConversationtypeAutocomplete.as_view(), name='conversation-autocomplete'),
+    path('autocomplete_postcode/', PostcodeChoicesAutocomplete.as_view(), name='postcode-autocomplete'),
 ]

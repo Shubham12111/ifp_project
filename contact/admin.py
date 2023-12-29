@@ -18,6 +18,17 @@ class ContactTypeAdmin(admin.ModelAdmin):
     list_display = ['name']  # Display 'name' field
     search_fields = ['name']   # Search options for 'name'
 
+    def has_add_permission(self, request):
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        # Disable the ability to change existing ContactType instances
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        # Disable the ability to delete existing ContactType instances
+        return False
+
 
 @admin.register(ConversationType)
 class ConversationTypeAdmin(admin.ModelAdmin):
