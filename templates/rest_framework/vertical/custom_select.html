@@ -1,63 +1,44 @@
 {% load rest_framework %}
 {% load static %}
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-
-<style>
-   .ui-autocomplete {
-    max-height: 400px;
-    overflow-y: auto;
-    /* Add additional styles as needed */
-    border: 1px solid #ccc; /* Add border */
-    border-radius:10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Adjust shadow values as desired */
-  }
-
-  .ui-menu-item {
-    padding: 2px;
-    transition: background-color 0.3s; /* Smooth hover transition */
-    {% comment %} background-color:#a6b3c3 !important; /* Desired hover color */ {% endcomment %}
-}
-
-.ui-menu .ui-menu-item-wrapper:hover {
-    background-color: #a6b3c3 !important; /* Desired hover color */
-    border: 1px solid #ccc; /* Add border on hover */
-    border-radius: 10px;   /* Maintain rounded corners on hover */
-    color:#344767;
-}
-</style>
-
-
-<div class="form-group {% if style.custom_class %} {{style.custom_class}} {% else %}col-6 {% endif %}">
+<div class="form-group {% if style.custom_class %} {{style.custom_class}} {% else %}col-6  {% endif %}">
   {% if field.label %}
     <label {% if style.hide_label %}class="sr-only"{% endif %}>
-      {{ field.label }} {% if field.required %}<span class="text-danger">*</span>{% endif %}
+      {{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}
     </label>
   {% endif %}
 
-  {% if field.name == 'assigned_to' %}
-  <input type="text" id="assigned_to_search" name="search" placeholder="Search {{ field.label }}" class="form-control">
-  {% elif field.name == 'module' %}
-  <input type="text" id="module_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
-  {% elif field.name == 'priority' %}
-  <input type="text" id="priority_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
-  {% elif field.name == 'contact_type' %}
-  <input type="text" id="contact_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
-  {% elif field.name == 'post_code' %}
-  <input type="text" id="postcode_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
-  {% elif field.name == 'conversation_type' %}
-  <input type="text" id="conversation_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
-  {% elif field.name == 'status' %}
-  <input type="text" id="status_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
-  {% elif field.name == 'customer_type' %}
-  <input type="text" id="customer_type_serach" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
-  {% elif field.name == 'tax_preference' %}
-  <input type="text" id="tax_preference_serach" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
-  
-  {% else %}
-  <input type="text" id="search" name="search" placeholder="Search {{ field.label }}" class="form-control">
-  {% endif %}
- 
+    {% if field.label == 'Priority' %}
+    <select class="form-control custom-select" name="{{ field.name }}" id="choices-Priority">
+      {% if field.allow_null or field.allow_blank %}
+        <option value="" {% if not field.value %}selected{% endif %}>----</option>
+      {% endif %}
+      {% for select in field.iter_options %}
+          {% if select.start_option_group %}
+            <optgroup label="{{ select.label }}">
+          {% elif select.end_option_group %}
+            </optgroup>
+          {% else %}
+            <option value="{{ select.value }}" {% if select.value|as_string == field.value|as_string %}selected{% endif %} {% if select.disabled %}disabled{% endif %}>{{ select.display_text }}</option>
+          {% endif %}
+      {% endfor %}
+    </select>
+    {% else %}
 
+        <select class="form-control" name="{{ field.name }}" id="choices-{{ field.name }}">
+          {% if field.allow_null or field.allow_blank %}
+            <option value="" {% if not field.value %}selected{% endif %}>--------</option>
+          {% endif %}
+          {% for select in field.iter_options %}
+              {% if select.start_option_group %}
+                <optgroup label="{{ select.label }}">
+              {% elif select.end_option_group %}
+                </optgroup>
+              {% else %}
+                <option value="{{ select.value }}" {% if select.value|as_string == field.value|as_string %}selected{% endif %} {% if select.disabled %}disabled{% endif %}>{{ select.display_text }}</option>
+              {% endif %}
+          {% endfor %}
+        </select>
+        {% endif %}
   {% if field.errors %}
     {% for error in field.errors %}
       <span class="help-block">{{ error }}</span>
@@ -70,128 +51,43 @@
 </div>
 
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
 <script>
-  
-  $(function() {
-    {% if field.name == 'assigned_to' %}
-      var assignedToInput = $("#assigned_to_search");
-
-      assignedToInput.autocomplete({
-        source: "{% url 'user-autocomplete' %}",
-        minLength: 1,
-        select: function(event, ui) {
-          assignedToInput.val(ui.item.value); // Set the selected value
-          assignedToInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-    {% elif field.name == 'module' %}
-    var moduleInput = $("#module_search");
-
-    moduleInput.autocomplete({
-        source: "{% url 'module-autocomplete' %}",
-        minLength: 1,
-        select: function(event, ui) {
-          moduleInput.val(ui.item.value); // Set the selected value
-          moduleInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-
-      {% elif field.name == 'priority' %}
-      var priorityInput = $("#priority_search");
-
-      priorityInput.autocomplete({
-        source: ["High", "Medium", "Low"],
-        minLength: 1,
-        select: function(event, ui) {
-          priorityInput.val(ui.item.value); // Set the selected value
-          priorityInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-
-    {% elif field.name == 'contact_type' %}
-      var contactInput = $("#contact_search");
-
-      contactInput.autocomplete({
-        source:"{% url 'contact-autocomplete' %}",
-        minLength: 1,
-        select: function(event, ui) {
-          contactInput.val(ui.item.value); // Set the selected value
-          contactInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-
-    {% elif field.name == 'post_code' %}
-      var postcodeInput = $("#postcode_search");
-
-      postcodeInput.autocomplete({
-        source:"{% url 'postcode-autocomplete' %}",
-        minLength: 1,
-        select: function(event, ui) {
-          postcodeInput.val(ui.item.value); // Set the selected value
-          postcodeInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-
-    {% elif field.name == 'conversation_type' %}
-      var conversationInput = $("#conversation_search");
-
-      conversationInput.autocomplete({
-        source:"{% url 'postcode-autocomplete' %}",
-        minLength: 1,
-        select: function(event, ui) {
-          conversationInput.val(ui.item.value); // Set the selected value
-          conversationInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-
-    {% elif field.name == 'status' %}
-      var statusInput = $("#status_search");
-
-      statusInput.autocomplete({
-        source:["Pending", "In Progress", "Completed"],
-        minLength: 1,
-        select: function(event, ui) {
-          statusInput.val(ui.item.value); // Set the selected value
-          statusInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-
-    {% elif field.name == 'customer_type' %}
-      var customerTypeInput = $("#customer_type_serach");
-
-      customerTypeInput.autocomplete({
-        source:["Business","Individual"],
-        minLength: 1,
-        select: function(event, ui) {
-          customerTypeInput.val(ui.item.value); // Set the selected value
-          customerTypeInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-
-    {% elif field.name == 'tax_preference' %}
-      var taxPreferenceInput = $("#tax_preference_serach");
-
-      taxPreferenceInput.autocomplete({
-        source:["Taxable","Tax Exempt"],
-        minLength: 1,
-        select: function(event, ui) {
-          taxPreferenceInput.val(ui.item.value); // Set the selected value
-          taxPreferenceInput.prop("readonly", true); // Disable the input
-          return false;
-        }
-      });
-      {% else %}
-      {# Handle other fields as needed #}
-    {% endif %}
+  if (document.getElementById('choices-Priority')) {
+  var element = document.getElementById('choices-Priority');
+  const example = new Choices(element, {
+    searchEnabled: false,
+    shouldSort: false // Keep the options in the original order
   });
+};
+
+// Initialize Choices.js
+if (document.getElementById('choices-{{ field.name }}')) {
+  var element = document.getElementById('choices-{{ field.name }}');
+  const vendor_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 5,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchPlaceholderValue: "Search ....", 
+    fuseOptions: {
+      includeScore: true,
+      includeMatches: true,
+      threshold: 0, // Set to 0 for exact match
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 1
+    }
+  });
+
+  
+ }
 </script>

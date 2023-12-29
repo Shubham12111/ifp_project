@@ -22,19 +22,19 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views import View
 
 
-class UserAutocomplete(View):
-    def get(self, request):
-        query = request.GET.get('term', '')
-        users = User.objects.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query))[:10]
-        results = [f"{user.first_name} {user.last_name} - {user.roles.name}" for user in users]
-        return JsonResponse(results, safe=False)
+# class UserAutocomplete(View):
+#     def get(self, request):
+#         query = request.GET.get('term', '')
+#         users = User.objects.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query))[:10]
+#         results = [f"{user.first_name} {user.last_name} - {user.roles.name}" for user in users]
+#         return JsonResponse(results, safe=False)
     
-class ModuleAutocomplete(View):
-    def get(self, request):
-        query = request.GET.get('term', '')
-        module_list = Module.objects.filter(Q(name__icontains=query))[:10]
-        results = [f"{module.name}" for module in module_list]
-        return JsonResponse(results, safe=False)
+# class ModuleAutocomplete(View):
+#     def get(self, request):
+#         query = request.GET.get('term', '')
+#         module_list = Module.objects.filter(Q(name__icontains=query))[:10]
+#         results = [f"{module.name}" for module in module_list]
+#         return JsonResponse(results, safe=False)
     
     
 class ToDoUserSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
