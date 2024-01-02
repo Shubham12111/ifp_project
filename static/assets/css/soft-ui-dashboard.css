@@ -37532,7 +37532,11 @@ ul.pagination > li.page-item:last-child{
   font-size: 0.65rem;
 }
 
-.table{
+.table.table-hover tbody tr{
+  cursor: pointer !important;
+}
+
+.table.table-hover{
   border-collapse: collapse !important;
 }
 

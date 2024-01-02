@@ -31,7 +31,7 @@
 
           <div class="row mt-3">
             <div class="col-12 d-block d-md-flex">
-              <div class="dropdown d-inline me-2">
+              <div class="dropdown d-inline me-0 me-md-3">
                 <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle mb-0" data-bs-toggle="dropdown"
                   id="statusDropdown">
                   <span class="flex-grow-1 text-start">
@@ -52,7 +52,7 @@
                       Filter</a></li>
                 </ul>
               </div>
-              <div class="d-flex mt-3 mt-md-0 w-100 w-lg-25">
+              <div class="d-flex mt-3 mt-md-0 w-100 w-lg-50 w-xl-25">
                 {% include "components/custom_table_search.html" %}
               </div>
             </div>
@@ -78,7 +78,7 @@
               </thead>
               <tbody class="ml-4">
                 {% for contact in contacts %}
-                <tr style="cursor: pointer !important;">
+                <tr>
                   <td class="text-sm">
                     <input type="checkbox" name="stw_checkbox" value="{{ contact.id }}">
                   </td>
