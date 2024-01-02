@@ -250,3 +250,29 @@ class ItemSerializer(serializers.ModelSerializer):
         
         representation['document_paths'] = document_paths
         return representation
+    
+class ItemUploadSerializer(serializers.ModelSerializer):
+    upload_item = serializers.CharField(
+        allow_null=True,
+        validators=[CustomFileValidator()],
+        label=('Documents'),  # Corrected placement of label attribute
+        required=False,
+        write_only=True,
+        initial=[],
+        style={
+            "input_type": "file",
+            "class": "form-control",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_multiple_file.html',
+            'help_text': True,
+            'multiple': True,
+            'accept': ','.join(settings.SUPPORTED_EXTENSIONS),
+            'allow_null': True,
+            'custom_class': 'col-6'
+        },
+        help_text=('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
+    )
+    class Meta:
+        model = Item  
+        fields = ('upload_item',)  

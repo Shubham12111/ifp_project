@@ -1,5 +1,8 @@
+import pandas as pd
+import xlwt
 from django.shortcuts import render, redirect
 from django.conf import settings
+from django.http import HttpResponse
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from .models import *
@@ -8,6 +11,9 @@ from infinity_fire_solutions.response_schemas import *
 from django.contrib import messages
 from rest_framework import generics, status, filters
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
+from rest_framework.views import APIView
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from django.template.response import TemplateResponse
 from django.core.serializers import serialize
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
@@ -612,3 +618,86 @@ class ItemDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         else:
             messages.error(request, "Item not found OR You are not authorized to perform this action.")
             return redirect(reverse('vendor_list'))
+        
+class ItemExcelDownloadAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        # Get your item queryset based on your requirements
+        items = Item.objects.filter(vendor_id=self.kwargs.get('vendor_id'))
+
+        # Create a new workbook and add a worksheet.
+        workbook = xlwt.Workbook()
+        worksheet = workbook.add_sheet('Item Details')
+
+        # Write the headers
+        headers = ["Item Name", "Description", "Category", "Price", "Units", "Quantity Per Box", "Reference Number"]
+        for col_num, header in enumerate(headers):
+            worksheet.write(0, col_num, header)
+
+        # Write the data
+        for row_num, item in enumerate(items, start=1):
+            worksheet.write(row_num, 0, item.item_name)
+            worksheet.write(row_num, 1, item.description)
+            worksheet.write(row_num, 2, item.category_id.name)
+            worksheet.write(row_num, 3, item.price)
+            worksheet.write(row_num, 4, item.units)
+            worksheet.write(row_num, 5, item.quantity_per_box)
+            worksheet.write(row_num, 6, item.reference_number)
+
+        # Create a response with the Excel file
+        response = HttpResponse(content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="item_details.xls"'
+        workbook.save(response)
+        return response
+
+class UploadExcelView(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'upload_file.html'
+    serializer_class = ItemUploadSerializer
+
+    def get(self, request, *args, **kwargs):
+        serializer = self.serializer_class()
+        return TemplateResponse(request, self.template_name, {'serializer': serializer})
+
+    def post(self, request, *args, **kwargs):
+        uploaded_file = request.FILES.get('excel_file')
+
+        if not uploaded_file:
+            return Response({'error': 'No file uploaded'}, status=HTTP_400_BAD_REQUEST)
+
+        try:
+            excel_data = pd.read_excel(uploaded_file)
+        except pd.errors.ParserError:
+            return Response({'error': 'Invalid Excel file format'}, status=HTTP_400_BAD_REQUEST)
+
+        column_names = list(excel_data.columns)
+        system_attributes = column_names
+
+        serializer = self.serializer_class(data=excel_data.to_dict(orient='records'), many=True)
+
+        if not serializer.is_valid():
+            return Response({'error': 'Invalid data from Excel file'}, status=HTTP_400_BAD_REQUEST)
+
+        serialized_data = serializer.data
+        mapping = request.data.get('mapping', {})
+
+        for index, row in excel_data.iterrows():
+            vendor_stock_data = {}
+
+            for excel_column, system_attribute in mapping.items():
+                vendor_stock_data[system_attribute] = row[excel_column]
+
+            # Create or update Vendor Stock items based on vendor_stock_data
+            # Example:
+            # VendorStock.objects.update_or_create(**vendor_stock_data)
+
+        # Retrieve vendor_id from request's query parameters
+        vendor_id = request.query_params.get('vendor_id')
+
+        if vendor_id is None:
+            return Response({'error': 'Vendor ID is missing in the request'}, status=HTTP_400_BAD_REQUEST)
+
+        # Redirect to the item listing page after processing
+        return redirect(reverse('item_list', kwargs={'vendor_id': vendor_id}))
+
+        context = {'message': 'Upload successful', 'excel_data': excel_data, 'mapping': mapping, 'serialized_data': serialized_data}
+        return TemplateResponse(request, self.template_name, context)
