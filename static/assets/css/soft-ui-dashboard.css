@@ -37557,4 +37557,22 @@ ul.pagination > li.page-item:last-child{
     overflow-y: hidden;
   }
 }
+
+@media screen and (min-width: 1880px) {
+  #table-search-bar-form-row {
+    width: 25% !important;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1879px) {
+  #table-search-bar-form-row {
+    width: 50% !important;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  #table-search-bar-form-ro {
+    width: 100% !important;
+  }
+}
 /*# sourceMappingURL=dashboard-pro.css.map */

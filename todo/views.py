@@ -76,7 +76,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = TodoListSerializer
 
     def get_paginated_queryset(self, base_queryset):
-        items_per_page = 10 
+        items_per_page = 20 
         paginator = Paginator(base_queryset, items_per_page)
         page_number = self.request.GET.get('page')
         
@@ -137,6 +137,8 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                     }
                     base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
 
+        # Filter the queryset
+        base_queryset = self.get_searched_queryset(base_queryset)
         # Sort the queryset by 'created_at' in descending order
         base_queryset = self.get_paginated_queryset(base_queryset.order_by('-created_at'))
         return base_queryset
@@ -152,6 +154,20 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         Get a list of all unique assigned_to users from the User model.
         """
         return User.objects.values_list('first_name', flat=True).distinct()
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
     
     common_list_response = {
     status.HTTP_200_OK: 
@@ -190,11 +206,14 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            context = {'todo_list': queryset,
-                    'status_values': STATUS_CHOICES,
-                    'module_list': module_list,
-                    'assigned_to_users': assigned_to_users,
-                    'priority_list': PRIORITY_CHOICES,}
+            context = {
+                'todo_list': queryset,
+                'search_fields': ['title',],
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+                'status_values': STATUS_CHOICES,
+                'module_list': module_list,
+                'assigned_to_users': assigned_to_users,
+                'priority_list': PRIORITY_CHOICES,}
             return render_html_response(context, self.template_name)
         else:
             # If the client accepts other formats, serialize the data and return an API response

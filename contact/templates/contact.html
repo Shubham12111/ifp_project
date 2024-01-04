@@ -10,7 +10,14 @@
           <form role="form" method="POST" autocomplete="off" class="multisteps-form__form mb-8"  onsubmit="showLoader()">
             <!--single form panel-->
             <div class="card  p-3 bg-white js-active" data-animation="FadeIn">
-              <h4 class="font-weight-bolder">{% if instance %}Edit {% else %} Add {% endif %} Contact</h4>
+              <div class="row justify-content-between">
+                <div class="col-6">
+                  <h4 class="font-weight-bolder">{% if instance %}Edit {% else %} Add {% endif %} Contact</h4>
+                </div>
+                <div class="col-6 text-end">
+                  <a class="btn bg-gradient-secondary btn-sm mb-0 js-btn-prev"  href="{% url 'contact_list' %}" title="Back">Back</a>
+                </div>
+              </div>
               <div class="multisteps-form__content">
                 {% csrf_token %}
                 <div class="row mt-3">
@@ -22,7 +29,6 @@
                 <div class="row mt-4">
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 m-auto text-center text-md-end">
-                  <a class="btn bg-gradient-secondary btn-sm mb-0 js-btn-prev"  href="{% url 'contact_list' %}" title="Back">Back</a>
                   <button class="btn btn-md bg-gradient-primary btn-sm ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Submit</button>
                 </div>
               </div>

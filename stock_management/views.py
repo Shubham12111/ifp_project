@@ -93,7 +93,7 @@ class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
     ordering_fields = ['created_at'] 
 
     def get_paginated_queryset(self, base_queryset):
-        items_per_page = 10 
+        items_per_page = 20 
         paginator = Paginator(base_queryset, items_per_page)
         page_number = self.request.GET.get('page')
         
@@ -138,6 +138,20 @@ class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
         return base_queryset
     
 
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
     common_get_response = {
         status.HTTP_200_OK: 
             docs_schema_response_new(
@@ -170,7 +184,12 @@ class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         queryset = self.get_queryset()
         if request.accepted_renderer.format == 'html':
-            context = {'vendors': queryset}
+            queryset = self.get_searched_queryset(queryset)
+            context = {
+                'vendors': self.get_paginated_queryset(queryset),
+                'search_fields': ['name', 'email'],
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+            }
             return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -246,6 +265,9 @@ class VendorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"stock_management", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
         message = "Vendor has been added successfully."
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
