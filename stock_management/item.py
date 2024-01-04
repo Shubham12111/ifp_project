@@ -760,5 +760,6 @@ class BulkImportItemsView(CustomAuthenticationMixin, generics.CreateAPIView):
         serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request, 'vendor_id': kwargs['vendor_id']})
         if serializer.is_valid():
             serializer.save()
+            messages.success(request, 'Bulk items uploaded successfully.')
         return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
         
