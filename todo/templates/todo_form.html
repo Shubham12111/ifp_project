@@ -17,6 +17,9 @@
                   <div class="multisteps-form__content">
                       <div class="row mt-3">
                           {% render_form serializer %}
+                          <input type="hidden" name="id_assign_type" id="id_assign_type">
+                          <input type="hidden" name="id_module" id="id_module">
+                          
                       </div>
                       <div class="card-footer p-3">
                           <div class="row mt-2">
@@ -29,7 +32,6 @@
                       </div>
                   </div>
               </div>
-
             </form>
             {% include 'components/loader.html' %}
 
@@ -40,6 +42,5 @@
   <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
   <script src="{% static 'assets/js/custom_country.js' %}"></script>
   <script src="{% static 'assets/js/custom_button.js' %}"></script>
-  <script src="{% static 'ckeditor/ckeditor-init.js' %}"></script>
-<script src="{% static 'ckeditor/ckeditor/ckeditor.js' %}"></script>
+
  {% endblock %}
