@@ -11,7 +11,15 @@
       <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header mt-0">
-              <h5>General Information</h5>
+              <div class="row justify-content-between">
+                <div class="col-6">
+                  <h5>General Information</h5>
+                </div>
+                <div class="col-6 text-end">
+                  <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'vendor_list' %}">Back</a>
+                </div>
+              </div>
+              
             </div>
             <div class="card-body pt-0">
                <form role="form"  method="POST" autocomplete="off" onsubmit="showLoader()" > 
@@ -21,7 +29,7 @@
                     </div>
                     
                     <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                    <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'vendor_list' %}">Back</a>
+                    
                     
 
                   </form>

@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse, HttpResponse
 from django.conf import settings
@@ -79,7 +80,19 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'customer_list.html'
     ordering_fields = ['created_at'] 
 
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
 
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
 
     common_get_response = {
     status.HTTP_200_OK: 
@@ -111,7 +124,12 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         # or use an empty Q() object if the value is not in the mapping
         queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='Customer').exclude(pk=request.user.id)
         if request.accepted_renderer.format == 'html':
-            context = {'customers':queryset}
+            queryset = self.get_searched_queryset(queryset)
+            page_number = request.GET.get('page', 1)
+            context = {'customers': Paginator(queryset, 20).get_page(page_number),
+                       'search_fields': ['name', 'email', 'company name'],
+                       'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
+                       }
             return render_html_response(context,self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)

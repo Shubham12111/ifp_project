@@ -1,8 +1,9 @@
+<div class="d-flex mt-3 mt-md-0" id="table-search-bar-form-row">
 <form class="row justify-content-start justify-content-lg-end w-100" method="get" autocomplete="off" id="searchForm">
     <div class="col-12 text-start text-md-end align-self-center">
         <div class="p-0 d-flex">
             <input class="form-control me-2" id="searchbar" name="q" type="text" 
-            placeholder="Search by {% for field in search_fields %}{{field|title}}{% if not forloop.last %}, {% endif %}{% endfor %}", 
+            placeholder="Search{% if search_fields %} by {% for field in search_fields %}{{field|title}}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}...{% endif %}", 
             value="{{search_value}}" aria-label="search-input" aira-autocomplete="off">
             <button type="submit" class="btn bg-gradient-secondary btn-sm mb-0 px-4 me-2"><i
                 class="fas fa-search d-lg-none" style="font-size: 0.7rem"></i> <span class="d-none d-lg-block">Search</span></button>
@@ -11,6 +12,7 @@
         </div>
     </div>
 </form>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

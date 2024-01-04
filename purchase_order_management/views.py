@@ -122,6 +122,47 @@ def get_paginated_data(request, queryset, serializer_class, search_field=None):
             "data": serializer.data,
         }
     return response_data
+
+def get_paginated_data_for_web(request, queryset, search_field=None):
+    search_params = request.query_params.get('q', '')
+    if search_params:
+        search_fields = search_field
+        q_objects = Q()
+
+        # Construct a Q object to search across multiple fields dynamically
+        for field in search_fields:
+            q_objects |= Q(**{f'{field}__icontains': search_params})
+
+        queryset = queryset.filter(q_objects)
+    
+    vendor_query = Q()  # Initialize an empty Q object for vendor filtering
+    data_queryset = queryset
+
+    # Handle filter parameters sent through the AJAX request
+    vendor_search = request.GET.get('vendor')
+    if vendor_search:
+        # Filter vendors based on first_name, last_name, and email
+        vendor_query |= Q(vendor_id__first_name__icontains=vendor_search)
+        vendor_query |= Q(vendor_id__last_name__icontains=vendor_search)
+        vendor_query |= Q(vendor_id__email__icontains=vendor_search)
+
+    location = request.GET.get('location')
+    status = request.GET.get('status')
+    
+    # Apply filters to the queryset based on filter parameters
+    if location:
+        data_queryset = data_queryset.filter(inventory_location_id__name__icontains=location)
+    if status:
+        data_queryset = data_queryset.filter(status=status)
+   
+    if  vendor_query:
+        data_queryset = data_queryset.filter(vendor_query)
+            
+    paginator = Paginator(data_queryset, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    return page_obj
     
     
 def get_order_items(data):
@@ -242,7 +283,12 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
                 return JsonResponse(get_paginated_data(request, queryset, serializer_class, search_field))
             
             if request.accepted_renderer.format == 'html':
-                context = {'status_list':STATUS_CHOICES}
+                context = {
+                    'status_list':STATUS_CHOICES,
+                    'orders': get_paginated_data_for_web(request, queryset, self.search_fields),
+                    'search_fields': ['po number', 'vendor email','inventory location name','status'],
+                    'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
+                }
                 return render_html_response(context, self.template_name)
         except Exception as e:
             print(e)
