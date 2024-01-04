@@ -18,5 +18,8 @@ urlpatterns = [
     path('autocomplete_contact/', ContacttypeAutocomplete.as_view(), name='contact-autocomplete'),
     # path('autocomplete_conversation/', ConversationtypeAutocomplete.as_view(), name='conversation-autocomplete'),
     # path('autocomplete_postcode/', PostcodeChoicesAutocomplete.as_view(), name='postcode-autocomplete'),
-    
+
+    path('export_csv/', ExportCSVView.as_view(), name='export_csv'),
+
+
 ]
