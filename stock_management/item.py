@@ -1,6 +1,7 @@
 import pandas as pd
 import xlwt
 from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.http import HttpResponse
 from infinity_fire_solutions.aws_helper import *
@@ -17,6 +18,8 @@ from django.template.response import TemplateResponse
 from django.core.serializers import serialize
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
+from django.views import View
+from io import BytesIO
 
 
 class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
@@ -649,55 +652,112 @@ class ItemExcelDownloadAPIView(APIView):
         workbook.save(response)
         return response
 
-class UploadExcelView(APIView):
-    renderer_classes = [TemplateHTMLRenderer]
-    template_name = 'upload_file.html'
-    serializer_class = ItemUploadSerializer
 
-    def get(self, request, *args, **kwargs):
-        serializer = self.serializer_class()
-        return TemplateResponse(request, self.template_name, {'serializer': serializer})
 
+class BulkImportItemsView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View to get the listing of all contacts.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = ItemSerializer
+    default_fieldset = ['name', 'category', 'price', 'description', 'units', 'quantity_per_box', 'reference_number']
+    EXCEL = ['xlsx', 'xls', 'ods']
+    CSV = ['csv',]
+
+    # File operation Functions ----------------------------------------------
+    def get_file_ext(self, file_name:str) -> str:
+        """
+        Get the file extension for a given file name.
+
+        Args:
+            file_name (str): The name of the file.
+
+        Returns:
+            str: The file extension in lowercase.
+        """
+
+        ext = file_name.split('.')[-1].lower()
+
+        return ext
+
+    # Excel File Supporter Functions ---------------------------------------------
+    def get_excel_engine(self, file_ext: str) -> str or None:
+        """
+        Get the engine to use for reading an Excel file based on its extension.
+
+        Args:
+            file_ext (str): The file extension in lowercase.
+
+        Returns:
+            str or None: The engine to use, or None if the file is not an Excel file.
+        """
+
+        engines = {'xlsx': 'openpyxl', 'xls': 'xlrd', 'ods': 'odf'}
+        return  engines[file_ext]
+
+    def read_file_to_df(self, file) -> pd.DataFrame:
+        """
+        Read a file from an in-memory upload and convert it into a DataFrame.
+
+        Parameters:
+        - file (InMemoryUploadedFile): The in-memory uploaded file.
+
+        Returns:
+        - pd.DataFrame or None: The DataFrame containing the data from the file, or None if an error occurs.
+        """
+        ext = self.get_file_ext(file.name)
+
+        # Convert the in-memory file to a BytesIO object
+        content = BytesIO(file.read())
+
+        if ext in self.EXCEL:
+            engine = self.get_excel_engine(ext)
+            data_frame = pd.read_excel(content, engine=engine)
+            return data_frame
+        
+        if ext in self.CSV:
+            data_frame = pd.read_csv(content)
+            return data_frame
+
+        raise ValueError('The file type is not supported.')
+    
     def post(self, request, *args, **kwargs):
-        uploaded_file = request.FILES.get('excel_file')
+        data = request.data.copy()
 
-        if not uploaded_file:
-            return Response({'error': 'No file uploaded'}, status=HTTP_400_BAD_REQUEST)
+        # Create a mapping dictionary from the request data
+        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
+        
+        # Check if any keys have the same value
+        values_set = set()
+        duplicate_values = set()
+        for key, value in mapping_dict.items():
+            if value in values_set:
+                duplicate_values.add(value)
+            values_set.add(value)
 
-        try:
-            excel_data = pd.read_excel(uploaded_file)
-        except pd.errors.ParserError:
-            return Response({'error': 'Invalid Excel file format'}, status=HTTP_400_BAD_REQUEST)
+        if duplicate_values:
+            # Handle the case where some keys have the same value
+            # You can raise an error or take appropriate action
+            messages.error(request, 'Duplicate Mapping of keys is not accepted.')
+            return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
+        
+        df = self.read_file_to_df(request.FILES.get('excel_file'))
 
-        column_names = list(excel_data.columns)
-        system_attributes = column_names
+        items_data_list = []
 
-        serializer = self.serializer_class(data=excel_data.to_dict(orient='records'), many=True)
+        for index, row in df.iterrows():
+            items_data = {}
+            for key, value in mapping_dict.items():
+                items_data[key] = row[value]
 
-        if not serializer.is_valid():
-            return Response({'error': 'Invalid data from Excel file'}, status=HTTP_400_BAD_REQUEST)
+            items_data_list.append(items_data)
 
-        serialized_data = serializer.data
-        mapping = request.data.get('mapping', {})
 
-        for index, row in excel_data.iterrows():
-            vendor_stock_data = {}
+        # except Exception as e:
+            #     # Handle exceptions, e.g., database error, validation error
+            #     messages.error(request, f"Error: {str(e)}")
+            #     return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
 
-            for excel_column, system_attribute in mapping.items():
-                vendor_stock_data[system_attribute] = row[excel_column]
-
-            # Create or update Vendor Stock items based on vendor_stock_data
-            # Example:
-            # VendorStock.objects.update_or_create(**vendor_stock_data)
-
-        # Retrieve vendor_id from request's query parameters
-        vendor_id = request.query_params.get('vendor_id')
-
-        if vendor_id is None:
-            return Response({'error': 'Vendor ID is missing in the request'}, status=HTTP_400_BAD_REQUEST)
-
-        # Redirect to the item listing page after processing
-        return redirect(reverse('item_list', kwargs={'vendor_id': vendor_id}))
-
-        context = {'message': 'Upload successful', 'excel_data': excel_data, 'mapping': mapping, 'serialized_data': serialized_data}
-        return TemplateResponse(request, self.template_name, context)
+            # # Continue with your post logic
+            # # For now, redirecting to 'item_list' after handling the request
+            # return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))

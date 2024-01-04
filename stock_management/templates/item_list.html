@@ -10,12 +10,129 @@
 <div class="container-fluid my-3 py-3">
   <div class="row">
     <div class="col-lg-12">
-        <form role="form" method="POST" autocomplete="off" class="multisteps-form__form" enctype="multipart/form-data"  onsubmit="showLoader()">
              <!--single form panel-->
             <div class="card  p-3  bg-white js-active">
-               <h5 class="">Items</h5>
+            <div class="row justify-content-between">
+                <div class="col-6">
+                  <h5 class="">Items</h5>
+                </div>
+                <div class="col-6 text-end">
+                  <!-- Button trigger modal -->
+                  <button type="button" class="btn btn-md bg-gradient-primary btn-sm" data-bs-toggle="modal" data-bs-target="#bulk_import_modal">
+                      Bulk Import Items
+                  </button>
 
-
+                  <!-- Modal -->
+                  <div class="modal fade" id="bulk_import_modal" tabindex="-1" aria-labelledby="bulkImportModalLabel" aria-hidden="true">
+                      <div class="modal-dialog">
+                          <div class="modal-content">
+                              <div class="modal-header">
+                                  <h1 class="modal-title fs-5" id="bulkImportModalLabel">Bulk Import Items</h1>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <form action="{% url 'item_bulk_import' vendor_instance.id %}" role="form" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+                                {% csrf_token %}
+                              <div class="modal-body">
+                                  <div class="mb-3">
+                                      <label for="formFile" class="form-label">Items file</label>
+                                      <input class="form-control" type="file" id="formFile" name="excel_file">
+                                  </div>
+                                  <div class="d-none" id="mapping_key_values">
+                                      <ul>
+                                          <li class="row g-3 align-items-center mt-3">
+                                              <div class="col-auto">
+                                                  <label for="name" class="col-form-label">Name</label>
+                                              </div>
+                                              <div class="col-auto">
+                                                  <select class="form-select" aria-label="Default select example" type="radio"
+                                                      name="name" id="mappings">
+                                                      <option selected>Open this select menu</option>
+                                                  </select>
+                                              </div>
+                                          </li>
+                                          <li class="row g-3 align-items-center mt-3">
+                                              <div class="col-auto">
+                                                  <label for="category" class="col-form-label">Category</label>
+                                              </div>
+                                              <div class="col-auto">
+                                                  <select class="form-select" aria-label="Default select example" type="radio"
+                                                      name="category" id="mappings">
+                                                      <option selected>Open this select menu</option>
+                                                  </select>
+                                              </div>
+                                          </li>
+                                          <li class="row g-3 align-items-center mt-3">
+                                              <div class="col-auto">
+                                                  <label for="price" class="col-form-label">Price</label>
+                                              </div>
+                                              <div class="col-auto">
+                                                  <select class="form-select" aria-label="Default select example" type="radio"
+                                                      name="price" id="mappings">
+                                                      <option selected>Open this select menu</option>
+                                                  </select>
+                                              </div>
+                                          </li>
+                                          <li class="row g-3 align-items-center mt-3">
+                                              <div class="col-auto">
+                                                  <label for="description" class="col-form-label">Description</label>
+                                              </div>
+                                              <div class="col-auto">
+                                                  <select class="form-select" aria-label="Default select example" type="radio"
+                                                      name="description" id="mappings">
+                                                      <option selected>Open this select menu</option>
+                                                  </select>
+                                              </div>
+                                          </li>
+                                          <li class="row g-3 align-items-center mt-3">
+                                              <div class="col-auto">
+                                                  <label for="units" class="col-form-label">Units</label>
+                                              </div>
+                                              <div class="col-auto">
+                                                  <select class="form-select" aria-label="Default select example" type="radio"
+                                                      name="units" id="mappings">
+                                                      <option selected>Open this select menu</option>
+                                                  </select>
+                                              </div>
+                                          </li>
+                                          <li class="row g-3 align-items-center mt-3">
+                                              <div class="col-auto">
+                                                  <label for="quantity_per_box" class="col-form-label">Quantity Per
+                                                      Box</label>
+                                              </div>
+                                              <div class="col-auto">
+                                                  <select class="form-select" aria-label="Default select example" type="radio"
+                                                      name="quantity_per_box" id="mappings">
+                                                      <option selected>Open this select menu</option>
+                                                  </select>
+                                              </div>
+                                          </li>
+                                          <li class="row g-3 align-items-center mt-3">
+                                              <div class="col-auto">
+                                                  <label for="reference_number" class="col-form-label">Reference
+                                                      Number</label>
+                                              </div>
+                                              <div class="col-auto">
+                                                  <select class="form-select" aria-label="Default select example" type="radio"
+                                                      name="reference_number" id="mappings">
+                                                      <option selected>Open this select menu</option>
+                                                  </select>
+                                              </div>
+                                          </li>
+                                      </ul>
+                                  </div>
+                              </div>
+                              <div class="modal-footer">
+                                  <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                                  <input type="submit" class="btn bg-gradient-primary btn-sm" value="Save"/>
+                              </div>
+                              </form>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+              </div>
+                
+              <form role="form" method="POST" autocomplete="off" class="multisteps-form__form" enctype="multipart/form-data"  onsubmit="showLoader()">
                <div class="multisteps-form__content mt-2 row">
                  {% csrf_token %}
                   {% render_form serializer %}
@@ -42,7 +159,6 @@
                  <div class="row mt-4">
                  <div class="col-6 col-lg-6 m-auto text-end"></div>
                  <div class="col-md-6 m-auto text-center text-md-end">
-                   <a class="btn btn-md bg-gradient-primary btn-sm ms-2 mb-0 js-btn-next" href="{% url 'upload_file' %}" title="Upload">Upload</a>
                    <a class="btn bg-gradient-secondary btn-sm mb-0 js-btn-prev"  href="{% url 'vendor_contact_person' vendor_instance.id  %}" title="Back">Back</a>
                    <button class="btn btn-md bg-gradient-primary btn-sm ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Submit</button>
                  </div>
@@ -150,6 +266,8 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 <script>
   if (document.getElementById('item-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#item-list", {
@@ -196,6 +314,48 @@
       // Show/hide the div based on selection
       unitsSelect.addEventListener('change', updateQuantityPerBoxDisplay);
   });
+</script>
+
+<script>
+    $(document).ready(function () {
+        // Event listener for file input change
+        $('input[name="excel_file"]').change(function () {
+            // Read the selected file
+            var fileInput = this;
+            var file = fileInput.files[0];
+            // Check if a file is selected
+            if (file) {
+                // Read the file content
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var data = e.target.result;
+                    // You can use this 'data' variable to perform further processing or send it to the server
+                    console.log(data);
+                    // Now proceed with extracting column names
+                    var workbook = XLSX.read(data, { type: 'binary' });
+                    var sheetName = workbook.SheetNames[0];
+                    var sheet = workbook.Sheets[sheetName];
+                    var headers = XLSX.utils.sheet_to_json(sheet, { header: 1 })[0];
+                    // Display the list of headers and create dropdowns for mapping
+                    displayHeaders(headers);
+                };
+                reader.readAsBinaryString(file);
+            }
+        });
+
+        // Function to display the list of headers and create dropdowns for mapping
+        function displayHeaders(headers) {
+            var dropdownContainer = $('#mapping_key_values');
+            if (headers && headers.length > 0) {
+                headers.forEach(function (header) {
+                    $('select[id="mappings"]').append(`<option value="${header}">${header}</option>`);
+                    // Add other mappings as needed
+                });
+
+                dropdownContainer.removeClass('d-none');
+            }
+        }
+    });
 </script>
 
 {% endblock %}

@@ -275,4 +275,4 @@ class ItemUploadSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = Item  
-        fields = ('upload_item',)  
+    fields = ('upload_item')  

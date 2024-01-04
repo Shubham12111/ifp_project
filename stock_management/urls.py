@@ -20,9 +20,9 @@ urlpatterns = [
    
    path('vendor/item/<int:vendor_id>/', ItemListView.as_view(), name='item_list'),
    path('vendor/item/edit/<int:vendor_id>/<int:item_id>/', ItemListView.as_view(), name='item_list'),
+   path('vendor/item/bulk_import/<int:vendor_id>/', BulkImportItemsView.as_view(), name='item_bulk_import'),
    path('vendor/item/view/<int:vendor_id>/<int:item_id>/', ItemDetailView.as_view(), name='item_view'),
    path('vendor/<int:vendor_id>/download-items/', ItemExcelDownloadAPIView.as_view(), name='download_items_excel'),
-   path('upload_file/', UploadExcelView.as_view(), name='upload_file'),
 
 
 
