@@ -16,7 +16,17 @@ from infinity_fire_solutions.response_schemas import create_api_response, conver
 from infinity_fire_solutions.utils import docs_schema_response_new
 from .models import *
 from .serializers import *
+from django.views import View
 
+import csv
+from .models import User, Vendor
+from django.utils.encoding import smart_str
+from django.shortcuts import render
+
+
+from django.shortcuts import get_object_or_404
+from purchase_order_management.models import PurchaseOrder
+from purchase_order_management.serializers import PurchaseOrderSerializer
 
 # Define a custom API view for vendor search
 class VendorSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
@@ -748,4 +758,64 @@ class VendorRemarkView(CustomAuthenticationMixin, generics.CreateAPIView):
                                        data=convert_serializer_errors(serializer.errors))
 
 
-            
+
+class VendorPurchaseOrderListView(View):
+    template_name = 'vendor_purchase_order.html'  # Replace with the actual template name
+
+    def get(self, request, vendor_id):
+        vendor = get_object_or_404(Vendor, pk=vendor_id)
+        purchase_orders = PurchaseOrder.objects.filter(vendor_id=vendor_id)
+
+        context = {
+            'vendor_instance': vendor,
+            'purchase_orders': purchase_orders,
+        }
+
+        return render(request, self.template_name, context)
+
+
+class ExportCSVView(View):
+    def get(self, request, *args, **kwargs):
+        selected_ids_str = request.GET.get('stw_ids', '')
+        print(selected_ids_str)
+        selected_ids = selected_ids_str.split(',') if selected_ids_str else []
+
+        # Fetch the selected data from the database
+        selected_data = Vendor.objects.filter(id__in=selected_ids).values(
+            'first_name', 'last_name', 'email', 'phone_number',
+            'company', 'vat_number', 'tax_preference', 'address',
+            'country', 'town', 'county', 'post_code'
+        )
+        # print(selected_data)
+        # Create a CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+        # Create a CSV writer and write the header
+        writer = csv.writer(response)
+        header_row = [
+            'First Name', 'Last Name', 'Email', 'Phone Number',
+            'Company', 'VAT Number', 'Tax Preference', 'Address',
+            'Country', 'Town', 'County', 'Post Code'
+        ]
+        writer.writerow([smart_str(header) for header in header_row])
+
+        # Write data rows
+        for data_row in selected_data:
+            writer.writerow([
+                data_row['first_name'],
+                data_row['last_name'],
+                data_row['email'],
+                data_row['phone_number'],
+                data_row['company'],
+                data_row['vat_number'],
+                data_row['tax_preference'],
+                data_row['address'],
+                data_row['country'],
+                data_row['town'],
+                data_row['county'],
+                data_row['post_code']
+            ])
+
+        return response
+

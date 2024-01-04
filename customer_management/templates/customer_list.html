@@ -22,15 +22,50 @@
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
+              <button id="exportButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Export</button>
             </div>
           </div>
-{% comment %}{% include 'components/table_search.html' %} {% endcomment %}
+          {% comment %}           {% include 'components/table_search.html' %} {% endcomment %}
+        </div>
+        <label class="mt-2 text-muted"></label>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="d-flex flex-wrap ">
+                <div class="dropdown d-inline me-2">
+                    <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle" data-bs-toggle="dropdown" id="statusDropdown">
+                      <span class="flex-grow-1 text-start">
+                        {% if contact_type_filter %} {{contact_type_filter}} {% else %}Contact Type {% endif %}
+                      </span>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="statusDropdown" data-popper-placement="bottom-end">
+                  {% for contact_type in contact_types %}
+                  <li>
+                    <a class="dropdown-item border-radius-md" href="?contact_type={{ contact_type.name }}">{{ contact_type.name }}</a>
+                  </li>
+                {% endfor %}
+                <li><hr class="horizontal dark my-2"></li>
+                <li><a class="dropdown-item border-radius-md text-danger" onclick="removeContactTypeFilter()">Remove Filter</a></li>
+                </ul>
+              </div>
+            </div>
+            </div>
+            {% comment %} <div class="col-3"></div>
+            <div class="col-xs-12 col-sm-12 col-lg-3 col-md-3  text-end">
+              <div class="search">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+              </div>
+            </div>
+          </div> {% endcomment %}
         </div>
         <div class="card-body px-0 pb-0">
          <div class="table-responsive">
             <table class="table table-flush text-dark" id="customer-list">
               <thead class="thead-light">
                 <tr>
+                  <th>
+                    <input type="checkbox" id="selectAllCheckbox">
+                  </th>
+                  
                   <th>Company Name</th>
                   <th>Name</th>
                   <th>Phone</th>
@@ -43,10 +78,13 @@
               <tbody class="ml-4"> 
                 {% for customer in customers %}
                 <tr class="text-sm">
-                  <td >{{customer.company_name|default:''|truncatechars:20|title}}</td>
-                  <td >{{customer.first_name|default:''|truncatechars:20|title}} {{customer.last_name|default:''|truncatechars:20|title}}</td>
-                  <td >{% if customer.phone_number %}{{customer.phone_number}}{% endif %}</td>
-                  <td >{{customer.email}}</td>
+                  <td class="text-sm">
+                    <input type="checkbox" name="stw_checkbox" value="{{ customer.id }}">
+                  </td>
+                  <td class="text-sm">{{customer.company_name|default:''|truncatechars:20|title}}</td>
+                  <td class="text-sm">{{customer.first_name|default:''|truncatechars:20|title}} {{customer.last_name|default:''|truncatechars:20|title}}</td>
+                  <td class="text-sm">{% if customer.phone_number %}{{customer.phone_number}}{% endif %}</td>
+                  <td class="text-sm">{{customer.email}}</td>
 
                   {% if request.user|has_update_permission:"customer" or request.user|has_add_permission:"customer" or request.user|has_delete_permission:"customer" or request.user|has_view_permission:"customer" %}
                   <td>
@@ -89,25 +127,60 @@
 </div>
 {% endblock %} 
 {% block extra_js %}
+
 <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
-<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script>
-  if (document.getElementById('customer-list')) {
-  const dataTableSearch = new simpleDatatables.DataTable("#customer-list", {
-    searchable: true,
-    fixedHeight: false,
-    perPage: 10,
-  });
-
-  const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', function() {
-      const searchText = searchInput.value.toLowerCase();
-      dataTableSearch.search(searchText).draw();
+document.addEventListener("DOMContentLoaded", function () {
+    const exportButton = document.getElementById("exportButton");
+    const stwCheckboxes = document.querySelectorAll('input[name="stw_checkbox"]');
+    const selectAllCheckbox = document.getElementById("selectAllCheckbox"); 
+    function updateExportButton() {
+      const atLeastOneSelected = Array.from(stwCheckboxes).some(
+        (checkbox) => checkbox.checked
+      );
+      exportButton.disabled = !atLeastOneSelected;
+    }
+  
+    function handleSelectAll() {
+      const isChecked = selectAllCheckbox.checked;
+      stwCheckboxes.forEach((checkbox) => {
+        checkbox.checked = isChecked;
+      });
+      updateExportButton();
+    }
+  
+    selectAllCheckbox.addEventListener("change", handleSelectAll);
+  
+    stwCheckboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        updateExportButton();
+        const allChecked = Array.from(stwCheckboxes).every(
+          (checkbox) => checkbox.checked
+        );
+        selectAllCheckbox.checked = allChecked;
+      });
     });
-}
-
+  
+    updateExportButton();
+  
+    exportButton.addEventListener("click", function () {
+      const selectedIds = Array.from(stwCheckboxes)
+        .filter((checkbox) => checkbox.checked)
+        .map((checkbox) => checkbox.value);
+      console.log("Selected IDs:", selectedIds);
+      
+      if (selectedIds.length > 0) {
+        const exportUrl = `/customer/export_csv/?stw_ids=${encodeURIComponent(
+          selectedIds.join(",")
+        )}`;
+  
+        window.location.href = exportUrl;
+      }
+    });
+  });
 </script>
-{% endblock %}     
+{% endblock %}

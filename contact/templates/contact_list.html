@@ -64,7 +64,7 @@
               <thead class="thead-light">
                 <tr>
                   <th>
-                    <input type="checkbox" id="selectAllCheckbox">
+                    <input type="checkbox" id="selectAllCheckbox" >
                   </th>
             
                   <th>Name</th>
@@ -202,7 +202,6 @@
     const exportButton = document.getElementById("exportButton");
     const stwCheckboxes = document.querySelectorAll('input[name="stw_checkbox"]');
     const selectAllCheckbox = document.getElementById("selectAllCheckbox"); 
-    
     function updateExportButton() {
       const atLeastOneSelected = Array.from(stwCheckboxes).some(
         (checkbox) => checkbox.checked
@@ -237,6 +236,7 @@
         .filter((checkbox) => checkbox.checked)
         .map((checkbox) => checkbox.value);
       console.log("Selected IDs:", selectedIds);
+      
       if (selectedIds.length > 0) {
         const exportUrl = `/contact/export_csv/?stw_ids=${encodeURIComponent(
           selectedIds.join(",")

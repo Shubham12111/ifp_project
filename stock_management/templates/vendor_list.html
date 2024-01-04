@@ -22,6 +22,7 @@
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
+              <button id="exportButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Export</button>
               </div>
             </div>
             {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
@@ -31,6 +32,9 @@
             <table class="table table-flush text-dark" id="vendor-list">
               <thead class="thead-light">
                 <tr>
+                  <th>
+                    <input type="checkbox" id="selectAllCheckbox">
+                  </th>
                   <th>Name</th>
                   <th>Email</th>
                   <th>Phone</th>
@@ -43,6 +47,9 @@
               <tbody class="ml-4"> 
                 {% for vendor in vendors %}
                 <tr class="text-sm">
+                  <td class="text-sm">
+                    <input type="checkbox" name="stw_checkbox" value="{{ customer.id }}">
+                  </td>
                   <td >{{vendor.first_name|default:''|truncatechars:20|title}} {{vendor.last_name|default:''|truncatechars:20|title}}</td>
                   <td >{{vendor.email}}</td>
                   <td >{{vendor.phone_number}}</td>
@@ -92,11 +99,11 @@
 
 {% endblock %} 
 {% block extra_js %}
-<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+<!-- <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
-<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<!<script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script>
   if (document.getElementById('vendor-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#vendor-list", {
@@ -111,6 +118,70 @@
         const searchText = searchInput.value.toLowerCase();
         dataTableSearch.search(searchText).draw();
       });
-  }
-</script>
+  } -->
+<!-- </script> --> 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const exportButton = document.getElementById("exportButton");
+    const stwCheckboxes = document.querySelectorAll('input[name="stw_checkbox"]');
+    const selectAllCheckbox = document.getElementById("selectAllCheckbox");
+  
+    function updateExportButton() {
+      const atLeastOneSelected = Array.from(stwCheckboxes).some(
+        (checkbox) => checkbox.checked
+      );
+      exportButton.disabled = !atLeastOneSelected;
+    }
+  
+    function handleSelectAll() {
+      const isChecked = selectAllCheckbox.checked;
+      stwCheckboxes.forEach((checkbox) => {
+        checkbox.checked = isChecked;
+      });
+      updateExportButton();
+    }
+  
+    selectAllCheckbox.addEventListener("change", handleSelectAll);
+  
+    stwCheckboxes.forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        updateExportButton();
+        const allChecked = Array.from(stwCheckboxes).every(
+          (checkbox) => checkbox.checked
+        );
+        selectAllCheckbox.checked = allChecked;
+      });
+    });
+  
+    updateExportButton();
+  
+    exportButton.addEventListener("click", function () {
+      const selectedIds = Array.from(stwCheckboxes)
+        .filter((checkbox) => checkbox.checked)
+        .map((checkbox) => checkbox.value);
+        
+      console.log("Selected IDs:", selectedIds);
+      
+      if (selectedIds.length > 0) {
+          const exportUrl = `/customer/export_csv/?stw_ids=${encodeURIComponent(selectedIds.join(","))}`;
+          
+          // Send AJAX request to server with selected IDs
+          fetch(exportUrl)
+              .then(response => response.text())
+              .then(csvData => {
+                  // Create a Blob containing the CSV data
+                  const blob = new Blob([csvData], { type: 'text/csv' });
+  
+                  // Create a temporary link element and trigger a download
+                  const link = document.createElement('a');
+                  link.href = window.URL.createObjectURL(blob);
+                  link.download = 'exported_data.csv';
+                  link.click();
+              })
+              .catch(error => console.error('Error exporting data:', error));
+      }
+  });
+  });
+  
+  </script>
 {% endblock %}     

@@ -22,6 +22,10 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 from customer_management.constants import POST_CODES_INFO
 
 from django.contrib.auth.hashers import make_password
+from django.views import View
+from django.http import HttpResponse
+import csv
+from .models import User, BillingAddress
 
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -706,3 +710,57 @@ class BillingAddressInfoView(CustomAuthenticationMixin, APIView):
         serialize = self.serializer_class(data=data)
         serialize.is_valid(raise_exception=True)
         return Response({"data": serialize.data})
+
+class ExportCSVView(View):
+    def get(self, request, *args, **kwargs):
+        stw_ids = request.GET.get('stw_ids', '').split(',')
+        stw_ids = [int(id_) for id_ in stw_ids if id_.isdigit()]
+
+        # Fetch data efficiently using select_related
+        user_data = User.objects.filter(id__in=stw_ids).select_related('billingaddress').values(
+            'id', 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number',
+            'billingaddress__vat_number', 'billingaddress__tax_preference', 'billingaddress__address', 'billingaddress__country',
+            'billingaddress__town', 'billingaddress__county', 'billingaddress__post_code'
+        )
+
+        # Create CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'id', 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number',
+            'vat_number_billing', 'tax_preference_billing', 'address_billing', 'country_billing',
+            'town_billing', 'county_billing', 'post_code_billing'
+        ])
+
+        for row in user_data:
+            writer.writerow([row[field] for field in row])  # Write all fields, handling potential None values
+
+        return response
+
+
+
+
+# class ExportCSVView(View):
+#     def get(self, request, *args, **kwargs):
+#         stw_ids = request.GET.get('stw_ids', '').split(',')
+
+#         # Check for empty strings in stw_ids
+#         stw_ids = [id_ for id_ in stw_ids if id_.isdigit()]
+
+#         # Fetch data based on stw_ids
+#         data = User.objects.filter(id__in=stw_ids).values( 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number')
+#         # data = BillingAddress.objects.filter(id__in=stw_ids).values('addess')
+
+#         # Create CSV response
+#         response = HttpResponse(content_type='text/csv')
+#         response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+#         # Write CSV content
+#         writer = csv.writer(response)
+#         writer.writerow([ 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number'])  # Include 'id' field
+#         for row in data:
+#             writer.writerow([ row['first_name'], row['last_name'], row['email'], row['company_name'], row['customer_type'], row['phone_number']])
+
+#         return response
