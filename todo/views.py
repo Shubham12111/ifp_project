@@ -77,7 +77,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
-    search_fields = ['title']  # Specify fields you want to allow searching on
+    search_fields = ['module__name']  # Specify fields you want to allow searching on
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
 
@@ -214,7 +214,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
             # If the client accepts HTML, render the template
             context = {
                 'todo_list': queryset,
-                'search_fields': ['title',],
+                'search_fields': ['module name',],
                 'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
                 'status_values': STATUS_CHOICES,
                 'module_list': module_list,
