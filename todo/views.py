@@ -21,21 +21,27 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views import View
 
-
-# class UserAutocomplete(View):
-#     def get(self, request):
-#         query = request.GET.get('term', '')
-#         users = User.objects.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query))[:10]
-#         results = [f"{user.first_name} {user.last_name} - {user.roles.name}" for user in users]
-#         return JsonResponse(results, safe=False)
     
-# class ModuleAutocomplete(View):
-#     def get(self, request):
-#         query = request.GET.get('term', '')
-#         module_list = Module.objects.filter(Q(name__icontains=query))[:10]
-#         results = [f"{module.name}" for module in module_list]
-#         return JsonResponse(results, safe=False)
+class UserAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        users = User.objects.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query))[:10]
+        results = [f"{user.first_name} {user.last_name} - {user.roles.name}" if user.roles and user.roles.name 
+                   else f"{user.first_name} {user.last_name}"
+            for user in users
+        ]
+        
+        # Create a list of dictionaries containing both name and primary key
+        results = [{'label': result, 'value': user.id} for result, user in zip(results, users)]
+        return JsonResponse(results, safe=False)
     
+class ModuleAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        module_list = Module.objects.filter(Q(name__icontains=query))[:10]
+        results = [{'label': module.name , 'value': module.id} for module in module_list]
+        return JsonResponse(results, safe=False)
+ 
     
 class ToDoUserSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     """
@@ -252,9 +258,19 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         serializer = self.serializer_class(data=request.data,context={'request': request})
+        
+        id_assign_type = request.data.get('id_assign_type')  # Ensure that this field is correctly sent in the request payload
+        assign_type_obj = User.objects.get(pk=id_assign_type) if id_assign_type else None
+        id_module = request.data.get('id_module')
+        print("contact type is:",id_assign_type)
+        print("module id:",id_module)
+        module_obj = Module.objects.get(pk=id_module)
 
+        # breakpoint()
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user
+            serializer.validated_data['module'] = module_obj
+            serializer.validated_data['assigned_to'] = assign_type_obj
             serializer.save()
             message = "Your Task has been saved successfully!"
             status_code = status.HTTP_201_CREATED

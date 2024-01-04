@@ -14,6 +14,7 @@ from infinity_fire_solutions.custom_form_validation import *
 import re
 from bs4 import BeautifulSoup
 from customer_management.constants import POST_CODE_LIST
+from dal import autocomplete
 
 
 # Custom validation function for validating file size
@@ -189,13 +190,14 @@ class ContactSerializer(serializers.ModelSerializer):
         }
     )
     
-    contact_type = serializers.PrimaryKeyRelatedField(
+    contact_type = serializers.CharField(
         label=('Contact Type'),
         required=True,
-        queryset=ContactType.objects.all(),
+        # queryset=ContactType.objects.all(),
         style={
-            'base_template': 'custom_select.html',
-             'custom_class':'col-6'
+            'base_template': 'custom_search.html',
+            'custom_class': 'col-6 autocomplete',
+
         },
         error_messages={
             "required": "This field is required.",

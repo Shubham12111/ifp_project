@@ -53,7 +53,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         queryset=User.objects.none(),
         style={
             'base_template': 'custom_select.html',
-            'custom_class':'col-6'
+            'custom_class':'col-6 autocomplete'
         },
     )
     
