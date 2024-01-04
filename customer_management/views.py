@@ -186,6 +186,9 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"customer", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+            
         message = "Your customer has been added successfully."
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -711,6 +714,7 @@ class BillingAddressInfoView(CustomAuthenticationMixin, APIView):
         serialize.is_valid(raise_exception=True)
         return Response({"data": serialize.data})
 
+
 class ExportCSVView(View):
     def get(self, request, *args, **kwargs):
         stw_ids = request.GET.get('stw_ids', '').split(',')
@@ -741,26 +745,3 @@ class ExportCSVView(View):
 
 
 
-
-# class ExportCSVView(View):
-#     def get(self, request, *args, **kwargs):
-#         stw_ids = request.GET.get('stw_ids', '').split(',')
-
-#         # Check for empty strings in stw_ids
-#         stw_ids = [id_ for id_ in stw_ids if id_.isdigit()]
-
-#         # Fetch data based on stw_ids
-#         data = User.objects.filter(id__in=stw_ids).values( 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number')
-#         # data = BillingAddress.objects.filter(id__in=stw_ids).values('addess')
-
-#         # Create CSV response
-#         response = HttpResponse(content_type='text/csv')
-#         response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
-
-#         # Write CSV content
-#         writer = csv.writer(response)
-#         writer.writerow([ 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number'])  # Include 'id' field
-#         for row in data:
-#             writer.writerow([ row['first_name'], row['last_name'], row['email'], row['company_name'], row['customer_type'], row['phone_number']])
-
-#         return response
