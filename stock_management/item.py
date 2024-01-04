@@ -659,8 +659,8 @@ class BulkImportItemsView(CustomAuthenticationMixin, generics.CreateAPIView):
     View to get the listing of all contacts.
     Supports both HTML and JSON response formats.
     """
-    serializer_class = ItemSerializer
-    default_fieldset = ['name', 'category', 'price', 'description', 'units', 'quantity_per_box', 'reference_number']
+    serializer_class = ItemsSerializer
+    default_fieldset = ['item_name','category_id','price', 'units','description',  'quantity_per_box','reference_number',]
     EXCEL = ['xlsx', 'xls', 'ods']
     CSV = ['csv',]
 
@@ -724,6 +724,7 @@ class BulkImportItemsView(CustomAuthenticationMixin, generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         data = request.data.copy()
 
+
         # Create a mapping dictionary from the request data
         mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
         
@@ -745,19 +746,19 @@ class BulkImportItemsView(CustomAuthenticationMixin, generics.CreateAPIView):
 
         items_data_list = []
 
+
         for index, row in df.iterrows():
             items_data = {}
             for key, value in mapping_dict.items():
                 items_data[key] = row[value]
 
             items_data_list.append(items_data)
+            print(items_data
+                  )
 
 
-        # except Exception as e:
-            #     # Handle exceptions, e.g., database error, validation error
-            #     messages.error(request, f"Error: {str(e)}")
-            #     return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
-
-            # # Continue with your post logic
-            # # For now, redirecting to 'item_list' after handling the request
-            # return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
+        serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request, 'vendor_id': kwargs['vendor_id']})
+        if serializer.is_valid():
+            serializer.save()
+        return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
+        

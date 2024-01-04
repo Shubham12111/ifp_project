@@ -10,6 +10,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 
+from django.shortcuts import get_object_or_404
+
 class CustomFileValidator(FileExtensionValidator):
     def __init__(self, allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS, *args, **kwargs):
         super().__init__(allowed_extensions, *args, **kwargs)
@@ -276,3 +278,57 @@ class ItemUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item  
     fields = ('upload_item')  
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['name', ]
+
+
+# class ItemsSerializer(serializers.ModelSerializer):
+#     category = CategorySerializer()
+
+#     class Meta:
+#         model = Item
+#         fields = ['item_name', 'category', 'price', 'description', 'units', 'quantity_per_box', 'reference_number']
+
+#     def validate_category(self, value):
+#         category_data = value
+#         category_name = category_data.get('name')
+
+#         if category_name:
+#             try:
+#                 category_instance = Category.objects.get(name=category_name)
+#             except Category.DoesNotExist:
+#                 raise serializers.ValidationError(f"Category with name '{category_name}' does not exist.")
+
+#             category_data['id'] = category_instance.id
+
+#         return category_data
+        
+
+class ItemsSerializer(serializers.ModelSerializer):
+
+    category_id = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+
+    class Meta:
+        model = Item
+        fields = ['item_name', 'category_id', 'price', 'description', 'units', 'quantity_per_box', 'reference_number']
+    
+    def validate_category_id(self, value):
+        try:
+            category_instance = get_object_or_404(Category, name=value)
+            return category_instance
+        except Exception as e:
+            raise serializers.ValidationError(f"Category with name '{value}' does not exist.")
+    
+    def validate(self, attrs):
+        request = self.context.get('request')
+
+        attrs['user_id'] = request.user
+        attrs['vendor_id'] = Vendor.objects.get(id=self.context['vendor_id'])
+
+        return super().validate(attrs)
+    
+        
