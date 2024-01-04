@@ -19,7 +19,7 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.http import HttpResponseRedirect
 from infinity_fire_solutions.utils import docs_schema_response_new
 from django.views import View
-from dal import autocomplete
+
 
 
 
