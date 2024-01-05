@@ -34,91 +34,82 @@
                                 {% csrf_token %}
                               <div class="modal-body">
                                   <div class="mb-3">
-                                      <label for="formFile" class="form-label">Items file</label>
                                       <input class="form-control" type="file" id="formFile" name="excel_file">
                                   </div>
                                   <div class="d-none" id="mapping_key_values">
-                                      <ul>
-                                          <li class="row g-3 align-items-center mt-3">
-                                              <div class="col-auto">
-                                                  <label for="item_name" class="col-form-label">Name</label>
-                                              </div>
-                                              <div class="col-auto">
-                                                  <select class="form-select" aria-label="Default select example" type="radio"
-                                                      name="item_name" id="mappings">
-                                                      <option selected>Open this select menu</option>
-                                                  </select>
-                                              </div>
-                                          </li>
-                                          <li class="row g-3 align-items-center mt-3">
-                                              <div class="col-auto">
-                                                  <label for="category_id" class="col-form-label">Category</label>
-                                              </div>
-                                              <div class="col-auto">
-                                                  <select class="form-select" aria-label="Default select example" type="radio"
-                                                      name="category_id" id="mappings">
-                                                      <option selected>Open this select menu</option>
-                                                  </select>
-                                              </div>
-                                          </li>
-                                          <li class="row g-3 align-items-center mt-3">
-                                              <div class="col-auto">
-                                                  <label for="price" class="col-form-label">Price</label>
-                                              </div>
-                                              <div class="col-auto">
-                                                  <select class="form-select" aria-label="Default select example" type="radio"
-                                                      name="price" id="mappings">
-                                                      <option selected>Open this select menu</option>
-                                                  </select>
-                                              </div>
-                                          </li>
-                                          <li class="row g-3 align-items-center mt-3">
-                                              <div class="col-auto">
-                                                  <label for="description" class="col-form-label">Description</label>
-                                              </div>
-                                              <div class="col-auto">
-                                                  <select class="form-select" aria-label="Default select example" type="radio"
-                                                      name="description" id="mappings">
-                                                      <option selected>Open this select menu</option>
-                                                  </select>
-                                              </div>
-                                          </li>
-                                          <li class="row g-3 align-items-center mt-3">
-                                              <div class="col-auto">
-                                                  <label for="units" class="col-form-label">Units</label>
-                                              </div>
-                                              <div class="col-auto">
-                                                  <select class="form-select" aria-label="Default select example" type="radio"
-                                                      name="units" id="mappings">
-                                                      <option selected>Open this select menu</option>
-                                                  </select>
-                                              </div>
-                                          </li>
-                                          <li class="row g-3 align-items-center mt-3">
-                                              <div class="col-auto">
-                                                  <label for="quantity_per_box" class="col-form-label">Quantity Per
-                                                      Box</label>
-                                              </div>
-                                              <div class="col-auto">
-                                                  <select class="form-select" aria-label="Default select example" type="radio"
-                                                      name="quantity_per_box" id="mappings">
-                                                      <option selected>Open this select menu</option>
-                                                  </select>
-                                              </div>
-                                          </li>
-                                          <li class="row g-3 align-items-center mt-3">
-                                              <div class="col-auto">
-                                                  <label for="reference_number" class="col-form-label">Reference
-                                                      Number</label>
-                                              </div>
-                                              <div class="col-auto">
-                                                  <select class="form-select" aria-label="Default select example" type="radio"
-                                                      name="reference_number" id="mappings">
-                                                      <option selected>Open this select menu</option>
-                                                  </select>
-                                              </div>
-                                          </li>
-                                      </ul>
+                                      <div class="container">
+                                <div class="row mt-3">
+                                    <div class="col text-start">
+                                        <label for="item_name" class="col-form-label text-start">Name:</label>
+                                    </div>
+                                    <div class="col">
+                                        <select class="form-select" aria-label="Default select example" type="radio" name="item_name" id="mappings">
+                                            <option selected>Open this select menu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col text-start">
+                                        <label for="category_id" class="col-form-label text-start">Category:</label>
+                                    </div>
+                                    <div class="col">
+                                        <select class="form-select" aria-label="Default select example" type="radio" name="category_id" id="mappings">
+                                            <option selected>Open this select menu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col text-start">
+                                        <label for="price" class="col-form-label text-start">Price:</label>
+                                    </div>
+                                    <div class="col">
+                                        <select class="form-select" aria-label="Default select example" type="radio" name="price" id="mappings">
+                                            <option selected>Open this select menu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col text-start">
+                                        <label for="description" class="col-form-label text-start">Description:</label>
+                                    </div>
+                                    <div class="col">
+                                        <select class="form-select" aria-label="Default select example" type="radio" name="description" id="mappings">
+                                            <option selected>Open this select menu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col text-start">
+                                        <label for="units" class="col-form-label text-start">Units:</label>
+                                    </div>
+                                    <div class="col">
+                                        <select class="form-select" aria-label="Default select example" type="radio" name="units" id="mappings">
+                                            <option selected>Open this select menu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col text-start">
+                                        <label for="quantity_per_box" class="col-form-label text-start">Quantity Per Box:</label>
+                                    </div>
+                                    <div class="col">
+                                        <select class="form-select" aria-label="Default select example" type="radio" name="quantity_per_box" id="mappings">
+                                            <option selected>Open this select menu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col text-start">
+                                        <label for="reference_number" class="col-form-label text-start">Reference Number:</label>
+                                    </div>
+                                    <div class="col">
+                                        <select class="form-select" aria-label="Default select example" type="radio" name="reference_number" id="mappings">
+                                            <option selected>Open this select menu</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
                                   </div>
                               </div>
                               <div class="modal-footer">

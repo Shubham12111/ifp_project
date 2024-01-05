@@ -286,28 +286,6 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['name', ]
 
 
-# class ItemsSerializer(serializers.ModelSerializer):
-#     category = CategorySerializer()
-
-#     class Meta:
-#         model = Item
-#         fields = ['item_name', 'category', 'price', 'description', 'units', 'quantity_per_box', 'reference_number']
-
-#     def validate_category(self, value):
-#         category_data = value
-#         category_name = category_data.get('name')
-
-#         if category_name:
-#             try:
-#                 category_instance = Category.objects.get(name=category_name)
-#             except Category.DoesNotExist:
-#                 raise serializers.ValidationError(f"Category with name '{category_name}' does not exist.")
-
-#             category_data['id'] = category_instance.id
-
-#         return category_data
-        
-
 class ItemsSerializer(serializers.ModelSerializer):
 
     category_id = serializers.CharField(required=True, allow_null=False, allow_blank=False)
