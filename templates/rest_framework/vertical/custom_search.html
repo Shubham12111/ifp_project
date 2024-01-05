@@ -26,6 +26,7 @@
 }
 .input-group {
     position: relative; /* Allow positioning of child elements */
+    border-right: 1px solid #ccc; /* Add border */
 }
 
 .input-group-icon {
@@ -33,6 +34,9 @@
     top: 50%;
     transform: translateY(-50%); /* Center the icon vertically */
     right: 15px; /* Adjust right spacing as needed */
+    font-size: 10px;
+    font-weight: bold;
+
 }
 </style>
 
@@ -116,7 +120,6 @@
             console.log('Converted value:', convertedValue, typeof convertedValue); // Log the type of the converted value
             $("#id_module").val(convertedValue); // Convert to integer
             moduleInput.val(ui.item.label); // Display the name in the input
-            moduleInput.prop("readonly", true); // Make input read-only after selection
             return false;
           }
 
@@ -136,7 +139,7 @@
             console.log('Selected item:', ui.item);
             $("#id_contact_type").val(parseInt(ui.item.value)); // Convert to integer
             contactInput.val(ui.item.label); // Display the name in the input
-            contactInput.prop("readonly", true); // Make input read-only after selection
+            // Make the field non-editable
             return false;
         }
       });

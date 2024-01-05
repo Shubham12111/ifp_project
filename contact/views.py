@@ -19,7 +19,8 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.http import HttpResponseRedirect
 from infinity_fire_solutions.utils import docs_schema_response_new
 from django.views import View
-
+import csv
+from django.utils.encoding import smart_str
 
 
 
@@ -33,9 +34,6 @@ class ContacttypeAutocomplete(View):
         return JsonResponse(results, safe=False)
 
 
-from django.views import View
-import csv
-from django.utils.encoding import smart_str
 class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     View to get the listing of all contacts.
@@ -220,6 +218,20 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        # Check if 'contact_type' is empty in the request data
+        if not request.data.get('contact_type'):
+            # Create the serializer instance without saving it to the database
+            serializer = self.serializer_class(data=request.data)
+
+            # Check if the serializer is valid before accessing .data
+            if serializer.is_valid():
+                context = {'serializer': serializer}
+            else:
+                context = {'serializer': serializer, 'error_message': "Invalid data. Please review the below information."}
+
+            return render_html_response(context, self.template_name)
+
 
         message = "your contact has been added successfully."
         serializer = self.serializer_class(data=request.data)
@@ -312,6 +324,11 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             instance = self.get_queryset()
             if instance:
                 serializer = self.serializer_class(instance=instance, context={'request': request})
+                # Set the initial value for the contact_type field
+                initial_contact_type = instance.contact_type.id if instance.contact_type else None
+                serializer.fields['contact_type'].initial = initial_contact_type
+
+                # Add the serialized data to the context
                 context = {'serializer': serializer, 'instance': instance}
                 return render_html_response(context, self.template_name)
             else:

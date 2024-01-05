@@ -9,6 +9,9 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import gettext_lazy as _
+
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
 import re
@@ -299,6 +302,24 @@ class ContactSerializer(serializers.ModelSerializer):
         if len(value) < 2:
             raise serializers.ValidationError("Last Name should be at least 2 characters long.")
 
+        return value
+    
+
+    def validate_contact_type(self, value):
+        """
+        Validate the Contact Type field.
+        
+        Args:
+            value (str): The value of the Contact Type field.
+
+        Returns:
+            str: The validated Contact Type value.
+
+        Raises:
+            serializers.ValidationError: If the Contact Type is empty.
+        """
+        if not value:
+            raise serializers.ValidationError("Contact Type cannot be empty.")
         return value
     
 
