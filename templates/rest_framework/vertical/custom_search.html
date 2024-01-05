@@ -32,7 +32,7 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%); /* Center the icon vertically */
-    right: 10px; /* Adjust right spacing as needed */
+    right: 15px; /* Adjust right spacing as needed */
 }
 </style>
 
@@ -50,7 +50,9 @@
     <i class="fas fa-chevron-down input-group-icon"></i> </div>
   {% comment %} <input type="text" id="assigned_to_search" name="search" placeholder="Search {{ field.label }}" class="form-control"> {% endcomment %}
   {% elif field.name == 'module' %}
+  <div class="input-group">
   <input type="text" id="module_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <i class="fas fa-chevron-down input-group-icon"></i> </div>
   {% elif field.name == 'priority' %}
   <input type="text" id="priority_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
   {% elif field.name == 'contact_type' %}
