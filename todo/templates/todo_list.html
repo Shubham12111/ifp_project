@@ -325,21 +325,11 @@
     function clearAllFilters() {
       const currentUrl = new URL(window.location.href);
       const queryParams = new URLSearchParams(currentUrl.search);
-      const filterNames = ['status', 'priority', 'module', 'assigned_to', 'dateRange']; // Add dateRange to the filterNames array
+      const filterNames = ['status', 'priority', 'module', 'assigned_to', 'dateRange', 'q']; // Add dateRange to the filterNames array
 
       filterNames.forEach(filterName => {
         queryParams.delete(filterName);
-        if (filterName === 'dateRange') {
-          document.getElementById('reportrange').value = "";
-        }
-
-        else {
-          document.getElementById(`${filterName}Dropdown`).textContent = filterName;
-        }
-
-
       });
-
       window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
       window.location.reload(); // Reload the page after clearing all filters
     }
@@ -347,7 +337,7 @@
 
     // Check URL parameters on page load and update search and filter selections
     window.addEventListener('DOMContentLoaded', function () {
-      const filterNames = ['status', 'priority', 'module', 'assigned_to', 'dateRange'];
+      const filterNames = ['status', 'priority', 'module', 'assigned_to', 'dateRange', 'q'];
       filterNames.forEach(filterName => {
         const filterValue = new URLSearchParams(window.location.search).get(filterName);
 

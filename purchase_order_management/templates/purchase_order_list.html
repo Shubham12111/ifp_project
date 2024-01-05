@@ -61,13 +61,13 @@
               <tbody class="ml-4">
                 {% for order in orders %}
                 <tr class="text-sm">
-                  <td>{{order.po_number}}</a></td>
-                  <td>{{order.vendor_id.first_name|default:''|truncatechars:20|title}}
+                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.po_number}}</a></td>
+                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.vendor_id.first_name|default:''|truncatechars:20|title}}
                     {{order.vendor_id.last_name|default:''|truncatechars:20|title}}</a></td>
-                  <td>{{order.inventory_location_id.name}}</td>
-                  <td>{{order.total_amount}}</td>
-                  <td>{{order.created_at|date:"d/m/Y "}}</td>
-                  <td>{{order.status}}</td>
+                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.inventory_location_id.name}}</a></td>
+                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.total_amount}}</a></td>
+                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.created_at|date:"d/m/Y "}}</a></td>
+                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.status}}</a></td>
                     <td>
                       <div class="dropstart ms-auto pe-0">
                         <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
@@ -334,7 +334,7 @@
     function clearAllFilters() {
       const currentUrl = new URL(window.location.href);
       const queryParams = new URLSearchParams(currentUrl.search);
-      const filterNames = ['vendor', 'location', 'status'];
+      const filterNames = ['vendor', 'location', 'status', 'q'];
 
       filterNames.forEach(filterName => {
         queryParams.delete(filterName);
