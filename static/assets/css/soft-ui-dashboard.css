@@ -37558,13 +37558,13 @@ ul.pagination > li.page-item:last-child{
   }
 }
 
-@media screen and (min-width: 1880px) {
+@media screen and (min-width: 1580px) {
   #table-search-bar-form-row {
     width: 25% !important;
   }
 }
 
-@media screen and (min-width: 768px) and (max-width: 1879px) {
+@media screen and (min-width: 768px) and (max-width: 1579px) {
   #table-search-bar-form-row {
     width: 50% !important;
   }
