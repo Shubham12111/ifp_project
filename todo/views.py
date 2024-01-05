@@ -280,15 +280,15 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         # id_assign_type = request.data.get('id_assign_type')  # Ensure that this field is correctly sent in the request payload
         # assign_type_obj = User.objects.get(pk=id_assign_type) if id_assign_type else None
-        # id_module = request.data.get('id_module')
+        id_module = request.data.get('id_module')
         # print("contact type is:",id_assign_type)
-        # print("module id:",id_module)
-        # module_obj = Module.objects.get(pk=id_module)
+        print("module id:",id_module)
+        module_obj = Module.objects.get(pk=id_module)
 
         # breakpoint()
         if serializer.is_valid():
             serializer.validated_data['user_id'] = request.user
-            # serializer.validated_data['module'] = module_obj
+            serializer.validated_data['module'] = module_obj
             # serializer.validated_data['assigned_to'] = assign_type_obj
             serializer.save()
             message = "Your Task has been saved successfully!"
@@ -417,6 +417,15 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             # If the todo instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():
+                id_module = request.data.get('id_module')
+
+            # If contact_type_id is provided, fetch the corresponding object
+                if id_module:
+                    try:
+                        module_obj = Module.objects.get(id=id_module)
+                        serializer.validated_data['module'] = module_obj  # Assign the object to serializer data
+                    except Module.DoesNotExist:
+                        serializer.errors['module'] = "Invalid module"  # Add error message if not found
                 # If the serializer data is valid, save the updated todo instance.
                 serializer.save()
                 message = "Your TODO has been updated successfully!"
