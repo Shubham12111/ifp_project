@@ -37532,7 +37532,11 @@ ul.pagination > li.page-item:last-child{
   font-size: 0.65rem;
 }
 
-.table{
+.table.table-hover tbody tr{
+  cursor: pointer !important;
+}
+
+.table.table-hover{
   border-collapse: collapse !important;
 }
 
@@ -37551,6 +37555,24 @@ ul.pagination > li.page-item:last-child{
 @media screen and (min-width: 1200px){
   #sidenav-main{
     overflow-y: hidden;
+  }
+}
+
+@media screen and (min-width: 1880px) {
+  #table-search-bar-form-row {
+    width: 25% !important;
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1879px) {
+  #table-search-bar-form-row {
+    width: 50% !important;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  #table-search-bar-form-ro {
+    width: 100% !important;
   }
 }
 /*# sourceMappingURL=dashboard-pro.css.map */

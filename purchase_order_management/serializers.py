@@ -47,10 +47,10 @@ class InventoryLocationSerializer(serializers.ModelSerializer):
         # Combine address components into a single string
         address_components = [
             instance.address,
-            instance.town.name,
-            instance.county.name,
+            instance.town,
+            instance.county,
             instance.post_code,
-            instance.country.name
+            instance.country
         ]
         full_address = ', '.join(filter(None, address_components))  # Join non-empty components with ', '
 

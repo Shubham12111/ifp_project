@@ -12,12 +12,12 @@ class TodoListSerializer(serializers.ModelSerializer):
         fields = ('id','module', 'assigned_to', 'title', 'description','priority', 'start_date', 'end_date', )
     
 class TodoAddSerializer(serializers.ModelSerializer):
-    module = serializers.PrimaryKeyRelatedField(
+    module = serializers.CharField(
         label=('Module'),
         required=True,
-        queryset=Module.objects.all(),
+        # queryset=Module.objects.all(),
         style={
-            'base_template': 'custom_select.html',
+            'base_template': 'custom_search.html',
             'custom_class':'col-6'
         },
     )
@@ -53,7 +53,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         queryset=User.objects.none(),
         style={
             'base_template': 'custom_select.html',
-            'custom_class':'col-6'
+            'custom_class':'col-6 autocomplete'
         },
     )
     

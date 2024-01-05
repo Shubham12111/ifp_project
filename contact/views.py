@@ -21,32 +21,17 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 from django.views import View
 
 
-# class ContacttypeAutocomplete(View):
-#     def get(self, request):
-#         query = request.GET.get('term', '')
-#         contact_type = ContactType.objects.filter(Q(name__icontains=query))[:10]
-#         results = [{'id': type.pk, 'name': type.name} for type in contact_type]
-#         return JsonResponse(results, safe=False)
-    
-# class ConversationtypeAutocomplete(View):
-#     def get(self, request):
-#         query = request.GET.get('term', '')
-#         conversation_type =ConversationType.objects.filter(Q(name__icontains=query))[:10]
-#         print(conversation_type)
-#         results = [type.name for type in conversation_type]
-#         return JsonResponse(results, safe=False)
-    
-# class PostcodeChoicesAutocomplete(View):
-#     def get(self, request):
-#         query = request.GET.get('term', '')
-#         # Filter choices based on the post_code field of the Contact model
-#         choices_queryset = Contact.objects.filter(post_code__icontains=query)[:10]
-#         print(choices_queryset)
-#         choices = list(choices_queryset.values_list('post_code', flat=True))
-#         return JsonResponse(choices, safe=False)
-    
 
-    
+
+
+class ContacttypeAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        contact_types = ContactType.objects.filter(Q(name__icontains=query))[:10]
+        # Create a list of dictionaries containing both name and primary key
+        results = [{'label': type.name, 'value': type.id} for type in contact_types]
+        return JsonResponse(results, safe=False)
+
 
 from django.views import View
 import csv
@@ -239,9 +224,16 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         message = "your contact has been added successfully."
         serializer = self.serializer_class(data=request.data)
         
+        contact_type_id = request.data.get('id_contact_type')
+        print("contact type is:",contact_type_id)
+        contact_type_obj = ContactType.objects.get(pk=contact_type_id)
+        
         if serializer.is_valid():
+            # Use the provided contact_type_id to set the contact_type field
             serializer.validated_data['user_id'] = request.user  # Assign the current user instance
+            serializer.validated_data['contact_type'] = contact_type_obj
             serializer.save()
+           
 
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
@@ -372,6 +364,15 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             serializer = self.serializer_class(instance=instance, data=data)
             print(data,"data")
             if serializer.is_valid():
+                contact_type_id = request.data.get('id_contact_type')
+
+            # If contact_type_id is provided, fetch the corresponding object
+                if contact_type_id:
+                    try:
+                        contact_type_obj = ContactType.objects.get(id=contact_type_id)
+                        serializer.validated_data['contact_type'] = contact_type_obj  # Assign the object to serializer data
+                    except ContactType.DoesNotExist:
+                        serializer.errors['contact_type'] = "Invalid contact type"  # Add error message if not found
                 # If the serializer data is valid, save the updated contact instance.
                 serializer.save()
                 message = "Your Contact has been updated successfully!"
