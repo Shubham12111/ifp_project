@@ -6,7 +6,7 @@ from employee_management.models import EmployeeUser
 
 class EmployeeAdmin(UserAdmin):
 
-    list_display = ('email', 'first_name', 'last_name', 'is_active', 'last_login')
+    list_display = ('email', 'first_name', 'last_name', 'is_active', 'roles', 'last_login')
     search_fields = ('email', 'first_name', 'last_name')
     search_help_text = 'Search Employee by: Email, First Name, Last Name'
     ordering = ('email',)
