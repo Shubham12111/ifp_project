@@ -52,7 +52,7 @@ class CheckAdminUserMiddleware:
             HttpResponse: The response object for the request.
         """
         if not request.path.startswith('/admin/') and not request.path.startswith('/favicon.ico'):
-            if request.user.is_authenticated and all( [not request.user.is_superuser, not request.user.is_staff] ):
+            if request.user.is_authenticated and any( [request.user.is_superuser, request.user.is_staff] ):
                 # If the user is authenticated and is a superuser, log them out and redirect to the login page.
                 logout(request)
                 return redirect('login')
