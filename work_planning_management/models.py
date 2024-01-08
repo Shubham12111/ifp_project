@@ -285,7 +285,7 @@ class JobDocument(models.Model):
 class Events(models.Model):
     name = models.CharField(max_length=255,null=True,blank=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True, blank=True)
-    members = models.ManyToManyField(Member,null=True, blank=True)
+    members = models.ManyToManyField(Member, blank=True)
     start = models.DateTimeField(null=True,blank=True)
     end = models.DateTimeField(null=True,blank=True)
     description = models.TextField(null=True,blank=True)
