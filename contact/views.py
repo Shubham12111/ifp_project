@@ -683,6 +683,10 @@ class ConversationCommentView(generics.DestroyAPIView):
 class ExportCSVView(View):
     def get(self, request, *args, **kwargs):
         selected_ids_str = request.GET.get('stw_ids', '')
+        if not selected_ids_str:
+            messages.error(request, 'No Row was selected to export the data, Please selecte a row and try again.')
+            return redirect('contact_list')
+
         selected_ids = selected_ids_str.split(',') if selected_ids_str else []
 
         # Fetch the selected data from the database
