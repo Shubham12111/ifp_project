@@ -123,12 +123,11 @@ WSGI_APPLICATION = 'infinity_fire_solutions.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'datab2',
-        'USER': 'root',
-        'PASSWORD': 'Tanya@123',
-        'HOST': '127.0.0.1',
-        'HOST': 'localhost', # or 'localhost' if MySQL is running on the same machine as Django
-        'PORT': '3306', # default port is usually 3306
+        'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
+        'USER': os.environ.get('DB_USER', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': '3306',
     }
 }
 
@@ -188,7 +187,8 @@ FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
 STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
 # STATIC_URL = '/static/'
-# # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
 
 
 # STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
@@ -251,7 +251,4 @@ requires_system_checks = [
     # ... other checks ...
 ]
 
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION')
 

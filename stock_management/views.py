@@ -799,7 +799,10 @@ class VendorPurchaseOrderListView(View):
 class ExportCSVView(View):
     def get(self, request, *args, **kwargs):
         selected_ids_str = request.GET.get('stw_ids', '')
-        print(selected_ids_str)
+        if not selected_ids_str:
+            messages.error(request, 'No Row was selected to export the data, Please selecte a row and try again.')
+            return redirect('vendor_list')
+        
         selected_ids = selected_ids_str.split(',') if selected_ids_str else []
 
         # Fetch the selected data from the database

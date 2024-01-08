@@ -735,8 +735,13 @@ class BillingAddressInfoView(CustomAuthenticationMixin, APIView):
 
 class ExportCSVView(View):
     def get(self, request, *args, **kwargs):
-        stw_ids = request.GET.get('stw_ids', '').split(',')
-        stw_ids = [int(id_) for id_ in stw_ids if id_.isdigit()]
+        stw_ids = request.GET.get('stw_ids', '')
+        if not stw_ids:
+            messages.error(request, 'No Row was selected to export the data, Please selecte a row and try again.')
+            return redirect('customer_list')
+        
+        selected_ids = stw_ids.split(',') if stw_ids else []
+        stw_ids = [int(id_) for id_ in selected_ids if id_.isdigit()]
 
         # Fetch data efficiently using select_related
         user_data = User.objects.filter(id__in=stw_ids).select_related('billingaddress').values(
