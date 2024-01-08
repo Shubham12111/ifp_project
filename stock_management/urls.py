@@ -44,8 +44,7 @@ urlpatterns = [
    path('vendor/contact_person/delete/<int:vendor_id>/<int:contact_id>/', VendorRemoveContactPersonView.as_view(), name='vendor_contact_person_delete'),
 
    path('vendor/remarks/<int:vendor_id>/',VendorRemarkView.as_view(), name='vendor_remarks'),
-   
-   
+   path('vendor/purchase-orders/<int:vendor_id>/', VendorPurchaseOrderListView.as_view(), name='vendor_purchase_order_list'),
    
    path('inventory_location/serach/', InventoryLocationSearchAPIView.as_view(), name='inventory_location_search'),
    path('inventory_location/list/', InventoryLocationListView.as_view(), name='inventory_location_list'),
@@ -53,5 +52,6 @@ urlpatterns = [
    path('inventory_location/edit/<int:inventory_location_id>/', InventoryLocationUpdateView.as_view(), name='inventory_location_edit'),
    path('inventory_location/delete/<int:inventory_location_id>/', InventoryLocationDeleteView.as_view(), name='inventory_location_delete'),
 
+   path('export_csv/', ExportCSVView.as_view(), name='export_csv'),
 
 ]
