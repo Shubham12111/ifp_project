@@ -40,14 +40,14 @@ class CustomUserAdmin(UserAdmin):
         (None, {'fields': ('email', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'last_name',)}),
         ('Address', {'fields': ('town', 'county','country','post_code','created_by')}),
-        ('Permissions', {'fields': ('is_active','roles','enforce_password_change')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'roles','enforce_password_change', 'groups')}),
 
     )
     
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'roles'),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'roles', 'is_staff'),
         }),
     )
     autocomplete_fields = ['roles',]
@@ -86,5 +86,5 @@ class InfinityLogsAdmin(admin.ModelAdmin):
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(InfinityLogs,InfinityLogsAdmin)
 admin.site.register(UserRole, UserRoleAdmin)
-admin.site.register(UserRolePermission)
+# admin.site.register(UserRolePermission)
 admin.site.unregister(Group)
