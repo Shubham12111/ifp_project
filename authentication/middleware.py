@@ -51,14 +51,14 @@ class CheckAdminUserMiddleware:
         Returns:
             HttpResponse: The response object for the request.
         """
-        if not request.path.startswith('/admin/'):
-            if request.user.is_authenticated and request.user.is_superuser:
+        if not request.path.startswith('/admin/') and not request.path.startswith('/favicon.ico'):
+            if request.user.is_authenticated and all( [not request.user.is_superuser, not request.user.is_staff] ):
                 # If the user is authenticated and is a superuser, log them out and redirect to the login page.
                 logout(request)
                 return redirect('login')
         else:
-            if request.path.startswith('/admin/'):
-                if request.user.is_authenticated and not request.user.is_superuser:
+            if request.path.startswith('/admin/') or request.path.startswith('/favicon.ico'):
+                if request.user.is_authenticated and all( [not request.user.is_superuser, not request.user.is_staff] ):
                     # If the user is authenticated and is not a superuser, log them out.
                     logout(request)
 
@@ -107,7 +107,7 @@ class ForcePasswordChangeBackend:
             HttpResponse: The response object for the request.
         """
         # Define a list of URL paths that should bypass password change enforcement
-        if not request.path.startswith('/admin/'):
+        if not request.path.startswith('/admin/') and not request.path.startswith('/favicon.ico'):
             allowed_paths = [
                 reverse('login'),
                 reverse('signup'),

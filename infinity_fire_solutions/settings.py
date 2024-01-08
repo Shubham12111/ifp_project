@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'stock_management',
     'purchase_order_management',
     'work_planning_management',
+    'employee_management',
     'drf_api_logger',
     'django_user_agents',
     'django_admin_listfilter_dropdown',
