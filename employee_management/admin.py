@@ -17,14 +17,14 @@ class EmployeeAdmin(UserAdmin):
         (None, {'fields': ('email', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'last_name',)}),
         ('Address', {'fields': ('town', 'county','country','post_code','created_by')}),
-        ('Permissions', {'fields': ('is_active','roles','enforce_password_change')}),
+        ('Permissions', {'fields': ('is_employee', 'is_active','roles','enforce_password_change')}),
 
     )
     
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'roles'),
+            'fields': ('email', 'password1', 'password2', 'first_name', 'last_name', 'roles', 'is_employee'),
         }),
     )
     autocomplete_fields = ['roles',]
@@ -39,19 +39,12 @@ class EmployeeAdmin(UserAdmin):
         qs = self.model._default_manager.get_queryset()
         
         # add a filter to check if the user is the employee or not.
-        # qs = qs.filter(is_employee=True)
+        qs = qs.filter(is_superuser=False)
 
         # TODO: this should be handled by some parameter to the ChangeList.
         ordering = self.get_ordering(request)
         if ordering:
             qs = qs.order_by(*ordering)
         return qs
-    
-    def has_module_permission(self, request: HttpRequest) -> bool:
-        if request.user.is_superuser:
-            return super().has_module_permission(request)
-        if request.user.is_staff:
-            return True
-        else: False
 
 admin.site.register(EmployeeUser, EmployeeAdmin)

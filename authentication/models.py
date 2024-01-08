@@ -182,6 +182,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    is_employee = models.BooleanField(default=False)
     
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     address = models.CharField(max_length=255,null=True,blank=True)
