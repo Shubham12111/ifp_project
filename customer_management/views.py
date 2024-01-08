@@ -23,6 +23,10 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 from customer_management.constants import POST_CODES_INFO
 
 from django.contrib.auth.hashers import make_password
+from django.views import View
+from django.http import HttpResponse
+import csv
+from .models import User, BillingAddress
 
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -727,3 +731,40 @@ class BillingAddressInfoView(CustomAuthenticationMixin, APIView):
         serialize = self.serializer_class(data=data)
         serialize.is_valid(raise_exception=True)
         return Response({"data": serialize.data})
+
+
+class ExportCSVView(View):
+    def get(self, request, *args, **kwargs):
+        stw_ids = request.GET.get('stw_ids', '')
+        if not stw_ids:
+            messages.error(request, 'No Row was selected to export the data, Please selecte a row and try again.')
+            return redirect('customer_list')
+        
+        selected_ids = stw_ids.split(',') if stw_ids else []
+        stw_ids = [int(id_) for id_ in selected_ids if id_.isdigit()]
+
+        # Fetch data efficiently using select_related
+        user_data = User.objects.filter(id__in=stw_ids).select_related('billingaddress').values(
+            'id', 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number',
+            'billingaddress__vat_number', 'billingaddress__tax_preference', 'billingaddress__address', 'billingaddress__country',
+            'billingaddress__town', 'billingaddress__county', 'billingaddress__post_code'
+        )
+
+        # Create CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'id', 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number',
+            'vat_number_billing', 'tax_preference_billing', 'address_billing', 'country_billing',
+            'town_billing', 'county_billing', 'post_code_billing'
+        ])
+
+        for row in user_data:
+            writer.writerow([row[field] for field in row])  # Write all fields, handling potential None values
+
+        return response
+
+
+
