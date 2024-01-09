@@ -193,10 +193,11 @@ class ContactSerializer(serializers.ModelSerializer):
         }
     )
     
-    contact_type = serializers.CharField(
+    contact_type = serializers.SlugRelatedField(
+        slug_field='name',
         label=('Contact Type'),
         required=True,
-        # queryset=ContactType.objects.all(),
+        queryset=ContactType.objects.all(),
         style={
             'base_template': 'custom_search.html',
             'custom_class': 'col-6 autocomplete',
@@ -206,6 +207,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "required": "This field is required.",
             "blank": "Contact Type field cannot be blank.",
             "invalid": "Contact Type can only contain characters.",
+            'does_not_exist': _('Contact type with {slug_name}, {value} does not exist.'),
 
         },
     )

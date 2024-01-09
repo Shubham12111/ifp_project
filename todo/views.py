@@ -278,19 +278,8 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
         serializer = self.serializer_class(data=request.data,context={'request': request})
         
-        # id_assign_type = request.data.get('id_assign_type')  # Ensure that this field is correctly sent in the request payload
-        # assign_type_obj = User.objects.get(pk=id_assign_type) if id_assign_type else None
-        id_module = request.data.get('id_module')
-        # print("contact type is:",id_assign_type)
-        print("module id:",id_module)
-        module_obj = Module.objects.get(pk=id_module)
-
-        # breakpoint()
         if serializer.is_valid():
-            serializer.validated_data['user_id'] = request.user
-            serializer.validated_data['module'] = module_obj
-            # serializer.validated_data['assigned_to'] = assign_type_obj
-            serializer.save()
+            serializer.save(user_id=request.user)
             message = "Your Task has been saved successfully!"
             status_code = status.HTTP_201_CREATED
 
