@@ -7,6 +7,8 @@ urlpatterns = [
    path('add/', PurchaseOrderAddView.as_view(), name='purchase_order_add'),
    path('get_vendor_data/', get_vendor_data, name='get_vendor_data'),
    path('inventory_location/', get_inventory_location_data, name='get_inventory_location_data'),
+   path('site_address/', get_site_address, name='site_address'),
+
    path('edit/<int:purchase_order_id>/', PurchaseOrderUpdateView.as_view(), name='purchase_order_edit'),
    # path('delete/<int:purchase_order_id>/', PurchaseDeleteView.as_view(), name='purchase_order_delete'),
    

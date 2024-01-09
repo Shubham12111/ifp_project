@@ -7,6 +7,7 @@ from infinity_fire_solutions.custom_form_validation import *
 from django.conf import settings
 from stock_management.models import Item
 from django.utils.translation import gettext as _
+from authentication.models import User
 
 
 def validate_non_negative(value):
@@ -77,7 +78,7 @@ class PurchaseOrderListSerializer(serializers.ModelSerializer):
     
 class PurchaseOrderSerializer(serializers.ModelSerializer):
     inventory_location_id = serializers.PrimaryKeyRelatedField(
-        required=True,
+        required=False,
         queryset=InventoryLocation.objects.all(),
         error_messages={
             "required": "This field is required.",
@@ -97,7 +98,28 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         },
     )
     
+    user_id = serializers.PrimaryKeyRelatedField(
+        required=False,
+        queryset=User.objects.all(),
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Inventory Location is required.",
+            "incorrect_type":"Inventory Location is required.",
+            "null": "Inventory Location is required."
+        },
+    )
 
+    site_address = serializers.SlugRelatedField(
+        slug_field='site_name',
+        required=False,
+        queryset=SiteAddress.objects.all(),
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Inventory Location is required.",
+            "incorrect_type":"Inventory Location is required.",
+            "null": "Inventory Location is required."
+        },
+    )
     file = serializers.FileField(
     required=False,
     validators=[file_extension_validator, validate_file_size],
@@ -120,7 +142,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PurchaseOrder
-        fields = ['vendor_id', 'inventory_location_id',  'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file']
+        fields = ['vendor_id', 'inventory_location_id',  'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file', 'user_id','site_address']
 
 
     def validate_sub_total(self, value):

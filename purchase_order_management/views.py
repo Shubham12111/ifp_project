@@ -37,6 +37,7 @@ from stock_management.models import Inventory
 import json
 from rest_framework.response import Response
 from common_app.models import *
+from customer_management.serializers import SiteAddressSerializer
 
 def po_number_generated():
     """
@@ -222,6 +223,25 @@ def get_inventory_location_data(request):
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+
+def get_site_address(request):
+    if request.method == "GET":
+        customer_id = request.GET.get("customer_id")
+
+        try:
+            # Retrieve InventoryLocation data using the vendor_id
+            site_address_data = SiteAddress.objects.filter(user_id__id=customer_id)
+            serializer = SiteAddressSerializer(site_address_data, many=True)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                message="Site Address data",
+                                 data=serializer.data)
+            
+        except Vendor.DoesNotExist:
+            return JsonResponse({"error": "Site Address not found OR You are not authorized to perform this action."}, status=404)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
 def filter_purchase_order(data_access_value, user):
     # Define a mapping of data access values to corresponding filters.
     filter_mapping = {
@@ -322,7 +342,8 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         vendor_list = Vendor.objects.all()
         inventory_location_list = InventoryLocation.objects.all()
         tax_rate = AdminConfiguration.objects.all().first()
-
+        customer_list = User.objects.all()
+        site_address = PurchaseOrder.objects.all()
         
            
         if request.accepted_renderer.format == 'html':
@@ -330,6 +351,8 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             
             context = {'vendor_list':vendor_list, 
                        'inventory_location_list':inventory_location_list,
+                        'customer_list': customer_list,
+                        'site_address': site_address,
                        'tax_rate':tax_rate,
                        'new_po_number':po_number_generated()
                        
