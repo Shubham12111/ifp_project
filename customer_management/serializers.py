@@ -9,6 +9,14 @@ from .models import *
 import re
 from customer_management.constants import POST_CODE_LIST
 
+import uuid
+from customer_management.models import SiteAddress
+from django.db import transaction
+from django.core.exceptions import ValidationError
+from decimal import Decimal
+
+from requirement_management.models import *
+from requirement_management.serializers import CustomFileValidator
 
 # Define a serializer for ContactCustomer model
 class ContactCustomerSerializer(serializers.ModelSerializer):
@@ -555,3 +563,232 @@ class PostCodeInfoSerializer(serializers.Serializer):
     town = serializers.CharField(max_length=255)
     county = serializers.CharField(max_length=255)
     country = serializers.CharField(max_length=255)
+
+
+
+
+class SORSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(
+        label=('Name'),
+        max_length=225, 
+        required=True, 
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "Item Name is required.",
+            "blank":"Name is required.",
+        },
+    )
+    description = serializers.CharField(
+        max_length=1000, 
+        required=True, 
+        style={'base_template': 'rich_textarea.html', 'rows': 5},
+        error_messages={
+            "required": "Description is required.",
+            "blank":"Description is required.",
+        },
+        validators=[validate_description]
+    )
+    
+    
+    category_id = serializers.PrimaryKeyRelatedField(
+        label=('Category'),
+        required=False,
+        queryset=SORCategory.objects.all(),
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-6'
+        },
+    )
+
+    price = serializers.DecimalField(
+        label=('Price ( £ )'),
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "Price is required.",
+            "invalid": "Price is invalid.",  
+            "blank":"Price is required.", 
+            "max_length": "Invalid price and max limit should be 10.",
+        },
+    )
+    
+    reference_number = serializers.CharField(
+        label=('SOR Code'),
+        max_length=50,
+        required=True,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "Reference Number is required.",
+            "invalid": "Reference Number is invalid.",  
+            "blank":"Reference Number is required.", 
+        },
+    )
+    units = serializers.ChoiceField(
+        label=('Units'),
+        choices=UNIT_CHOICES, 
+        required=True,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-6 units'
+        },
+        error_messages={
+            "required": "Units is required.",
+            "invalid": "Units is invalid.",  
+            "blank":"Units is required.", 
+        },
+    )
+    
+    file_list = serializers.ListField(
+        child=serializers.FileField(
+            allow_empty_file=False,
+            validators=[CustomFileValidator()],
+        ),
+        label=('Documents'),  # Adjust the label as needed
+        required=False,
+        initial=[],
+        style={
+            "input_type": "file",
+            "class": "form-control",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_multiple_file.html',
+            'help_text': True,
+            'multiple': True,
+            'accept': ".png, .jpg, .jpeg,",
+            'allow_null': True,  # Allow None values
+        },
+        help_text=('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
+        )
+        
+    class Meta:
+        model = SORItem
+        fields = ['name','reference_number','category_id','price', 'description','units','file_list']
+
+        
+    def validate_price(self, value):
+        # Ensure that the price is not empty or None
+        if value is None:
+            raise ValidationError("Price is required.")
+
+        # Ensure that the price is a valid Decimal with 2 decimal places
+        if not isinstance(value, Decimal) and not isinstance(value, int):
+            raise ValidationError("Price is invalid.")
+
+        # Ensure that the price is not negative
+
+        if value <=0:
+
+            raise ValidationError("Price cannot be negative or zero")
+
+        # Ensure that the price has at most 10 digits in total
+        if len(str(value)) > 10:
+            raise ValidationError("Invalid price, max limit should be 10 digits.")
+
+        # Ensure that the price has at most 2 decimal places
+        if value.as_tuple().exponent < -2:
+            raise ValidationError("Price can have at most 2 decimal places.")
+
+        return value
+
+    def validate_item_name(self, value):
+        # Check for minimum length of 3 characters
+        if len(value) < 3:
+            raise serializers.ValidationError("Item Name must be at least 3 characters long.")
+         # Check if the value consists entirely of digits (integers)
+        if value.isdigit():
+            raise serializers.ValidationError("Item Name cannot consist of only integers.")
+
+        # Check for alphanumeric characters and spaces
+        if not re.match(r'^[a-zA-Z0-9\s]*$', value):
+            raise serializers.ValidationError("Item Name can only contain alphanumeric characters and spaces.")
+
+        return value
+
+    
+    def validate_reference_number(self, value):
+        """
+        Validate that the reference number (SKU) i unique.
+        """
+        if self.instance:
+            reference_number = SORItem.objects.filter(reference_number=value).exclude(id=self.instance.id).exists()
+        else:
+            reference_number = SORItem.objects.filter(reference_number=value).exists()
+        
+        if reference_number:
+            raise serializers.ValidationError("This SOR code is already in Use.")
+        
+        return value
+
+    
+    def create(self, validated_data):
+        # Pop the 'file_list' field from validated_data
+        file_list = validated_data.pop('file_list', None)
+        # Create a new instance of Requirement with other fields from validated_data
+        instance = SORItem.objects.create(**validated_data)
+
+        if file_list and len(file_list) > 0:
+            for file in file_list:
+                # Generate a unique filename for each file
+                unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                upload_file_to_s3(unique_filename, file, f'fra/sor/{instance.id}')
+                file_path = f'fra/sor/{instance.id}/{unique_filename}'
+                
+                # save the Product images
+                SORItemImage.objects.create(
+                sor_id = instance,
+                image_path=file_path,
+                )
+
+        instance.save()
+        return instance
+    
+    def update(self, instance, validated_data):
+        file_list = validated_data.pop('file_list', None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        
+        with transaction.atomic():
+            instance.save()
+
+            # Update associated documents if file_list is provided
+            if file_list and len(file_list) > 0:
+                
+                for file in file_list:
+                    unique_filename = f"{str(uuid.uuid4())}_{file.name}"
+                    upload_file_to_s3(unique_filename, file, f'fra/sor/{instance.id}')
+                    file_path = f'fra/sor/{instance.id}/{unique_filename}'
+                
+                    SORItemImage.objects.create(
+                        sor_id=instance,
+                        image_path=file_path,
+                )
+        
+        return instance
+    
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        document_paths = []
+        if hasattr(instance, 'soritemimage_set'):  # Using 'itemimage_set' for images
+            for document in SORItemImage.objects.filter(sor_id=instance):
+                document_paths.append({
+                    'presigned_url': generate_presigned_url(document.image_path),
+                    'filename': document.image_path.split('/')[-1],
+                    'id': document.id  #  document ID
+                })
+
+        
+        representation['document_paths'] = document_paths
+        return representation
