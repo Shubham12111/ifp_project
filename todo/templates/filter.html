@@ -1,6 +1,6 @@
 <div class="row px-3 mt-3 justify-content-start">
-    <div class="dropdown d-inline me-2 col-auto px-0">
-        <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle mb-0 "
+    <div class="dropdown d-inline me-2 col-auto px-0 mb-2">
+        <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 "
             data-bs-toggle="dropdown" id="statusDropdown">
             <span class="flex-grow-1 text-start custom-search">Status</span>
         </a>
@@ -24,8 +24,8 @@
         </ul>
     </div>
     <!-- priority list filter-->
-    <div class="dropdown d-inline me-2 col-auto px-0">
-        <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle  mb-0 "
+    <div class="dropdown d-inline me-2 col-auto px-0 mb-2">
+        <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 "
             data-bs-toggle="dropdown" id="priorityDropdown">
             Priority
         </a>
@@ -47,8 +47,8 @@
         </ul>
     </div>
     <!-- Assigned list filter-->
-    <div class="dropdown d-inline me-2 col-auto px-0">
-        <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle  mb-0 "
+    <div class="dropdown d-inline me-2 col-auto px-0 mb-2">
+        <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 "
             data-bs-toggle="dropdown" id="assigned_toDropdown">
             Assigned To
         </a>
@@ -71,30 +71,30 @@
     </div>
 
     <!--  Date Range list filter-->
-    <div class="responsive-date-filter d-inline me-2 col-auto px-0" style="width: auto;">
+    <div class="responsive-date-filter d-inline me-2 col-auto px-0 mb-2" style="width: auto;">
         <input type="text" id="reportrange" class="form-control custom-date-search text-uppercase"
             style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;"
             placeholder="Select date range">
     </div>
 
-    <div class="col-auto px-0">
-        <!--end of filter-->
-        <a href="" class="btn bg-gradient-secondary me-3 float-right mb-0 " onclick="clearAllFilters()">
-            Clear Filters
-        </a>
-    </div>
-
-    <div class="d-flex mt-3 mt-md-0 col-auto px-0" id="table-search-bar-form-row">
+    <div class="d-flex mt-0 col-auto px-0 mb-2" id="table-search-bar-form-row">
         <form class="row justify-content-start justify-content-lg-end w-100" method="get" autocomplete="off" id="searchForm">
-            <div class="col-12 text-start text-md-end align-self-center">
+            <div class="col-12 text-start text-md-end align-self-center pe-0">
                 <div class="p-0 d-flex">
                     <input class="form-control me-2" id="searchbar" name="q" type="text" 
                     placeholder="Search{% if search_fields %} by {% for field in search_fields %}{{field|title}}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}...{% endif %}", 
                     value="{{search_value}}" aria-label="search-input" aira-autocomplete="off">
-                    <button type="submit" class="btn bg-gradient-secondary btn-sm mb-0 px-4 me-2"><i
+                    <button type="submit" class="btn bg-gradient-secondary btn-sm mb-0 px-4"><i
                         class="fas fa-search d-lg-none" style="font-size: 0.7rem"></i> <span class="d-none d-lg-block">Search</span></button>
                 </div>
             </div>
         </form>
+    </div>
+
+    <div class="col-auto px-0 mb-2">
+        <!--end of filter-->
+        <a href="" class="btn bg-gradient-secondary float-right mb-0 " onclick="clearAllFilters()">
+            Clear
+        </a>
     </div>
 </div>
