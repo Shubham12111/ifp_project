@@ -88,8 +88,8 @@
                 </div>
 
                 <div class="row mt-5">
-                    <div class="col-md-12">
-                        <table class="table-responsive custom-table mb-3  text-sm" style="width:100%">
+                    <div class="col-md-12 table-responsive">
+                        <table class="custom-table mb-3  text-sm" style="width:100%">
                                 <thead>
                                     <tr class="px-0">
                                         <th class="text-start col-6">Item Name</th>
@@ -109,7 +109,7 @@
                     </div>
                 
                 <div class="row mt-4">
-                    <div class="col-md-6 ">
+                    <div class="col-md-6 col-12">
                         {% if purchase_order.status == "sent_for_approval" %}
                         <p class="notes text-sm">{{ existingPurchaseOrderData.notes }}</p>
                         <label>Approval Notes</label>
@@ -134,46 +134,32 @@
                         </div>
                         {% endif %}
                     </div>
-                    <div class="col-md-1 "></div>
-                    <div class="col-md-5">
+                    <div class="col-md-1 d-none d-md-block"></div>
+                    <div class="col-md-5 col-12">
                         <input type="hidden" id="subtotalInput" name="sub_total" value="0">
                         <input type="hidden" id="grandTotalInput" name="total_amount" value="0">
                         <div class="row mb-2">
-                            <div class="col-6 text-end mb-1">
-                                <p class=" mx-1 subtotal-label ">Sub Total:</p>
+                            <div class="row mb-2 justify-content-between">
+                                <div class="col-6 text-end"><p class="text-md subtotal-label">Sub Total:</p></div>
+                                <div class="col-6 text-end"><p class="text-dark font-weight-bold subtotal-value">£00.00</p></div>
                             </div>
-                            <div class="col-6 mb-1">
-                                <p class="mb-2 text-end subtotal-value"> £00.00</p>
+                            <div class="row mb-2 justify-content-between">
+                                <div class="col-6 text-end"><span class="text-md discount-label">Discount:</span></div>
+                                <div class="col-3 text-end"><input type="number" class="form-control discount-input text-end pe-0" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)"></div>
+                                <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
                             </div>
-                            <div class="col-6 mb-1 text-end">
-                                <p class="discount-label">Discount:</p>
+                            <div class="row mb-4 justify-content-between">
+                                <div class="col-6 text-end"><span class="text-md tax-label">Tax (%):</span></div>
+                                {% if tax_rate.tax_rate  %}
+                                <div class="col-6 tax-input text-end" id="tax">
+                                    {{tax_rate.tax_rate}}
+                                </div>
+                                {% endif %}
                             </div>
-                            <div class="col-2 text-end mb-2"></div>
-                            <div class="col-2 text-end mb-2"></div>
-                            <div class="col-2 text-end mb-2">
-                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)">
-                            </div>
-                            <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
-                           
-                
-                            <div class="col-6 mb-1 text-end">
-                                <p class="tax-label">Tax (%):</p>
-                            </div>
-                            <div class="col-2 text-end mb-2"></div>
-                            <div class="col-1 text-end mb-2"></div>
-                            {% if tax_rate.tax_rate  %}
-                            <div class="col-3 mb-1 tax-input text-end" id="tax">
-                                {{tax_rate.tax_rate}}
-                               
-                            </div>
-                            {% endif %}
-                            <div class="col-6 mb-1 text-end">
-                                <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
-                            </div>
-                            <div class="col-6 mb-1">
-                                <p class="font-weight-bolder mb-0 text-end grand-total-value">£00.00</p>
+                            <div class="row justify-content-between">
+                                <div class="col-6 text-end"><span class="font-weight-bolder grand-total-label">Total</span></div>
+                                <div class="col-6 text-end"><span class="text-dark font-weight-bold grand-total-value">£00.00</span></div>
                                 <div class="error-message help-block mt-2 text-danger text-sm" id="grandTotalError"></div>
-
                             </div>
                         </div>
                     </div>
