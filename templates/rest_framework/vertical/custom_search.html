@@ -50,32 +50,32 @@
 
   {% if field.name == 'assigned_to' %}
   <div class="input-group">
-    <input type="text" id="assigned_to_search" name="search" placeholder="Search {{ field.label }}" class="form-control">
+    <input type="text" id="assigned_to_search" name="search" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
     <i class="fas fa-chevron-down input-group-icon"></i> </div>
-  {% comment %} <input type="text" id="assigned_to_search" name="search" placeholder="Search {{ field.label }}" class="form-control"> {% endcomment %}
   {% elif field.name == 'module' %}
   <div class="input-group">
-  <input type="text" id="module_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="module_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   <i class="fas fa-chevron-down input-group-icon"></i> </div>
   {% elif field.name == 'priority' %}
-  <input type="text" id="priority_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="priority_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   {% elif field.name == 'contact_type' %}
+  
   <div class="input-group">
-  <input type="text" id="contact_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="contact_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
    <i class="fas fa-chevron-down input-group-icon"></i> </div>
   {% elif field.name == 'post_code' %}
-  <input type="text" id="postcode_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="postcode_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   {% elif field.name == 'conversation_type' %}
-  <input type="text" id="conversation_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="conversation_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   {% elif field.name == 'status' %}
-  <input type="text" id="status_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="status_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   {% elif field.name == 'customer_type' %}
-  <input type="text" id="customer_type_serach" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="customer_type_serach" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   {% elif field.name == 'tax_preference' %}
-  <input type="text" id="tax_preference_serach" name="{{ field.name }}" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="tax_preference_serach" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   
   {% else %}
-  <input type="text" id="search" name="search" placeholder="Search {{ field.label }}" class="form-control">
+  <input type="text" id="search" name="search" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   {% endif %}
  
 
@@ -137,7 +137,8 @@
         minLength: 1,
         select: function(event, ui) {
             console.log('Selected item:', ui.item);
-            $("#id_contact_type").val(parseInt(ui.item.value)); // Convert to integer
+            $("#id_contact_type").val(parseInt(ui.item.value)); 
+            // Convert to integer
             contactInput.val(ui.item.label); // Display the name in the input
             // Make the field non-editable
             return false;

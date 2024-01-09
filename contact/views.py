@@ -235,17 +235,10 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
 
         message = "your contact has been added successfully."
         serializer = self.serializer_class(data=request.data)
-        
-        contact_type_id = request.data.get('id_contact_type')
-        print("contact type is:",contact_type_id)
-        contact_type_obj = ContactType.objects.get(pk=contact_type_id)
-        
         if serializer.is_valid():
             # Use the provided contact_type_id to set the contact_type field
-            serializer.validated_data['user_id'] = request.user  # Assign the current user instance
-            serializer.validated_data['contact_type'] = contact_type_obj
-            serializer.save()
-           
+            contact = serializer.save(user_id=request.user)
+            contact.save()
 
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
@@ -324,9 +317,6 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             instance = self.get_queryset()
             if instance:
                 serializer = self.serializer_class(instance=instance, context={'request': request})
-                # Set the initial value for the contact_type field
-                initial_contact_type = instance.contact_type.id if instance.contact_type else None
-                serializer.fields['contact_type'].initial = initial_contact_type
 
                 # Add the serialized data to the context
                 context = {'serializer': serializer, 'instance': instance}
