@@ -1,9 +1,9 @@
 
-
+{% extends 'base.html' %}
 {% load static %}
 {% load custom_tags %}
 {% load rest_framework %}
-{% block title %} Customer Contact Person {{ block.super }}{% endblock %}
+{% block title %} Customer Contact Person {% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
 {% include 'customer_management/customer_actions.html' %}

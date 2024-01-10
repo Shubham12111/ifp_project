@@ -323,7 +323,7 @@ class CSSORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     
     serializer_class = SORSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'sor/sor_form.html'
+    template_name = 'sor_form.html'
 
 
     

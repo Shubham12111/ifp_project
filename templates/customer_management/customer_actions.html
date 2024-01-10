@@ -44,6 +44,16 @@
                     <a class="nav-link " >Contact Persons</a>
                 {% endif %}
            </li>
+
+           <li class="nav-item ">
+            {% if customer_instance %}
+                <a class="nav-link {% if '/customer/sor/' in request.path  %}active{% endif %}"  href="{% url 'cs_customer_sor_list' customer_instance.id  %}">
+                    Manage SOR
+                </a>
+            {% else %}
+                <a class="nav-link " >Manage SOR</a>        
+            {% endif %}
+       </li>
         </ul>
     </div>
 </div>
