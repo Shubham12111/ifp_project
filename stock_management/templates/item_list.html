@@ -210,7 +210,7 @@
                     {% endif %}
 
 
-                    {% if request.user|has_view_permission:"stock_management" %}
+                    <!-- {% if request.user|has_view_permission:"stock_management" %}
                     <li>
                       <a href="{% url 'item_view' vendor_instance.id item.id %}" class="dropdown-item border-radius-md">
                         View
@@ -224,7 +224,7 @@
                         Download
                       </a>
                     </li>
-                  {% endif %}
+                  {% endif %} -->
 
 
                     {% if request.user|has_delete_permission:"stock_management" %}
