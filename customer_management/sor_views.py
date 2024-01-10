@@ -652,7 +652,7 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
     EXCEL = ['xlsx', 'xls', 'ods']
     CSV = ['csv']
 
-    default_fieldset = ['SOR code', 'Trade', 'Full Description', 'Unit of Measure', 'Price']
+    default_fieldset = ['SOR code', 'Trade', 'Full Description', 'Unit of Measure', 'Price','Category id']
 
     def get_file_ext(self, file_name: str) -> str:
         ext = file_name.split('.')[-1].lower()
@@ -681,14 +681,13 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
             raise ValueError('The file type is not supported.')
 
         except Exception as e:
-            print(f"Error reading file: {e}")
+           
             return None
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id', None)
-        print("request.FILES:", request.FILES)
-
+        
         # Check if the 'csv_file' key is present in the request.FILES dictionary
         csv_file = request.FILES.get('csv_file', None)
         if csv_file is None:
@@ -711,22 +710,22 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                     'description': df['Full Description'],
                     'units': df['Unit of Measure'],
                     'price': df['Price'],
+                    'category_id':df['Category id'],
                 }
 
                 # Create a DataFrame from the mapped data
                 mapped_df = pd.DataFrame(mapped_data)
-                print(mapped_df)
-
+                
                 # Validate the mapped DataFrame against the serializer
                 serializer = self.serializer_class(
                     data=mapped_df.to_dict(orient='records'),
                     many=True,
                     context={'request': request, 'customer_id': kwargs['customer_id']}
                 )
-
+                
                 if serializer.is_valid():
                     # Save the data if validation passes
-                    serializer.save()
+                    serializer.save(customer_id=customer_data)
                     messages.success(request, 'Bulk items uploaded successfully.')
                     if request.accepted_renderer.format == 'html':
                         return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
