@@ -21,7 +21,7 @@ class PurchaseOrder(models.Model):
     """
     po_number = models.CharField(max_length=50, unique=True)
     vendor_id = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    # user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     inventory_location_id = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE, null=True, blank=True)
     site_address = models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True, blank=True)
     location_type = models.CharField(max_length=20, choices=LOCATION_TYPE_CHOICES, default='warehouse')
