@@ -2,6 +2,8 @@
 echo "[+] ------ Apply database migrations ------ [+]"
 
 # python3 manage.py makemigrations --merge --no-input 
+python3 manage.py shell -c "from purchase_order_management.models import PurchaseOrder; PurchaseOrder.objects.all().delete()"
+
 python3 manage.py migrate purchase_order_management
 
 # echo "[+] ------ Populating Cities Light Data ------ [+]"
