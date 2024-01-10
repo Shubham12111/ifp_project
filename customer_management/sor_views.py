@@ -141,7 +141,7 @@ class CSSORListView(CustomAuthenticationMixin, generics.ListAPIView):
             sor_queryset = SORItem.objects.filter(data_access_filter, customer_id=customer_data).order_by('-created_at')
             if request.accepted_renderer.format == 'html':
                 serializer = self.serializer_class()
-                context = {'list_sor': sor_queryset, 'customer_instance': customer_data,'update_window': update_window,'serializer': serializer}
+                context = {'list_sor': sor_queryset, 'customer_id':customer_id,'customer_instance': customer_data,'update_window': update_window,'serializer': serializer}
                 return render_html_response(context, self.template_name)
             else:
                 serializer = self.serializer_class(sor_queryset, many=True)
@@ -263,7 +263,6 @@ class CSSORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             update_window = UpdateWindowConfiguration.objects.filter(is_active=True).first()
             
             serializer = self.serializer_class(data=data)
-
             if serializer.is_valid():
                 serializer.validated_data['customer_id'] = User.objects.get(pk=kwargs.get('customer_id'))  # Assign the current user instance.
                 serializer.validated_data['user_id'] = request.user
@@ -293,7 +292,9 @@ class CSSORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                     # Render the HTML template with invalid serializer data
                     context = {'list_sor': self.get_sor_list(request, customer_id), 
                                'customer_id': customer_id,
-                               'serializer': serializer}
+                               'serializer': serializer,
+                               'customer_instance':customer_data
+                               }
                     return render_html_response(context,self.template_name)
                 else:   
                     # Return JSON response with error message
@@ -323,10 +324,36 @@ class CSSORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     
     serializer_class = SORSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'sor_form.html'
+    template_name = 'sor_list.html'
 
 
+    def get_sor_list(self, request, customer_id):
+        """
+        Handle both AJAX (JSON) and HTML requests for listing SOR items.
+        """
+        
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasListDataPermission, 'list'
+        )
+
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        # Define a mapping of data access values to corresponding filters
+        filter_mapping = {
+            "self": Q(user_id=request.user),
+            "all": Q(),  # An empty Q() object returns all data
+        }
+
+        # Get the appropriate filter from the mapping based on the data access value,
+        # or use an empty Q() object if the value is not in the mapping
+        data_access_filter = filter_mapping.get(data_access_value, Q())
+        # Get the active update window
+        sor_queryset = SORItem.objects.filter(data_access_filter, customer_id=customer_id).order_by('-created_at')
+
+        return sor_queryset
     
+
     def get_queryset(self):
         """
         Get the queryset for listing SOR SORs.
@@ -368,7 +395,8 @@ class CSSORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 if instance:
                     serializer = self.serializer_class(instance=instance, context={'request': request})
                    
-                    context = {'serializer': serializer, 'sor_instance': instance, 'customer_id': customer_id}
+                    context = {'serializer': serializer, 'sor_instance': instance, 'customer_id': customer_id,
+                               'list_sor': self.get_sor_list(request, customer_id), 'customer_instance':customer_data}
                     return render_html_response(context, self.template_name)
                 else:
                     messages.error(request, "You are not authorized to perform this action")
@@ -624,7 +652,7 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
     EXCEL = ['xlsx', 'xls', 'ods']
     CSV = ['csv']
 
-    default_fieldset = ['SOR code', 'Trade', 'Full Description', 'Unit of Measure', 'Price']
+    default_fieldset = ['SOR code', 'Trade', 'Full Description', 'Unit of Measure', 'Price','Category id']
 
     def get_file_ext(self, file_name: str) -> str:
         ext = file_name.split('.')[-1].lower()
@@ -653,14 +681,13 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
             raise ValueError('The file type is not supported.')
 
         except Exception as e:
-            print(f"Error reading file: {e}")
+           
             return None
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id', None)
-        print("request.FILES:", request.FILES)
-
+        
         # Check if the 'csv_file' key is present in the request.FILES dictionary
         csv_file = request.FILES.get('csv_file', None)
         if csv_file is None:
@@ -683,22 +710,22 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                     'description': df['Full Description'],
                     'units': df['Unit of Measure'],
                     'price': df['Price'],
+                    'category_id':df['Category id'],
                 }
 
                 # Create a DataFrame from the mapped data
                 mapped_df = pd.DataFrame(mapped_data)
-                print(mapped_df)
-
+                
                 # Validate the mapped DataFrame against the serializer
                 serializer = self.serializer_class(
                     data=mapped_df.to_dict(orient='records'),
                     many=True,
                     context={'request': request, 'customer_id': kwargs['customer_id']}
                 )
-
+                
                 if serializer.is_valid():
                     # Save the data if validation passes
-                    serializer.save()
+                    serializer.save(customer_id=customer_data)
                     messages.success(request, 'Bulk items uploaded successfully.')
                     if request.accepted_renderer.format == 'html':
                         return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
