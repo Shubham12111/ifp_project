@@ -162,7 +162,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         Get a list of all unique assigned_to users from the User model.
         """
-        return User.objects.values_list('first_name', flat=True).distinct()
+        return User.objects.filter(is_employee=True, is_active=True).exclude(roles__name='Customer').values_list('first_name', flat=True).distinct()
     
     def get_searched_queryset(self, queryset):
         search_params = self.request.query_params.get('q', '')
