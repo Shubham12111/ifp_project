@@ -248,64 +248,72 @@ class CSSORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         customer_id = kwargs.get('customer_id')
         
         customer_data = get_customer_data(customer_id)
-        # Apply an additional filter for customer_id
-        if customer_data:
-            data = request.data
-            # Retrieve the 'file_list' key from the copied data, or use None if it doesn't exist
-            file_list = data.getlist('file_list', None)
-            
 
-            if file_list is not None and not any(file_list):
-                data = data.copy()
-                del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
-
-            # Check if the current date is within the update window
-            update_window = UpdateWindowConfiguration.objects.filter(is_active=True).first()
-            
-            serializer = self.serializer_class(data=data)
-            if serializer.is_valid():
-                serializer.validated_data['customer_id'] = User.objects.get(pk=kwargs.get('customer_id'))  # Assign the current user instance.
-                serializer.validated_data['user_id'] = request.user
-                sor_data = serializer.save()
-
-                sor_data.save()
-
-                if update_window:
-                    message = f"SOR has been added successfully.You can update SOR till {update_window.end_date}."
-                else:
-                    message = "SOR has been added successfully."
-
-            
-                if request.accepted_renderer.format == 'html':
-                    messages.success(request, message)
-                    return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-
-                else:
-                    # Return JSON response with success message and serialized data
-                    return create_api_response(status_code=status.HTTP_201_CREATED,
-                                        message=message,
-                                        data=serializer.data
-                                        )
-            else:
-                # Invalid serializer data
-                if request.accepted_renderer.format == 'html':
-                    # Render the HTML template with invalid serializer data
-                    context = {'list_sor': self.get_sor_list(request, customer_id), 
-                               'customer_id': customer_id,
-                               'serializer': serializer,
-                               'customer_instance':customer_data
-                               }
-                    return render_html_response(context,self.template_name)
-                else:   
-                    # Return JSON response with error message
-                    return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                        message="We apologize for the inconvenience, but please review the below information.",)
-        
-
-        else:
-    
+        # Check if the user is authorized to perform this action
+        if not customer_data:
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('cs_sor_customers_list', kwargs={'customer_id': customer_id}))
+
+        data = request.data
+        file_list = data.getlist('file_list', None)
+
+        if file_list is not None and not any(file_list):
+            data = data.copy()
+            del data['file_list']  # Remove the 'file_list' key if it's a blank list or None
+
+        update_window = UpdateWindowConfiguration.objects.filter(is_active=True).first()
+
+        # Retrieve existing SOR codes for the current customer
+        existing_sor_codes = SORItem.objects.filter(customer_id=customer_id).values_list('reference_number', flat=True)
+
+        # Create a serializer instance with the data and the queryset for reference_number uniqueness check
+        serializer = self.serializer_class(data=data)
+
+        if serializer.is_valid():
+            # Check if the reference_number is unique for the current customer
+            if serializer.validated_data['reference_number'] in existing_sor_codes:
+                messages.error(request, "This SOR code is already in use for this customer.")
+                return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+            # Assign additional data to the serializer before saving
+            serializer.validated_data['customer_id'] = User.objects.get(pk=kwargs.get('customer_id'))
+            serializer.validated_data['user_id'] = request.user
+
+            sor_data = serializer.save()
+
+            if update_window:
+                message = f"SOR has been added successfully. You can update SOR till {update_window.end_date}."
+            else:
+                message = "SOR has been added successfully."
+
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+            else:
+                # Return JSON response with success message and serialized data
+                return create_api_response(
+                    status_code=status.HTTP_201_CREATED,
+                    message=message,
+                    data=serializer.data
+                )
+        else:
+            # Invalid serializer data
+            if request.accepted_renderer.format == 'html':
+                # Render the HTML template with invalid serializer data
+                context = {'list_sor': self.get_sor_list(request, customer_id), 
+                           'customer_id': customer_id,
+                           'serializer': serializer,
+                           'customer_instance': customer_data
+                           }
+                return render_html_response(context, self.template_name)
+            else:
+                # Return JSON response with error message
+                return create_api_response(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message="We apologize for the inconvenience, but please review the below information."
+                )
+
+   
         
         
 class CSSORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
@@ -683,11 +691,11 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
         except Exception as e:
            
             return None
-
+    
     @transaction.atomic
     def post(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id', None)
-        
+     
         # Check if the 'csv_file' key is present in the request.FILES dictionary
         csv_file = request.FILES.get('csv_file', None)
         if csv_file is None:
@@ -696,8 +704,7 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
         try:
             # Read the CSV file into a DataFrame
             df = self.read_file_to_df(csv_file)
-            print(df.columns)
-
+           
             if df is None:
                 return JsonResponse({'error': 'Error processing the uploaded file.'}, status=400)
 
@@ -715,7 +722,7 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
 
                 # Create a DataFrame from the mapped data
                 mapped_df = pd.DataFrame(mapped_data)
-                
+
                 # Validate the mapped DataFrame against the serializer
                 serializer = self.serializer_class(
                     data=mapped_df.to_dict(orient='records'),
@@ -725,8 +732,10 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                 
                 if serializer.is_valid():
                     # Save the data if validation passes
+                    remove_data=SORItem.objects.filter(customer_id=customer_id)
+                    remove_data.delete()
                     serializer.save(customer_id=customer_data)
-                    messages.success(request, 'Bulk items uploaded successfully.')
+                    messages.success(request, 'Bulk Sor uploaded successfully.')
                     if request.accepted_renderer.format == 'html':
                         return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
                     else:
@@ -745,10 +754,8 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
         except Exception as e:
             print(f"Error processing file: {e}")
             return JsonResponse({'error': f'Error processing the uploaded file. Exception: {e}'}, status=400)
-
-
-
-
+        
+    
 
 class CSSORRemoveImageView(generics.DestroyAPIView):
     """

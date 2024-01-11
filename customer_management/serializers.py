@@ -715,21 +715,23 @@ class SORSerializer(serializers.ModelSerializer):
 
         return value
 
-    
+
     def validate_reference_number(self, value):
         """
-        Validate that the reference number (SKU) i unique.
+        Validate that the reference number (SOR code) is unique for the given customer.
         """
-        if self.instance:
-            reference_number = SORItem.objects.filter(reference_number=value).exclude(id=self.instance.id).exists()
-        else:
-            reference_number = SORItem.objects.filter(reference_number=value).exists()
-        
-        if reference_number:
-            raise serializers.ValidationError("This SOR code is already in Use.")
-        
-        return value
+        instance = self.instance
+        customer_id = self.context.get('customer_id')
 
+        # If updating an existing instance, exclude the current instance from the uniqueness check
+        queryset = SORItem.objects.filter(reference_number=value, customer_id=customer_id)
+        if instance:
+            queryset = queryset.exclude(id=instance.id)
+
+        if queryset.exists():
+            raise serializers.ValidationError("This SOR code is already in use for this customer.")
+
+        return value
     
     def create(self, validated_data):
         # Pop the 'file_list' field from validated_data
