@@ -476,7 +476,7 @@ class ItemDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             # check if any image on s3
             for image in images:
                 if image.image_path:
-                    s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=item.image_path)
+                    s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=image.image_path)
                     image.delete()
 
             item.delete()
@@ -739,27 +739,25 @@ class BulkImportItemsView(CustomAuthenticationMixin, generics.CreateAPIView):
         if duplicate_values:
             # Handle the case where some keys have the same value
             # You can raise an error or take appropriate action
-            messages.error(request, 'Duplicate Mapping of keys is not accepted.')
+            messages.error(request, 'Please select correct headers to upload bulk item file')
             return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
         
         df = self.read_file_to_df(request.FILES.get('excel_file'))
 
         items_data_list = []
-
-
         for index, row in df.iterrows():
             items_data = {}
             for key, value in mapping_dict.items():
                 items_data[key] = row[value]
 
             items_data_list.append(items_data)
-            print(items_data
-                  )
-
 
         serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request, 'vendor_id': kwargs['vendor_id']})
         if serializer.is_valid():
             serializer.save()
             messages.success(request, 'Bulk items uploaded successfully.')
+        else:
+            messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
+    
         return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
         
