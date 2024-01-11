@@ -101,7 +101,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         try:
             user = self.context['request'].user
             if user.is_authenticated:
-                self.fields['assigned_to'].queryset = User.objects.filter(is_superuser=False, is_active=True).exclude(roles__name='Customer')
+                self.fields['assigned_to'].queryset = User.objects.filter(is_employee=True, is_active=True).exclude(roles__name='Customer')
         except Exception as e:
             pass
 
