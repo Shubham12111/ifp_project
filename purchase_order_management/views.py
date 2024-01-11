@@ -342,8 +342,8 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         vendor_list = Vendor.objects.all()
         inventory_location_list = InventoryLocation.objects.all()
         tax_rate = AdminConfiguration.objects.all().first()
-        customer_list = User.objects.all()
-        site_address = PurchaseOrder.objects.all()
+        customer_list = User.objects.filter(roles__name='Customer').all()
+        site_address = SiteAddress.objects.filter(user_id__in=customer_list).all()
         
            
         if request.accepted_renderer.format == 'html':
@@ -516,6 +516,8 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
             # Extract the first purchase order object from the queryset
             if purchase_order_data:
                 vendor_list = Vendor.objects.all()
+                customer_list = User.objects.filter(roles__name='Customer').all()
+                site_address = SiteAddress.objects.filter(user_id__in=customer_list).all()
                 inventory_location_list = InventoryLocation.objects.all()
                 item_list = Item.objects.filter(vendor_id=purchase_order_data.vendor_id)
                 tax_rate = AdminConfiguration.objects.all().first()
@@ -537,7 +539,9 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                 
                 existingPurchaseOrderData = {
                     'vendor_id': purchase_order_data.vendor_id.id,
-                    'inventory_location_id': purchase_order_data.inventory_location_id.id,
+                    'inventory_location_id': purchase_order_data.inventory_location_id.id if purchase_order_data.inventory_location_id else '',
+                    'user_id': purchase_order_data.user_id.id if purchase_order_data.user_id else '',
+                    'site_address': purchase_order_data.site_address.id if purchase_order_data.site_address else '',
                     'po_number': purchase_order_data.po_number,
                     'created_at': purchase_order_data.created_at.strftime('%Y-%m-%d'),  # Convert date to string
                     'tax': purchase_order_data.tax,
@@ -557,6 +561,8 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
 
                 context = {'vendor_list':vendor_list, 
                             'inventory_location_list':inventory_location_list,
+                            'customer_list': customer_list,
+                            'site_address': site_address,
                             'item_list':item_list,
                             'purchase_order':purchase_order_data,
                             'existingPurchaseOrderData':existingPurchaseOrderData,

@@ -27,7 +27,7 @@
 
 </style>
 {% include 'components/alert.html' %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
     <div class="row">
         <div class="col-lg-12 col-12 mt-3">
             
@@ -40,11 +40,21 @@
             
             {% csrf_token %}
             <div class="card">
+                <div class="card-header mt-0">
+                    <div class="row justify-content-between">
+                        <div class="col-6">
+                        <h5>{% if purchase_order %}{% if purchase_order.status == "pending" %}Edit{% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "projects_admin_(IT)"  %}Approve{% endif %}{% else %}Add{% endif %} Purchase Order</h5>
+                        </div>
+                        <div class="col-6 text-end">
+                        <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'purchase_order_list' %}">Back</a>
+                        </div>
+                    </div>
+                </div>
               <div class="card-body px-4 pb-0">
                 <div class="row">
                     <div class="col-md-3 mb-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="locationType" id="warehouse" value="warehouse" checked>
+                            <input class="form-check-input" type="radio" name="locationType" id="warehouse" value="warehouse" {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}checked{% endif %}{%else%}checked{% endif %}>
                             <label class="form-check-label" for="warehouse">
                                 Warehouse
                             </label>
@@ -52,7 +62,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="locationType" id="siteAddress" value="site_address">
+                            <input class="form-check-input" type="radio" name="locationType" id="siteAddress" value="site_address" {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}{% else %}checked{% endif %}{% endif %}>
                             <label class="form-check-label" for="siteAddress">
                                 Site Address
                             </label>
@@ -63,7 +73,7 @@
                     <div class="col-md-12">
                         <div class="row">
                          <div class="col-md-4">
-                                <div class="row d-none" id="siteAddressRow">
+                                <div class="row {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}d-none{% endif %}{% else %}d-none{% endif %}" id="siteAddressRow">
                                     <div class="col-md-12">
                                         <label for="customerDropdown" class="form-label">Select Customer:</label>
                                         <select class="form-select" name="user_id" id="customer-choices" onchange="fetchCustomers()">
@@ -74,7 +84,7 @@
                                         </select>
                                         <div class="col-md-12 mt-3">
                                             <label for="siteAddressDropdown" class="form-label">Select Site Address:</label>
-                                            <select class="form-select "  name="site_address" id="site_address_choices" onchange="fetchSiteAddress()">
+                                            <select class="form-select "  name="site_address" id="site_address-choices" onchange="fetchSiteAddress()">
                                                 <option disabled selected value> Select Site Address </option>
                                             {% for site_address in site_address %}
                                                     <option value="{{site_address.id}}">{{site_address.address}}</option>
@@ -86,7 +96,7 @@
                                 </div>
                                 
                             
-                                <div class="row" id="inventoryLocationsRow">
+                                <div class="row {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}{% else %}d-none{% endif %}{% endif %}" id="inventoryLocationsRow">
                                     <div class="col-md-12">
                                     <label for="inventory_location" class="form-label">Inventory Location </label>
                                         <select class="form-control" id="inventory_location-choices" name="inventory_location_id">
@@ -124,6 +134,7 @@
                           
                             
                             <script>
+
                                 // Add event listener to radio buttons
                                 document.querySelectorAll('input[name="locationType"]').forEach(function (radio) {
                                     radio.addEventListener('change', function () {
@@ -233,7 +244,6 @@
                 <div class="row mt-5 mb-5">
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 col-xs-12 col-sm-12 m-auto text-center text-md-end">
-                    <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-2" href="{% url 'purchase_order_list' %}">Cancel</a>
                     {% if purchase_order.status == "pending" or not purchase_order   %}
                     <button class="btn bg-gradient-primary mb-0 js-btn-prev  ms-2 mb-2" id="submitSaveAsDraftBtn" title="Submit">Save As Draft</button>
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-2 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
@@ -296,7 +306,7 @@ function getUnselectedOptions() {
 // Update the function to fetch customer list dynamically
 async function fetchCustomers() {
     try {
-        const response = await fetch('/path/to/your/customer/api');
+        {% comment %} const response = await fetch('customer/list/');
         const customerData = await response.json();
 
         // Get the customerDropdown element
@@ -311,7 +321,7 @@ async function fetchCustomers() {
             option.value = customer.id;  // Use a unique identifier for each customer
             option.text = customer.name;  // Adjust based on your customer data structure
             customerDropdown.add(option);
-        });
+        }); {% endcomment %}
 
         // Trigger the fetchSiteAddresses function to update site addresses based on the selected customer
         fetchSiteAddresses();
@@ -336,8 +346,7 @@ async function fetchSiteAddresses() {
             const siteAddressData = await siteAddressResponse.json();
             const dataArray = Array.isArray(siteAddressData.data) ? siteAddressData.data : [siteAddressData.data];
             // Get the siteAddressDropdown element
-            const siteAddressDropdown = document.getElementById('site_address_choices');
-            
+            const siteAddressDropdown = document.getElementById('site_address-choices');
             // Clear previous options
             siteAddressDropdown.innerHTML = '';
 
@@ -348,14 +357,35 @@ async function fetchSiteAddresses() {
                 option.text = siteAddress.site_name;
                 siteAddressDropdown.add(option);
             });
+
+            const site_address_choices = new Choices(siteAddressDropdown, {
+                default: false,
+                items: [],
+                choices: [],
+                renderChoiceLimit: 1,
+                searchEnabled: true,
+                searchChoices: true,
+                searchFloor: 1,
+                searchResultLimit: 10,
+                resetScrollPosition: true,
+                shouldSort: true,
+                shouldSortItems: false,
+                searchFields: ['label'],
+                searchPlaceholderValue: "Search Site address", 
+                fuseOptions: {
+                  includeScore: true,
+                  includeMatches: true,
+                  threshold: 0, // Set to 0 for exact match
+                  location: 0,
+                  distance: 100,
+                  maxPatternLength: 32,
+                  minMatchCharLength: 1
+                }
+              });
             
-
-        
-
-
         } else {
             // Clear the siteAddressDropdown if no customer is selected
-            const siteAddressDropdown = document.getElementById('site_address_choices');
+            const siteAddressDropdown = document.getElementById('site_address-choices');
             siteAddressDropdown.innerHTML = '';
         }
     } catch (error) {
@@ -382,8 +412,9 @@ if (document.getElementById('existingPurchaseOrderData')) {
     }
     // Populate the form fields with existing data
         document.getElementById('vendor-choices').value = safeGetProperty(existingPurchaseOrderData, 'vendor_id');
+        document.getElementById('customer-choices').value = safeGetProperty(existingPurchaseOrderData, 'user_id');
         document.getElementById('inventory_location-choices').value = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
-        document.getElementById('site_address-choices').value = safeGetProperty(existingPurchaseOrderData, 'site_address_id');
+        document.getElementById('site_address-choices').value = safeGetProperty(existingPurchaseOrderData, 'site_address');
         document.getElementById('po_number').value = safeGetProperty(existingPurchaseOrderData, 'po_number');
        
         document.querySelector('.subtotal-value').textContent = `£${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
@@ -400,14 +431,14 @@ if (document.getElementById('existingPurchaseOrderData')) {
             document.querySelector('.notes').value = safeGetProperty(existingPurchaseOrderData, 'notes');
 
         }
-        documen// Populate inventory location data for existing value on page load
+        // Populate inventory location data for existing value on page load
 document.addEventListener('DOMContentLoaded', async function() {
     const existingInventoryLocationId = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
     if (existingInventoryLocationId) {
         populateInventoryLocationData(existingInventoryLocationId);
     }
 });
-t.querySelector('.grand-total-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
+document.querySelector('.grand-total-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
         // Populate item rows with existing item data
 
     
@@ -437,12 +468,6 @@ existingPurchaseOrderData.items.forEach(item => {
             ${getUnselectedOptions(item.item_id)}
         </select>
     </td>
-    <td>
-        <select class="form-control location-dropdown" onchange="updateLocation(this)">
-            <option value="site">Site Address</option>
-            <option value="warehouse">Warehouse</option>
-        </select>
-    </td>
     <td class="text-center item-price">${item.price}</td>
     <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)"></td>
     <td class="text-center total">${item.row_total}</td>
@@ -470,8 +495,9 @@ existingPurchaseOrderData.items.forEach(item => {
         }
     }
     preselectDropdownOption('vendor-choices', existingPurchaseOrderData.vendor_id);
+    preselectDropdownOption('customer-choices', existingPurchaseOrderData.user_id);
     preselectDropdownOption('inventory_location-choices', existingPurchaseOrderData.inventory_location_id);
-    preselectDropdownOption('site_address-choices', existingPurchaseOrderData.site_address_id);
+    preselectDropdownOption('site_address-choices', existingPurchaseOrderData.site_address);
     }
 }
     
@@ -562,31 +588,7 @@ if (document.getElementById('customer-choices')) {
  // Customer 
 if (document.getElementById('site_address-choices')) {
   var element = document.getElementById('site_address-choices');
-  const site_address_choices = new Choices(element, {
-    default: false,
-    items: [],
-    choices: [],
-    renderChoiceLimit: 1,
-    searchEnabled: true,
-    searchChoices: true,
-    searchFloor: 1,
-    searchResultLimit: 10,
-    resetScrollPosition: true,
-    shouldSort: true,
-    shouldSortItems: false,
-    searchFields: ['label'],
-    searchPlaceholderValue: "Search Site address", 
-    fuseOptions: {
-      includeScore: true,
-      includeMatches: true,
-      threshold: 0, // Set to 0 for exact match
-      location: 0,
-      distance: 100,
-      maxPatternLength: 32,
-      minMatchCharLength: 1
-    }
-  });
- }
+}
 
 if (document.getElementById('vendor-choices')) {
   var element = document.getElementById('vendor-choices');
@@ -892,7 +894,7 @@ async function populateInventoryLocationData(selectedInventoryLocationId) {
         cardBody.style.display = 'block';  // Show the card body
         cardBody.innerHTML = `
         <h6 class="text-sm mb-1">${selectedInventoryLocationData.data.name}</h6>
-        <p class="text-sm mb-site_address_choices1">${selectedInventoryLocationData.data.full_address}</p>
+        <p class="text-sm mb-site_address-choices1">${selectedInventoryLocationData.data.full_address}</p>
         `;
     } catch (error) {
         console.error('Error fetching InventoryLocation data:', error);
@@ -917,9 +919,9 @@ function hideLoader() {
 
 // Inside your JavaScript
 // Event listeners for the buttons
+{% if purchase_order.status == "pending" or not purchase_order   %}
 const submitSaveAsDraftBtn = document.getElementById('submitSaveAsDraftBtn');
 const submitBtnApproval = document.getElementById('submitBtnApproval');
-const submitBtnApproved = document.getElementById('submitBtnApproved');
 
 if (submitSaveAsDraftBtn)
 {
@@ -936,10 +938,13 @@ submitBtnApproval.addEventListener('click', function() {
 });
 
 }
+{% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "projects_admin_(IT)"  %}
+const submitBtnApproved = document.getElementById('submitBtnApproved');
 submitBtnApproved.addEventListener('click', function() {
     showLoader(); // Show the loader overlay before submitting
     submitForm('approved'); // Call the common function with the status
 });
+{% endif %}
 
 function submitForm(status) {
     event.preventDefault(); // Prevent default button behavior

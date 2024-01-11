@@ -16,8 +16,6 @@
               <h4>Contacts</h4>
             </div>
             <div class="col-6 text-end">
-              <a id="exportButton" class="btn bg-gradient-primary btn-sm px-4 mb-0"><i
-                class="fas fa-download d-lg-none" style="font-size: 0.7rem"></i> <span class="d-none d-lg-block">Export</span></a>
               {% if request.user|has_add_permission:"contact" %}
               <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Contacts' module -->
               <a href="{% url 'contact_add' %}" class="btn bg-gradient-primary btn-sm px-4 mb-0"><i
@@ -26,6 +24,8 @@
               {% else %}
               <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
+              <a id="exportButton" class="btn bg-gradient-primary btn-sm px-4 mb-0"><i
+                class="fas fa-download d-lg-none" style="font-size: 0.7rem"></i> <span class="d-none d-lg-block">Export</span></a>
             </div>
           </div>
 

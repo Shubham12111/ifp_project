@@ -26,7 +26,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
             "blank": "Module field cannot be blank.",
             "invalid": "Module can only contain characters.",
             'does_not_exist': 'Module with {slug_name}, {value} does not exist.',
-
+            'null': "This field is required."
         },
     )
      # Custom CharField for the message with more rows (e.g., 5 rows)

@@ -9,10 +9,15 @@
   <div class="row gx-4">
     <div class="col-lg-6">
       <div class="card">
-        <div class="card-header pb-0">
-
-          <h5 class="font-weight-bolder">{% if conversation_data %}Edit {% else %} New {% endif %} Conversation</h5>
-
+        <div class="card-header mt-0">
+          <div class="row justify-content-between">
+              <div class="col-6">
+                <h5>{% if conversation_data %}Edit {% else %} New {% endif %} Conversation</h5>
+              </div>
+              <div class="col-6 text-end">
+                <a class="btn bg-gradient-secondary mb-0 btn-sm js-btn-prev " href="{% url 'contact_list' %}" title="Back">Back</a>
+              </div>
+          </div>
         </div>
         <form role="form" method="POST" autocomplete="off" class="multisteps-form__form" enctype="multipart/form-data"  onsubmit="showLoader()">
           <div class="card-body p-3">
@@ -42,7 +47,6 @@
               <div class="row mt-2">
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 m-auto text-center text-md-end">
-                  <a class="btn bg-gradient-secondary mb-0 btn-sm js-btn-prev " href="{% url 'contact_list' %}" title="Back">Back</a>
                   <button class="btn btn-md bg-gradient-primary btn-sm ms-2 mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
                 </div>
                 </div>

@@ -132,17 +132,20 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                     start_date = datetime.strptime(start_date_str.strip(), date_format).date()
                     end_date = datetime.strptime(end_date_str.strip(), date_format).date()
                     base_queryset = base_queryset.filter(start_date__gte=start_date, end_date__lte=end_date)
+                elif filter_name == 'assigned_to':
+                    value_list = filter_value.split()
+                    if 2 >= len(value_list) > 1:
+                        base_queryset = base_queryset.filter(assigned_to__first_name=value_list[0], assigned_to__last_name=value_list[1])
+                    else:
+                        base_queryset = base_queryset.filter(assigned_to__first_name = filter_value)
                 else:
                     # For other filters, apply the corresponding filters on the queryset
                     filter_mapping = {
                         'status': 'status',
                         'priority': 'priority',
                         'module': 'module__name',
-                        'assigned_to': 'assigned_to__first_name',
-
                     }
                     base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
-
         # Filter the queryset
         base_queryset = self.get_searched_queryset(base_queryset)
         # Sort the queryset by 'created_at' in descending order

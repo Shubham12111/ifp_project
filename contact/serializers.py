@@ -208,7 +208,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "blank": "Contact Type field cannot be blank.",
             "invalid": "Contact Type can only contain characters.",
             'does_not_exist': _('Contact type with {slug_name}, {value} does not exist.'),
-
+            'null': "This field is required."
         },
     )
      
