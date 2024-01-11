@@ -1,5 +1,6 @@
 from django.db import models
 from stock_management.models import Vendor, InventoryLocation, Item
+from customer_management.models import SiteAddress
 from authentication.models import User
 from django.db.models import Sum
 
@@ -12,13 +13,18 @@ STATUS_CHOICES = [
     ('completed', 'Completed'),
 ]
 
+LOCATION_TYPE_CHOICES = [('site address', 'Site Address'), ('warehouse', 'Warehouse')]
+
 class PurchaseOrder(models.Model):
     """
     Represents a Purchase Order in the system.
     """
     po_number = models.CharField(max_length=50, unique=True)
     vendor_id = models.ForeignKey(Vendor, on_delete=models.CASCADE)
-    inventory_location_id = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    inventory_location_id = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE, null=True, blank=True)
+    site_address = models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True, blank=True)
+    location_type = models.CharField(max_length=20, choices=LOCATION_TYPE_CHOICES, default='warehouse')
     sub_total = models.DecimalField(max_digits=10, decimal_places=2)
     discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     tax = models.DecimalField(max_digits=5, decimal_places=2, default=0)

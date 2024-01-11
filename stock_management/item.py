@@ -1,5 +1,9 @@
+import pandas as pd
+import xlwt
 from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404
 from django.conf import settings
+from django.http import HttpResponse
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
 from .models import *
@@ -8,9 +12,14 @@ from infinity_fire_solutions.response_schemas import *
 from django.contrib import messages
 from rest_framework import generics, status, filters
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
+from rest_framework.views import APIView
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from django.template.response import TemplateResponse
 from django.core.serializers import serialize
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
+from django.views import View
+from io import BytesIO
 
 
 class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
@@ -467,7 +476,7 @@ class ItemDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
             # check if any image on s3
             for image in images:
                 if image.image_path:
-                    s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=item.image_path)
+                    s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=image.image_path)
                     image.delete()
 
             item.delete()
@@ -612,3 +621,143 @@ class ItemDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         else:
             messages.error(request, "Item not found OR You are not authorized to perform this action.")
             return redirect(reverse('vendor_list'))
+        
+class ItemExcelDownloadAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        # Get your item queryset based on your requirements
+        items = Item.objects.filter(vendor_id=self.kwargs.get('vendor_id'))
+
+        # Create a new workbook and add a worksheet.
+        workbook = xlwt.Workbook()
+        worksheet = workbook.add_sheet('Item Details')
+
+        # Write the headers
+        headers = ["Item Name", "Description", "Category", "Price", "Units", "Quantity Per Box", "Reference Number"]
+        for col_num, header in enumerate(headers):
+            worksheet.write(0, col_num, header)
+
+        # Write the data
+        for row_num, item in enumerate(items, start=1):
+            worksheet.write(row_num, 0, item.item_name)
+            worksheet.write(row_num, 1, item.description)
+            worksheet.write(row_num, 2, item.category_id.name)
+            worksheet.write(row_num, 3, item.price)
+            worksheet.write(row_num, 4, item.units)
+            worksheet.write(row_num, 5, item.quantity_per_box)
+            worksheet.write(row_num, 6, item.reference_number)
+
+        # Create a response with the Excel file
+        response = HttpResponse(content_type='application/ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="item_details.xls"'
+        workbook.save(response)
+        return response
+
+
+
+class BulkImportItemsView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View to get the listing of all contacts.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = ItemsSerializer
+    default_fieldset = ['item_name','category_id','price', 'units','description',  'quantity_per_box','reference_number',]
+    EXCEL = ['xlsx', 'xls', 'ods']
+    CSV = ['csv',]
+
+    # File operation Functions ----------------------------------------------
+    def get_file_ext(self, file_name:str) -> str:
+        """
+        Get the file extension for a given file name.
+
+        Args:
+            file_name (str): The name of the file.
+
+        Returns:
+            str: The file extension in lowercase.
+        """
+
+        ext = file_name.split('.')[-1].lower()
+
+        return ext
+
+    # Excel File Supporter Functions ---------------------------------------------
+    def get_excel_engine(self, file_ext: str) -> str or None:
+        """
+        Get the engine to use for reading an Excel file based on its extension.
+
+        Args:
+            file_ext (str): The file extension in lowercase.
+
+        Returns:
+            str or None: The engine to use, or None if the file is not an Excel file.
+        """
+
+        engines = {'xlsx': 'openpyxl', 'xls': 'xlrd', 'ods': 'odf'}
+        return  engines[file_ext]
+
+    def read_file_to_df(self, file) -> pd.DataFrame:
+        """
+        Read a file from an in-memory upload and convert it into a DataFrame.
+
+        Parameters:
+        - file (InMemoryUploadedFile): The in-memory uploaded file.
+
+        Returns:
+        - pd.DataFrame or None: The DataFrame containing the data from the file, or None if an error occurs.
+        """
+        ext = self.get_file_ext(file.name)
+
+        # Convert the in-memory file to a BytesIO object
+        content = BytesIO(file.read())
+
+        if ext in self.EXCEL:
+            engine = self.get_excel_engine(ext)
+            data_frame = pd.read_excel(content, engine=engine)
+            return data_frame
+        
+        if ext in self.CSV:
+            data_frame = pd.read_csv(content)
+            return data_frame
+
+        raise ValueError('The file type is not supported.')
+    
+    def post(self, request, *args, **kwargs):
+        data = request.data.copy()
+
+
+        # Create a mapping dictionary from the request data
+        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
+        
+        # Check if any keys have the same value
+        values_set = set()
+        duplicate_values = set()
+        for key, value in mapping_dict.items():
+            if value in values_set:
+                duplicate_values.add(value)
+            values_set.add(value)
+
+        if duplicate_values:
+            # Handle the case where some keys have the same value
+            # You can raise an error or take appropriate action
+            messages.error(request, 'Please select correct headers to upload bulk item file')
+            return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
+        
+        df = self.read_file_to_df(request.FILES.get('excel_file'))
+
+        items_data_list = []
+        for index, row in df.iterrows():
+            items_data = {}
+            for key, value in mapping_dict.items():
+                items_data[key] = row[value]
+
+            items_data_list.append(items_data)
+
+        serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request, 'vendor_id': kwargs['vendor_id']})
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, 'Bulk items uploaded successfully.')
+        else:
+            messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
+    
+        return redirect(reverse('item_list', kwargs={'vendor_id': kwargs['vendor_id']}))
+        

@@ -37,6 +37,7 @@ from stock_management.models import Inventory
 import json
 from rest_framework.response import Response
 from common_app.models import *
+from customer_management.serializers import SiteAddressSerializer
 
 def po_number_generated():
     """
@@ -122,6 +123,47 @@ def get_paginated_data(request, queryset, serializer_class, search_field=None):
             "data": serializer.data,
         }
     return response_data
+
+def get_paginated_data_for_web(request, queryset, search_field=None):
+    search_params = request.query_params.get('q', '')
+    if search_params:
+        search_fields = search_field
+        q_objects = Q()
+
+        # Construct a Q object to search across multiple fields dynamically
+        for field in search_fields:
+            q_objects |= Q(**{f'{field}__icontains': search_params})
+
+        queryset = queryset.filter(q_objects)
+    
+    vendor_query = Q()  # Initialize an empty Q object for vendor filtering
+    data_queryset = queryset
+
+    # Handle filter parameters sent through the AJAX request
+    vendor_search = request.GET.get('vendor')
+    if vendor_search:
+        # Filter vendors based on first_name, last_name, and email
+        vendor_query |= Q(vendor_id__first_name__icontains=vendor_search)
+        vendor_query |= Q(vendor_id__last_name__icontains=vendor_search)
+        vendor_query |= Q(vendor_id__email__icontains=vendor_search)
+
+    location = request.GET.get('location')
+    status = request.GET.get('status')
+    
+    # Apply filters to the queryset based on filter parameters
+    if location:
+        data_queryset = data_queryset.filter(inventory_location_id__name__icontains=location)
+    if status:
+        data_queryset = data_queryset.filter(status=status)
+   
+    if  vendor_query:
+        data_queryset = data_queryset.filter(vendor_query)
+            
+    paginator = Paginator(data_queryset, 20)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    return page_obj
     
     
 def get_order_items(data):
@@ -180,6 +222,25 @@ def get_inventory_location_data(request):
             return JsonResponse({"error": "Vendor not found OR You are not authorized to perform this action."}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+def get_site_address(request):
+    if request.method == "GET":
+        customer_id = request.GET.get("customer_id")
+
+        try:
+            # Retrieve InventoryLocation data using the vendor_id
+            site_address_data = SiteAddress.objects.filter(user_id__id=customer_id)
+            serializer = SiteAddressSerializer(site_address_data, many=True)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                message="Site Address data",
+                                 data=serializer.data)
+            
+        except Vendor.DoesNotExist:
+            return JsonResponse({"error": "Site Address not found OR You are not authorized to perform this action."}, status=404)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
 
 def filter_purchase_order(data_access_value, user):
     # Define a mapping of data access values to corresponding filters.
@@ -242,7 +303,12 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
                 return JsonResponse(get_paginated_data(request, queryset, serializer_class, search_field))
             
             if request.accepted_renderer.format == 'html':
-                context = {'status_list':STATUS_CHOICES}
+                context = {
+                    'status_list':STATUS_CHOICES,
+                    'orders': get_paginated_data_for_web(request, queryset, self.search_fields),
+                    'search_fields': ['po number', 'vendor email','inventory location name','status'],
+                    'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
+                }
                 return render_html_response(context, self.template_name)
         except Exception as e:
             print(e)
@@ -276,7 +342,8 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         vendor_list = Vendor.objects.all()
         inventory_location_list = InventoryLocation.objects.all()
         tax_rate = AdminConfiguration.objects.all().first()
-
+        customer_list = User.objects.filter(roles__name='Customer').all()
+        site_address = SiteAddress.objects.filter(user_id__in=customer_list).all()
         
            
         if request.accepted_renderer.format == 'html':
@@ -284,6 +351,8 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             
             context = {'vendor_list':vendor_list, 
                        'inventory_location_list':inventory_location_list,
+                        'customer_list': customer_list,
+                        'site_address': site_address,
                        'tax_rate':tax_rate,
                        'new_po_number':po_number_generated()
                        
@@ -447,6 +516,8 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
             # Extract the first purchase order object from the queryset
             if purchase_order_data:
                 vendor_list = Vendor.objects.all()
+                customer_list = User.objects.filter(roles__name='Customer').all()
+                site_address = SiteAddress.objects.filter(user_id__in=customer_list).all()
                 inventory_location_list = InventoryLocation.objects.all()
                 item_list = Item.objects.filter(vendor_id=purchase_order_data.vendor_id)
                 tax_rate = AdminConfiguration.objects.all().first()
@@ -468,7 +539,9 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
                 
                 existingPurchaseOrderData = {
                     'vendor_id': purchase_order_data.vendor_id.id,
-                    'inventory_location_id': purchase_order_data.inventory_location_id.id,
+                    'inventory_location_id': purchase_order_data.inventory_location_id.id if purchase_order_data.inventory_location_id else '',
+                    'user_id': purchase_order_data.user_id.id if purchase_order_data.user_id else '',
+                    'site_address': purchase_order_data.site_address.id if purchase_order_data.site_address else '',
                     'po_number': purchase_order_data.po_number,
                     'created_at': purchase_order_data.created_at.strftime('%Y-%m-%d'),  # Convert date to string
                     'tax': purchase_order_data.tax,
@@ -488,6 +561,8 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
 
                 context = {'vendor_list':vendor_list, 
                             'inventory_location_list':inventory_location_list,
+                            'customer_list': customer_list,
+                            'site_address': site_address,
                             'item_list':item_list,
                             'purchase_order':purchase_order_data,
                             'existingPurchaseOrderData':existingPurchaseOrderData,

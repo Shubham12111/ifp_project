@@ -13,23 +13,32 @@
               <input type="hidden" name="_method" value="PUT">
               <!--single form panel-->
               <div class="card p-3  bg-white js-active" data-animation="FadeIn">
-                  <h5> {% if instance %} Edit {% else %}Add {% endif %} Task</h5>
+                <div class="row justify-content-between">
+                    <div class="col-6">
+                        <h5> {% if instance %} Edit {% else %}Add {% endif %} Task</h5>
+                    </div>
+                    <div class="col-6 text-end">
+                        <a class="btn bg-gradient-secondary mb-0 js-btn-prev btn-sm" href="{% url 'todo_list' %}" title="Back">Back</a>
+                    </div>
+                </div>
+                  
                   <div class="multisteps-form__content">
                       <div class="row mt-3">
                           {% render_form serializer %}
+                          <input type="hidden" name="id_assign_type" id="id_assign_type">
+                          <input type="hidden" name="id_module" id="id_module">
+                          
                       </div>
                       <div class="card-footer p-3">
                           <div class="row mt-2">
                               <div class="col-6 col-lg-6 m-auto text-end"></div>
                               <div class="col-md-6 m-auto text-center text-md-end">
-                                  <a class="btn bg-gradient-secondary mb-0 js-btn-prev " href="{% url 'todo_list' %}" title="Back">Back</a>
-                                  <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" type="submit" title="Submit">Submit</button>
+                                  <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next btn-sm" type="submit" title="Submit">Submit</button>
                               </div>
                           </div>
                       </div>
                   </div>
               </div>
-
             </form>
             {% include 'components/loader.html' %}
 
@@ -40,4 +49,5 @@
   <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
   <script src="{% static 'assets/js/custom_country.js' %}"></script>
   <script src="{% static 'assets/js/custom_button.js' %}"></script>
+
  {% endblock %}

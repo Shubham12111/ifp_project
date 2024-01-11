@@ -10,6 +10,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 
+from django.shortcuts import get_object_or_404
+
 class CustomFileValidator(FileExtensionValidator):
     def __init__(self, allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS, *args, **kwargs):
         super().__init__(allowed_extensions, *args, **kwargs)
@@ -250,3 +252,95 @@ class ItemSerializer(serializers.ModelSerializer):
         
         representation['document_paths'] = document_paths
         return representation
+    
+class ItemUploadSerializer(serializers.ModelSerializer):
+    upload_item = serializers.CharField(
+        allow_null=True,
+        validators=[CustomFileValidator()],
+        label=('Documents'),  # Corrected placement of label attribute
+        required=False,
+        write_only=True,
+        initial=[],
+        style={
+            "input_type": "file",
+            "class": "form-control",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_multiple_file.html',
+            'help_text': True,
+            'multiple': True,
+            'accept': ','.join(settings.SUPPORTED_EXTENSIONS),
+            'allow_null': True,
+            'custom_class': 'col-6'
+        },
+        help_text=('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
+    )
+    class Meta:
+        model = Item  
+    fields = ('upload_item')  
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['name', ]
+
+
+class ItemsSerializer(serializers.ModelSerializer):
+
+    category_id = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+
+    class Meta:
+        model = Item
+        fields = ['item_name', 'category_id', 'price', 'description', 'units', 'quantity_per_box', 'reference_number']
+    
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Price cannot be negative.")
+        return value
+
+    def validate_item_name(self, value):
+        # Check for minimum length of 3 characters
+        if len(value) < 3:
+            raise serializers.ValidationError("Item Name must be at least 3 characters long.")
+         # Check if the value consists entirely of digits (integers)
+        if value.isdigit():
+            raise serializers.ValidationError("Item Name cannot consist of only integers.")
+
+        # Check for alphanumeric characters and spaces
+        if not re.match(r'^[a-zA-Z0-9\s]*$', value):
+            raise serializers.ValidationError("Item Name can only contain alphanumeric characters and spaces.")
+
+        return value
+
+    
+    def validate_reference_number(self, value):
+        """
+        Validate that the reference number (SKU) is unique.
+        """
+        if self.instance:
+            reference_number = Item.objects.filter(reference_number=value).exclude(id=self.instance.id).exists()
+        else:
+            reference_number = Item.objects.filter(reference_number=value).exists()
+        
+        if reference_number:
+            raise serializers.ValidationError("This reference number is already in use.")
+        
+        return value
+
+    def validate_category_id(self, value):
+        try:
+            category_instance = get_object_or_404(Category, name=value)
+            return category_instance
+        except Exception as e:
+            raise serializers.ValidationError(f"Category with name '{value}' does not exist.")
+    
+    def validate(self, attrs):
+        request = self.context.get('request')
+
+        attrs['user_id'] = request.user
+        attrs['vendor_id'] = Vendor.objects.get(id=self.context['vendor_id'])
+
+        return super().validate(attrs)
+    
+        

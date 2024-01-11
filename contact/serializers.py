@@ -9,11 +9,15 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import FileExtensionValidator
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.translation import gettext_lazy as _
+
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
 import re
 from bs4 import BeautifulSoup
 from customer_management.constants import POST_CODE_LIST
+
 
 
 # Custom validation function for validating file size
@@ -189,19 +193,22 @@ class ContactSerializer(serializers.ModelSerializer):
         }
     )
     
-    contact_type = serializers.PrimaryKeyRelatedField(
+    contact_type = serializers.SlugRelatedField(
+        slug_field='name',
         label=('Contact Type'),
         required=True,
         queryset=ContactType.objects.all(),
         style={
-            'base_template': 'custom_select.html',
-             'custom_class':'col-6'
+            'base_template': 'custom_search.html',
+            'custom_class': 'col-6 autocomplete',
+
         },
         error_messages={
             "required": "This field is required.",
             "blank": "Contact Type field cannot be blank.",
             "invalid": "Contact Type can only contain characters.",
-
+            'does_not_exist': _('Contact type with {slug_name}, {value} does not exist.'),
+            'null': "This field is required."
         },
     )
      
@@ -297,6 +304,24 @@ class ContactSerializer(serializers.ModelSerializer):
         if len(value) < 2:
             raise serializers.ValidationError("Last Name should be at least 2 characters long.")
 
+        return value
+    
+
+    def validate_contact_type(self, value):
+        """
+        Validate the Contact Type field.
+        
+        Args:
+            value (str): The value of the Contact Type field.
+
+        Returns:
+            str: The validated Contact Type value.
+
+        Raises:
+            serializers.ValidationError: If the Contact Type is empty.
+        """
+        if not value:
+            raise serializers.ValidationError("Contact Type cannot be empty.")
         return value
     
 

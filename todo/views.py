@@ -19,7 +19,30 @@ from datetime import datetime
 from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.views import View
 
+    
+class UserAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        users = User.objects.filter(Q(first_name__icontains=query) | Q(last_name__icontains=query))[:10]
+        results = [f"{user.first_name} {user.last_name} - {user.roles.name}" if user.roles and user.roles.name 
+                   else f"{user.first_name} {user.last_name}"
+            for user in users
+        ]
+        
+        # Create a list of dictionaries containing both name and primary key
+        results = [{'label': result, 'value': user.id} for result, user in zip(results, users)]
+        return JsonResponse(results, safe=False)
+    
+class ModuleAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        module_list = Module.objects.filter(Q(name__icontains=query))[:10]
+        results = [{'label': module.name , 'value': module.id} for module in module_list]
+        return JsonResponse(results, safe=False)
+ 
+    
 class ToDoUserSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     """
     API view to search for users by email.
@@ -36,10 +59,9 @@ class ToDoUserSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         data = {}
         if search_term:
             # Filter users whose email contains the search term
-            user_list = User.objects.filter(Q(first_name__icontains=search_term))
-
+            user_list = User.objects.filter(Q(first_name__icontains=search_term) | Q(last_name__icontains=search_term))
             # Get the usernames from the user_list
-            results = [user.first_name for user in user_list]
+            results = [f"{user.first_name} {user.last_name}" for user in user_list]
 
             data = {'results': results}
             return create_api_response(status_code=status.HTTP_200_OK,
@@ -55,12 +77,12 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
     filter_backends = [filters.OrderingFilter, filters.SearchFilter]
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     ordering_fields = ['created_at']  # Specify fields you want to allow ordering on
-    search_fields = ['title']  # Specify fields you want to allow searching on
+    search_fields = ['module__name']  # Specify fields you want to allow searching on
     template_name = 'todo_list.html'
     serializer_class = TodoListSerializer
 
     def get_paginated_queryset(self, base_queryset):
-        items_per_page = 10 
+        items_per_page = 20 
         paginator = Paginator(base_queryset, items_per_page)
         page_number = self.request.GET.get('page')
         
@@ -110,17 +132,22 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
                     start_date = datetime.strptime(start_date_str.strip(), date_format).date()
                     end_date = datetime.strptime(end_date_str.strip(), date_format).date()
                     base_queryset = base_queryset.filter(start_date__gte=start_date, end_date__lte=end_date)
+                elif filter_name == 'assigned_to':
+                    value_list = filter_value.split()
+                    if 2 >= len(value_list) > 1:
+                        base_queryset = base_queryset.filter(assigned_to__first_name=value_list[0], assigned_to__last_name=value_list[1])
+                    else:
+                        base_queryset = base_queryset.filter(assigned_to__first_name = filter_value)
                 else:
                     # For other filters, apply the corresponding filters on the queryset
                     filter_mapping = {
                         'status': 'status',
                         'priority': 'priority',
                         'module': 'module__name',
-                        'assigned_to': 'assigned_to__first_name',
-
                     }
                     base_queryset = base_queryset.filter(**{filter_mapping[filter_name]: filter_value})
-
+        # Filter the queryset
+        base_queryset = self.get_searched_queryset(base_queryset)
         # Sort the queryset by 'created_at' in descending order
         base_queryset = self.get_paginated_queryset(base_queryset.order_by('-created_at'))
         return base_queryset
@@ -135,7 +162,21 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         Get a list of all unique assigned_to users from the User model.
         """
-        return User.objects.values_list('first_name', flat=True).distinct()
+        return User.objects.filter(is_employee=True, is_active=True).exclude(roles__name='Customer').values_list('first_name', flat=True).distinct()
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
     
     common_list_response = {
     status.HTTP_200_OK: 
@@ -174,11 +215,14 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
-            context = {'todo_list': queryset,
-                    'status_values': STATUS_CHOICES,
-                    'module_list': module_list,
-                    'assigned_to_users': assigned_to_users,
-                    'priority_list': PRIORITY_CHOICES,}
+            context = {
+                'todo_list': queryset,
+                'search_fields': ['module name',],
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+                'status_values': STATUS_CHOICES,
+                'module_list': module_list,
+                'assigned_to_users': assigned_to_users,
+                'priority_list': PRIORITY_CHOICES,}
             return render_html_response(context, self.template_name)
         else:
             # If the client accepts other formats, serialize the data and return an API response
@@ -205,6 +249,7 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         serializer = self.serializer_class(context={'request': request})
+        
 
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
@@ -235,10 +280,9 @@ class ToDoAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         serializer = self.serializer_class(data=request.data,context={'request': request})
-
+        
         if serializer.is_valid():
-            serializer.validated_data['user_id'] = request.user
-            serializer.save()
+            serializer.save(user_id=request.user)
             message = "Your Task has been saved successfully!"
             status_code = status.HTTP_201_CREATED
 
@@ -365,6 +409,15 @@ class ToDoUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             # If the todo instance exists, initialize the serializer with instance and provided data.
             serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
             if serializer.is_valid():
+                id_module = request.data.get('id_module')
+
+            # If contact_type_id is provided, fetch the corresponding object
+                if id_module:
+                    try:
+                        module_obj = Module.objects.get(id=id_module)
+                        serializer.validated_data['module'] = module_obj  # Assign the object to serializer data
+                    except Module.DoesNotExist:
+                        serializer.errors['module'] = "Invalid module"  # Add error message if not found
                 # If the serializer data is valid, save the updated todo instance.
                 serializer.save()
                 message = "Your TODO has been updated successfully!"

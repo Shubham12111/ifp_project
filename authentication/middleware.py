@@ -1,7 +1,14 @@
+
 # middleware.py
 from django.urls import reverse
 from django.shortcuts import redirect
 from django.contrib.auth import logout
+from django.urls import resolve
+from django.http import HttpResponse
+from authentication.signals import api_request_logged
+from django.core.exceptions import PermissionDenied
+from django.conf import settings
+from django.dispatch import receiver
 
 
 class CheckAdminUserMiddleware:
@@ -44,14 +51,14 @@ class CheckAdminUserMiddleware:
         Returns:
             HttpResponse: The response object for the request.
         """
-        if not request.path.startswith('/admin/'):
-            if request.user.is_authenticated and request.user.is_superuser:
+        if not request.path.startswith('/admin/') and not request.path.startswith('/favicon.ico'):
+            if request.user.is_authenticated and any( [request.user.is_superuser, request.user.is_staff] ):
                 # If the user is authenticated and is a superuser, log them out and redirect to the login page.
                 logout(request)
                 return redirect('login')
         else:
-            if request.path.startswith('/admin/'):
-                if request.user.is_authenticated and not request.user.is_superuser:
+            if request.path.startswith('/admin/') or request.path.startswith('/favicon.ico'):
+                if request.user.is_authenticated and all( [not request.user.is_superuser, not request.user.is_staff] ):
                     # If the user is authenticated and is not a superuser, log them out.
                     logout(request)
 
@@ -100,12 +107,12 @@ class ForcePasswordChangeBackend:
             HttpResponse: The response object for the request.
         """
         # Define a list of URL paths that should bypass password change enforcement
-        if not request.path.startswith('/admin/'):
+        if not request.path.startswith('/admin/') and not request.path.startswith('/favicon.ico'):
             allowed_paths = [
                 reverse('login'),
                 reverse('signup'),
                 reverse('forgot_password')
-            ]  # Add other allowed paths if needed
+            ] 
 
             if request.user.is_authenticated:
                 if request.path in allowed_paths:
@@ -115,3 +122,32 @@ class ForcePasswordChangeBackend:
 
         response = self.get_response(request)
         return response
+
+class SimpleAPILoggerMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Continue with the original request processing
+        request_data = request.body if request.body else ''
+        response = self.get_response(request)
+
+        # Check if the request is in the 'admin' namespace
+        namespace = resolve(request.path_info).namespace
+
+        if namespace == 'admin':
+            return response
+
+        api_request_logged.send(
+            sender=self.__class__,
+            request_data=request_data,
+            request=request,
+            response=response,
+        )
+
+        # Add the function call to capture request and response payload
+        # self.log_request_and_response(request_data, response)
+
+        return response
+    
+

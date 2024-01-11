@@ -27,7 +27,7 @@
 
 </style>
 {% include 'components/alert.html' %}
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
     <div class="row">
         <div class="col-lg-12 col-12 mt-3">
             
@@ -40,11 +40,82 @@
             
             {% csrf_token %}
             <div class="card">
+                <div class="card-header mt-0">
+                    <div class="row justify-content-between">
+                        <div class="col-6">
+                        <h5>{% if purchase_order %}{% if purchase_order.status == "pending" %}Edit{% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "projects_admin_(IT)"  %}Approve{% endif %}{% else %}Add{% endif %} Purchase Order</h5>
+                        </div>
+                        <div class="col-6 text-end">
+                        <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'purchase_order_list' %}">Back</a>
+                        </div>
+                    </div>
+                </div>
               <div class="card-body px-4 pb-0">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-3 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="locationType" id="warehouse" value="warehouse" {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}checked{% endif %}{%else%}checked{% endif %}>
+                            <label class="form-check-label" for="warehouse">
+                                Warehouse
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="locationType" id="siteAddress" value="site_address" {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}{% else %}checked{% endif %}{% endif %}>
+                            <label class="form-check-label" for="siteAddress">
+                                Site Address
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                    <div class="col-md-12">
                         <div class="row">
-                            <div class="col-md-6">
+                         <div class="col-md-4">
+                                <div class="row {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}d-none{% endif %}{% else %}d-none{% endif %}" id="siteAddressRow">
+                                    <div class="col-md-12">
+                                        <label for="customerDropdown" class="form-label">Select Customer:</label>
+                                        <select class="form-select" name="user_id" id="customer-choices" onchange="fetchCustomers()">
+                                        <option disabled selected value> Select an Customer </option>
+                                            {% for customer in customer_list %}
+                                                    <option value="{{customer.id}}">{{customer.email}}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="col-md-12 mt-3">
+                                            <label for="siteAddressDropdown" class="form-label">Select Site Address:</label>
+                                            <select class="form-select "  name="site_address" id="site_address-choices" onchange="fetchSiteAddress()">
+                                                <option disabled selected value> Select Site Address </option>
+                                            {% for site_address in site_address %}
+                                                    <option value="{{site_address.id}}">{{site_address.address}}</option>
+                                            {% endfor %}
+                                        </select>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            
+                                <div class="row {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}{% else %}d-none{% endif %}{% endif %}" id="inventoryLocationsRow">
+                                    <div class="col-md-12">
+                                    <label for="inventory_location" class="form-label">Inventory Location </label>
+                                        <select class="form-control" id="inventory_location-choices" name="inventory_location_id">
+                                            <option disabled selected value>Select Inventory Location</option>
+                                            {% for inventory_location in inventory_location_list %}
+                                                <option value="{{inventory_location.id}}">{{inventory_location.name}}</option>
+                                            {% endfor %}
+                                        </select>
+                                
+                                        <div id ="inventorylocation-card" class="mt-3">
+                                            <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0 text-sm"  style="display: none;">
+                                            </div>
+                                    </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-4">
                                 <label for="po_number" class="form-label">Vendor <span class="text-danger">*</span></label>
                                 <select class="form-control" id="vendor-choices" name="vendor_id">
                                     <option disabled selected value> Select an Vendor </option>
@@ -59,37 +130,43 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="inventory_location" class="form-label">Inventory Location <span class="text-danger">*</span></label>
-                                <select class="form-control" id="inventory_location-choices" name="inventory_location_id">
-                                    <option disabled selected value>Select Inventory Location</option>
-                                    {% for inventory_location in inventory_location_list %}
-                                        <option value="{{inventory_location.id}}">{{inventory_location.name}}</option>
-                                    {% endfor %}
-                                </select>
-                                <div id ="inventorylocation-card" class="mt-3">
-                                    <div class="card card-body border card-plain border-radius-lg align-items-center flex-row pt-3 px-3 pb-3 px-0 pb-0 pt-0 text-sm"  style="display: none;">
+                            
+                          
+                            
+                            <script>
+
+                                // Add event listener to radio buttons
+                                document.querySelectorAll('input[name="locationType"]').forEach(function (radio) {
+                                    radio.addEventListener('change', function () {
+                                        if (this.value === 'site_address') {
+                                            // Show the siteAddressRow when "Site Address" is selected
+                                            document.getElementById('siteAddressRow').classList.remove('d-none');
+                                            document.getElementById('inventoryLocationsRow').classList.add('d-none');
+                                        } else {
+                                            // Hide the siteAddressRow when "Warehouse" is selected
+                                            document.getElementById('siteAddressRow').classList.add('d-none');
+                                            document.getElementById('inventoryLocationsRow').classList.remove('d-none');
+                                        }
+                                    });
+                                });
+                            </script>
+                            
+                            
+                            <div class="col-md-4">
+                                <div class="row mb-4">
+                                <div class="col-md-12">
+                                        <label for="po_number" class="form-label">PO Number <span class="text-danger">*</span></label>
+                                        <input  class="form-control" id="po_number" value="{{new_po_number}}" 
+                                        name="po_number"  disabled> 
                                     </div>
                                 </div>
-
+                                
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="row mb-4">
-                           <div class="col-md-12">
-                                <label for="po_number" class="form-label">PO Number <span class="text-danger">*</span></label>
-                                <input  class="form-control" id="po_number" value="{{new_po_number}}" 
-                                name="po_number"  disabled> 
-                            </div>
-                        </div>
-                        
-                    </div>
                 </div>
 
                 <div class="row mt-5">
-                    <div class="col-md-12">
-                        <table class="table-responsive custom-table mb-3  text-sm" style="width:100%">
+                    <div class="col-md-12 table-responsive">
+                        <table class="custom-table mb-3  text-sm" style="width:100%">
                                 <thead>
                                     <tr class="px-0">
                                         <th class="text-start col-6">Item Name</th>
@@ -109,7 +186,7 @@
                     </div>
                 
                 <div class="row mt-4">
-                    <div class="col-md-6 ">
+                    <div class="col-md-6 col-12">
                         {% if purchase_order.status == "sent_for_approval" %}
                         <p class="notes text-sm">{{ existingPurchaseOrderData.notes }}</p>
                         <label>Approval Notes</label>
@@ -134,46 +211,32 @@
                         </div>
                         {% endif %}
                     </div>
-                    <div class="col-md-1 "></div>
-                    <div class="col-md-5">
+                    <div class="col-md-1 d-none d-md-block"></div>
+                    <div class="col-md-5 col-12">
                         <input type="hidden" id="subtotalInput" name="sub_total" value="0">
                         <input type="hidden" id="grandTotalInput" name="total_amount" value="0">
                         <div class="row mb-2">
-                            <div class="col-6 text-end mb-1">
-                                <p class=" mx-1 subtotal-label ">Sub Total:</p>
+                            <div class="row mb-2 justify-content-between">
+                                <div class="col-6 text-end"><p class="text-md subtotal-label">Sub Total:</p></div>
+                                <div class="col-6 text-end"><p class="text-dark font-weight-bold subtotal-value">£00.00</p></div>
                             </div>
-                            <div class="col-6 mb-1">
-                                <p class="mb-2 text-end subtotal-value"> £00.00</p>
+                            <div class="row mb-2 justify-content-between">
+                                <div class="col-6 text-end"><span class="text-md discount-label">Discount:</span></div>
+                                <div class="col-3 text-end"><input type="number" class="form-control discount-input text-end pe-0" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)"></div>
+                                <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
                             </div>
-                            <div class="col-6 mb-1 text-end">
-                                <p class="discount-label">Discount:</p>
+                            <div class="row mb-4 justify-content-between">
+                                <div class="col-6 text-end"><span class="text-md tax-label">Tax (%):</span></div>
+                                {% if tax_rate.tax_rate  %}
+                                <div class="col-6 tax-input text-end" id="tax">
+                                    {{tax_rate.tax_rate}}
+                                </div>
+                                {% endif %}
                             </div>
-                            <div class="col-2 text-end mb-2"></div>
-                            <div class="col-2 text-end mb-2"></div>
-                            <div class="col-2 text-end mb-2">
-                                <input type="number" class="form-control discount-input" id="discount" name="discount" min="0" placeholder="00.00" onchange="calculateTotal()" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)">
-                            </div>
-                            <div class="error-message  help-block mt-2 text-danger text-sm text-end mb-2" id="discountError"></div>
-                           
-                
-                            <div class="col-6 mb-1 text-end">
-                                <p class="tax-label">Tax (%):</p>
-                            </div>
-                            <div class="col-2 text-end mb-2"></div>
-                            <div class="col-1 text-end mb-2"></div>
-                            {% if tax_rate.tax_rate  %}
-                            <div class="col-3 mb-1 tax-input text-end" id="tax">
-                                {{tax_rate.tax_rate}}
-                               
-                            </div>
-                            {% endif %}
-                            <div class="col-6 mb-1 text-end">
-                                <p class="font-weight-bolder mb-0 text-end grand-total-label">Grand Total:</p>
-                            </div>
-                            <div class="col-6 mb-1">
-                                <p class="font-weight-bolder mb-0 text-end grand-total-value">£00.00</p>
+                            <div class="row justify-content-between">
+                                <div class="col-6 text-end"><span class="font-weight-bolder grand-total-label">Total</span></div>
+                                <div class="col-6 text-end"><span class="text-dark font-weight-bold grand-total-value">£00.00</span></div>
                                 <div class="error-message help-block mt-2 text-danger text-sm" id="grandTotalError"></div>
-
                             </div>
                         </div>
                     </div>
@@ -181,7 +244,6 @@
                 <div class="row mt-5 mb-5">
                 <div class="col-6 col-lg-6 m-auto text-end"></div>
                 <div class="col-md-6 col-xs-12 col-sm-12 m-auto text-center text-md-end">
-                    <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-2" href="{% url 'purchase_order_list' %}">Cancel</a>
                     {% if purchase_order.status == "pending" or not purchase_order   %}
                     <button class="btn bg-gradient-primary mb-0 js-btn-prev  ms-2 mb-2" id="submitSaveAsDraftBtn" title="Submit">Save As Draft</button>
                     <button class="btn btn-md bg-gradient-primary ms-2 mb-2 js-btn-next" id="submitBtnApproval" title="Submit">Send For Approval</button>
@@ -241,6 +303,105 @@ function getUnselectedOptions() {
     return unselectedOptionsHtml;
 }
 
+// Update the function to fetch customer list dynamically
+async function fetchCustomers() {
+    try {
+        {% comment %} const response = await fetch('customer/list/');
+        const customerData = await response.json();
+
+        // Get the customerDropdown element
+        const customerDropdown = document.getElementById('customerDropdown');
+
+        // Clear previous options
+        customerDropdown.innerHTML = '';
+
+        // Populate customer names in the dropdown
+        customerData.forEach(customer => {
+            const option = document.createElement('option');
+            option.value = customer.id;  // Use a unique identifier for each customer
+            option.text = customer.name;  // Adjust based on your customer data structure
+            customerDropdown.add(option);
+        }); {% endcomment %}
+
+        // Trigger the fetchSiteAddresses function to update site addresses based on the selected customer
+        fetchSiteAddresses();
+    } catch (error) {
+        console.error('Error fetching customer data:', error);
+    }
+}
+
+// Call the fetchCustomers function to populate the customer dropdown on page load
+document.addEventListener('DOMContentLoaded', fetchCustomers);
+
+
+async function fetchSiteAddresses() {
+    try {
+        // Get the selected customer ID from the customer dropdown
+        const selectedCustomerId = document.getElementById('customer-choices').value;  // Adjust the ID if necessary
+
+        // Check if a customer is selected
+        if (selectedCustomerId) {
+            // Fetch the site addresses based on the selected customer ID
+            const siteAddressResponse = await fetch(`/purchase_order/site_address/?customer_id=${selectedCustomerId}`);
+            const siteAddressData = await siteAddressResponse.json();
+            const dataArray = Array.isArray(siteAddressData.data) ? siteAddressData.data : [siteAddressData.data];
+            // Get the siteAddressDropdown element
+            const siteAddressDropdown = document.getElementById('site_address-choices');
+            // Clear previous options
+            siteAddressDropdown.innerHTML = '';
+
+            // Populate site addresses in the dropdown
+            dataArray.forEach(siteAddress => {
+                const option = document.createElement('option');
+                option.value = siteAddress.site_name;
+                option.text = siteAddress.site_name;
+                siteAddressDropdown.add(option);
+            });
+
+            const site_address_choices = new Choices(siteAddressDropdown, {
+                default: false,
+                items: [],
+                choices: [],
+                renderChoiceLimit: 1,
+                searchEnabled: true,
+                searchChoices: true,
+                searchFloor: 1,
+                searchResultLimit: 10,
+                resetScrollPosition: true,
+                shouldSort: true,
+                shouldSortItems: false,
+                searchFields: ['label'],
+                searchPlaceholderValue: "Search Site address", 
+                fuseOptions: {
+                  includeScore: true,
+                  includeMatches: true,
+                  threshold: 0, // Set to 0 for exact match
+                  location: 0,
+                  distance: 100,
+                  maxPatternLength: 32,
+                  minMatchCharLength: 1
+                }
+              });
+            
+        } else {
+            // Clear the siteAddressDropdown if no customer is selected
+            const siteAddressDropdown = document.getElementById('site_address-choices');
+            siteAddressDropdown.innerHTML = '';
+        }
+    } catch (error) {
+        console.error('Error fetching site addresses:', error);
+    }
+}
+
+// Call the fetchSiteAddresses function whenever the customer dropdown changes
+document.getElementById('customer-choices').addEventListener('change', fetchSiteAddresses);
+
+// Call the fetchSiteAddresses function on page load to handle any existing selected customer
+document.addEventListener('DOMContentLoaded', fetchSiteAddresses);
+
+
+
+
 // Assume you have retrieved existingPurchaseOrderData from the backend
 if (document.getElementById('existingPurchaseOrderData')) {
     const existingPurchaseOrderData = JSON.parse(document.getElementById('existingPurchaseOrderData').textContent);
@@ -251,7 +412,9 @@ if (document.getElementById('existingPurchaseOrderData')) {
     }
     // Populate the form fields with existing data
         document.getElementById('vendor-choices').value = safeGetProperty(existingPurchaseOrderData, 'vendor_id');
+        document.getElementById('customer-choices').value = safeGetProperty(existingPurchaseOrderData, 'user_id');
         document.getElementById('inventory_location-choices').value = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
+        document.getElementById('site_address-choices').value = safeGetProperty(existingPurchaseOrderData, 'site_address');
         document.getElementById('po_number').value = safeGetProperty(existingPurchaseOrderData, 'po_number');
        
         document.querySelector('.subtotal-value').textContent = `£${parseFloat(safeGetProperty(existingPurchaseOrderData, 'sub_total')).toFixed(2)}`;
@@ -268,7 +431,14 @@ if (document.getElementById('existingPurchaseOrderData')) {
             document.querySelector('.notes').value = safeGetProperty(existingPurchaseOrderData, 'notes');
 
         }
-        document.querySelector('.grand-total-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
+        // Populate inventory location data for existing value on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    const existingInventoryLocationId = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
+    if (existingInventoryLocationId) {
+        populateInventoryLocationData(existingInventoryLocationId);
+    }
+});
+document.querySelector('.grand-total-value').textContent = `£ ${parseFloat(safeGetProperty(existingPurchaseOrderData, 'grand_total')).toFixed(2)}`;
         // Populate item rows with existing item data
 
     
@@ -281,34 +451,35 @@ if (document.getElementById('existingPurchaseOrderData')) {
     });
 
     // Populate inventory location data for existing value on page load
-    document.addEventListener('DOMContentLoaded', async function() {
-        const existingInventoryLocationId = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
-        if (existingInventoryLocationId) {
-            populateInventoryLocationData(existingInventoryLocationId);
-        }
-    });
+{% comment %} document.addEventListener('DOMContentLoaded', async function() {
+    const existingInventoryLocationId = safeGetProperty(existingPurchaseOrderData, 'inventory_location_id');
+    if (existingInventoryLocationId) {
+        populateInventoryLocationData(existingInventoryLocationId);
+    }
+}); {% endcomment %}
 
-    itemTableBody.innerHTML = ''; // Clear existing rows
-    existingPurchaseOrderData.items.forEach(item => {
-        
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-        <td>
-            <select class="form-control item-dropdown" onchange="updatePrice(this)">
+itemTableBody.innerHTML = ''; // Clear existing rows
+existingPurchaseOrderData.items.forEach(item => {
+
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+    <td>
+        <select class="form-control item-dropdown" onchange="updatePrice(this)">
             ${getUnselectedOptions(item.item_id)}
-            </select>
-        </td>
-        <td class="text-center item-price">${item.price}</td>
-        <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)"></td>
-        <td class="text-center total">${item.row_total}</td>
-        <td class="text-center">
-            <a class="remove-row-btn" onclick="removeRow(this)">
+        </select>
+    </td>
+    <td class="text-center item-price">${item.price}</td>
+    <td class="text-center"><input type="number" class="form-control quantity-input" value="${item.quantity}" min="0" oninput="this.value = (parseInt(this.value) > 0 ? Math.abs(this.value) : 1)"></td>
+    <td class="text-center total">${item.row_total}</td>
+    <td class="text-center">
+        <a class="remove-row-btn" onclick="removeRow(this)">
             <i class="fas fa-times"></i>
-            </a>
-        </td>
-        `;
-        itemTableBody.appendChild(newRow);
-    });
+        </a>
+    </td>
+    `;
+    itemTableBody.appendChild(newRow);
+});
+
 
     // Calculate and populate totals based on existing item data
     calculateTotal();
@@ -324,7 +495,9 @@ if (document.getElementById('existingPurchaseOrderData')) {
         }
     }
     preselectDropdownOption('vendor-choices', existingPurchaseOrderData.vendor_id);
+    preselectDropdownOption('customer-choices', existingPurchaseOrderData.user_id);
     preselectDropdownOption('inventory_location-choices', existingPurchaseOrderData.inventory_location_id);
+    preselectDropdownOption('site_address-choices', existingPurchaseOrderData.site_address);
     }
 }
     
@@ -383,8 +556,40 @@ addItemBtn.addEventListener('click', () => {
 });
 
 
+// Customer 
+if (document.getElementById('customer-choices')) {
+  var element = document.getElementById('customer-choices');
+  const customer_choices = new Choices(element, {
+    default: false,
+    items: [],
+    choices: [],
+    renderChoiceLimit: 1,
+    searchEnabled: true,
+    searchChoices: true,
+    searchFloor: 1,
+    searchResultLimit: 10,
+    resetScrollPosition: true,
+    shouldSort: true,
+    shouldSortItems: false,
+    searchFields: ['label'],
+    searchPlaceholderValue: "Search Customer", 
+    fuseOptions: {
+      includeScore: true,
+      includeMatches: true,
+      threshold: 0, // Set to 0 for exact match
+      location: 0,
+      distance: 100,
+      maxPatternLength: 32,
+      minMatchCharLength: 1
+    }
+  });
+ }
 
-// Initialize Choices.js
+ // Customer 
+if (document.getElementById('site_address-choices')) {
+  var element = document.getElementById('site_address-choices');
+}
+
 if (document.getElementById('vendor-choices')) {
   var element = document.getElementById('vendor-choices');
   const vendor_choices = new Choices(element, {
@@ -459,8 +664,6 @@ function getUnselectedOptionsFromItemList(itemList) {
     return unselectedOptionsHtml;
 }
 
-
-
 itemTableBody.addEventListener('change', (event) => {
     if (event.target.classList.contains('item-price') || event.target.classList.contains('quantity-input')) {
         recalculateTotal(event.target.closest('tr'));
@@ -469,7 +672,7 @@ itemTableBody.addEventListener('change', (event) => {
    
 });
 
-            
+      
 function setInitialPrice(row) {
     const dropdown = row.querySelector('.item-dropdown');
     const selectedOption = dropdown.options[dropdown.selectedIndex];
@@ -513,9 +716,6 @@ function updatePrice(selectElement) {
     rowsAdded--; // Increment the counter for added rows
     recalculateTotal(row);
 }
-
-
-
 
 function removeRow(buttonElement) {
     const row = buttonElement.closest('tr');
@@ -564,9 +764,6 @@ function recalculateTotal(row) {
 }
 
 
-
-
-
 function calculateTotal() {
     let subtotal = 0;
     const rows = itemTableBody.querySelectorAll('tr');
@@ -586,7 +783,6 @@ function calculateTotal() {
     document.getElementById('discountError').textContent = '';
     document.getElementById('grandTotalError').textContent = '';
    
-    
     
     if (subtotal > 0) 
     {
@@ -608,9 +804,7 @@ function calculateTotal() {
             const subtotalInput = document.getElementById('subtotalInput');
             const grandTotalInput = document.getElementById('grandTotalInput');
             subtotalInput.value = subtotal.toFixed(2);
-            grandTotalInput.value = grandTotal.toFixed(2);
-
-
+            grandTotalInput.value = grandTotal.toFixed(2)
             
         }
         else
@@ -631,8 +825,7 @@ function calculateTotal() {
         subtotalInput.value = subtotal.toFixed(2);
         grandTotalInput.value = grandTotal.toFixed(2);
         }
-        
-        
+
     }
     else
     {
@@ -653,12 +846,8 @@ function calculateTotal() {
         subtotalInput.value = subtotal.toFixed(2);
         grandTotalInput.value = grandTotal.toFixed(2);
     }
-    
-    
 
 }
-
-
     // Trigger the function on page load
 window.addEventListener('load', function() {
 const selectElement = document.getElementById('itemSelect');
@@ -693,6 +882,7 @@ if (document.getElementById('inventory_location-choices')) {
       minMatchCharLength: 1
     }
   });
+
 }
 // Function to populate inventory location data in the card
 async function populateInventoryLocationData(selectedInventoryLocationId) {
@@ -704,7 +894,7 @@ async function populateInventoryLocationData(selectedInventoryLocationId) {
         cardBody.style.display = 'block';  // Show the card body
         cardBody.innerHTML = `
         <h6 class="text-sm mb-1">${selectedInventoryLocationData.data.name}</h6>
-        <p class="text-sm mb-1">${selectedInventoryLocationData.data.full_address}</p>
+        <p class="text-sm mb-site_address-choices1">${selectedInventoryLocationData.data.full_address}</p>
         `;
     } catch (error) {
         console.error('Error fetching InventoryLocation data:', error);
@@ -729,10 +919,9 @@ function hideLoader() {
 
 // Inside your JavaScript
 // Event listeners for the buttons
+{% if purchase_order.status == "pending" or not purchase_order   %}
 const submitSaveAsDraftBtn = document.getElementById('submitSaveAsDraftBtn');
 const submitBtnApproval = document.getElementById('submitBtnApproval');
-const submitBtnApproved = document.getElementById('submitBtnApproved');
-
 
 if (submitSaveAsDraftBtn)
 {
@@ -749,11 +938,13 @@ submitBtnApproval.addEventListener('click', function() {
 });
 
 }
-
+{% elif purchase_order.status == "sent_for_approval" and request.user.roles.name == "projects_admin_(IT)"  %}
+const submitBtnApproved = document.getElementById('submitBtnApproved');
 submitBtnApproved.addEventListener('click', function() {
     showLoader(); // Show the loader overlay before submitting
     submitForm('approved'); // Call the common function with the status
 });
+{% endif %}
 
 function submitForm(status) {
     event.preventDefault(); // Prevent default button behavior
@@ -785,7 +976,6 @@ function submitForm(status) {
         formData.append('tax', '0.00'); // Default to 0 if tax is empty or not a number
     }
     
-   
     // Collect item row data
     const rows = itemTableBody.querySelectorAll('tr');
     let hasNonEmptyRow = false; // Flag to track non-empty rows
@@ -823,9 +1013,7 @@ function submitForm(status) {
             hasNonEmptyRow = true;
         }
         
-        
     });
-
     if (!hasNonEmptyRow)
     {
         const rowErrorElement = document.getElementById('rowError');
@@ -838,8 +1026,6 @@ function submitForm(status) {
                 }, 10000); // 1000 milliseconds = 1 second
         }
     }
-
-    
     if (hasNonEmptyRow) {
         // Make an AJAX POST request to your Django view
     fetch(form.action, {
@@ -887,21 +1073,12 @@ function submitForm(status) {
             // Other error handling
             alert('An error occurred while saving items.');
         }
-
-
-
         });
-        
-        
-
     }).catch(error => {
         console.error('Error:', error);
     });
     }
-
-    
 }
-
-
 </script>
 {% endblock %}
+                                

@@ -9,6 +9,7 @@ from .inventory import *
 
 
 
+
 urlpatterns = [
    path('vendor/serach/', VendorSearchAPIView.as_view(), name='vendor_search'),
    path('vendor/list/', VendorListView.as_view(), name='vendor_list'),
@@ -19,7 +20,11 @@ urlpatterns = [
    
    path('vendor/item/<int:vendor_id>/', ItemListView.as_view(), name='item_list'),
    path('vendor/item/edit/<int:vendor_id>/<int:item_id>/', ItemListView.as_view(), name='item_list'),
+   path('vendor/item/bulk_import/<int:vendor_id>/', BulkImportItemsView.as_view(), name='item_bulk_import'),
    path('vendor/item/view/<int:vendor_id>/<int:item_id>/', ItemDetailView.as_view(), name='item_view'),
+   path('vendor/<int:vendor_id>/download-items/', ItemExcelDownloadAPIView.as_view(), name='download_items_excel'),
+
+
 
    path('item/delete/<int:item_id>/', ItemDeleteView.as_view(), name='item_delete'),
    path('inventory/<int:item_id>/', InventoryView.as_view(), name='inventory_view'),
@@ -39,8 +44,7 @@ urlpatterns = [
    path('vendor/contact_person/delete/<int:vendor_id>/<int:contact_id>/', VendorRemoveContactPersonView.as_view(), name='vendor_contact_person_delete'),
 
    path('vendor/remarks/<int:vendor_id>/',VendorRemarkView.as_view(), name='vendor_remarks'),
-   
-   
+   path('vendor/purchase-orders/<int:vendor_id>/', VendorPurchaseOrderListView.as_view(), name='vendor_purchase_order_list'),
    
    path('inventory_location/serach/', InventoryLocationSearchAPIView.as_view(), name='inventory_location_search'),
    path('inventory_location/list/', InventoryLocationListView.as_view(), name='inventory_location_list'),
@@ -48,5 +52,6 @@ urlpatterns = [
    path('inventory_location/edit/<int:inventory_location_id>/', InventoryLocationUpdateView.as_view(), name='inventory_location_edit'),
    path('inventory_location/delete/<int:inventory_location_id>/', InventoryLocationDeleteView.as_view(), name='inventory_location_delete'),
 
+   path('export_csv/', ExportCSVView.as_view(), name='export_csv'),
 
 ]

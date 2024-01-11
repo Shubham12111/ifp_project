@@ -16,7 +16,17 @@ from infinity_fire_solutions.response_schemas import create_api_response, conver
 from infinity_fire_solutions.utils import docs_schema_response_new
 from .models import *
 from .serializers import *
+from django.views import View
 
+import csv
+from .models import User, Vendor
+from django.utils.encoding import smart_str
+from django.shortcuts import render
+
+
+from django.shortcuts import get_object_or_404
+from purchase_order_management.models import PurchaseOrder
+from purchase_order_management.serializers import PurchaseOrderSerializer
 
 # Define a custom API view for vendor search
 class VendorSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
@@ -93,7 +103,7 @@ class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
     ordering_fields = ['created_at'] 
 
     def get_paginated_queryset(self, base_queryset):
-        items_per_page = 10 
+        items_per_page = 20 
         paginator = Paginator(base_queryset, items_per_page)
         page_number = self.request.GET.get('page')
         
@@ -138,6 +148,20 @@ class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
         return base_queryset
     
 
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
     common_get_response = {
         status.HTTP_200_OK: 
             docs_schema_response_new(
@@ -170,7 +194,12 @@ class VendorListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         queryset = self.get_queryset()
         if request.accepted_renderer.format == 'html':
-            context = {'vendors': queryset}
+            queryset = self.get_searched_queryset(queryset)
+            context = {
+                'vendors': self.get_paginated_queryset(queryset),
+                'search_fields': ['name', 'email'],
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+            }
             return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -246,6 +275,9 @@ class VendorAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"stock_management", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
         message = "Vendor has been added successfully."
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -748,4 +780,67 @@ class VendorRemarkView(CustomAuthenticationMixin, generics.CreateAPIView):
                                        data=convert_serializer_errors(serializer.errors))
 
 
-            
+
+class VendorPurchaseOrderListView(View):
+    template_name = 'vendor_purchase_order.html'  # Replace with the actual template name
+
+    def get(self, request, vendor_id):
+        vendor = get_object_or_404(Vendor, pk=vendor_id)
+        purchase_orders = PurchaseOrder.objects.filter(vendor_id=vendor_id)
+
+        context = {
+            'vendor_instance': vendor,
+            'purchase_orders': purchase_orders,
+        }
+
+        return render(request, self.template_name, context)
+
+
+class ExportCSVView(View):
+    def get(self, request, *args, **kwargs):
+        selected_ids_str = request.GET.get('stw_ids', '')
+        if not selected_ids_str:
+            messages.error(request, 'No Row was selected to export the data, Please selecte a row and try again.')
+            return redirect('vendor_list')
+        
+        selected_ids = selected_ids_str.split(',') if selected_ids_str else []
+
+        # Fetch the selected data from the database
+        selected_data = Vendor.objects.filter(id__in=selected_ids).values(
+            'first_name', 'last_name', 'email', 'phone_number',
+            'company', 'vat_number', 'tax_preference', 'address',
+            'country', 'town', 'county', 'post_code'
+        )
+        # print(selected_data)
+        # Create a CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+        # Create a CSV writer and write the header
+        writer = csv.writer(response)
+        header_row = [
+            'First Name', 'Last Name', 'Email', 'Phone Number',
+            'Company', 'VAT Number', 'Tax Preference', 'Address',
+            'Country', 'Town', 'County', 'Post Code'
+        ]
+        writer.writerow([smart_str(header) for header in header_row])
+
+        # Write data rows
+        for data_row in selected_data:
+            writer.writerow([
+                data_row['first_name'],
+                data_row['last_name'],
+                data_row['email'],
+                data_row['phone_number'],
+                data_row['company'],
+                data_row['vat_number'],
+                data_row['tax_preference'],
+                data_row['address'],
+                data_row['country'],
+                data_row['town'],
+                data_row['county'],
+                data_row['post_code']
+            ])
+
+        return response
+

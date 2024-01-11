@@ -12,13 +12,21 @@ class TodoListSerializer(serializers.ModelSerializer):
         fields = ('id','module', 'assigned_to', 'title', 'description','priority', 'start_date', 'end_date', )
     
 class TodoAddSerializer(serializers.ModelSerializer):
-    module = serializers.PrimaryKeyRelatedField(
+    module = serializers.SlugRelatedField(
+        slug_field='name',
         label=('Module'),
         required=True,
         queryset=Module.objects.all(),
         style={
-            'base_template': 'custom_select.html',
+            'base_template': 'custom_search.html',
             'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Module field cannot be blank.",
+            "invalid": "Module can only contain characters.",
+            'does_not_exist': 'Module with {slug_name}, {value} does not exist.',
+            'null': "This field is required."
         },
     )
      # Custom CharField for the message with more rows (e.g., 5 rows)
@@ -53,7 +61,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         queryset=User.objects.none(),
         style={
             'base_template': 'custom_select.html',
-            'custom_class':'col-6'
+            'custom_class':'col-6 autocomplete'
         },
     )
     
@@ -93,7 +101,7 @@ class TodoAddSerializer(serializers.ModelSerializer):
         try:
             user = self.context['request'].user
             if user.is_authenticated:
-                self.fields['assigned_to'].queryset = User.objects.filter(is_active=True)
+                self.fields['assigned_to'].queryset = User.objects.filter(is_employee=True, is_active=True).exclude(roles__name='Customer')
         except Exception as e:
             pass
 

@@ -43,16 +43,21 @@
       theme: 'snow', // Specify theme in configuration
       modules: {
         toolbar: [
-          ['bold', 'italic', 'underline', 'strike'],  
-          ['link', 'blockquote', 'code-block', 'image'],    // links and images      // basic formatting
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],     // lists
-          [{ 'indent': '-1'}, { 'indent': '+1' }],          // indentation
-          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],        // headers
-          [{ 'color': [] }, { 'background': [] }],          // color and background
-          ['clean']                                         // remove formatting button
-        ],
+        ['bold', 'italic', 'underline'],  
+        [{ 'list': 'bullet' }],     // lists
+      ],
       },
     });
+    // Assuming 'hidden-input-{{ field.name }}' is the ID of your hidden input field
+      var quillContent = document.getElementById('edit-{{ field.name }}').textContent;
+      var hiddenInput = document.getElementById('quill-{{ field.name }}');
+      
+
+      
+      // Update the hidden input field value whenever the Quill content changes
+      quill.on('text-change', function () {
+        hiddenInput.value = quill.root.innerHTML;
+      });
 
 
     // Add an event listener to capture the content when the form is submitted
@@ -61,7 +66,7 @@
     form.addEventListener('submit', function (event) {
       
       var quillContent = document.getElementById('edit-{{ field.name }}').textContent;
-       document.getElementById('quill-{{ field.name }}').value = quillContent;
+     
 
       
 

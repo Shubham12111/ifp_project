@@ -17,7 +17,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # Quick-start development settings - unsuitable for production
-
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -52,10 +51,18 @@ INSTALLED_APPS = [
     'stock_management',
     'purchase_order_management',
     'work_planning_management',
+    'employee_management',
+    'drf_api_logger',
+    'django_user_agents',
+    'django_admin_listfilter_dropdown',
+    'rangefilter',
+    'admin_auto_filters',
+  
+
 
      # for calendar setup
-    # 'schedule',
-    # 'djangobower',
+    'schedule',
+    'djangobower',
     
 ]
 
@@ -63,14 +70,22 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'infinity_fire_solutions.custom_csrf.CustomCsrfMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'authentication.middleware.CheckAdminUserMiddleware',
     'authentication.middleware.ForcePasswordChangeBackend',
+    # 'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware', 
+    'authentication.middleware.SimpleAPILoggerMiddleware',
+    'django_user_agents.middleware.UserAgentMiddleware',
+
+
+
+
 ]
+DRF_API_LOGGER_DATABASE = True  # Default to False
 
 ROOT_URLCONF = 'infinity_fire_solutions.urls'
 
@@ -110,11 +125,12 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
         'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'root'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': '3306',
     }
 }
+
 
 
 
@@ -170,7 +186,7 @@ USE_TZ = True
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
 STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
-#STATIC_URL = '/static/'
+# STATIC_URL = '/static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 
@@ -217,6 +233,7 @@ CITIES_LIGHT_INCLUDE_COUNTRIES = ['UK']
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'djangobower.finders.BowerFinder',
 )
 
 BOWER_INSTALLED_APPS = (
@@ -226,11 +243,12 @@ BOWER_INSTALLED_APPS = (
     'fullcalendar#3.8.2'
 )
 
-# BOWER_COMPONENTS_ROOT = BASE_DIR + '/components/'
+BOWER_COMPONENTS_ROOT = '/BASE_DIR/components/'
 
-# requires_system_checks = [
-#     'some_check',
-#     'another_check',
-#     # ... other checks ...
-# ]
+requires_system_checks = [
+    'some_check',
+    'another_check',
+    # ... other checks ...
+]
+
 

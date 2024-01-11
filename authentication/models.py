@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from cities_light.models import City, Country, Region
 from ckeditor.fields import RichTextField
+from customer_management.constants import POST_CODE_LIST
+from django.utils.safestring import mark_safe
 
 
 # Choices for the can_access field
@@ -168,6 +170,7 @@ class UserManager(BaseUserManager):
         
         return self.create_user(email, password, **extra_fields)
 
+
 class User(AbstractBaseUser, PermissionsMixin):
     """
     Custom User model with email as the unique identifier.
@@ -179,13 +182,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=50)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    is_employee = models.BooleanField(default=False)
     
     phone_number = models.CharField(max_length=20, null=True, blank=True)
-    address = models.CharField(max_length=255 , null=True, blank=True)
-    country = models.ForeignKey(Country, on_delete=models.CASCADE, null=True, blank=True)
-    town = models.ForeignKey(City, on_delete=models.CASCADE, null=True, blank=True , verbose_name="Town" )
-    county = models.ForeignKey(Region, on_delete=models.CASCADE, null=True, blank=True, verbose_name="County")
-    post_code = models.CharField(max_length=10, null=True, blank=True)
+    address = models.CharField(max_length=255,null=True,blank=True)
+    country = models.CharField(max_length=255, null=True, blank=True)
+    town = models.CharField(max_length=255, null=True, blank=True)
+    county = models.CharField(max_length=255, null=True, blank=True)
+    post_code = models.CharField(max_length=10, choices=POST_CODE_LIST, null=True, blank=True)
 
     # relationship with UserRole
     company_name = models.CharField(max_length=100, blank=True, null=True)
@@ -193,16 +197,81 @@ class User(AbstractBaseUser, PermissionsMixin):
     roles = models.ForeignKey(UserRole,on_delete=models.PROTECT, null=True,verbose_name="UserRole")
     created_by = models.ForeignKey("self", on_delete=models.PROTECT, null=True, blank=True, related_name='created_users')
     enforce_password_change = models.BooleanField(default = False)
-    
+
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
-        return self.first_name
+        return mark_safe(f"{self.first_name} {self.last_name} - <i>{self.roles}</i>")
     
     class Meta:
         ordering = ['-id']  # Order by the default primary key in descending order
     
 
+class InfinityLogs(models.Model):
+    """
+    Model to store logs of API requests in the InfinityLogs table.
+
+    Fields:
+        - api: API URL
+        - access_type: Type of access (e.g., Postman, Application)
+        - ip_address: IP address of the client
+        - page_slug: Slug of the accessed page
+        - module: Module of the application
+        - action_type: Type of action (create, update, delete, get)
+        - user_id: ID of the user (0 for anonymous)
+        - username: Username of the user (null for anonymous)
+        - token_id: Token ID (null for anonymous)
+        - device_type: Type of device (e.g., desktop, mobile)
+        - browser: Web browser used by the client
+        - outcome: Outcome of the API request (e.g., success, error)
+        - request_payload: JSON representation of the request payload (null for certain response types)
+        - response_payload: JSON representation of the response payload
+        - status_code: HTTP status code of the response
+        - elapsed_time: Server execution time (in seconds)
+        - affected_modules: Modules affected by the action (null if not applicable)
+        - change_description: Description of the change made (null if not applicable)
+        - previous_state: JSON representation of the previous state (null if not applicable)
+        - new_state: JSON representation of the new state (null if not applicable)
+        - user_role: Role of the user (null for anonymous)
+        - body: Additional information related to the request (null for certain response types)
+        - method: HTTP method used in the request
+        - timestamp: Timestamp of when the log entry was created
+    """
+    api = models.CharField(max_length=1024, help_text='API URL')
+    access_type = models.CharField(max_length=150)
+    ip_address = models.CharField(max_length=50)
+    page_slug = models.CharField(max_length=2000)
+    module = models.CharField(max_length=20)
+    action_type = models.CharField(max_length=10)
+    user_id = models.IntegerField()
+    username = models.CharField(max_length=100, null=True)
+    device_type = models.CharField(max_length=50)
+    browser = models.CharField(max_length=100)
+    outcome = models.CharField(max_length=100)
+    request_payload = models.TextField(null=True)
+    response_payload = models.TextField()
+    status_code = models.PositiveSmallIntegerField(help_text='Response status code', db_index=True)
+    elapsed_time = models.DecimalField(decimal_places=5, max_digits=8,
+                                        help_text='Server execution time (Not complete response time.)')
+    affected_modules = models.TextField(null=True)
+    change_description = models.CharField(max_length=200, null=True)
+    previous_state = models.TextField(null=True)
+    new_state = models.TextField(null=True)
+    user_role = models.CharField(max_length=100, null=True)
+    body = models.TextField(null=True)
+    method = models.CharField(max_length=10, db_index=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        """
+        Return a string representation of the log entry (API URL).
+        """
+        return self.api
+
+    class Meta:
+        db_table = 'InfinityLogs'
+        verbose_name = 'InfinityLogs'
+        verbose_name_plural = 'InfinityLogs '

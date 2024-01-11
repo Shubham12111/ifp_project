@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import render, redirect
@@ -17,6 +18,21 @@ from rest_framework.views import APIView
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from django.http import HttpResponseRedirect
 from infinity_fire_solutions.utils import docs_schema_response_new
+from django.views import View
+import csv
+from django.utils.encoding import smart_str
+
+
+
+
+class ContacttypeAutocomplete(View):
+    def get(self, request):
+        query = request.GET.get('term', '')
+        contact_types = ContactType.objects.filter(Q(name__icontains=query))[:10]
+        # Create a list of dictionaries containing both name and primary key
+        results = [{'label': type.name, 'value': type.id} for type in contact_types]
+        return JsonResponse(results, safe=False)
+
 
 class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -78,6 +94,20 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         return ContactType.objects.all()
     
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+    
     common_get_response = {
         status.HTTP_200_OK: 
             docs_schema_response_new(
@@ -102,10 +132,14 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         queryset = self.get_queryset()
         contact_types = self.get_contact_types()
-        contact_type_filter = self.request.GET.get('contact_type')
+        contact_type_filter = self.request.GET.get('contact_type', '')
         if request.accepted_renderer.format == 'html':
-            context = {'contacts': queryset,
+            queryset = self.get_searched_queryset(queryset)
+            page_number = request.GET.get('page', 1)
+            context = {'contacts': Paginator(queryset, 20).get_page(page_number),
                        'contact_types': contact_types,
+                       'search_fields': ['name', 'email'],
+                       'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
                        'contact_type_filter':contact_type_filter}
             return render_html_response(context, self.template_name)
         else:
@@ -184,13 +218,27 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        # Check if 'contact_type' is empty in the request data
+        if not request.data.get('contact_type'):
+            # Create the serializer instance without saving it to the database
+            serializer = self.serializer_class(data=request.data)
+
+            # Check if the serializer is valid before accessing .data
+            if serializer.is_valid():
+                context = {'serializer': serializer}
+            else:
+                context = {'serializer': serializer, 'error_message': "Invalid data. Please review the below information."}
+
+            return render_html_response(context, self.template_name)
+
 
         message = "your contact has been added successfully."
         serializer = self.serializer_class(data=request.data)
-        
         if serializer.is_valid():
-            serializer.validated_data['user_id'] = request.user  # Assign the current user instance
-            serializer.save()
+            # Use the provided contact_type_id to set the contact_type field
+            contact = serializer.save(user_id=request.user)
+            contact.save()
 
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
@@ -213,6 +261,8 @@ class ContactAddView(CustomAuthenticationMixin, generics.CreateAPIView):
                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
                                     message="We apologize for the inconvenience, but please review the below information.",
                                     data=convert_serializer_errors(serializer.errors))
+            
+
 
 class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
@@ -267,6 +317,8 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             instance = self.get_queryset()
             if instance:
                 serializer = self.serializer_class(instance=instance, context={'request': request})
+
+                # Add the serialized data to the context
                 context = {'serializer': serializer, 'instance': instance}
                 return render_html_response(context, self.template_name)
             else:
@@ -319,6 +371,15 @@ class ContactUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             serializer = self.serializer_class(instance=instance, data=data)
             print(data,"data")
             if serializer.is_valid():
+                contact_type_id = request.data.get('id_contact_type')
+
+            # If contact_type_id is provided, fetch the corresponding object
+                if contact_type_id:
+                    try:
+                        contact_type_obj = ContactType.objects.get(id=contact_type_id)
+                        serializer.validated_data['contact_type'] = contact_type_obj  # Assign the object to serializer data
+                    except ContactType.DoesNotExist:
+                        serializer.errors['contact_type'] = "Invalid contact type"  # Add error message if not found
                 # If the serializer data is valid, save the updated contact instance.
                 serializer.save()
                 message = "Your Contact has been updated successfully!"
@@ -608,3 +669,51 @@ class ConversationCommentView(generics.DestroyAPIView):
             messages.error(request, "Conversation not found OR You are not authorized to perform this action. ")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="Conversation not found OR You are not authorized to perform this action. ", )
+
+class ExportCSVView(View):
+    def get(self, request, *args, **kwargs):
+        selected_ids_str = request.GET.get('stw_ids', '')
+        if not selected_ids_str:
+            messages.error(request, 'No Row was selected to export the data, Please selecte a row and try again.')
+            return redirect('contact_list')
+
+        selected_ids = selected_ids_str.split(',') if selected_ids_str else []
+
+        # Fetch the selected data from the database
+        selected_data = Contact.objects.filter(id__in=selected_ids).values(
+            'first_name', 'last_name', 'email', 'phone_number','mobile_number','contact_type', 'job_title',
+            'company_name','address','country','town','county','post_code'
+        )
+
+        # Create a CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+        # Create a CSV writer and write the header
+        writer = csv.writer(response)
+        header_row = [
+            'First Name', 'Last Name', 'Email', 'Phone Number', 'Mobile Number', 'Contact Type', 'Job Title',
+            'Company Name', 'Address', 'Country', 'Town', 'County', 'Post Code'
+        ]
+        writer.writerow([smart_str(header) for header in header_row])
+       
+
+        # Write data rows
+        for data_row in selected_data:
+            writer.writerow([
+                data_row['first_name'],
+                data_row['last_name'],
+                data_row['email'],
+                data_row['phone_number'], 
+                data_row['mobile_number'], 
+                data_row['contact_type'],
+                data_row['job_title'],
+                data_row['company_name'], 
+                data_row['address'], 
+                data_row['country'],
+                data_row['town'],
+                data_row['county'],
+                data_row['post_code']
+            ])
+
+        return response

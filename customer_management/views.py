@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.shortcuts import render, redirect
 from django.http import Http404, JsonResponse, HttpResponse
 from django.conf import settings
@@ -22,6 +23,10 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 from customer_management.constants import POST_CODES_INFO
 
 from django.contrib.auth.hashers import make_password
+from django.views import View
+from django.http import HttpResponse
+import csv
+from .models import User, BillingAddress
 
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -79,7 +84,19 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     template_name = 'customer_list.html'
     ordering_fields = ['created_at'] 
 
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
 
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
 
     common_get_response = {
     status.HTTP_200_OK: 
@@ -111,7 +128,12 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         # or use an empty Q() object if the value is not in the mapping
         queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='Customer').exclude(pk=request.user.id)
         if request.accepted_renderer.format == 'html':
-            context = {'customers':queryset}
+            queryset = self.get_searched_queryset(queryset)
+            page_number = request.GET.get('page', 1)
+            context = {'customers': Paginator(queryset, 20).get_page(page_number),
+                       'search_fields': ['name', 'email', 'company name'],
+                       'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
+                       }
             return render_html_response(context,self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -182,6 +204,9 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"customer", HasCreateDataPermission, 'add'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+            
         message = "Your customer has been added successfully."
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
@@ -706,3 +731,40 @@ class BillingAddressInfoView(CustomAuthenticationMixin, APIView):
         serialize = self.serializer_class(data=data)
         serialize.is_valid(raise_exception=True)
         return Response({"data": serialize.data})
+
+
+class ExportCSVView(View):
+    def get(self, request, *args, **kwargs):
+        stw_ids = request.GET.get('stw_ids', '')
+        if not stw_ids:
+            messages.error(request, 'No Row was selected to export the data, Please selecte a row and try again.')
+            return redirect('customer_list')
+        
+        selected_ids = stw_ids.split(',') if stw_ids else []
+        stw_ids = [int(id_) for id_ in selected_ids if id_.isdigit()]
+
+        # Fetch data efficiently using select_related
+        user_data = User.objects.filter(id__in=stw_ids).select_related('billingaddress').values(
+            'id', 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number',
+            'billingaddress__vat_number', 'billingaddress__tax_preference', 'billingaddress__address', 'billingaddress__country',
+            'billingaddress__town', 'billingaddress__county', 'billingaddress__post_code'
+        )
+
+        # Create CSV response
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="exported_data.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'id', 'first_name', 'last_name', 'email', 'company_name', 'customer_type', 'phone_number',
+            'vat_number_billing', 'tax_preference_billing', 'address_billing', 'country_billing',
+            'town_billing', 'county_billing', 'post_code_billing'
+        ])
+
+        for row in user_data:
+            writer.writerow([row[field] for field in row])  # Write all fields, handling potential None values
+
+        return response
+
+
+
