@@ -5,9 +5,10 @@
 {% block title %} Purchase Order View{{ block.super }}{% endblock %}
 {% block content %}
 <style>
-     /* Add CSS rules here */
-     .form-control.comments {
-      resize: none; /* Disable textarea resizing */
+    /* Add CSS rules here */
+    .form-control.comments {
+        resize: none;
+        /* Disable textarea resizing */
     }
 </style>
 {% include 'components/alert.html' %}
@@ -15,30 +16,48 @@
     /* Add borders to the table */
     .custom-table th,
     .custom-table td {
-      border: 1px solid #dee2e6;
-      padding: 8px;
+        border: 1px solid #dee2e6;
+        padding: 8px;
     }
+
     .btn.btn-outline-dotted {
-    border: 1px dotted #000; /* Replace #000 with the desired color for the border */
-    background-color: transparent;
-    color: #000; /* Replace #000 with the desired text color */
-}
-.choices__item--disabled{
-  display: none !important;
-}
+        border: 1px dotted #000;
+        /* Replace #000 with the desired color for the border */
+        background-color: transparent;
+        color: #000;
+        /* Replace #000 with the desired text color */
+    }
+
+    .choices__item--disabled {
+        display: none !important;
+    }
 </style>
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
     <div class="card">
+        <div class="card-header mt-0">
+            <div class="row justify-content-between">
+                <div class="col-6">
+                <h5>Purchase Order</h5>
+                </div>
+                <div class="col-6 text-end">
+                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'purchase_order_list' %}">Back</a>
+                </div>
+            </div>
+        </div>
         <div class="card-body px-4 pb-0">
             <div class="row">
                 <div class="col-lg-4 col-md-4 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-                            <h6 class="mb-3 text-sm">Vendor Information </h6>
-                            <span class="mb-2 text-sm">Vendor Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}</span></span>
-                            <span class="mb-2 text-sm">Phone Number: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.vendor_id.phone_number}}</span></span>
-                            <span class="mb-2 text-sm">Email Address: <span class="text-dark ms-2 font-weight-bold"> {{purchase_order.vendor_id.email}}</span></span>
+                                <h6 class="mb-3 text-sm">Vendor Information </h6>
+                                <span class="mb-2 text-sm">Vendor Name: <span class="text-dark font-weight-bold ms-2">
+                                        {{purchase_order.vendor_id.first_name}}
+                                        {{purchase_order.vendor_id.last_name}}</span></span>
+                                <span class="mb-2 text-sm">Phone Number: <span class="text-dark font-weight-bold ms-2">
+                                        {{purchase_order.vendor_id.phone_number}}</span></span>
+                                <span class="mb-2 text-sm">Email Address: <span class="text-dark ms-2 font-weight-bold">
+                                        {{purchase_order.vendor_id.email}}</span></span>
                             </div>
                         </li>
                     </ul>
@@ -46,305 +65,321 @@
 
                 <div class="col-lg-4 col-md-4 col-12">
                     <ul class="list-group">
+                        {% if purchase_order.inventory_location_id %}
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Inventory Location Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.name}}</span></span>
-                            <span class="mb-2 text-sm">Address: <span class="text-dark font-weight-bold ms-2"> {{purchase_order.inventory_location_id.address}}</span></span>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.name}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.address}}</span></span>
                             </div>
                         </li>
+                        {% else %}
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+                            <h6 class="mb-3 text-sm">Customer Information</h6>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap">{{purchase_order.user_id.first_name|default:''|truncatechars:20|title}}
+                                {{purchase_order.user_id.last_name|default:''|truncatechars:20|title}}</span></span>
+                            <span class="mb-2 text-sm">Email: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.user_id.email}}</span></span>
+                            <h6 class="mb-3 mt-3 text-sm">Customer Site Address Information</h6>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.site_address.site_name}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.site_address.address}}</span></span>
+                            </div>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
 
-                <div class="col-lg-3 col-xs-12 col-sm-12 col-12">
+                <div class="col-lg-4 col-xs-12 col-sm-12 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
 
-                                <span class="mb-2 text-sm">PO No.: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_number}}</span></span>
-                                <span class="mb-2 text-sm">Status: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.get_status_display}}</span></span>
+                                <span class="mb-2 text-sm">PO No.: <span
+                                        class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.po_number}}</span></span>
+                                <span class="mb-2 text-sm">Status: <span
+                                        class=" text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.get_status_display}}</span></span>
                             </div>
                         </li>
                     </ul>
                 </div>
-                        
-                </div>
+
             </div>
-           
             <form method="post" enctype="multipart/form-data" id="invoiceForm">
                 {% csrf_token %}
-                
+
                 <div class="row mt-0">
-                    <div class="col-md-12">
+                    <div class="col-md-12 table-responsive ">
 
                         <h6 class="mx-1 mb-3 mt-5">Item Details:</h6>
-                        <table class="table-responsive custom-table mb-3 " style="width:100%">
-                                <thead>
-                                    <tr class="px-0 text-sm">
-                                        <th class="text-start col-4">Item Name</th>
-                                        <th class="text-center col-2">Price(£)</th>
-                                        <th class="text-center col-2">Quantity </th>
-                                        <th class="text-center col-2">Received Quantity </th>
-                                        <th class="text-center col-3">Total(£)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    
-                                    {% for item in purchase_order_items %}
-                                    <tr class="">
-                                        <td class="text-sm">{{item.item_name}} </td>
-                                        <td class="text-sm text-center">{{item.unit_price}} </td>
-                                        <td class="text-sm text-center">{{item.quantity}} </td>
-                                        <td class="text-sm">
-                                            <input type="number" class="form-control quantity-input" value="0" data-max="{{item.quantity}}" data-item-id="{{item.id}}" id="" oninput="this.value =!!this.value && Math.abs(this.value) >= 0 ? Math.abs(this.value) : null">
-                                            <p class="error-message text-sm text-danger" style=" display: none;">Exceeds available quantity or Received inventory is missing.</p>
-                                        </td>
+                        <table class="custom-table mb-3 " style="width:100%">
+                            <thead>
+                                <tr class="px-0 text-sm">
+                                    <th class="text-start col-4">Item Name</th>
+                                    <th class="text-center col-2">Price(£)</th>
+                                    <th class="text-center col-2">Quantity </th>
+                                    <th class="text-center col-2">Received Quantity </th>
+                                    <th class="text-center col-3">Total(£)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
 
-                                        <td class="text-sm text-center">{{item.row_total}} </td>
-                                    </tr>
-                                    {% endfor %}
-                                    
-                                </tbody>
-                            </table>
-                            <div class="error-message text-danger text-sm mb-2" id="rowError"></div>
-                        </div>
+                                {% for item in purchase_order_items %}
+                                <tr class="">
+                                    <td class="text-sm">{{item.item_name}} </td>
+                                    <td class="text-sm text-center">{{item.unit_price}} </td>
+                                    <td class="text-sm text-center">{{item.quantity}} </td>
+                                    <td class="text-sm">
+                                        <input type="number" class="form-control quantity-input" value="0"
+                                            data-max="{{item.quantity}}" data-item-id="{{item.id}}" id=""
+                                            oninput="this.value =!!this.value && Math.abs(this.value) >= 0 ? Math.abs(this.value) : null">
+                                        <p class="error-message text-sm text-danger" style=" display: none;">Exceeds
+                                            available quantity or Received inventory is missing.</p>
+                                    </td>
+
+                                    <td class="text-sm text-center">{{item.row_total}} </td>
+                                </tr>
+                                {% endfor %}
+
+                            </tbody>
+                        </table>
+                        <div class="error-message text-danger text-sm mb-2" id="rowError"></div>
                     </div>
-                    <div class="row mt-2">
-                        <div class="col-md-6 ">
-                            <div class="row mb-6">
-                                <div class="col-md-6">
-                                    <label for="invoiceNumber">Invoice Number <span class="text-danger">*</span></label>
-                                    <input type="text" id="invoiceNumber" name="invoice_number" class="form-control" placeholder="Enter Invoice Number" required>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-6 ">
+                        <div class="row mb-6">
+                            <div class="col-md-6">
+                                <label for="invoiceNumber">Invoice Number <span class="text-danger">*</span></label>
+                                <input type="text" id="invoiceNumber" name="invoice_number" class="form-control"
+                                    placeholder="Enter Invoice Number" required>
 
-                                </div>
-                               
-                                <div class="col-md-6">
-                                    <label for="invoiceDate">Invoice Date <span class="text-danger">*</span> </label>
-                                    <input type="date" id="invoiceDate" name="invoice_date"  class="form-control invoice_date" required>
-                                </div>
-                                <div class="col-md-12 mt-4">
-                                    <label for="invoicePDF">Comments</label>
-                                    <textarea class="form-control comments" rows="6" name="comments" ></textarea>
-                                </div>
-                                <div class="col-md-12 mt-4">
-                                    <label for="invoicePDF">Invoice PDF</label>
-                                    <input type="file" name="file" id="invoicePDF"  class="form-control" accept=".pdf">
-                                    <small class="form-text text-muted">Only pdf formats are supported (pdf).</small> 
-                                </div>
-                               
-                                
                             </div>
-    
-                            {% if purchase_order.notes %}
-                            <h6 class=" text-sm">Additional  Notes </h6>
-                            <span class="notes text-sm">{{ purchase_order.notes }}</span>
-                            <br>
-                            {% endif %}
-                            {% if purchase_order.approval_notes %}
-                                <h6 class="mt-2  text-sm">Approval Notes </h6>
-                                <span class="approval_notes text-sm">{{ purchase_order.approval_notes }}</span>
-                            {% endif %}
-                            
+
+                            <div class="col-md-6">
+                                <label for="invoiceDate">Invoice Date <span class="text-danger">*</span> </label>
+                                <input type="date" id="invoiceDate" name="invoice_date" class="form-control invoice_date"
+                                    required>
+                            </div>
+                            <div class="col-md-12 mt-4">
+                                <label for="invoicePDF">Comments</label>
+                                <textarea class="form-control comments" rows="6" name="comments"></textarea>
+                            </div>
+                            <div class="col-md-12 mt-4">
+                                <label for="invoicePDF">Invoice PDF</label>
+                                <input type="file" name="file" id="invoicePDF" class="form-control" accept=".pdf">
+                                <small class="form-text text-muted">Only pdf formats are supported (pdf).</small>
+                            </div>
+
+
                         </div>
 
-                        <div class="col-lg-3 col-12 ms-auto">
-                            <div class="d-flex justify-content-between">
-                                    <span class="mb-2 text-md">Sub Total</span>
-                                    <span class="text-dark font-weight-bold ms-2">£ {{ purchase_order.sub_total }}</span>
-                                </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="mb-2 text-md">Discount </span>
-                                <span class="text-dark ms-2 font-weight-bold">£ {{ purchase_order.discount}}</span>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <span class="text-md"> Taxes:</span>
-                                <span class="text-dark ms-2 font-weight-bold">£ {{ purchase_order.tax }}</span>
-                            </div>
-                            <div class="d-flex justify-content-between mt-4">
-                                <span class="mb-2 text-md font-weight-bolder mb-0 text-end grand-total-value">Total</span>
-                                <span class="font-weight-bolder mb-0 text-end grand-total-value">£ {{ purchase_order.total_amount }}</span>
+                        {% if purchase_order.notes %}
+                        <h6 class=" text-sm">Additional Notes </h6>
+                        <span class="notes text-sm">{{ purchase_order.notes }}</span>
+                        <br>
+                        {% endif %}
+                        {% if purchase_order.approval_notes %}
+                        <h6 class="mt-2  text-sm">Approval Notes </h6>
+                        <span class="approval_notes text-sm">{{ purchase_order.approval_notes }}</span>
+                        {% endif %}
+
+                    </div>
+                    <div class="col-lg-3 col-12 col-md-6 ms-auto">
+                        <div class="row mb-2 justify-content-between">
+                            <div class="col-6 text-end"><span class="text-md">Sub Total</span></div>
+                            <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.sub_total }}</span></div>
+                        </div>
+                        <div class="row mb-2 justify-content-between">
+                            <div class="col-6 text-end"><span class="text-md">Discount</span></div>
+                            <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.discount }}</span></div>
+                        </div>
+                        <div class="row mb-4 justify-content-between">
+                            <div class="col-6 text-end"><span class="text-md">Tax (%):</span></div>
+                            <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.tax }}</span></div>
+                        </div>
+                        <div class="row justify-content-between">
+                            <div class="col-6 text-end"><span class="font-weight-bolder grand-total-value">Total</span></div>
+                            <div class="col-6 text-end"><span class="text-dark font-weight-bold grand-total-value">£{{ purchase_order.total_amount }}</span></div>
                         </div>
                     </div>
                 </div>
                 <div class="row mt-5 mb-3">
                     <div class="col-6 col-lg-6 m-auto text-end"></div>
                     <div class="col-md-6 m-auto text-center text-md-end">
-                        <a class="btn bg-gradient-secondary mb-0 js-btn-prev ms-2 mb-0" href="{% url 'purchase_order_list' %}">Cancel</a>
-                        <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitButton" type="button">Save</button>
+                        <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitButton"
+                            type="button">Save</button>
                     </div>
                 </div>
-              </form>
-             
+            </form>
         </div>
     </div>
 </div>
-            
+</div>
+
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
 <script>
- // Check if the datetimepicker element exists
- if (document.querySelector('.invoice_date')) {
-    // Get the default value for the datetime picker
-    const fieldElement = document.querySelector('.invoice_date');
-    if (fieldElement.value)
-    {
-        var defaultDateValue = fieldElement.value ; 
-    }
-    else
-    {
-        var defaultDateValue;
-    }
-
-    
-
-    // Convert the default value to a Date object (if available)
-    const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
-   
-    // Create the flatpickr date-time picker and set the default date to the default value or current date
-    flatpickr('.invoice_date', {
-      allowInput: true,
-      defaultDate: defaultDate,
-      dateFormat: "d/m/Y" // Set your desired date format
-    });
-  }
-
-
-const quantityInputs = document.querySelectorAll('.quantity-input');
-
-quantityInputs.forEach(input => {
-    const maxQuantity = parseInt(input.getAttribute('data-max'));
-    const errorMessage = input.parentElement.querySelector('.error-message');
-
-    input.addEventListener('input', () => {
-        const enteredQuantity = parseInt(input.value);
-
-        if (isNaN(enteredQuantity)) {
-            errorMessage.style.display = 'none';
-        } else if (enteredQuantity > maxQuantity) {
-            errorMessage.style.display = 'block';
-        } else {
-            errorMessage.style.display = 'none';
-        }
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    const submitButton = document.getElementById('submitButton');
-    
-    submitButton.addEventListener('click', function() {
-        const formData = new FormData(document.getElementById('invoiceForm'));
-        const quantityInputs = document.querySelectorAll('.quantity-input');
-        
-        const Quantities = [];
-        let hasReceivedInventory = false; // Flag to track if any row has received inventory
-
-        quantityInputs.forEach(input => {
-            const purchase_order_item_id = input.getAttribute('data-item-id');
-            const received_inventory = parseFloat(input.value); // Parse the value as a float
-            Quantities.push({ purchase_order_item_id, received_inventory });
-
-            if (received_inventory !== 0 && received_inventory !== -1) { // Check for non-zero and non-negative values
-                hasReceivedInventory = true;
-            }
-        });
-
-        if (hasReceivedInventory) {
-            // If at least one row has received_inventory, proceed to form submission
-            formData.append('purchase_order_items', JSON.stringify(Quantities));
-            // ... Code to submit the form or further processing
-        } else {
-            // Display an error message if all rows have zero or -1 received_inventory
-            const rowErrorElement = document.getElementById('rowError');
-            if (rowErrorElement) {
-                rowErrorElement.textContent = "Add valid received inventory quantities to at least one item. Negative values and zero are not allowed.";
-
-                // Clear the error message after 3 seconds
-                setTimeout(() => {
-                    rowErrorElement.textContent = "";
-                }, 9000); // 3000 milliseconds = 3 seconds
-            }
-        }
-
-        
-        if (hasReceivedInventory)
-        {
-
-        // Send data via Fetch API
-        fetch('{% url 'purchase_order_convert_to_invoice' purchase_order.id %}', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        }).then(response => {
-        response.json().then(data => {
-            if (data.errors) {
-                const existingErrorMessages = document.querySelectorAll('.help-block');
-                existingErrorMessages.forEach(errorMessage => errorMessage.remove());
-                
-                const quantityInputs = document.querySelectorAll('.quantity-input');
-
-                for (const fieldName in data.errors) {
-                    const field = document.querySelector(`[name="${fieldName}"]`);
-                    
-                    if (field) {
-                        const tagName = field.nodeName.toLowerCase(); // Get the lowercase tag name
-                        if (tagName === 'select') {
-                            // For select elements, display error message near the select element
-                            const selectContainer = field.closest('.choices'); // Adjust this selector based on your HTML structure
-                            console.log(selectContainer)
-                            if (selectContainer) {
-                                const errorElement = document.createElement('div');
-                                errorElement.classList.add('help-block', 'mt-2');
-                                errorElement.textContent = data.errors[fieldName].join(', ');
-                                selectContainer.appendChild(errorElement);
-                            }
-                        } else {
-                            // For other input elements, display error message under the field
-                            const errorElement = document.createElement('div');
-                            errorElement.classList.add('help-block', 'mt-2');
-                            errorElement.textContent = data.errors[fieldName].join(', ');
-                            field.parentElement.appendChild(errorElement);
-                        }
-                    }
-                }
-                
-                for (const input of quantityInputs) {
-                    const fieldName = 'received_inventory'; // Change this to match the actual field name
-                    const parentRow = input.closest('tr'); // Find the parent row
-                    
-                    if (data.errors[0]['purchase_order_item_id'] == input.getAttribute('data-item-id')) {
-                        
-                        const errorElement = parentRow.querySelector('.error-message');
-                        errorElement.style.display = 'block';
-                    } else {
-                        const errorElement = parentRow.querySelector('.error-message');
-                        errorElement.style.display = 'none';
-                    }
-                }
-            } 
-        else if(response.ok)
-        {
-            window.location.href = '/purchase_order/list/';
+    // Check if the datetimepicker element exists
+    if (document.querySelector('.invoice_date')) {
+        // Get the default value for the datetime picker
+        const fieldElement = document.querySelector('.invoice_date');
+        if (fieldElement.value) {
+            var defaultDateValue = fieldElement.value;
         }
         else {
-            // Other error handling
-            alert('An error occurred while saving items.');
+            var defaultDateValue;
         }
 
 
 
-        });
-          
-         
-        }).catch(error => {
-            // Handle error
-        });
+        // Convert the default value to a Date object (if available)
+        const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
 
+        // Create the flatpickr date-time picker and set the default date to the default value or current date
+        flatpickr('.invoice_date', {
+            allowInput: true,
+            defaultDate: defaultDate,
+            dateFormat: "d/m/Y" // Set your desired date format
+        });
     }
+
+
+    const quantityInputs = document.querySelectorAll('.quantity-input');
+
+    quantityInputs.forEach(input => {
+        const maxQuantity = parseInt(input.getAttribute('data-max'));
+        const errorMessage = input.parentElement.querySelector('.error-message');
+
+        input.addEventListener('input', () => {
+            const enteredQuantity = parseInt(input.value);
+
+            if (isNaN(enteredQuantity)) {
+                errorMessage.style.display = 'none';
+            } else if (enteredQuantity > maxQuantity) {
+                errorMessage.style.display = 'block';
+            } else {
+                errorMessage.style.display = 'none';
+            }
+        });
     });
-});
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const submitButton = document.getElementById('submitButton');
+
+        submitButton.addEventListener('click', function () {
+            const formData = new FormData(document.getElementById('invoiceForm'));
+            const quantityInputs = document.querySelectorAll('.quantity-input');
+
+            const Quantities = [];
+            let hasReceivedInventory = false; // Flag to track if any row has received inventory
+
+            quantityInputs.forEach(input => {
+                const purchase_order_item_id = input.getAttribute('data-item-id');
+                const received_inventory = parseFloat(input.value); // Parse the value as a float
+                Quantities.push({ purchase_order_item_id, received_inventory });
+
+                if (received_inventory !== 0 && received_inventory !== -1) { // Check for non-zero and non-negative values
+                    hasReceivedInventory = true;
+                }
+            });
+
+            if (hasReceivedInventory) {
+                // If at least one row has received_inventory, proceed to form submission
+                formData.append('purchase_order_items', JSON.stringify(Quantities));
+                // ... Code to submit the form or further processing
+            } else {
+                // Display an error message if all rows have zero or -1 received_inventory
+                const rowErrorElement = document.getElementById('rowError');
+                if (rowErrorElement) {
+                    rowErrorElement.textContent = "Add valid received inventory quantities to at least one item. Negative values and zero are not allowed.";
+
+                    // Clear the error message after 3 seconds
+                    setTimeout(() => {
+                        rowErrorElement.textContent = "";
+                    }, 9000); // 3000 milliseconds = 3 seconds
+                }
+            }
+
+
+            if (hasReceivedInventory) {
+
+                // Send data via Fetch API
+                fetch('{% url 'purchase_order_convert_to_invoice' purchase_order.id %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).then(response => {
+                    response.json().then(data => {
+                        if (data.errors) {
+                            const existingErrorMessages = document.querySelectorAll('.help-block');
+                            existingErrorMessages.forEach(errorMessage => errorMessage.remove());
+
+                            const quantityInputs = document.querySelectorAll('.quantity-input');
+
+                            for (const fieldName in data.errors) {
+                                const field = document.querySelector(`[name="${fieldName}"]`);
+
+                                if (field) {
+                                    const tagName = field.nodeName.toLowerCase(); // Get the lowercase tag name
+                                    if (tagName === 'select') {
+                                        // For select elements, display error message near the select element
+                                        const selectContainer = field.closest('.choices'); // Adjust this selector based on your HTML structure
+                                        console.log(selectContainer)
+                                        if (selectContainer) {
+                                            const errorElement = document.createElement('div');
+                                            errorElement.classList.add('help-block', 'mt-2');
+                                            errorElement.textContent = data.errors[fieldName].join(', ');
+                                            selectContainer.appendChild(errorElement);
+                                        }
+                                    } else {
+                                        // For other input elements, display error message under the field
+                                        const errorElement = document.createElement('div');
+                                        errorElement.classList.add('help-block', 'mt-2');
+                                        errorElement.textContent = data.errors[fieldName].join(', ');
+                                        field.parentElement.appendChild(errorElement);
+                                    }
+                                }
+                            }
+
+                            for (const input of quantityInputs) {
+                                const fieldName = 'received_inventory'; // Change this to match the actual field name
+                                const parentRow = input.closest('tr'); // Find the parent row
+
+                                if (data.errors[0]['purchase_order_item_id'] == input.getAttribute('data-item-id')) {
+
+                                    const errorElement = parentRow.querySelector('.error-message');
+                                    errorElement.style.display = 'block';
+                                } else {
+                                    const errorElement = parentRow.querySelector('.error-message');
+                                    errorElement.style.display = 'none';
+                                }
+                            }
+                        }
+                        else if (response.ok) {
+                            window.location.href = '/purchase_order/list/';
+                        }
+                        else {
+                            // Other error handling
+                            alert('An error occurred while saving items.');
+                        }
+
+
+
+                    });
+
+
+                }).catch(error => {
+                    // Handle error
+                });
+
+            }
+        });
+    });
 
 
 </script>

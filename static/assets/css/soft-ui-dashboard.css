@@ -37575,4 +37575,12 @@ ul.pagination > li.page-item:last-child{
     width: 100% !important;
   }
 }
+
+div.dropdown > a::after{
+  float: right !important;
+}
+
+div.dropdown > ul.dropdown-menu > li > a.dropdown-item{
+  color: #344767;
+}
 /*# sourceMappingURL=dashboard-pro.css.map */
