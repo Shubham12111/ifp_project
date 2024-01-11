@@ -294,6 +294,40 @@ class ItemsSerializer(serializers.ModelSerializer):
         model = Item
         fields = ['item_name', 'category_id', 'price', 'description', 'units', 'quantity_per_box', 'reference_number']
     
+    def validate_price(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Price cannot be negative.")
+        return value
+
+    def validate_item_name(self, value):
+        # Check for minimum length of 3 characters
+        if len(value) < 3:
+            raise serializers.ValidationError("Item Name must be at least 3 characters long.")
+         # Check if the value consists entirely of digits (integers)
+        if value.isdigit():
+            raise serializers.ValidationError("Item Name cannot consist of only integers.")
+
+        # Check for alphanumeric characters and spaces
+        if not re.match(r'^[a-zA-Z0-9\s]*$', value):
+            raise serializers.ValidationError("Item Name can only contain alphanumeric characters and spaces.")
+
+        return value
+
+    
+    def validate_reference_number(self, value):
+        """
+        Validate that the reference number (SKU) is unique.
+        """
+        if self.instance:
+            reference_number = Item.objects.filter(reference_number=value).exclude(id=self.instance.id).exists()
+        else:
+            reference_number = Item.objects.filter(reference_number=value).exists()
+        
+        if reference_number:
+            raise serializers.ValidationError("This reference number is already in use.")
+        
+        return value
+
     def validate_category_id(self, value):
         try:
             category_instance = get_object_or_404(Category, name=value)
