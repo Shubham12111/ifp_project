@@ -12,7 +12,7 @@
     <div class="col-lg-12">
       <!--single form panel-->
       <div class="card" id="basic-info">
-        <div class="card-header mt-0">
+        <div class="card-header mt-0 mb-3">
           <div class="row justify-content-between">
             <div class="col-6">
               <h5>Orders</h5>
@@ -22,33 +22,28 @@
             </div>
           </div>
         </div>
-        <div class="card-body mt-3 px-0 pb-0">
+        <div class="card-body mt-0 mb-3 pb-0">
           <div class="table-responsive">
-            <table class="table table-flush text-dark" id="purchase-order-list">
+            <table class="table table-hover text-dark" id="purchase-order-list">
               <thead class="thead-light">
                 <tr>
                   <th>PO Number</th>
+                  <th>Location</th>
+                  <th>Created At</th>
                   <th>Sub Total</th>
                   <th>Total Amount</th>
                   <th>Status</th>
-                  <th class="custom-last-column">Actions</th>
                 </tr>
               </thead>
               <tbody class="ml-4">
                 {% for purchase_order in purchase_orders %}
                 <tr class="text-sm">
-                  <td>{{ purchase_order.po_number }}</td>
-                  <td>{{ purchase_order.sub_total }}</td>
-                  <td>{{ purchase_order.total_amount }}</td>
-                  <td>{{ purchase_order.status }}</td>
-                  <td>
-                    <!-- Add your actions for each purchase order here -->
-                    <a
-                      href="{% url 'purchase_order_view' purchase_order.id %}"
-                      class="btn bg-gradient-primary btn-sm mb-0"
-                      >View</a
-                    >
-                  </td>
+                  <td><a href="{% url 'purchase_order_view' purchase_order.id %}" class="text-decoration-none w-100 nav-link">{{ purchase_order.po_number }}</a></td>
+                  <td><a href="{% url 'purchase_order_view' purchase_order.id %}" class="text-decoration-none w-100 nav-link">{% if purchase_order.inventory_location_id %}{{purchase_order.inventory_location_id.name}} - <i>Inventory Location</i>{% else %}{{purchase_order.site_address}} - <i>Site Address</i>{% endif %}</a></td>
+                  <td><a href="{% url 'purchase_order_view' purchase_order.id %}" class="text-decoration-none w-100 nav-link">{{purchase_order.created_at|date:"d/m/Y "}}</a></td>
+                  <td><a href="{% url 'purchase_order_view' purchase_order.id %}" class="text-decoration-none w-100 nav-link">{{ purchase_order.sub_total }}</a></td>
+                  <td><a href="{% url 'purchase_order_view' purchase_order.id %}" class="text-decoration-none w-100 nav-link">{{ purchase_order.total_amount }}</a></td>
+                  <td><a href="{% url 'purchase_order_view' purchase_order.id %}" class="text-decoration-none w-100 nav-link">{{ purchase_order.status }}</a></td>
                 </tr>
                 {% endfor %}
               </tbody>
@@ -67,17 +62,4 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script>
-  if (document.getElementById("purchase-order-list")) {
-    const dataTableSearch = new simpleDatatables.DataTable(
-      "#purchase-order-list",
-      {
-        searchable: true,
-        fixedHeight: false,
-        perPage: 10,
-      }
-    );
-  }
-</script>
-
 {% endblock %}
