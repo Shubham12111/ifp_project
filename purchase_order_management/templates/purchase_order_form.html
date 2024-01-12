@@ -76,7 +76,7 @@
                                 <div class="row {% if purchase_order %}{% if existingPurchaseOrderData.inventory_location_id %}d-none{% endif %}{% else %}d-none{% endif %}" id="siteAddressRow">
                                     <div class="col-md-12">
                                         <label for="customerDropdown" class="form-label">Select Customer:</label>
-                                        <select class="form-select" name="user_id" id="customer-choices" onchange="fetchCustomers()">
+                                        <select class="form-select" name="user_id" id="customer-choices">
                                         <option disabled selected value> Select an Customer </option>
                                             {% for customer in customer_list %}
                                                     <option value="{{customer.id}}">{{customer.email}}</option>
@@ -84,12 +84,8 @@
                                         </select>
                                         <div class="col-md-12 mt-3">
                                             <label for="siteAddressDropdown" class="form-label">Select Site Address:</label>
-                                            <select class="form-select "  name="site_address" id="site_address-choices" onchange="fetchSiteAddress()">
+                                            <select class="form-select "  name="site_address" id="site_address-choices">
                                                 <option disabled selected value> Select Site Address </option>
-                                            {% for site_address in site_address %}
-                                                    <option value="{{site_address.id}}">{{site_address.address}}</option>
-                                            {% endfor %}
-                                        </select>
                                             </select>
                                         </div>
                                     </div>
@@ -306,23 +302,6 @@ function getUnselectedOptions() {
 // Update the function to fetch customer list dynamically
 async function fetchCustomers() {
     try {
-        {% comment %} const response = await fetch('customer/list/');
-        const customerData = await response.json();
-
-        // Get the customerDropdown element
-        const customerDropdown = document.getElementById('customerDropdown');
-
-        // Clear previous options
-        customerDropdown.innerHTML = '';
-
-        // Populate customer names in the dropdown
-        customerData.forEach(customer => {
-            const option = document.createElement('option');
-            option.value = customer.id;  // Use a unique identifier for each customer
-            option.text = customer.name;  // Adjust based on your customer data structure
-            customerDropdown.add(option);
-        }); {% endcomment %}
-
         // Trigger the fetchSiteAddresses function to update site addresses based on the selected customer
         fetchSiteAddresses();
     } catch (error) {
@@ -331,37 +310,52 @@ async function fetchCustomers() {
 }
 
 // Call the fetchCustomers function to populate the customer dropdown on page load
-document.addEventListener('DOMContentLoaded', fetchCustomers);
+{% comment %} document.addEventListener('DOMContentLoaded', fetchCustomers); {% endcomment %}
 
-
+let site_address_choices = null;
 async function fetchSiteAddresses() {
     try {
         // Get the selected customer ID from the customer dropdown
-        const selectedCustomerId = document.getElementById('customer-choices').value;  // Adjust the ID if necessary
+        var selectedCustomerId = document.getElementById('customer-choices').value;  // Adjust the ID if necessary
+        var siteAddressDropdown = document.getElementById('site_address-choices');
+        try{
+            // Get the Choices instance
+            const choicesInstance = await site_address_choices;
+            
+            // Destroy the existing instance
+            choicesInstance.destroy();
 
+            // Clear the input and rendered choices
+            choicesInstance.clearInput(true);
+            choicesInstance.clearRendered();
+
+            // Clear the store
+            choicesInstance.clearStore();
+
+        } catch(error) {
+            console.log('error ::, ', error)
+        }
         // Check if a customer is selected
         if (selectedCustomerId) {
             // Fetch the site addresses based on the selected customer ID
-            const siteAddressResponse = await fetch(`/purchase_order/site_address/?customer_id=${selectedCustomerId}`);
-            const siteAddressData = await siteAddressResponse.json();
-            const dataArray = Array.isArray(siteAddressData.data) ? siteAddressData.data : [siteAddressData.data];
-            // Get the siteAddressDropdown element
-            const siteAddressDropdown = document.getElementById('site_address-choices');
+            var siteAddressResponse = await fetch(`/purchase_order/site_address/?customer_id=${selectedCustomerId}`);
+            var siteAddressData = await siteAddressResponse.json();
+            var dataArray = Array.isArray(siteAddressData.data) ? siteAddressData.data : [siteAddressData.data];
+            
             // Clear previous options
             siteAddressDropdown.innerHTML = '';
 
             // Populate site addresses in the dropdown
             dataArray.forEach(siteAddress => {
-                const option = document.createElement('option');
-                option.value = siteAddress.site_name;
+                var option = document.createElement('option');
+                option.value = siteAddress.id;
                 option.text = siteAddress.site_name;
                 siteAddressDropdown.add(option);
             });
-
-            const site_address_choices = new Choices(siteAddressDropdown, {
+            site_address_choices = new Choices(document.getElementById('site_address-choices'), {
                 default: false,
                 items: [],
-                choices: [],
+                choices: dataArray,
                 renderChoiceLimit: 1,
                 searchEnabled: true,
                 searchChoices: true,
@@ -373,19 +367,18 @@ async function fetchSiteAddresses() {
                 searchFields: ['label'],
                 searchPlaceholderValue: "Search Site address", 
                 fuseOptions: {
-                  includeScore: true,
-                  includeMatches: true,
-                  threshold: 0, // Set to 0 for exact match
-                  location: 0,
-                  distance: 100,
-                  maxPatternLength: 32,
-                  minMatchCharLength: 1
+                includeScore: true,
+                includeMatches: true,
+                threshold: 0, // Set to 0 for exact match
+                location: 0,
+                distance: 100,
+                maxPatternLength: 32,
+                minMatchCharLength: 1
                 }
-              });
+            });
             
         } else {
             // Clear the siteAddressDropdown if no customer is selected
-            const siteAddressDropdown = document.getElementById('site_address-choices');
             siteAddressDropdown.innerHTML = '';
         }
     } catch (error) {
@@ -586,10 +579,6 @@ if (document.getElementById('customer-choices')) {
  }
 
  // Customer 
-if (document.getElementById('site_address-choices')) {
-  var element = document.getElementById('site_address-choices');
-}
-
 if (document.getElementById('vendor-choices')) {
   var element = document.getElementById('vendor-choices');
   const vendor_choices = new Choices(element, {

@@ -110,14 +110,14 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     )
 
     site_address = serializers.SlugRelatedField(
-        slug_field='site_name',
+        slug_field='id',
         required=False,
         queryset=SiteAddress.objects.all(),
         error_messages={
             "required": "This field is required.",
-            "blank": "Inventory Location is required.",
-            "incorrect_type":"Inventory Location is required.",
-            "null": "Inventory Location is required."
+            "blank": "Site Address is required.",
+            "incorrect_type":"Site Address is required.",
+            "null": "This field is required."
         },
     )
     file = serializers.FileField(
@@ -143,6 +143,23 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = PurchaseOrder
         fields = ['vendor_id', 'inventory_location_id',  'sub_total', 'discount', 'tax','total_amount','notes','status', "approval_notes",'file', 'user_id','site_address']
+
+    def validate(self, attrs):
+
+        site_address = attrs.get('site_address', None)
+        user_id = attrs.get('user_id', None)
+
+        if site_address and user_id:
+            if site_address.user_id not in [user_id]:
+                raise serializers.ValidationError({'site_address': ['Invalid Sit Address is selected for the selected customer.']})
+
+        if site_address and not user_id:
+            raise serializers.ValidationError({'user_id': ['Please select a Customer before selecting a site address.']})   
+        
+        if user_id and not site_address:
+            raise serializers.ValidationError({'site_address': ['Please select a Site Address for the selected customer.']})
+         
+        return attrs
 
 
     def validate_sub_total(self, value):

@@ -443,7 +443,7 @@ class SiteAddressSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = SiteAddress
-        fields = ['site_name', 'address', 'country', 'town', 'county', 'post_code','full_address']
+        fields = ['id', 'site_name', 'address', 'country', 'town', 'county', 'post_code','full_address']
 
     def get_full_address(self, instance):
         # Create a dictionary with label names and corresponding values
