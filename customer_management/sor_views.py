@@ -36,17 +36,6 @@ def get_customer_data(customer_id):
     
     return customer_data
 
-# def get_queryset(self, request, *args, **kwargs):
-
-#     filter_mapping = {
-#             "self": Q(user_id=request.user),
-#             "all": Q(),  # An empty Q() object returns all data
-#         }
-
-#         # Get the appropriate filter from the mapping based on the data access value,
-#         # or use an empty Q() object if the value is not in the mapping
-#         data_access_filter = filter_mapping.get(data_access_value, Q())
-
 
 
 class CSSORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -279,7 +268,7 @@ class CSSORAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             serializer.validated_data['customer_id'] = User.objects.get(pk=kwargs.get('customer_id'))
             serializer.validated_data['user_id'] = request.user
 
-            sor_data = serializer.save()
+            serializer.save()
 
             if update_window:
                 message = f"SOR has been added successfully. You can update SOR till {update_window.end_date}."
@@ -706,7 +695,9 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
             df = self.read_file_to_df(csv_file)
            
             if df is None:
-                return JsonResponse({'error': 'Error processing the uploaded file.'}, status=400)
+                messages.error(request,'File format not supported.')
+                return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
 
             customer_data = get_customer_data(customer_id)
             if customer_data:
@@ -752,8 +743,9 @@ class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         return JsonResponse({'error': 'Error validating data. Please check the file format and try again.',
                                             'validation_errors': serializer.errors}, status=400)
         except Exception as e:
-            print(f"Error processing file: {e}")
-            return JsonResponse({'error': f'Error processing the uploaded file. Exception: {e}'}, status=400)
+            messages.error(request, 'The file contains irrelavent data, please check data and try again')
+            return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+           
         
     
 
