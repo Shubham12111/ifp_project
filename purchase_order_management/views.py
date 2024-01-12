@@ -343,7 +343,6 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         inventory_location_list = InventoryLocation.objects.all()
         tax_rate = AdminConfiguration.objects.all().first()
         customer_list = User.objects.filter(roles__name='Customer').all()
-        site_address = SiteAddress.objects.filter(user_id__in=customer_list).all()
         
            
         if request.accepted_renderer.format == 'html':
@@ -352,7 +351,6 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             context = {'vendor_list':vendor_list, 
                        'inventory_location_list':inventory_location_list,
                         'customer_list': customer_list,
-                        'site_address': site_address,
                        'tax_rate':tax_rate,
                        'new_po_number':po_number_generated()
                        
