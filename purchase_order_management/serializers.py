@@ -149,6 +149,8 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         site_address = attrs.get('site_address', None)
         user_id = attrs.get('user_id', None)
 
+        inventory_location_id = attrs.get('inventory_location_id', None)
+
         if site_address and user_id:
             if site_address.user_id not in [user_id]:
                 raise serializers.ValidationError({'site_address': ['Invalid Sit Address is selected for the selected customer.']})
@@ -158,6 +160,14 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
         
         if user_id and not site_address:
             raise serializers.ValidationError({'site_address': ['Please select a Site Address for the selected customer.']})
+        
+        if not inventory_location_id and not site_address:
+            raise serializers.ValidationError(
+                {
+                    'site_address': ['Please either choose Inventory Location or Site Address of a Customer.'],
+                    'inventory_location_id': ['Please either choose Inventory Location or Site Address of a Customer.'],
+                },
+            )
          
         return attrs
 

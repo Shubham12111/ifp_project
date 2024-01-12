@@ -1042,6 +1042,14 @@ function submitForm(status) {
                                 errorElement.classList.add('help-block', 'mt-2');
                                 errorElement.textContent = data.errors[fieldName].join(', ');
                                 selectContainer.appendChild(errorElement);
+                            }else{
+                                const selectContainer = field.closest('div');
+                                if (selectContainer) {
+                                    const errorElement = document.createElement('div');
+                                    errorElement.classList.add('help-block', 'mt-2');
+                                    errorElement.textContent = data.errors[fieldName].join(', ');
+                                    selectContainer.appendChild(errorElement);
+                                }
                             }
                         } else {
                             // For other input elements, display error message under the field
