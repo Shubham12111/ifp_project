@@ -271,7 +271,7 @@ class SORItem(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, 
                                 verbose_name="Created By", related_name="sor_user", null=True)
     
-    customer_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    customer_id = models.ForeignKey(User, on_delete=models.CASCADE,null=True)
     category_id = models.ForeignKey(SORCategory, on_delete=models.CASCADE)
     name = models.CharField(max_length=225)
     description =  RichTextField(null=True)
@@ -300,6 +300,28 @@ class SORItem(models.Model):
             'units':self.units
         }
     
+class SORItemProxy(SORItem):
+
+    """
+    Proxy model representing a default version of an item related to SOR (Service Order Request).
+
+    This model inherits from the SORItem model and serves as a proxy, allowing customization
+    and extensions without creating a separate database table.
+
+    Attributes:
+        Inherits attributes from the SORItem model.
+    """
+    
+    class Meta:
+        """
+    Meta:
+        proxy (bool): Indicates that this is a proxy model.
+        verbose_name (str): Human-readable name for a single object of this model.
+        verbose_name_plural (str): Human-readable name for the plural of this model.
+    """
+        proxy = True
+        verbose_name = 'Default SOR Item'
+        verbose_name_plural = 'Default SOR Item'
 
 class SORItemImage(models.Model):
     sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)
