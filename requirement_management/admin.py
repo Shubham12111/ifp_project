@@ -1,5 +1,8 @@
 from django.contrib import admin
 from .models import *
+from import_export.admin import ImportExportModelAdmin
+from django.contrib import admin 
+from .resource import SORItemUpload
 
 # Register your models here.
 
@@ -35,13 +38,14 @@ class RequirementDefectDocumentAdmin(admin.ModelAdmin):
 
 @admin.register(SORItem)
 class SORItemAdmin(admin.ModelAdmin):
-    list_display = ('name', 'customer_id', 'category_id', 'price','units', 'created_at', 'updated_at')
+    list_display = ('name', 'customer_id','reference_number', 'category_id', 'price','units', 'created_at', 'updated_at')
     list_filter = ('customer_id', 'category_id', 'created_at')
     search_fields = ('name', 'reference_number', 'user_id__email')
 
 @admin.register(SORItemProxy)
-class SORItemProxyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category_id', 'price','units', 'created_at', 'updated_at')
+class SORItemProxyAdmin(ImportExportModelAdmin):
+    resource_class = SORItemUpload  
+    list_display = ('name', 'category_id', 'reference_number','price','units', 'created_at', 'updated_at')
     list_filter = ( 'category_id', 'created_at')
     search_fields = ('name', 'reference_number', 'user_id__email')
 
@@ -95,4 +99,3 @@ admin.site.register(SORItemImage)
 admin.site.register(RequirementDefectDocument, RequirementDefectDocumentAdmin)
 admin.site.register(RequirementAsset)
 admin.site.register(Report)
-# admin.site.register(SORItemProxy,SORItemProxyAdmin )
