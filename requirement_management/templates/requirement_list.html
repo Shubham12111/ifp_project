@@ -100,9 +100,9 @@
                     <td class="text-sm">
                       <input type="checkbox" name="requirement_checkbox" value="{{ requirement.id }}">
                     </td>
-                    <td class="text-sm">{{requirement.action|truncatechars:20|title}}<br>
+                    <td class="text-sm">{{requirement.action|truncatechars:20|title|striptags}}<br>
                     </td>
-                    <td class="text-sm">{{requirement.description|truncatechars:20|title}}<br>
+                    <td class="text-sm">{{requirement.description|truncatechars:20|title|striptags}}<br>
                     </td>
                     <td class="text-sm">{{requirement.site_address|truncatechars:20|title}}<br>
                     </td>
