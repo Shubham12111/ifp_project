@@ -29,14 +29,14 @@
                   {% endif %}
 
                   {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor" %}
-                  <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Assign
+                  <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>Assign
                     Surveyor</button>
+
 
                     <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" >Assign
                       Quantity Surveyor</button>
                     {% endif %}
 
-                  
 
                 </div>
                 {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
@@ -262,16 +262,12 @@
   
     }
   
-  
-  
     if (document.getElementById('requirement-list')) {
       const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
         searchable: true,
         fixedHeight: false,
         perPage: 10,
       });
-  
-     
   
       const searchInput = document.getElementById('searchInput');
       const selectedReqIdsInput = document.getElementById('selectedReqIds');
@@ -308,20 +304,34 @@
   </script>
   
   <script>
+
     document.addEventListener("DOMContentLoaded", function () {
-      // Get the "Add Quantity Surveyor" button
-      const addSurveyorButton = document.getElementById("addSurveyorButton");
-  
+      const addQuantitySurveyorButton = document.getElementById('addQuantitySurveyorButton');
+      const addSurveyorButton = document.getElementById('addSurveyorButton');
+      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+
+      checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+          const selectedReqIds = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+
+          // Enable/disable the buttons based on whether any row is selected
+          addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
+          addSurveyorButton.disabled = selectedReqIds.length === 0;
+        });
+      });
+
       // Get the modal
-      const addSurveyorModal = new bootstrap.Modal(document.getElementById("addSurveyorModal"));
-  
-      // Add an event listener to show the modal when the button is clicked
-      addSurveyorButton.addEventListener("click", function () {
+      const addSurveyorModal = new bootstrap.Modal(document.getElementById('addSurveyorModal'));
+
+      // Add an event listener to show the modal when the "Assign Surveyor" button is clicked
+      addSurveyorButton.addEventListener('click', function () {
         addSurveyorModal.show();
       });
-  
-  
-      const addQsButton = document.getElementById("addQuantitySurveyorButton");
+    });
+
+
   
       // Get the modal
       const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
@@ -345,7 +355,7 @@
         selectForm.submit(); // Submit the form
       });
   
-    });
+
   </script>
   
   <script>
@@ -385,10 +395,6 @@
       });
   
   
-  
-  
-  
-  
       // Add an event listener to submit the form when the "Submit" button is clicked
       const submitQsButton = document.getElementById("submitQsForm");
       submitQsButton.addEventListener("click", function () {
@@ -410,14 +416,12 @@
         const selectQsForm = document.getElementById("selectQsForm");
         selectQsForm.submit();
       });
-  
-  
+
       const saveButton = document.getElementById("saveButton");
       saveButton.addEventListener("click", function () {
         const csvForm = document.getElementById("csvForm");
         csvForm.submit(); // Submit the form
       });
-  
   
     });
   
@@ -435,12 +439,6 @@
       });
     }
   
-  
-  
   </script>
-  
-  
-
-  
   
   {% endblock %}
