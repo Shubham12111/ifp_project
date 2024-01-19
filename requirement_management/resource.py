@@ -9,6 +9,7 @@ from .models import SORItem
 class SORItemUpload(resources.ModelResource):
     class Meta:
         model = SORItem
+        fields = ['id', 'name', 'description', 'category_id', 'reference_number', 'price', 'units']
 
     def save_instance(self, instance, using_transactions=True, dry_run=False, **kwargs):
         """
@@ -45,20 +46,6 @@ class SORItemUpload(resources.ModelResource):
         Override the after_import method to perform bulk create and bulk update.
         """
         super().after_import(dataset, using_transactions, dry_run, result, **kwargs)
-        
-        # Perform bulk create and bulk update
-        if not dry_run:
-            batch_size = self.get_chunk_size()
-            self.bulk_create(using_transactions, dry_run, raise_errors=True, batch_size=batch_size)
-            self.bulk_update(using_transactions, dry_run, raise_errors=True, batch_size=batch_size)
-
-
-    def after_import(self, dataset, using_transactions, dry_run, result, **kwargs):
-        """
-        Override the after_import method to perform bulk create and bulk update.
-        """
-        super().after_import(dataset, using_transactions, dry_run, result, **kwargs)
-        
         # Perform bulk create and bulk update
         if not dry_run:
             batch_size = self.get_chunk_size()

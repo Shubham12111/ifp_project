@@ -1099,24 +1099,28 @@ class SurveyorRequirementSerializer(serializers.ModelSerializer):
         fields = ('action', 'survey_start_date', 'survey_end_date', 'due_date', 'status')
     
     def to_representation(self, instance: Requirement):
-        soup = BeautifulSoup(instance.action, 'html.parser')
-        title = soup.get_text().strip()
-        start = instance.survey_start_date.isoformat()
-        end = instance.survey_end_date.isoformat()
-        className = 'bg-gradient-warning'
+        try:
+            soup = BeautifulSoup(instance.action, 'html.parser')
+            title = soup.get_text().strip()
 
-        if instance.status == 'assigned-to-surveyor' and instance.survey_end_date < timezone.now():
-            className = 'bg-gradient-danger'
-        
-        if instance.status == 'surveyed':
-            className = 'bg-gradient-success'
-        return {
-            'id': instance.id,
-            'title': f'{title}',
-            'start': f'{start}',
-            'end': f'{end}',
-            'className': f'{className}'
-        }
+            start = instance.survey_start_date.isoformat()
+            end = instance.survey_end_date.isoformat()
+            className = 'bg-gradient-warning'
+
+            if instance.status == 'assigned-to-surveyor' and instance.survey_end_date < timezone.now():
+                className = 'bg-gradient-danger'
+            
+            if instance.status == 'surveyed':
+                className = 'bg-gradient-success'
+            return {
+                'id': instance.id,
+                'title': f'{title}',
+                'start': f'{start}',
+                'end': f'{end}',
+                'className': f'{className}'
+            }
+        except:
+            return {}
 
 class BulkRequirementAddSerializer(serializers.ModelSerializer):
     """
