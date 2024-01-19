@@ -63,6 +63,7 @@ INSTALLED_APPS = [
      # for calendar setup
     'schedule',
     'djangobower',
+    'import_export',
     
 ]
 
