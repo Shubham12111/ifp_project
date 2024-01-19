@@ -39,7 +39,7 @@
 <script src="{% static 'assets/js/plugins/quill.min.js' %}"></script>
 <script>
   if (document.getElementById('edit-{{ field.name }}')) {
-    var quill = new Quill('#edit-{{ field.name }}', {
+    var {{ field.name }}Quill = new Quill('#edit-{{ field.name }}', {
       theme: 'snow', // Specify theme in configuration
       modules: {
         toolbar: [
@@ -49,15 +49,13 @@
       },
     });
     // Assuming 'hidden-input-{{ field.name }}' is the ID of your hidden input field
-      var quillContent = document.getElementById('edit-{{ field.name }}').textContent;
-      var hiddenInput = document.getElementById('quill-{{ field.name }}');
-      
-
-      
-      // Update the hidden input field value whenever the Quill content changes
-      quill.on('text-change', function () {
-        hiddenInput.value = quill.root.innerHTML;
-      });
+    var {{ field.name }}QuillContent = document.getElementById('edit-{{ field.name }}').textContent;
+    var {{ field.name }}HiddenInput = document.getElementById('quill-{{ field.name }}');
+    
+    // Update the hidden input field value whenever the Quill content changes
+    {{ field.name }}Quill.on('text-change', function () {
+      {{ field.name }}HiddenInput.value = {{ field.name }}Quill.root.innerHTML;
+    });
 
 
     // Add an event listener to capture the content when the form is submitted
@@ -65,11 +63,7 @@
     
     form.addEventListener('submit', function (event) {
       
-      var quillContent = document.getElementById('edit-{{ field.name }}').textContent;
-     
-
-      
-
+      var {{ field.name }}QuillContent = document.getElementById('edit-{{ field.name }}').textContent;
 
     });
   }

@@ -10,8 +10,15 @@
         <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
-              <h5>FRA Summary</h5>
-              {% include 'customer_info.html' %}
+              <div class="row justify-content-between">
+                <div class="col-6">
+                  <h5>FRA Summary</h5>
+                  {% include 'customer_info.html' %}
+                </div>
+                <div class="col-6">
+                  <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_list' customer_id %}">Back</a>
+                </div>
+              </div>
             </div>
             <div class="card-body pt-0">
              <form role="form"  method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
@@ -36,8 +43,6 @@
                       {% endfor %}
                   {% endif %}
                 <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_list' customer_id %}">Back</a>
-            
               </form>
               {% include 'components/loader.html' %}
         </div>
@@ -64,8 +69,6 @@
 
   // Add an event listener to the edit button
   editButton.addEventListener('click', toggleEditMode);
-  }
-
 </script>
 {% endif %}
 
