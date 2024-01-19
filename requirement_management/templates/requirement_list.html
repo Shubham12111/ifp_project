@@ -1,56 +1,103 @@
   {% extends 'base.html' %}
   {% load static %}
+  {% load rest_framework %}
   {% block title %} FRA Actions {{ block.super }}{% endblock %}
   {% block content %}
   {% load custom_tags %}
+  <link id="pagestyle" href="{% static 'assets/css/daterangepicker.css' %}" rel="stylesheet" />
+  <style>
+  div.choices__list.choices__list--dropdown.is-active{
+    z-index: 100 !important;
+  }
+  </style>
+  <style>
+    ul li input[type=text] {
+      display: inline-block;
+    }
+  </style>
+  
+  <style>
+    .daterangepicker .ranges ul li.active {
+      background-color: transparent !important;
+      border: none !important;
+      color: inherit !important;
+    }
+    
+    a.fc-daygrid-event{
+      cursor: pointer !important;
+    }
+
+    .fc-h-event .fc-event-main-frame {
+      display: block !important;
+    }
+    .fc-daygrid-block-event .fc-event-time, .fc-daygrid-block-event .fc-event-title {
+        font-weight: 600 !important;
+        padding: 0rem 0.3rem !important;
+    }
+
+    .fc-daygrid-event-dot{
+      display: none !important;
+    }
+
+    a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past.bg-gradient-danger{
+      display: block !important;
+      color: white !important;
+      background-image: linear-gradient(310deg, #ea0606 0%, #ff667c 100%) !important;
+    }
+
+    div.fc-event-title{
+      padding: 0rem 0.3rem !important;
+    }
+    div.fc-toolbar-chunk{
+      display: flex !important;
+    }
+  </style>
   {% include 'components/alert.html' %}
-  <div class="container-fluid py-4">
+  <div class="container-fluid py-2">
     <div class="row">
       <div class="col-12">
         <div class="card">
           <!-- Card header -->
-          <div class="card-header pb-0">
-            <div class="row">
-              <div class="col-lg-5 col-12 mb-lg-0 mb-3">
+          <div class="card-header pt-3 pb-0">
+            <div class="row justify-content-between">
+              <div class="col-6">
                 <h4 class="mb-0">FRA Actions</h4>
                 {% include 'customer_info.html' %}
               </div>
-              <div class="col-lg-7 col-12">
-                <div class="ms-auto my-auto mt-lg-0 mt-4 text-end">
+              <div class="col-6 text-end">
 
-                  <button id="openCreateCsvModalButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Import
+                  <button id="openCreateCsvModalButton" class="btn bg-gradient-primary btn-sm mb-0 mx-2">Import
                     FRA</button>
                   {% if request.user|has_add_permission:"fire_risk_assessment" %}
                   <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
                     
                   <a href="{% url 'customer_requirement_add'    customer_id %}"
                   
-                    class="btn bg-gradient-primary  btn-sm mb-2 mx-2">+&nbsp; New FRA Actions</a>
+                    class="btn bg-gradient-primary  btn-sm mb-0 mx-2">+&nbsp; New FRA Actions</a>
                   {% endif %}
 
                   {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor" %}
-                  <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Assign
+                  <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#addSurveyorModal" disabled>Assign
                     Surveyor</button>
 
-                    <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" >Assign
-                      Quantity Surveyor</button>
+
+                    {% comment %} <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" >Assign
+                      Quantity Surveyor</button> {% endcomment %}
                     {% endif %}
 
-                  
-
-                </div>
                 {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
               </div>
 
             </div>
 
+            {% include "requirement_filters.html" %}
           </div>
           
-          <div class="card-body px-0 pb-0">
+          <div class="card-body pb-3 pt-0 mt-3">
 
             <div class="table-responsive">
               <!-- Modal for adding Quantity Surveyor -->
-              <div class="modal fade" id="addQsModal" tabindex="-1" aria-labelledby="addQsModalLabel" aria-hidden="true">
+              {% comment %} <div class="modal fade" id="addQsModal" tabindex="-1" aria-labelledby="addQsModalLabel" aria-hidden="true">
                 <div class="modal-dialog ">
                   <div class="modal-content">
                     <div class="modal-header">
@@ -79,15 +126,15 @@
                     </div>
                   </div>
                 </div>
-              </div>
-              <table class="table table-flush text-dark" id="requirement-list">
+              </div> {% endcomment %}
+              <table class="table table-hover text-dark" id="requirement-list">
                 <thead class="thead-light">
                   <tr>
                     <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th><!-- Add an empty th for the checkbox column -->
                     <th>FRA Action</th>
                     <th>Description</th>
                     <th>Site Address</th>
-                    <th>Quantity Surveyor</th>
+                    {% comment %} <th>Quantity Surveyor</th> {% endcomment %}
                     <th>Surveyor</th>
                     <th>Status</th>
                     <th>Due Date</th>
@@ -100,16 +147,16 @@
                     <td class="text-sm">
                       <input type="checkbox" name="requirement_checkbox" value="{{ requirement.id }}">
                     </td>
-                    <td class="text-sm">{{requirement.action|truncatechars:20|title}}<br>
+                    <td class="text-sm"><a href="{% url 'customer_requirement_view' customer_id requirement.pk %}" class="text-decoration-none w-100 nav-link">{{requirement.action|safe|truncatechars:20|title|default:''}}</a>
                     </td>
-                    <td class="text-sm">{{requirement.description|truncatechars:20|title}}<br>
+                    <td class="text-sm"><a href="{% url 'customer_requirement_view' customer_id requirement.pk %}" class="text-decoration-none w-100 nav-link">{{requirement.description|safe|truncatechars:20|title|default:''}}</a>
                     </td>
-                    <td class="text-sm">{{requirement.site_address|truncatechars:20|title}}<br>
+                    <td class="text-sm"><a href="{% url 'customer_requirement_view' customer_id requirement.pk %}" class="text-decoration-none w-100 nav-link">{{requirement.site_address|truncatechars:20|title}}</a>
                     </td>
-                    <td class="text-sm">{{requirement.quantity_surveyor|default:''}}</td>
-                    <td class="text-sm">{{requirement.surveyor|default:''}}</td>
-                    <td class="text-sm">{{requirement.get_status_display|default:''|title}}</td>
-                    <td class="text-sm">{{requirement.due_date|date:"d/m/Y"}}</td>
+                    {% comment %} <td class="text-sm">{{requirement.quantity_surveyor|default:''}}</td> {% endcomment %}
+                    <td class="text-sm"><a href="{% url 'customer_requirement_view' customer_id requirement.pk %}" class="text-decoration-none w-100 nav-link">{{requirement.surveyor|default:''}}</a>
+                    <td class="text-sm"><a href="{% url 'customer_requirement_view' customer_id requirement.pk %}" class="text-decoration-none w-100 nav-link">{{requirement.get_status_display|default:''|title}}</a>
+                    <td class="text-sm"><a href="{% url 'customer_requirement_view' customer_id requirement.pk %}" class="text-decoration-none w-100 nav-link">{{requirement.due_date|date:"d/m/Y"}}</a>
                     <td class="text-sm">
                       <div class="dropstart ms-auto pe-0">
                         <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
@@ -117,14 +164,6 @@
                           <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
                         </a>
                         <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                          {% if request.user|has_view_permission:"fire_risk_assessment" %}
-                          <li>
-                            <a href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
-                              class="dropdown-item border-radius-md">
-                              View
-                            </a>
-                          </li>
-                          {% endif %}
                           {% if request.user|has_update_permission:"fire_risk_assessment" %}
                           <li>
                             <a href="{% url 'customer_requirement_edit' customer_id requirement.pk %}"
@@ -148,6 +187,37 @@
                 </tbody>
               </table>
             </div>
+
+            {% if requirements.paginator.num_pages > 1 %}
+          <div class="row justify-content-start justify-content-lg-between pagination-row">
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">Showing {{requirements.number}} of {{requirements.paginator.num_pages}} pages</div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                    {% if requirements.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ requirements.previous_page_number }}"><i class="fas fa-angle-left"></i></a></li>
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a></li>
+                    {% endif %}
+                    {% for i in requirements.paginator.page_range %}
+                        {% if requirements.number == i %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                        {% else%}
+                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if requirements.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ requirements.next_page_number }}"><i class="fas fa-angle-right"></i></a></li>
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a></li>
+                    {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>          
+          {% endif %} 
           </div>
         </div>
       </div>
@@ -156,7 +226,7 @@
 
   <!-- Modal for adding Quantity Surveyor -->
   <div class="modal fade" id="addSurveyorModal" tabindex="-1" aria-labelledby="addSurveyorModal" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="max-width: calc(var(--bs-modal-width) + (var(--bs-modal-width) / 1.5)) !important;">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="addSurveyorModal">Assign Surveyor</h5>
@@ -167,20 +237,29 @@
           <form id="selectForm" method="POST" action="{% url 'add_surveyor' customer_id %}">
             {% csrf_token %}
             <input type="hidden" id="selectedIds" name="selectedIds" value="">
-            <div class="form-group">
-              <label for="qsSelect">Select Surveyor:</label>
-              <select id="sureveyorSelect" name="sureveyorselect" class="form-control">
-                <option disabled selected value>Select Surveyor</option>
-                {% for sureveyor in sureveyors %}
-                <option value="{{sureveyor.id}}">{{sureveyor.email}}</option>
-                {% endfor %}
-              </select>
+            <div class="row">
+              {% csrf_token %}
+              {% render_form assign_to_surveyor_serializer %}
+              {% comment %} <div class="form-group col-4">
+                <label for="qsSelect">Select Surveyor:</label>
+                <select id="sureveyorSelect" name="sureveyorselect" class="form-control">
+                  <option disabled selected value>Select Surveyor</option>
+                  {% for sureveyor in sureveyors %}
+                  <option value="{{sureveyor.id}}">{{sureveyor.email}}</option>
+                  {% endfor %}
+                </select>
+              </div> {% endcomment %}
             </div>
           </form>
+          <div class="card card-calendar d-none" id="calendarCard">
+            <div class="card-body p-3">
+              <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" id="submitButton" class="btn bg-gradient-primary">Submit</button>
+          <button type="submit" id="submitButton" class="btn bg-gradient-primary">Submit</button>
         </div>
       </div>
     </div>
@@ -215,6 +294,8 @@
     </div>
   </div>
 
+  {% include 'components/loader.html' %}
+
 
   {% endblock %}
   {% block extra_js %}
@@ -222,6 +303,7 @@
   <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
   <script src="{% static 'assets/js/custom_delete.js' %}"></script>
   <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/fullcalendar.min.js' %}"></script>
   <script>
     // Initialize Choices.js
     if (document.getElementById('qsSelect')) {
@@ -262,51 +344,9 @@
   
     }
   
-  
-  
-    if (document.getElementById('requirement-list')) {
-      const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
-        searchable: true,
-        fixedHeight: false,
-        perPage: 10,
-      });
-  
-     
-  
-      const searchInput = document.getElementById('searchInput');
-      const selectedReqIdsInput = document.getElementById('selectedReqIds');
-  
-      const selectedIdsInput = document.getElementById('selectedIds');
-  
-  
-      const addQuantitySurveyorButton = document.getElementById('addQuantitySurveyorButton');
-      const addSurveyorButton = document.getElementById('addSurveyorButton');
-  
-  
-      searchInput.addEventListener('input', function () {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
-      });
-  
-      // Listen for checkbox changes and update the selectedReqIdsInput
-      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
-      checkboxes.forEach(function (checkbox) {
-        checkbox.addEventListener('change', function () {
-          const selectedReqIds = Array.from(checkboxes)
-            .filter(checkbox => checkbox.checked)
-            .map(checkbox => checkbox.value);
-  
-          selectedReqIdsInput.value = JSON.stringify(selectedReqIds);
-          selectedIdsInput.value = JSON.stringify(selectedReqIds);
-          // Enable/disable the button based on whether any row is selected
-          addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
-          addSurveyorButton.disabled = selectedReqIds.length === 0;
-        });
-      });
-    }
-  
   </script>
-  
+
+
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       // Get the "Add Quantity Surveyor" button
@@ -321,28 +361,47 @@
       });
   
   
-      const addQsButton = document.getElementById("addQuantitySurveyorButton");
+      // const addQsButton = document.getElementById("addQuantitySurveyorButton");
   
       // Get the modal
-      const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
+      // const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
   
       // Add an event listener to show the modal when the button is clicked
-      addQsButton.addEventListener("click", function () {
+      /* addQsButton.addEventListener("click", function () {
         addQsModal.show();
-      });
+      }); */
   
       // Add an event listener to submit the form when the "Submit" button is clicked
-      const submitQsButton = document.getElementById("submitQsForm");
+      /* const submitQsButton = document.getElementById("submitQsForm");
       submitQsButton.addEventListener("click", function () {
         const selectQsForm = document.getElementById("selectQsForm");
         selectQsForm.submit(); // Submit the form
-      });
+      }); */
   
       // Add an event listener to submit the form when the "Submit" button is clicked
       const submitButton = document.getElementById("submitButton");
       submitButton.addEventListener("click", function () {
+        showLoader()
         const selectForm = document.getElementById("selectForm");
         selectForm.submit(); // Submit the form
+      });
+
+      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+
+      checkboxes.forEach(function (checkbox) {
+        checkbox.addEventListener('change', function () {
+          const selectedIdsInput = document.getElementById('selectedIds');
+          const selectedReqIds = Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked)
+            .map(checkbox => checkbox.value);
+          
+          if (selectedReqIds){
+            selectedIdsInput.value = JSON.stringify(selectedReqIds);
+          }
+          // Enable/disable the buttons based on whether any row is selected
+          //addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
+          addSurveyorButton.disabled = selectedReqIds.length === 0;
+        });
       });
   
     });
@@ -385,10 +444,6 @@
       });
   
   
-  
-  
-  
-  
       // Add an event listener to submit the form when the "Submit" button is clicked
       const submitQsButton = document.getElementById("submitQsForm");
       submitQsButton.addEventListener("click", function () {
@@ -410,14 +465,12 @@
         const selectQsForm = document.getElementById("selectQsForm");
         selectQsForm.submit();
       });
-  
-  
+
       const saveButton = document.getElementById("saveButton");
       saveButton.addEventListener("click", function () {
         const csvForm = document.getElementById("csvForm");
         csvForm.submit(); // Submit the form
       });
-  
   
     });
   
@@ -435,12 +488,89 @@
       });
     }
   
-  
-  
   </script>
   
-  
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // calendar script
+      function renderCalendar(events) {
+        if (!events){
+          events = []
+        }
+        var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+          initialView: "dayGridMonth",
+          headerToolbar: {
+            start: 'title', // will normally be on the left. if RTL, will be on the right
+            center: '',
+            end: 'today prev,next' // will normally be on the right. if RTL, will be on the left
+          },
+          selectable: true,
+          editable: false,
+          initialDate: '2024-01-18',
+          timeZone: 'UTC',
+          displayEventEnd: true,
+          eventTimeFormat: {
+            hour: 'numeric',
+            minute: '2-digit',
+            meridiem: 'short'
+          },
+          events: events,
+          views: {
+            month: {
+              titleFormat: {
+                month: "long",
+                year: "numeric"
+              }
+            },
+            agendaWeek: {
+              titleFormat: {
+                month: "long",
+                year: "numeric",
+                day: "numeric"
+              }
+            },
+            agendaDay: {
+              titleFormat: {
+                month: "short",
+                year: "numeric",
+                day: "numeric"
+              }
+            }
+          },
+          eventClick: function(info) {
+            var linkUrl = `/fra/{{ customer_id }}/view/${info.event.id}/`;
+            window.open(linkUrl, '_blank');
+          }
+        });
 
-  
-  
+        calendar.render();
+      }
+
+      async function showCalendar(){
+        calendarCard = document.getElementById('calendarCard');
+        selectedSureveyorId = document.getElementById('choices-sureveyorselect').value;
+        if (selectedSureveyorId){
+          calendarCard.classList.remove('d-none');
+          var fraResponse = await fetch(`/fra/customers/{{ customer_data.id }}/surveyor/${selectedSureveyorId}/list/`);
+          var fraData = await fraResponse.json();
+          var fraArray = Array.isArray(fraData.data) ? fraData.data : [fraData.data];
+          renderCalendar(fraArray);
+        }else{
+          if (!('d-none' in calendarCard.classList)){
+            calendarCard.classList.add('d-none');
+          }
+        }
+      }
+
+      document.getElementById('choices-sureveyorselect').addEventListener('change', () => {
+        showCalendar();
+      });
+
+      const addSurveyorModal = document.getElementById('addSurveyorModal')
+      addSurveyorModal.addEventListener('shown.bs.modal', () => {
+        showCalendar();
+      })
+      
+    });
+  </script>
   {% endblock %}

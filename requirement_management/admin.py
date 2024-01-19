@@ -13,7 +13,8 @@ class RequirementAdmin(admin.ModelAdmin):
     Attributes:
         list_display (tuple): A tuple of fields to be displayed in the list view of the admin panel.
     """
-    list_display = ('user_id', 'customer_id', 'description', 'quantity_surveyor', 'status')
+    # list_display = ('user_id', 'customer_id', 'description', 'quantity_surveyor', 'status')
+    list_display = ('user_id', 'customer_id', 'description', 'status')
 
 
 class RequirementDefectAdmin(admin.ModelAdmin):

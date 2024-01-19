@@ -7,13 +7,14 @@ from .sor_view import *
 from .quotation_views import *
 
 urlpatterns = [
-    path('quantity_surveyor/add/<int:customer_id>/',RequirementQSAddView.as_view() , name='add_quantity_surveyor'),
+    # path('quantity_surveyor/add/<int:customer_id>/',RequirementQSAddView.as_view() , name='add_quantity_surveyor'),
     path('surveyor/add/<int:customer_id>/',RequirementSurveyorAddView.as_view() , name='add_surveyor'),
+    path('customers/<int:customer_id>/surveyor/<int:surveyor_id>/list/', retriveSurveyorAssignedFRA, name='list_assigned_fra_of_surveyor'),
+    path('surveyor/search/', FRASurveyorSearchAPIView.as_view(), name='fra_search_surveyor'),
 
     path('customers/', RequirementCustomerListView.as_view(), name='customers_list'),
     path('customers/<int:customer_id>/list/', RequirementListView.as_view(), name='customer_requirement_list'),
     path('customers/<int:customer_id>/add/', RequirementAddView.as_view(), name='customer_requirement_add'),
-    path('<int:customer_id>/view/<int:pk>/', RequirementDetailView.as_view(), name='customer_requirement_view'),
     path('<int:customer_id>/view/<int:pk>/', RequirementDetailView.as_view(), name='customer_requirement_view'),
     
     path('<int:customer_id>/view/selecetd_defects/<int:pk>/', get_selected_defect_data, name='get_selected_defect_data'),
