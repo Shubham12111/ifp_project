@@ -20,7 +20,7 @@ REQUIREMENT_DEFECT_CHOICES = (
 REQUIREMENT_CHOICES = (
     ('active', 'Active'),
     ('to-surveyor', 'To Surveyor'),
-    ('assigned-to-surveyor ', 'Assigned To Surveyor')
+    ('assigned-to-surveyor', 'Assigned To Surveyor')
 )
 
 REQUIREMENT_DEFECT_STATUS_CHOICES = (
@@ -85,6 +85,8 @@ class Requirement(models.Model):
     action = RichTextField()
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
     due_date = models.DateField(null=True, blank=True)
+    survey_start_date = models.DateTimeField(null=True, blank=True)
+    survey_end_date = models.DateTimeField(null=True, blank=True)
     quantity_surveyor = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='surveyor_requirement')
     surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor', null=True, blank=False)
     status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='active')

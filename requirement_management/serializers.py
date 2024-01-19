@@ -130,11 +130,12 @@ class RequirementDetailSerializer(serializers.ModelSerializer):
         to_representation: Convert the model instance to JSON representation.
     """
     customer_name = CustomerNameField(source='customer_id', read_only=True)
-    quantity_surveyor_name = CustomerNameField(source='quantity_surveyor', read_only=True)
+    # quantity_surveyor_name = CustomerNameField(source='quantity_surveyor', read_only=True)
     requirementdefect_set = RequirementDefectSerializer(many=True, read_only=True)
     class Meta:
         model = Requirement
-        fields = ('user_id', 'customer_id', 'description', 'RBNO', 'UPRN', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
+        # fields = ('user_id', 'customer_id', 'description', 'RBNO', 'UPRN', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
+        fields = ('user_id', 'customer_id', 'description', 'RBNO', 'UPRN', 'status', 'customer_name', 'requirementdefect_set')
 
     def to_representation(self, instance):
         """
@@ -169,7 +170,8 @@ class RequirementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requirement
-        fields = ('user_id', 'customer_id', 'description', 'quantity_surveyor', 'status')
+        # fields = ('user_id', 'customer_id', 'description', 'quantity_surveyor', 'status')
+        fields = ('user_id', 'customer_id', 'description', 'status')
 
     def to_representation(self, instance):
         """
@@ -1046,3 +1048,72 @@ class SORSerializer(serializers.ModelSerializer):
         
         representation['document_paths'] = document_paths
         return representation
+
+
+class AssignToSurveyorSerializer(serializers.Serializer):
+
+    sureveyorselect = serializers.PrimaryKeyRelatedField(
+        label=('Select Surveyor:'),
+        required=True,
+        queryset=User.objects.filter(roles__name='surveyor').all(),
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-12 col-md-4 autocomplete'
+        },
+    )
+
+    surevey_start_date = serializers.DateTimeField(
+        label='Start Date',
+        required=True,
+        input_formats=['%d/%m/%Y','iso-8601'],
+        style={
+            'base_template': 'custom_date_time.html',
+            'custom_class': 'col-12 col-md-4'
+        },
+        # Add any additional styles or validators if needed
+    )
+
+    surevey_end_date = serializers.DateTimeField(
+        label='End Date',
+        required=True,
+        input_formats=['%d/%m/%Y','iso-8601'],
+        style={
+            'base_template': 'custom_date_time.html',
+            'custom_class': 'col-12 col-md-4'
+        },
+        # Add any additional styles or validators if needed
+    )
+
+class SurveyorRequirementSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Requirement model.
+
+    This serializer is used to get Requirements for a Surveyor and convert Requirement model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+
+    class Meta:
+        model = Requirement
+        fields = ('action', 'survey_start_date', 'survey_end_date', 'due_date', 'status')
+    
+    def to_representation(self, instance: Requirement):
+        soup = BeautifulSoup(instance.action, 'html.parser')
+        title = soup.get_text().strip()
+        start = instance.survey_start_date.isoformat()
+        end = instance.survey_end_date.isoformat()
+        className = 'bg-gradient-warning'
+
+        if instance.status == 'assigned-to-surveyor' and instance.survey_end_date < timezone.now():
+            className = 'bg-gradient-danger'
+        
+        if instance.status == 'surveyed':
+            className = 'bg-gradient-success'
+        return {
+            'id': instance.id,
+            'title': f'{title}',
+            'start': f'{start}',
+            'end': f'{end}',
+            'className': f'{className}'
+        }
