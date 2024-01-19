@@ -27,18 +27,18 @@ from rest_framework import permissions
 # swagger settings
 schema_view = get_schema_view(
    openapi.Info(
-      title="Infinity Fire solution APIs",
+      title="Infinity Fire Prevention APIs",
       default_version='v0.2.0',
-      description="Welcome to the Infinity Fire Solution API Documentation, offering effortless integration with our platform. </br><b>Please note that certain modules currently do not have associated APIs.</b> </br>These modules include:</br></br>1. Contact </br> </br>2. Todo Comments </br></br>3. Customer Billing Address </br></br>4. Customer Site Address  </br></br>5. Customer Contact Person  </br></br>6. Requriment Defect",
+      description="Welcome to the Infinity Fire Prevention API Documentation, offering effortless integration with our platform. </br><b>Please note that certain modules currently do not have associated APIs.</b> </br>These modules include:</br></br>1. Contact </br> </br>2. Todo Comments </br></br>3. Customer Billing Address </br></br>4. Customer Site Address  </br></br>5. Customer Contact Person  </br></br>6. Requriment Defect",
    ),
    public=True,
    permission_classes=[permissions.AllowAny]
 )
 
 # admin Customization
-admin.site.site_header = "Infinity Fire Solutions Admin"
-admin.site.site_title = "Infinity Fire Solutions"
-admin.site.index_title = "Infinity Fire Solutions Management"
+admin.site.site_header = "Infinity Fire Prevention Admin"
+admin.site.site_title = "Infinity Fire Prevention"
+admin.site.index_title = "Infinity Fire Prevention Management"
 
 urlpatterns = [
     path('admin/', admin.site.urls),

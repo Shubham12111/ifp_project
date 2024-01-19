@@ -20,7 +20,7 @@ REQUIREMENT_DEFECT_CHOICES = (
 REQUIREMENT_CHOICES = (
     ('active', 'Active'),
     ('to-surveyor', 'To Surveyor'),
-    ('assigned-to-surveyor ', 'Assigned To Surveyor')
+    ('assigned-to-surveyor', 'Assigned To Surveyor')
 )
 
 REQUIREMENT_DEFECT_STATUS_CHOICES = (
@@ -81,10 +81,12 @@ class Requirement(models.Model):
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='customer_requirement')
     UPRN = models.CharField(max_length=255, null=True)
     RBNO = models.CharField(max_length=255, null=True)
-    description = models.TextField()
-    action = models.TextField()
+    description = RichTextField()
+    action = RichTextField()
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
     due_date = models.DateField(null=True, blank=True)
+    survey_start_date = models.DateTimeField(null=True, blank=True)
+    survey_end_date = models.DateTimeField(null=True, blank=True)
     quantity_surveyor = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='surveyor_requirement')
     surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor', null=True, blank=False)
     status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='active')
@@ -250,6 +252,8 @@ class SORCategory(models.Model):
         return self.name
     
     class Meta:
+        verbose_name = _('SOR Category')
+        verbose_name_plural = _('SOR Category')
         ordering = ['-id']  # Order by the default primary key in descending order
 
 class SORItem(models.Model):
@@ -271,7 +275,7 @@ class SORItem(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, 
                                 verbose_name="Created By", related_name="sor_user", null=True)
     
-    customer_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    customer_id = models.ForeignKey(User, on_delete=models.CASCADE,null=True)
     category_id = models.ForeignKey(SORCategory, on_delete=models.CASCADE)
     name = models.CharField(max_length=225)
     description =  RichTextField(null=True)
@@ -300,6 +304,28 @@ class SORItem(models.Model):
             'units':self.units
         }
     
+class SORItemProxy(SORItem):
+
+    """
+    Proxy model representing a default version of an item related to SOR (Service Order Request).
+
+    This model inherits from the SORItem model and serves as a proxy, allowing customization
+    and extensions without creating a separate database table.
+
+    Attributes:
+        Inherits attributes from the SORItem model.
+    """
+    
+    class Meta:
+        """
+    Meta:
+        proxy (bool): Indicates that this is a proxy model.
+        verbose_name (str): Human-readable name for a single object of this model.
+        verbose_name_plural (str): Human-readable name for the plural of this model.
+    """
+        proxy = True
+        verbose_name = 'SOR Item'
+        verbose_name_plural = 'SOR Item'
 
 class SORItemImage(models.Model):
     sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)

@@ -1,446 +1,1270 @@
-  {% extends 'base.html' %}
-  {% load static %}
-  {% block title %} FRA Actions {{ block.super }}{% endblock %}
-  {% block content %}
-  {% load custom_tags %}
-  {% include 'components/alert.html' %}
-  <div class="container-fluid py-4">
-    <div class="row">
-      <div class="col-12">
-        <div class="card">
-          <!-- Card header -->
-          <div class="card-header pb-0">
-            <div class="row">
-              <div class="col-lg-5 col-12 mb-lg-0 mb-3">
-                <h4 class="mb-0">FRA Actions</h4>
-                {% include 'customer_info.html' %}
-              </div>
-              <div class="col-lg-7 col-12">
-                <div class="ms-auto my-auto mt-lg-0 mt-4 text-end">
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} FRA Actions {{ block.super }}{% endblock %} 
+{% block content %} 
+{% load custom_tags %}
+<link
+  id="pagestyle"
+  href="{% static 'assets/css/daterangepicker.css' %}"
+  rel="stylesheet"
+/>
+<style>
+  div.choices__list.choices__list--dropdown.is-active {
+    z-index: 100 !important;
+  }
+</style>
+<style>
+  ul li input[type="text"] {
+    display: inline-block;
+  }
+</style>
 
-                  <button id="openCreateCsvModalButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Import
-                    FRA</button>
-                  {% if request.user|has_add_permission:"fire_risk_assessment" %}
-                  <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
-                    
-                  <a href="{% url 'customer_requirement_add'    customer_id %}"
-                  
-                    class="btn bg-gradient-primary  btn-sm mb-2 mx-2">+&nbsp; New FRA Actions</a>
-                  {% endif %}
+<style>
+  .daterangepicker .ranges ul li.active {
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+  }
 
-                  {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor" %}
-                  <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2">Assign
-                    Surveyor</button>
+  a.fc-daygrid-event {
+    cursor: pointer !important;
+  }
 
-                    <button id="addQuantitySurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" >Assign
-                      Quantity Surveyor</button>
-                    {% endif %}
+  .fc-h-event .fc-event-main-frame {
+    display: block !important;
+  }
+  .fc-daygrid-block-event .fc-event-time,
+  .fc-daygrid-block-event .fc-event-title {
+    font-weight: 600 !important;
+    padding: 0rem 0.3rem !important;
+  }
 
-                  
+  .fc-daygrid-event-dot {
+    display: none !important;
+  }
 
-                </div>
-                {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
-              </div>
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
 
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past.bg-gradient-danger {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-today {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
+
+  div.fc-event-title {
+    padding: 0rem 0.3rem !important;
+  }
+  div.fc-toolbar-chunk {
+    display: flex !important;
+  }
+</style>
+{% include 'components/alert.html' %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pt-3 pb-0">
+          <div class="row justify-content-end">
+            <div class="col-12 text-end">
+              <button
+                id="openCreateCsvModalButton"
+                data-bs-toggle="modal"
+                data-bs-target="#bulk_import_modal"
+                class="btn bg-gradient-primary btn-sm mb-2 mx-2"
+              >
+                Import FRA
+              </button>
+              {% if request.user|has_add_permission:"fire_risk_assessment" %}
+              <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
+
+              <a
+                href="{% url 'customer_requirement_add'    customer_id %}"
+                class="btn bg-gradient-primary btn-sm mb-2 mx-2"
+                >+&nbsp; New FRA Actions</a
+              >
+              {% endif %} 
+              {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor" %}
+              <button
+                id="addSurveyorButton"
+                class="btn bg-gradient-primary btn-sm mb-2 mx-2"
+                data-bs-toggle="modal"
+                data-bs-target="#addSurveyorModal"
+                disabled
+              >
+                Assign Surveyor
+              </button>
+
+              {% comment %}
+              <button
+                id="addQuantitySurveyorButton"
+                class="btn bg-gradient-primary btn-sm mb-2 mx-2"
+              >
+                Assign Quantity Surveyor
+              </button>
+              {% endcomment %} 
+              {% endif %} 
+              {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
             </div>
-
           </div>
-          
-          <div class="card-body px-0 pb-0">
-
-            <div class="table-responsive">
-              <!-- Modal for adding Quantity Surveyor -->
-              <div class="modal fade" id="addQsModal" tabindex="-1" aria-labelledby="addQsModalLabel" aria-hidden="true">
-                <div class="modal-dialog ">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="addQsModalLabel">Assign Quantity Surveyor</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
+          <div class="row justify-content-between">
+            <div class="col-6">
+              <h4 class="mb-0">FRA Actions</h4>
+              {% include 'customer_info.html' %}
+            </div>
+            <!-- Modal for bulk import-->
+            <div
+              class="modal fade"
+              id="bulk_import_modal"
+              tabindex="-1"
+              aria-labelledby="bulkImportModalLabel"
+              aria-hidden="true"
+            >
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="bulkImportModalLabel">
+                      Bulk Import FRA
+                    </h1>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                    ></button>
+                  </div>
+                  <form
+                    action="{% url 'bulk_import_customer_requirements' customer_id %}"
+                    role="form"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    onsubmit="showLoader()"
+                  >
+                    {% csrf_token %}
                     <div class="modal-body">
-                      <!-- Form to select a QS -->
-                      <form id="selectQsForm" method="POST" action="{% url 'add_quantity_surveyor' customer_id %}">
-                        {% csrf_token %}
-                        <input type="hidden" id="selectedReqIds" name="selectedReqIds" value="">
-                        <div class="form-group">
-                          <label for="qsSelect">Select a Quantity Surveyor:</label>
-                          <select id="qsSelect" name="qsSelect" class="form-control">
-                            <option disabled selected value> Select Quantity Surveyor </option>
-                            {% for qs in quantity_sureveyors %}
-                            <option value="{{qs.id}}">{{qs.email}}</option>
-                            {% endfor %}
-                          </select>
+                      <div class="mb-3">
+                        <input
+                          class="form-control"
+                          type="file"
+                          id="formFile"
+                          name="excel_file"
+                          accept=".xlsx, .xls, .csv, .ods"
+                        />
+                      </div>
+                      <div class="d-none" id="mapping_key_values">
+                        <div class="container">
+                          <div class="row mt-3">
+                            <div class="col text-start">
+                              <label
+                                for="RBNO"
+                                class="col-form-label text-start"
+                                >RBNO:</label
+                              >
+                            </div>
+                            <div class="col">
+                              <select
+                                class="form-select"
+                                aria-label="Default select example"
+                                type="radio"
+                                name="RBNO"
+                                id="mappings"
+                              >
+                                <option selected>Open this select menu</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row mt-3">
+                            <div class="col text-start">
+                              <label
+                                for="UPRN"
+                                class="col-form-label text-start"
+                                >UPRN:</label
+                              >
+                            </div>
+                            <div class="col">
+                              <select
+                                class="form-select"
+                                aria-label="Default select example"
+                                type="radio"
+                                name="UPRN"
+                                id="mappings"
+                              >
+                                <option selected>Open this select menu</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row mt-3">
+                            <div class="col text-start">
+                              <label
+                                for="action"
+                                class="col-form-label text-start"
+                                >Action:</label
+                              >
+                            </div>
+                            <div class="col">
+                              <select
+                                class="form-select"
+                                aria-label="Default select example"
+                                type="radio"
+                                name="action"
+                                id="mappings"
+                              >
+                                <option selected>Open this select menu</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row mt-3">
+                            <div class="col text-start">
+                              <label
+                                for="description"
+                                class="col-form-label text-start"
+                                >Description:</label
+                              >
+                            </div>
+                            <div class="col">
+                              <select
+                                class="form-select"
+                                aria-label="Default select example"
+                                type="radio"
+                                name="description"
+                                id="mappings"
+                              >
+                                <option selected>Open this select menu</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row mt-3">
+                            <div class="col text-start">
+                              <label
+                                for="site_address"
+                                class="col-form-label text-start"
+                                >Site Address:</label
+                              >
+                            </div>
+                            <div class="col">
+                              <select
+                                class="form-select"
+                                aria-label="Default select example"
+                                type="radio"
+                                name="site_address"
+                                id="mappings"
+                              >
+                                <option selected>Open this select menu</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row mt-3">
+                            <div class="col text-start">
+                              <label
+                                for="due_date"
+                                class="col-form-label text-start"
+                                >Due Date:</label
+                              >
+                            </div>
+                            <div class="col">
+                              <select
+                                class="form-select"
+                                aria-label="Default select example"
+                                type="radio"
+                                name="due_date"
+                                id="mappings"
+                              >
+                                <option selected>Open this select menu</option>
+                              </select>
+                            </div>
+                          </div>
                         </div>
-                      </form>
+                      </div>
                     </div>
                     <div class="modal-footer">
-                      <button type="button" id="cancelQsForm" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                      <button type="button" id="submitQsForm" class="btn bg-gradient-primary">Submit</button>
+                      <button
+                        type="button"
+                        class="btn bg-gradient-secondary btn-sm"
+                        data-bs-dismiss="modal"
+                      >
+                        Close
+                      </button>
+                      <input
+                        type="submit"
+                        class="btn bg-gradient-primary btn-sm"
+                        value="Save"
+                      />
                     </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {% include "requirement_filters.html" %}
+          </div>
+        </div>
+        <div class="card-body pb-3 pt-0 mt-3">
+          <div class="table-responsive">
+            <!-- Modal for adding Quantity Surveyor -->
+            {% comment %}
+            <div
+              class="modal fade"
+              id="addQsModal"
+              tabindex="-1"
+              aria-labelledby="addQsModalLabel"
+              aria-hidden="true"
+            >
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="addQsModalLabel">
+                      Assign Quantity Surveyor
+                    </h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"
+                    ></button>
+                  </div>
+                  <div class="modal-body">
+                    <!-- Form to select a QS -->
+                    <form
+                      id="selectQsForm"
+                      method="POST"
+                      action="{% url 'add_quantity_surveyor' customer_id %}"
+                    >
+                      {% csrf_token %}
+                      <input
+                        type="hidden"
+                        id="selectedReqIds"
+                        name="selectedReqIds"
+                        value=""
+                      />
+                      <div class="form-group">
+                        <label for="qsSelect"
+                          >Select a Quantity Surveyor:</label
+                        >
+                        <select
+                          id="qsSelect"
+                          name="qsSelect"
+                          class="form-control"
+                        >
+                          <option disabled selected value>
+                            Select Quantity Surveyor
+                          </option>
+                          {% for qs in quantity_sureveyors %}
+                          <option value="{{qs.id}}">{{qs.email}}</option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    </form>
+                  </div>
+                  <div class="modal-footer">
+                    <button
+                      type="button"
+                      id="cancelQsForm"
+                      class="btn btn-secondary"
+                      data-bs-dismiss="modal"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      id="submitQsForm"
+                      class="btn bg-gradient-primary"
+                    >
+                      Submit
+                    </button>
                   </div>
                 </div>
               </div>
-              <table class="table table-flush text-dark" id="requirement-list">
-                <thead class="thead-light">
-                  <tr>
-                    <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th><!-- Add an empty th for the checkbox column -->
-                    <th>FRA Action</th>
-                    <th>Description</th>
-                    <th>Site Address</th>
-                    <th>Quantity Surveyor</th>
-                    <th>Surveyor</th>
-                    <th>Status</th>
-                    <th>Due Date</th>
-                    <th class="custom-last-column">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="ml-4">
-                  {% for requirement in requirements %}
-                  <tr>
-                    <td class="text-sm">
-                      <input type="checkbox" name="requirement_checkbox" value="{{ requirement.id }}">
-                    </td>
-                    <td class="text-sm">{{requirement.action|truncatechars:20|title}}<br>
-                    </td>
-                    <td class="text-sm">{{requirement.description|truncatechars:20|title}}<br>
-                    </td>
-                    <td class="text-sm">{{requirement.site_address|truncatechars:20|title}}<br>
-                    </td>
-                    <td class="text-sm">{{requirement.quantity_surveyor|default:''}}</td>
-                    <td class="text-sm">{{requirement.surveyor|default:''}}</td>
-                    <td class="text-sm">{{requirement.get_status_display|default:''|title}}</td>
-                    <td class="text-sm">{{requirement.due_date|date:"d/m/Y"}}</td>
-                    <td class="text-sm">
-                      <div class="dropstart ms-auto pe-0">
-                        <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
-                          aria-expanded="false">
-                          <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
-                        </a>
-                        <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                          {% if request.user|has_view_permission:"fire_risk_assessment" %}
-                          <li>
-                            <a href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
-                              class="dropdown-item border-radius-md">
-                              View
-                            </a>
-                          </li>
-                          {% endif %}
-                          {% if request.user|has_update_permission:"fire_risk_assessment" %}
-                          <li>
-                            <a href="{% url 'customer_requirement_edit' customer_id requirement.pk %}"
-                              class="dropdown-item border-radius-md">
-                              Edit
-                            </a>
-                          </li>
-                          {% endif %}
-                          {% if request.user|has_delete_permission:"fire_risk_assessment" %}
-                          <li>
-                            <a href="#" type="button" class="dropdown-item border-radius-md"
-                              onclick="CustomconfirmDelete({{requirement.id}}, 'Are you sure you want to delete this requirement?','The requirement has been deleted successfully.','{% url 'customer_requirement_delete' customer_id requirement.id %}')">
-                              Delete</a>
-                          </li>
-                          {% endif %}
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            </div>
+            {% endcomment %}
+            <table class="table table-hover text-dark" id="requirement-list">
+              <thead class="thead-light">
+                <tr>
+                  <th class="custom-last-column">
+                    <i
+                      class="fa fa-cog text-secondary"
+                      aria-hidden="true"
+                    ></i>
+                  </th>
+                  <!-- Add an empty th for the checkbox column -->
+                  <th>FRA Action</th>
+                  <th>Description</th>
+                  <th>Site Address</th>
+                  {% comment %}
+                  <th>Quantity Surveyor</th>
+                  {% endcomment %}
+                  <th>Surveyor</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                  <th class="custom-last-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="ml-4">
+                {% for requirement in requirements %}
+                <tr>
+                  <td class="text-sm">
+                    <input
+                      type="checkbox"
+                      name="requirement_checkbox"
+                      value="{{ requirement.id }}"
+                    />
+                  </td>
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link"
+                      >{{requirement.action|safe|truncatechars:20|title|default:''}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link"
+                      >{{requirement.description|safe|truncatechars:20|title|default:''}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link"
+                      >{{requirement.site_address|default:''|truncatechars:20|title}}</a
+                    >
+                  </td>
+                  {% comment %}
+                  <td class="text-sm">
+                    {{requirement.quantity_surveyor|default:''}}
+                  </td>
+                  {% endcomment %}
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link"
+                      >{{requirement.surveyor|default:''}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link"
+                      >{{requirement.get_status_display|default:''|title}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link"
+                      >{{requirement.due_date|date:"d/m/Y"}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <div class="dropstart ms-auto pe-0">
+                      <a
+                        href="javascript:;"
+                        class="cursor-pointer"
+                        id="dropdownTable2"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                      >
+                        <i
+                          class="fa fa-cog text-secondary"
+                          aria-hidden="true"
+                        ></i>
+                      </a>
+                      <ul
+                        class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5"
+                        aria-labelledby="dropdownTable2"
+                      >
+                        {% if request.user|has_update_permission:"fire_risk_assessment" %}
+                        <li>
+                          <a
+                            href="{% url 'customer_requirement_edit' customer_id requirement.pk %}"
+                            class="dropdown-item border-radius-md"
+                          >
+                            Edit
+                          </a>
+                        </li>
+                        {% endif %} 
+                        {% if request.user|has_delete_permission:"fire_risk_assessment" %}
+                        <li>
+                          <a
+                            href="#"
+                            type="button"
+                            class="dropdown-item border-radius-md"
+                            onclick="CustomconfirmDelete({{ requirement.id }}, 'Are you sure you want to delete this requirement?','The requirement has been deleted successfully.','{% url 'customer_requirement_delete' customer_id requirement.id %}')"
+                          >
+                            Delete</a
+                          >
+                        </li>
+                        {% endif %}
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if requirements.paginator.num_pages > 1 %}
+          <div
+            class="row justify-content-start justify-content-lg-between pagination-row"
+          >
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">
+                Showing {{requirements.number}} of
+                {{requirements.paginator.num_pages}} pages
+              </div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul
+                  class="pagination justify-content-start justify-content-lg-end mb-0 ps-0"
+                >
+                  {% if requirements.has_previous %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ requirements.previous_page_number }}"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% endif %} {% for i in requirements.paginator.page_range %}
+                  {% if requirements.number == i %}
+                  <li class="page-item active">
+                    <a class="page-link" href="#">{{ i }}</a>
+                  </li>
+                  {% else%}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                  </li>
+                  {% endif %} {% endfor %} {% if requirements.has_next %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ requirements.next_page_number }}"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
             </div>
           </div>
+          {% endif %}
         </div>
       </div>
-    </div>  
+    </div>
   </div>
+</div>
 
-  <!-- Modal for adding Quantity Surveyor -->
-  <div class="modal fade" id="addSurveyorModal" tabindex="-1" aria-labelledby="addSurveyorModal" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addSurveyorModal">Assign Surveyor</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Form to select a QS -->
-          <form id="selectForm" method="POST" action="{% url 'add_surveyor' customer_id %}">
-            {% csrf_token %}
-            <input type="hidden" id="selectedIds" name="selectedIds" value="">
-            <div class="form-group">
+<!-- Modal for adding Quantity Surveyor -->
+<div
+  class="modal fade"
+  id="addSurveyorModal"
+  tabindex="-1"
+  aria-labelledby="addSurveyorModal"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog"
+    style="
+      max-width: calc(
+        var(--bs-modal-width) + (var(--bs-modal-width) / 1.5)
+      ) !important;
+    "
+  >
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addSurveyorModal">Assign Surveyor</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <!-- Form to select a QS -->
+        <form
+          id="selectForm"
+          method="POST"
+          action="{% url 'add_surveyor' customer_id %}"
+        >
+          {% csrf_token %}
+          <input type="hidden" id="selectedIds" name="selectedIds" value="" />
+          <div class="row">
+            {% csrf_token %} {% render_form assign_to_surveyor_serializer %}
+            {% comment %}
+            <div class="form-group col-4">
               <label for="qsSelect">Select Surveyor:</label>
-              <select id="sureveyorSelect" name="sureveyorselect" class="form-control">
+              <select
+                id="sureveyorSelect"
+                name="sureveyorselect"
+                class="form-control"
+              >
                 <option disabled selected value>Select Surveyor</option>
                 {% for sureveyor in sureveyors %}
                 <option value="{{sureveyor.id}}">{{sureveyor.email}}</option>
                 {% endfor %}
               </select>
             </div>
-          </form>
+            {% endcomment %}
+          </div>
+        </form>
+        <div class="card card-calendar d-none" id="calendarCard">
+          <div class="card-body p-3">
+            <div
+              class="calendar"
+              data-bs-toggle="calendar"
+              id="calendar"
+            ></div>
+          </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" id="submitButton" class="btn bg-gradient-primary">Submit</button>
-        </div>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          id="submitButton"
+          class="btn bg-gradient-primary"
+        >
+          Submit
+        </button>
       </div>
     </div>
   </div>
+</div>
 
-
-  <!-- Modal for importing csv -->
-  <div class="modal fade" id="createcsvModal" tabindex="-1" aria-labelledby="createcsvModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="createcsvModalLabel">Import CSV</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="csvForm" method="POST" action="{% url 'import_csv' customer_id %}" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="form-group">
-              <label for="fileInput">Select File:</label>
-              <input type="file" class="form-control-file" id="fileInput" name="csv_file">
-              <p class="text-sm mt-2">Supported file formats: xls, xlsx, csv</p>
-            </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <a href="#" id="downloadSampleButton" class="text-sm" style="margin-right: 105px; color: blue; text-decoration:underline" onMouseOver="this.style.color='#000080'"
-          onMouseOut="this.style.color='blue'">Download Sample Template</a>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
-        </div>
+<!-- Modal for importing csv -->
+{% comment %}
+<div
+  class="modal fade"
+  id="createcsvModal"
+  tabindex="-1"
+  aria-labelledby="createcsvModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createcsvModalLabel">Import CSV</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          id="csvForm"
+          method="POST"
+          action="{% url 'import_csv' customer_id %}"
+          enctype="multipart/form-data"
+        >
+          {% csrf_token %}
+          <div class="form-group">
+            <label for="fileInput">Select File:</label>
+            <input
+              type="file"
+              class="form-control-file"
+              id="fileInput"
+              name="csv_file"
+            />
+            <p class="text-sm mt-2">Supported file formats: xls, xlsx, csv</p>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <a
+          href="#"
+          id="downloadSampleButton"
+          class="text-sm"
+          style="margin-right: 105px; color: blue; text-decoration: underline"
+          onMouseOver="this.style.color='#000080'"
+          onMouseOut="this.style.color='blue'"
+          >Download Sample Template</a
+        >
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn bg-gradient-primary" id="saveButton">
+          Save
+        </button>
       </div>
     </div>
   </div>
+</div>
+{% endcomment %} 
+{% include 'components/loader.html' %} 
+{% endblock %} 
+{%block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/fullcalendar.min.js' %}"></script>
+<script>
+  // Initialize Choices.js
+  if (document.getElementById("qsSelect")) {
+    var element = document.getElementById("qsSelect");
+    const vendor_choices = new Choices(element, {
+      default: false,
+      items: [],
+      choices: [],
+      renderChoiceLimit: 1,
+      searchEnabled: true,
+      searchChoices: true,
+      searchFloor: 1,
+      searchResultLimit: 10,
+      resetScrollPosition: true,
+      shouldSort: true,
+      shouldSortItems: false,
+      searchPlaceholderValue: "Search Quantity Surveyor",
+    });
+  }
+  // Initialize Choices.js
+  if (document.getElementById("sureveyorSelect")) {
+    var element = document.getElementById("sureveyorSelect");
+    const vendor_choices = new Choices(element, {
+      default: false,
+      items: [],
+      choices: [],
+      renderChoiceLimit: 1,
+      searchEnabled: true,
+      searchChoices: true,
+      searchFloor: 1,
+      searchResultLimit: 10,
+      resetScrollPosition: true,
+      shouldSort: true,
+      shouldSortItems: false,
+      searchPlaceholderValue: "Search Surveyor",
+    });
+  }
+</script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Get the "Add Quantity Surveyor" button
+    const addSurveyorButton = document.getElementById("addSurveyorButton");
 
-  {% endblock %}
-  {% block extra_js %}
-  <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
-  <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
-  <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-  <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-  <script>
-    // Initialize Choices.js
-    if (document.getElementById('qsSelect')) {
-      var element = document.getElementById('qsSelect');
-      const vendor_choices = new Choices(element, {
-        default: false,
-        items: [],
-        choices: [],
-        renderChoiceLimit: 1,
-        searchEnabled: true,
-        searchChoices: true,
-        searchFloor: 1,
-        searchResultLimit: 10,
-        resetScrollPosition: true,
-        shouldSort: true,
-        shouldSortItems: false,
-        searchPlaceholderValue: "Search Quantity Surveyor",
-      });
-  
-    }
-    // Initialize Choices.js
-    if (document.getElementById('sureveyorSelect')) {
-      var element = document.getElementById('sureveyorSelect');
-      const vendor_choices = new Choices(element, {
-        default: false,
-        items: [],
-        choices: [],
-        renderChoiceLimit: 1,
-        searchEnabled: true,
-        searchChoices: true,
-        searchFloor: 1,
-        searchResultLimit: 10,
-        resetScrollPosition: true,
-        shouldSort: true,
-        shouldSortItems: false,
-        searchPlaceholderValue: "Search Surveyor",
-      });
-  
-    }
-  
-  
-  
-    if (document.getElementById('requirement-list')) {
-      const dataTableSearch = new simpleDatatables.DataTable("#requirement-list", {
-        searchable: true,
-        fixedHeight: false,
-        perPage: 10,
-      });
-  
-     
-  
-      const searchInput = document.getElementById('searchInput');
-      const selectedReqIdsInput = document.getElementById('selectedReqIds');
-  
-      const selectedIdsInput = document.getElementById('selectedIds');
-  
-  
-      const addQuantitySurveyorButton = document.getElementById('addQuantitySurveyorButton');
-      const addSurveyorButton = document.getElementById('addSurveyorButton');
-  
-  
-      searchInput.addEventListener('input', function () {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
-      });
-  
-      // Listen for checkbox changes and update the selectedReqIdsInput
-      const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
-      checkboxes.forEach(function (checkbox) {
-        checkbox.addEventListener('change', function () {
-          const selectedReqIds = Array.from(checkboxes)
-            .filter(checkbox => checkbox.checked)
-            .map(checkbox => checkbox.value);
-  
-          selectedReqIdsInput.value = JSON.stringify(selectedReqIds);
+    // Get the modal
+    const addSurveyorModal = new bootstrap.Modal(
+      document.getElementById("addSurveyorModal")
+    );
+
+    // Add an event listener to show the modal when the button is clicked
+    addSurveyorButton.addEventListener("click", function () {
+      addSurveyorModal.show();
+    });
+
+    // const addQsButton = document.getElementById("addQuantitySurveyorButton");
+
+    // Get the modal
+    // const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
+
+    // Add an event listener to show the modal when the button is clicked
+    /* addQsButton.addEventListener("click", function () {
+      addQsModal.show();
+    }); */
+
+    // Add an event listener to submit the form when the "Submit" button is clicked
+    /* const submitQsButton = document.getElementById("submitQsForm");
+    submitQsButton.addEventListener("click", function () {
+      const selectQsForm = document.getElementById("selectQsForm");
+      selectQsForm.submit(); // Submit the form
+    }); */
+
+    // Add an event listener to submit the form when the "Submit" button is clicked
+    const submitButton = document.getElementById("submitButton");
+    submitButton.addEventListener("click", function () {
+      showLoader();
+      const selectForm = document.getElementById("selectForm");
+      selectForm.submit(); // Submit the form
+    });
+
+    const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
+
+    checkboxes.forEach(function (checkbox) {
+      checkbox.addEventListener("change", function () {
+        const selectedIdsInput = document.getElementById("selectedIds");
+        const selectedReqIds = Array.from(checkboxes)
+          .filter((checkbox) => checkbox.checked)
+          .map((checkbox) => checkbox.value);
+
+        if (selectedReqIds) {
           selectedIdsInput.value = JSON.stringify(selectedReqIds);
-          // Enable/disable the button based on whether any row is selected
-          addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
-          addSurveyorButton.disabled = selectedReqIds.length === 0;
-        });
+        }
+        // Enable/disable the buttons based on whether any row is selected
+        //addQuantitySurveyorButton.disabled = selectedReqIds.length === 0;
+        addSurveyorButton.disabled = selectedReqIds.length === 0;
       });
-    }
-  
-  </script>
-  
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // Get the "Add Quantity Surveyor" button
-      const addSurveyorButton = document.getElementById("addSurveyorButton");
-  
-      // Get the modal
-      const addSurveyorModal = new bootstrap.Modal(document.getElementById("addSurveyorModal"));
-  
-      // Add an event listener to show the modal when the button is clicked
-      addSurveyorButton.addEventListener("click", function () {
-        addSurveyorModal.show();
-      });
-  
-  
-      const addQsButton = document.getElementById("addQuantitySurveyorButton");
-  
-      // Get the modal
-      const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
-  
-      // Add an event listener to show the modal when the button is clicked
-      addQsButton.addEventListener("click", function () {
-        addQsModal.show();
-      });
-  
-      // Add an event listener to submit the form when the "Submit" button is clicked
-      const submitQsButton = document.getElementById("submitQsForm");
-      submitQsButton.addEventListener("click", function () {
-        const selectQsForm = document.getElementById("selectQsForm");
-        selectQsForm.submit(); // Submit the form
-      });
-  
-      // Add an event listener to submit the form when the "Submit" button is clicked
-      const submitButton = document.getElementById("submitButton");
-      submitButton.addEventListener("click", function () {
-        const selectForm = document.getElementById("selectForm");
-        selectForm.submit(); // Submit the form
-      });
-  
     });
-  </script>
-  
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      // Get the "Add Quantity Surveyor" button
-      const addQsButton = document.getElementById("addQuantitySurveyorButton");
-  
-      // Get the modal
-      const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
-  
-      // Add an event listener to show the modal when the button is clicked
-      addQsButton.addEventListener("click", function () {
-        addQsModal.show();
-      });
-  
-      // Add an event listener to submit the form when the "Submit" button is clicked
-      const submitButton = document.getElementById("submitButton");
-  
-      submitButton.addEventListener("click", function () {
-        // Get all selected checkboxes
-        const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
-  
-        // Create an array to store the selected IDs
-        const selectedIdsArray = [];
-  
-        // Push the values of selected checkboxes into the array
-        selectedCheckboxes.forEach(function (checkbox) {
-          selectedIdsArray.push(checkbox.value);
-        });
-  
-        // Set the array as the value of the hidden input field
-        document.getElementById("selectedIds").value = JSON.stringify(selectedIdsArray);
-  
-        // Now, submit the form
-        const selectForm = document.getElementById("selectForm");
-        selectForm.submit();
-      });
-  
-  
-  
-  
-  
-  
-      // Add an event listener to submit the form when the "Submit" button is clicked
-      const submitQsButton = document.getElementById("submitQsForm");
-      submitQsButton.addEventListener("click", function () {
-        // Get all selected checkboxes
-        const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
-  
-        // Create an array to store the selected IDs
-        const selectedIdsArray = [];
-  
-        // Push the values of selected checkboxes into the array
-        selectedCheckboxes.forEach(function (checkbox) {
-          selectedIdsArray.push(checkbox.value);
-        });
-  
-        // Set the array as the value of the hidden input field
-        document.getElementById("selectedReqIds").value = JSON.stringify(selectedIdsArray);
-  
-        // Now, submit the form
-        const selectQsForm = document.getElementById("selectQsForm");
-        selectQsForm.submit();
-      });
-  
-  
-      const saveButton = document.getElementById("saveButton");
-      saveButton.addEventListener("click", function () {
-        const csvForm = document.getElementById("csvForm");
-        csvForm.submit(); // Submit the form
-      });
-  
-  
-    });
-  
-    // JavaScript to open the modal when the button is clicked
-    const openCreateCsvModalButton = document.getElementById("openCreateCsvModalButton");
-    const createCsvModal = new bootstrap.Modal(document.getElementById("createcsvModal"));
-  
-    if (openCreateCsvModalButton) {
-      openCreateCsvModalButton.addEventListener('click', function () {
-        createCsvModal.show();
-  
-        // Clear the file input when the modal is shown
-        const fileInput = document.getElementById("fileInput");
-        fileInput.value = ""; // Clear the selected file
-      });
-    }
-  
-  
-  
-  </script>
-  
-  
+  });
+</script>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Get the "Add Quantity Surveyor" button
+    const addQsButton = document.getElementById("addQuantitySurveyorButton");
+
+    // Get the modal
+    const addQsModal = new bootstrap.Modal(document.getElementById("addQsModal"));
+
+    // Add an event listener to show the modal when the button is clicked
+    addQsButton.addEventListener("click", function () {
+      addQsModal.show();
+    });
+
+    // Add an event listener to submit the form when the "Submit" button is clicked
+    const submitButton = document.getElementById("submitButton");
+
+    submitButton.addEventListener("click", function () {
+      // Get all selected checkboxes
+      const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
+
+      // Create an array to store the selected IDs
+      const selectedIdsArray = [];
+
+      // Push the values of selected checkboxes into the array
+      selectedCheckboxes.forEach(function (checkbox) {
+        selectedIdsArray.push(checkbox.value);
+      });
+
+      // Set the array as the value of the hidden input field
+      document.getElementById("selectedIds").value = JSON.stringify(selectedIdsArray);
+
+      // Now, submit the form
+      const selectForm = document.getElementById("selectForm");
+      selectForm.submit();
+    });
+
+
+    // Add an event listener to submit the form when the "Submit" button is clicked
+    const submitQsButton = document.getElementById("submitQsForm");
+    submitQsButton.addEventListener("click", function () {
+      // Get all selected checkboxes
+      const selectedCheckboxes = document.querySelectorAll('input[name="requirement_checkbox"]:checked');
+
+      // Create an array to store the selected IDs
+      const selectedIdsArray = [];
+
+      // Push the values of selected checkboxes into the array
+      selectedCheckboxes.forEach(function (checkbox) {
+        selectedIdsArray.push(checkbox.value);
+      });
+
+      // Set the array as the value of the hidden input field
+      document.getElementById("selectedReqIds").value = JSON.stringify(selectedIdsArray);
+
+      // Now, submit the form
+      const selectQsForm = document.getElementById("selectQsForm");
+      selectQsForm.submit();
+    });
+
+    const saveButton = document.getElementById("saveButton");
+    saveButton.addEventListener("click", function () {
+      const csvForm = document.getElementById("csvForm");
+      csvForm.submit(); // Submit the form
+    });
+
+  });
+
+  // JavaScript to open the modal when the button is clicked
+  {% comment %} const openCreateCsvModalButton = document.getElementById("openCreateCsvModalButton");
+  const createCsvModal = new bootstrap.Modal(document.getElementById("createcsvModal"));
+
+  if (openCreateCsvModalButton) {
+    openCreateCsvModalButton.addEventListener('click', function () {
+      createCsvModal.show();
+
+      // Clear the file input when the modal is shown
+      const fileInput = document.getElementById("fileInput");
+      fileInput.value = ""; // Clear the selected file
+    });
+  } {% endcomment %}
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // calendar script
+    function renderCalendar(events) {
+      if (!events) {
+        events = [];
+      }
+      var calendar = new FullCalendar.Calendar(
+        document.getElementById("calendar"),
+        {
+          initialView: "dayGridMonth",
+          headerToolbar: {
+            start: "title", // will normally be on the left. if RTL, will be on the right
+            center: "",
+            end: "today prev,next", // will normally be on the right. if RTL, will be on the left
+          },
+          selectable: true,
+          editable: false,
+          initialDate: "2024-01-18",
+          timeZone: "UTC",
+          displayEventEnd: true,
+          eventTimeFormat: {
+            hour: "numeric",
+            minute: "2-digit",
+            meridiem: "short",
+          },
+          events: events,
+          views: {
+            month: {
+              titleFormat: {
+                month: "long",
+                year: "numeric",
+              },
+            },
+            agendaWeek: {
+              titleFormat: {
+                month: "long",
+                year: "numeric",
+                day: "numeric",
+              },
+            },
+            agendaDay: {
+              titleFormat: {
+                month: "short",
+                year: "numeric",
+                day: "numeric",
+              },
+            },
+          },
+          eventClick: function (info) {
+            var linkUrl = `/fra/{{ customer_id }}/view/${info.event.id}/`;
+            window.open(linkUrl, "_blank");
+          },
+        }
+      );
+
+      calendar.render();
+    }
+
+    async function showCalendar() {
+      calendarCard = document.getElementById("calendarCard");
+      selectedSureveyorId = document.getElementById(
+        "choices-sureveyorselect"
+      ).value;
+      if (selectedSureveyorId) {
+        calendarCard.classList.remove("d-none");
+        var fraResponse = await fetch(
+          `/fra/customers/{{ customer_data.id }}/surveyor/${selectedSureveyorId}/list/`
+        );
+        var fraData = await fraResponse.json();
+        var fraArray = Array.isArray(fraData.data)
+          ? fraData.data
+          : [fraData.data];
+        renderCalendar(fraArray);
+      } else {
+        if (!("d-none" in calendarCard.classList)) {
+          calendarCard.classList.add("d-none");
+        }
+      }
+    }
+
+    document
+      .getElementById("choices-sureveyorselect")
+      .addEventListener("change", () => {
+        showCalendar();
+      });
+
+    const addSurveyorModal = document.getElementById("addSurveyorModal");
+    addSurveyorModal.addEventListener("shown.bs.modal", () => {
+      showCalendar();
+    });
+  });
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script>
+  $(document).ready(function () {
+    // Event listener for file input change
+    $('input[name="excel_file"]').change(function () {
+      // Read the selected file
+      var fileInput = this;
+      var file = fileInput.files[0];
+      // Check if a file is selected
+      if (file) {
+        // Read the file content
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var data = e.target.result;
+          // You can use this 'data' variable to perform further processing or send it to the server
+          console.log(data);
+          // Now proceed with extracting column names
+          var workbook = XLSX.read(data, { type: "binary" });
+          var sheetName = workbook.SheetNames[0];
+          var sheet = workbook.Sheets[sheetName];
+          var headers = XLSX.utils.sheet_to_json(sheet, { header: 1 })[0];
+          // Display the list of headers and create dropdowns for mapping
+          displayHeaders(headers);
+        };
+        reader.readAsBinaryString(file);
+      }
+    });
+
+    // Function to display the list of headers and create dropdowns for mapping
+    function displayHeaders(headers) {
+      var dropdownContainer = $("#mapping_key_values");
+      if (headers && headers.length > 0) {
+        $('select[id="mappings"]').empty();
+        $('select[id="mappings"]').append(
+          `<option selected>Open this select menu</option>`
+        );
+        headers.forEach(function (header) {
+          $('select[id="mappings"]').append(
+            `<option value="${header}">${header}</option>`
+          );
+          // Add other mappings as needed
+        });
+
+        dropdownContainer.removeClass("d-none");
+      }
+    }
+  });
+</script>
+
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/js/daterangepicker.js' %}"></script>
+<script>
+    // Initialize the Date Range Picker
+    document.addEventListener('DOMContentLoaded', function () {
+      let initialStartDate, initialEndDate; // Variables to store the initial dates
+
+      function cb(start, end) {
+        const formattedStartDate = start.format('DD/MM/YYYY');
+        const formattedEndDate = end.format('DD/MM/YYYY');
+        const formattedDateRange = formattedStartDate + ' - ' + formattedEndDate;
+
+        $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
+
+        applyFilter('dateRange', formattedDateRange);
+      }
+
+      // Initialize the Date Range Picker without setting an initial date range
+      const datePicker = $('#reportrange').daterangepicker({
+        autoUpdateInput: false,
+        autoApply: true,
+        showCustomRangeLabel: true, // Hide the "Custom Range" label
+        format: 'DD/MM/YYYY', // Change the format here
+        ranges: {
+          'Today': [moment(), moment()],
+          'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()]
+        },
+      });
+
+      if (datePicker.data('daterangepicker').showCustomRangeLabel) {
+        datePicker.data('daterangepicker').container.find('.ranges ul').append(
+          $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
+        );
+      }
+
+      datePicker.on('apply.daterangepicker', function (ev, picker) {
+        cb(picker.startDate, picker.endDate);
+      });
+
+      datePicker.on('show.daterangepicker', function (ev, picker) {
+        initialStartDate = picker.startDate.clone(); // Store initial start date
+        initialEndDate = picker.endDate.clone();     // Store initial end date
+      });
+
+      function dateclearFilter(filterType) {
+        if (filterType === 'dateRange') {
+          $('#reportrange').data('daterangepicker').setStartDate(moment());
+          $('#reportrange').data('daterangepicker').setEndDate(moment());
+          $('#reportrange span').html('');
+          clearFilter('dateRange'); // Apply empty filter value
+        }
+      }
+    });
+</script>
+
+<script>
+    const searchInput = document.getElementById('searchSurveyor');
+    const applySearchButton = document.getElementById('applySearch');
+    const searchResults = document.getElementById('searchResults');
+    const assignedToDropdown = document.getElementById('surveyorDropdown'); // Assigned To dropdown element
+
+    let currentSearchResults = []; // Store the current search results
+    let isDropdownOpen = false; // Variable to track dropdown open state
+
+    // Function to update search results
+    function updateSearchResults(results) {
+      currentSearchResults = results; // Store the results
+      searchResults.innerHTML = '';
+
+      if (results.length > 0) {
+        results.forEach(result => {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.classList.add('dropdown-item', 'border-radius-md');
+          link.href = '#';
+          link.textContent = result;
+          // Add the click event to apply the filter
+          link.onclick = function () {
+            applyFilter('surveyor', result);
+          };
+          li.appendChild(link);
+          searchResults.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.classList.add('dropdown-item', 'text-muted');
+        li.textContent = 'No results found.';
+        searchResults.appendChild(li);
+      }
+    }
+
+    // Function to handle Apply Filter button click
+    function handleApplyFilter() {
+      const searchTerm = searchInput.value;
+
+      // Make a request to your backend API with the searchTerm
+      // Example using fetch:
+      fetch(`/fra/surveyor/search?term=${searchTerm}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Update the search results
+          updateSearchResults(data.data.results);
+
+        })
+        .catch(error => console.error(error, "error"));
+    }
+
+    // Function to toggle dropdown visibility
+    function toggleDropdown() {
+      isDropdownOpen = !isDropdownOpen;
+    }
+
+    const inputField = document.getElementById('searchSurveyor');
+
+    inputField.addEventListener('input', () => {
+      handleApplyFilter();
+      toggleDropdown();
+      event.stopPropagation();
+    });
+</script>
+
+<script>
+    // JavaScript code to apply the filter on each field
+    function applyFilter(filterName, filterValue) {
+
+        // Handle date range filter
+        if (filterName === 'dateRange') {
+          filterValue = filterValue; // Use a custom delimiter to separate start and end dates
   
   
-  {% endblock %}
+        }
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set(filterName, filterValue);
+        window.location.href = currentUrl.toString();
+  
+  
+    }
+
+    // JavaScript code to clear single filter on onclick event
+    function clearFilter(filterName) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete(filterName);
+        window.location.href = currentUrl.toString();
+      }
+    // JavaScript code to clear all the filters
+    function clearAllFilters() {
+        const currentUrl = new URL(window.location.href);
+        const queryParams = new URLSearchParams(currentUrl.search);
+        const filterNames = ['status', 'surveyor', 'dateRange', 'q']; // Add dateRange to the filterNames array
+  
+        filterNames.forEach(filterName => {
+          queryParams.delete(filterName);
+        });
+        window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+        window.location.reload(); // Reload the page after clearing all filters
+    }
+
+
+    // Check URL parameters on page load and update search and filter selections
+    window.addEventListener('DOMContentLoaded', function () {
+        const filterNames = ['status', 'surveyor', 'dateRange', 'q'];
+        filterNames.forEach(filterName => {
+          const filterValue = new URLSearchParams(window.location.search).get(filterName);
+  
+          if (filterValue) {
+            let displayedValue = filterValue; // Default displayed value is the filter value itself
+  
+            if (filterName === 'dateRange') {
+              const formattedDateRange = filterValue.replace('_', ' to ');
+              displayedValue = formattedDateRange;
+  
+              // Also update the date range input field if needed
+              document.getElementById('reportrange').value = formattedDateRange;
+            }
+            else if (filterValue.length > 9) {
+              // Truncate the filter value if it's longer than 5 characters
+              displayedValue = filterValue.substring(0, 9) + '..';
+            }
+  
+            // Update the dropdown element with the displayed value
+            document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+          }
+        });
+      });
+</script>
+{% endblock %}

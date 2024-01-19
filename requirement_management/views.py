@@ -24,7 +24,8 @@ import chardet
 import pandas as pd
 from datetime import datetime, time
 from django.utils import timezone
-
+from io import BytesIO
+from rest_framework.request import Request
 
 
 def get_customer_data(customer_id):
@@ -116,7 +117,7 @@ def requirement_image(requirement_instance):
     
     
 
-def filter_requirements(data_access_value, user, customer=None):
+def filter_requirements(data_access_value, user, customer=None, request=None):
     """
     Filter Requirement objects based on data access and user roles.
 
@@ -151,6 +152,37 @@ def filter_requirements(data_access_value, user, customer=None):
         )
     else:
         queryset = queryset.filter(filter_mapping.get(data_access_value, Q()))
+
+    if isinstance(request, Request):
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'status': request.GET.get('status'),
+            'surveyor': request.GET.get('surveyor'),
+            'dateRange': request.GET.get('dateRange'),
+        }
+        date_format = '%d/%m/%Y'
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.strptime(end_date_str.strip(), date_format).date()
+                    queryset = queryset.filter(due_date__gte=start_date, due_date__lte=end_date)
+                elif filter_name == 'surveyor':
+                    value_list = filter_value.split()
+                    if 2 >= len(value_list) > 1:
+                        queryset = queryset.filter(surveyor__first_name=value_list[0], surveyor__last_name=value_list[1])
+                    else:
+                        queryset = queryset.filter(surveyor__first_name = filter_value)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                    }
+                    queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
     return queryset 
 
 class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -243,7 +275,8 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
             fra_counts = all_fra.filter(customer_id=customer).count()
              # Check if the user has any roles before accessing the first one
             
-            fra_counts_for_qs = all_fra.filter(customer_id=customer, quantity_surveyor=self.request.user).count()
+            # fra_counts_for_qs = all_fra.filter(customer_id=customer, quantity_surveyor=self.request.user).count()
+            fra_counts_for_qs = all_fra.filter(customer_id=customer).count()
             fra_counts_for_surveyor = all_fra.filter(customer_id=customer, surveyor=self.request.user).count()
             customers_with_counts.append({'customer': customer, 
                                           'fra_counts': fra_counts,
@@ -274,7 +307,7 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = RequirementSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    search_fields = ['action', 'description']
     template_name = 'requirement_list.html'
     ordering_fields = ['created_at'] 
 
@@ -286,6 +319,20 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
             message = "Data retrieved",
             )
     }
+
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
     
     @swagger_auto_schema(operation_id='Requirement Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
@@ -307,19 +354,27 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
             if isinstance(authenticated_user, HttpResponseRedirect):
                 return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-            queryset = filter_requirements(data_access_value, self.request.user, customer_data)
-            qs_role = UserRole.objects.filter(name='quantity_surveyor')
-            quantity_sureveyors = User.objects.filter(roles__in=qs_role)
+            queryset = filter_requirements(data_access_value, self.request.user, customer_data, request)
+            queryset = self.get_searched_queryset(queryset)
+            # qs_role = UserRole.objects.filter(name='quantity_surveyor')
+            # quantity_sureveyors = User.objects.filter(roles__in=qs_role)
             
             sureveyors = User.objects.filter(roles__name='surveyor')
 
             
             if request.accepted_renderer.format == 'html':
-                context = {'requirements':queryset,
-                            'customer_id':customer_id,
-                        'quantity_sureveyors': quantity_sureveyors,
-                        'customer_data':customer_data,
-                        'sureveyors':sureveyors}
+                page_number = request.GET.get('page', 1)
+                context = {
+                    'requirements': Paginator(queryset, 20).get_page(page_number),
+                    'customer_id':customer_id,
+                    # 'quantity_sureveyors': quantity_sureveyors,
+                    'customer_data':customer_data,
+                    'sureveyors':sureveyors,
+                    'assign_to_surveyor_serializer': AssignToSurveyorSerializer(),
+                    'status_values': REQUIREMENT_CHOICES,
+                    'search_fields': self.search_fields,
+                    'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+                }
                 return render_html_response(context,self.template_name)
             else:
                 serializer = self.serializer_class(queryset, many=True)
@@ -1288,7 +1343,7 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
             HttpResponse: The response, either a success message or an error message.
         """
         customer_id = kwargs.get('customer_id', None)
-            
+
         try:
             customer_data = get_customer_data(customer_id)
             if customer_data:
@@ -1297,17 +1352,29 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
                 sureveyor_id = request.data.get('sureveyorselect')
                 print(sureveyor_id)
 
-                # Check if a quantity surveyor is assigned to any of the selected requirements
-                if not Requirement.objects.filter(pk__in=ast.literal_eval(requirement_ids), quantity_surveyor__isnull=False).exists():
-                    messages.error(request, "Quantity Surveyor must be assigned first.")
+                survey_start_date = request.data.get('surevey_start_date', '')
+                survey_end_date = request.data.get('surevey_end_date', '')
+                if not survey_end_date or not survey_start_date:
+                    messages.error(request, "Survey dates are required, please select a date range before assigning FRA to a Surveyor.")
                     return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+
+                # Check if a quantity surveyor is assigned to any of the selected requirements
+                # if not Requirement.objects.filter(pk__in=ast.literal_eval(requirement_ids), quantity_surveyor__isnull=False).exists():
+                #     messages.error(request, "Quantity Surveyor must be assigned first.")
+                #     return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
                 
-                requirments = Requirement.objects.filter(pk__in=ast.literal_eval(requirement_ids))
+                requirments = Requirement.objects.filter(pk__in=ast.literal_eval(requirement_ids)).exclude(status='surveyed')
                 sureveyor = User.objects.filter(pk=sureveyor_id).first()
+                
+                if any([requirement.due_date < datetime.strptime(survey_end_date, '%d-%m-%Y %H:%M').date() for requirement in requirments]):
+                    messages.error(request, "Survey ending date cannot be greater than FRA Due Date.")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
                 
                 for requirement in requirments:
                     requirement.surveyor = sureveyor
                     requirement.status = "assigned-to-surveyor"
+                    requirement.survey_start_date = datetime.strptime(survey_start_date, '%d-%m-%Y %H:%M')
+                    requirement.survey_end_date = datetime.strptime(survey_end_date, '%d-%m-%Y %H:%M')
                     requirement.save()
                 
                 messages.success(request, "Updated sureveyor successfully")        
@@ -1433,3 +1500,168 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
             messages.error(self.request, "Something went wrong !")
         
         return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+
+def retriveSurveyorAssignedFRA(request, surveyor_id, customer_id):
+    if request.method == "GET":
+        if not surveyor_id:
+            return JsonResponse({"error": "No surveyor Found."}, status=404)
+        
+        if not customer_id:
+            return JsonResponse({"error": "No customer Found."}, status=404)
+
+        surveyor = User.objects.filter(roles__name='surveyor', id=surveyor_id).first()
+        if not surveyor:
+            return JsonResponse({"error": "No surveyor Found."}, status=404)
+        
+        customer = User.objects.filter(roles__name='Customer', id=customer_id).first()
+        if not customer:
+            return JsonResponse({"error": "No customer Found."}, status=404)
+        
+        requirements = Requirement.objects.filter(customer_id=customer, surveyor=surveyor).all()
+        serializer = SurveyorRequirementSerializer(requirements, many=True)
+        return create_api_response(
+            status_code=status.HTTP_200_OK,
+            message="Assigned FRAs",
+            data=serializer.data
+        )
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+class FRASurveyorSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    API view to search for Surveyor by email.
+
+    This view allows searching for users by email and returns a list of matching user emails.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+
+    def get(self, request, *args, **kwargs):
+        # Get the search term from the request's query parameters
+        search_term = request.GET.get('term')
+        surveyor = User.objects.filter(roles__name='surveyor')
+        data = {}
+        if search_term:
+            # Filter users whose email contains the search term
+            user_list = surveyor.filter(Q(first_name__icontains=search_term) | Q(last_name__icontains=search_term))
+            # Get the usernames from the user_list
+            results = [f"{user.first_name} {user.last_name}" for user in user_list]
+
+            data = {'results': results}
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                       message="surveyor data",
+                                       data=data)
+    
+class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View to get the listing of all contacts.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = BulkRequirementAddSerializer
+    default_fieldset = ['RBNO', 'UPRN', 'action','description','site_address','due_date']
+    EXCEL = ['xlsx', 'xls', 'ods']
+    CSV = ['csv',]
+
+    # File operation Functions ----------------------------------------------
+    def get_file_ext(self, file_name:str) -> str:
+        """
+        Get the file extension for a given file name.
+
+        Args:
+            file_name (str): The name of the file.
+
+        Returns:
+            str: The file extension in lowercase.
+        """
+
+        ext = file_name.split('.')[-1].lower()
+
+        return ext
+
+    # Excel File Supporter Functions ---------------------------------------------
+    def get_excel_engine(self, file_ext: str) -> str or None:
+        """
+        Get the engine to use for reading an Excel file based on its extension.
+
+        Args:
+            file_ext (str): The file extension in lowercase.
+
+        Returns:
+            str or None: The engine to use, or None if the file is not an Excel file.
+        """
+
+        engines = {'xlsx': 'openpyxl', 'xls': 'xlrd', 'ods': 'odf'}
+        return  engines[file_ext]
+
+    def read_file_to_df(self, file) -> pd.DataFrame:
+        """
+        Read a file from an in-memory upload and convert it into a DataFrame.
+
+        Parameters:
+        - file (InMemoryUploadedFile): The in-memory uploaded file.
+
+        Returns:
+        - pd.DataFrame or None: The DataFrame containing the data from the file, or None if an error occurs.
+        """
+        ext = self.get_file_ext(file.name)
+
+        # Convert the in-memory file to a BytesIO object
+        content = BytesIO(file.read())
+
+        if ext in self.EXCEL:
+            engine = self.get_excel_engine(ext)
+            data_frame = pd.read_excel(content, engine=engine)
+            return data_frame
+        
+        if ext in self.CSV:
+            data_frame = pd.read_csv(content)
+            return data_frame
+
+        raise ValueError('The file type is not supported.')
+    
+    def post(self, request, *args, **kwargs):
+        customer_id = kwargs.get('customer_id', None)
+        customer_data = User.objects.filter(id=customer_id).first()
+        
+        if not customer_data:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+        data = request.data.copy()
+
+
+        # Create a mapping dictionary from the request data
+        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
+        
+        # Check if any keys have the same value
+        values_set = set()
+        duplicate_values = set()
+        for key, value in mapping_dict.items():
+            if value in values_set:
+                duplicate_values.add(value)
+            values_set.add(value)
+
+        if duplicate_values:
+            # Handle the case where some keys have the same value
+            # You can raise an error or take appropriate action
+            messages.error(request, 'Please select correct headers to upload bulk item file')
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs['customer_id']}))
+        
+        df = self.read_file_to_df(request.FILES.get('excel_file'))
+
+        items_data_list = []
+        for index, row in df.iterrows():
+            items_data = {}
+            for key, value in mapping_dict.items():
+                items_data[key] = row[value]
+
+            items_data_list.append(items_data)
+        serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(customer_id=customer_data, user_id=request.user)
+            messages.success(request, 'Bulk FRA uploaded successfully.')
+        else:
+            messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
+    
+        return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs['customer_id']}))
+        
