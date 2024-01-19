@@ -43,25 +43,48 @@
                 {% for query_obj in customers_with_counts %}
                 <tr class="text-sm">
                   <td>
-                    <a class="font-weight-bolder" href="{% url 'customer_requirement_list' query_obj.customer.id %}"
-                      data-bs-toggle="tooltip" data-bs-original-title="Click For View FRA">
+                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
                       {{ query_obj.customer.first_name|truncatechars:20|title }} {{query_obj.customer.last_name|truncatechars:20|lower }}
                     </a>
                   </td>
 
-                  <td>{{query_obj.customer.company_name|default:''|title}}</td>
-                  <td>{{query_obj.customer.email}}</td>
-                  <td>{{query_obj.customer.phone_number|default:''}}</td>
+                  <td>
+                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{query_obj.customer.company_name|default:''|title}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{query_obj.customer.email}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{query_obj.customer.phone_number|default:''}}
+                    </a>
+                  </td>
                   {% if request.user.roles.name == "quantity_surveyor" %}
-                  <td>{{ query_obj.fra_counts_for_qs }}</td>
+                  <td>
+                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{ query_obj.fra_counts_for_qs }}
+                    </a>
+                  </td>
                   {% endif %}
 
                   {% if request.user.roles.name == "surveyor" %}
-                  <td>{{ query_obj.fra_counts_for_surveyor }}</td>
+                  <td>
+                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{ query_obj.fra_counts_for_surveyor }}
+                    </a>
+                  </td>
                   {% endif %}
 
                   {% if request.user.roles.name == "projects_admin_(IT)" %}
-                  <td>{{ query_obj.fra_counts }}</td>
+                  <td>
+                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{ query_obj.fra_counts }}
+                    </a>
+                  </td>
                   {% endif %}
 
 
