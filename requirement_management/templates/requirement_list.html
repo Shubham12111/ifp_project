@@ -449,7 +449,7 @@
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.site_address|truncatechars:20|title}}</a
+                      >{{requirement.site_address|default:''|truncatechars:20|title}}</a
                     >
                   </td>
                   {% comment %}
