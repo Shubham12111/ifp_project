@@ -17,6 +17,8 @@ urlpatterns = [
     path('customers/<int:customer_id>/add/', RequirementAddView.as_view(), name='customer_requirement_add'),
     path('<int:customer_id>/view/<int:pk>/', RequirementDetailView.as_view(), name='customer_requirement_view'),
     
+    path('customers/<int:customer_id>/bulk_import/', BulkImportRequirementView.as_view(), name= 'bulk_import_customer_requirements'),
+    
     path('<int:customer_id>/view/selecetd_defects/<int:pk>/', get_selected_defect_data, name='get_selected_defect_data'),
     path('customers/<int:customer_id>/<int:requirement_id>/defect/detail/<int:defect_id>/', RequirementDefectDetailView.as_view(), name='customer_requirement_defect_detail'),
 

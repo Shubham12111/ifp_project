@@ -1117,3 +1117,165 @@ class SurveyorRequirementSerializer(serializers.ModelSerializer):
             'end': f'{end}',
             'className': f'{className}'
         }
+
+class BulkRequirementAddSerializer(serializers.ModelSerializer):
+    """
+    Serializer for creating and updating Requirement instances with additional fields.
+
+    This serializer includes additional fields such as 'action', 'RBNO', 'UPRN', 'description',
+    'site_address', and 'file_list' to create and update Requirement instances.
+
+    Fields:
+        action (str): The action associated with the Requirement.
+        RBNO (str): The RBNO (Reference Building Number) associated with the Requirement.
+        UPRN (str): The UPRN (Unique Property Reference Number) associated with the Requirement.
+        description (str): The description of the Requirement.
+        site_address (SiteAddressField): A field for selecting the site address.
+        file_list (List[FileField]): A list of files associated with the Requirement.
+
+    Methods:
+        validate_RBNO: Validate the uniqueness of RBNO.
+        validate_UPRN: Validate the uniqueness of UPRN.
+        get_initial: Get the initial data for the serializer.
+        create: Create a new Requirement instance with associated files.
+        update: Update an existing Requirement instance with associated files.
+    """
+    # Add a field to accept the date from the CSV file
+    RBNO = serializers.CharField(
+        label=('RBNO'),
+        required=True,
+        max_length=12,
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "RBNO is required.",
+        },
+    )
+    
+    UPRN = serializers.CharField(
+        label=('UPRN'),
+        required=True, 
+        max_length=12,
+        style={'base_template': 'custom_input.html'},
+        error_messages={
+            "required": "This field is required.",
+            "blank": "UPRN is required.",
+        },
+    )
+
+      # Custom CharField for the message with more rows (e.g., 5 rows)
+    description = serializers.CharField(
+            max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
+    )
+
+      # Custom CharField for the message with more rows (e.g., 5 rows)
+    action = serializers.CharField(
+            max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",
+            },
+    )
+
+    # site_address = SiteAddressField(
+    #     label=('Site Address'),
+    #     required = True,
+    #     style={
+    #         'base_template': 'custom_select.html',
+    #         'custom_class':'col-6'
+    #     },
+    #     error_messages={
+    #         "required": "This field is required.",
+    #         "blank": "Site Address is required.",
+    #         "incorrect_type":"Site Address is required.",
+    #         "null": "Site Address is required."
+    #     },
+    # )
+    due_date = serializers.DateField(
+        label='Due Date',
+        required=True,
+        input_formats=['%d/%m/%Y','iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+        # Add any additional styles or validators if needed
+    )
+    
+    class Meta:
+        model = Requirement
+        fields = ('RBNO', 'UPRN', 'action','description' ,'due_date')
+
+    def validate_description(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Description is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Description cannot consist of only spaces and tabs.")
+
+        return value
+    
+    def validate_action(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Action is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Action cannot consist of only spaces and tabs.")
+
+        return value
+    
+
+    def validate_RBNO(self, value):
+        """
+        Validate the uniqueness of RBNO.
+
+        Args:
+            value (str): The RBNO value to be validated.
+
+        Returns:
+            str: The validated RBNO value.
+
+        Raises:
+            serializers.ValidationError: If the RBNO is not unique.
+        """
+        if not self.instance:
+            if Requirement.objects.filter(RBNO=value).exists():
+                raise serializers.ValidationError("RBNO already exists.")
+        return value
+
+
+    def validate_UPRN(self, value):
+        """
+        Validate the uniqueness of UPRN.
+
+        Args:
+            value (str): The UPRN value to be validated.
+
+        Returns:
+            str: The validated UPRN value.
+
+        Raises:
+            serializers.ValidationError: If the UPRN is not unique.
+        """
+        if not self.instance:
+            # Check if an object with the same UPRN already exists
+            if Requirement.objects.filter(UPRN=value).exists():
+                raise serializers.ValidationError("UPRN already exists.")
+        return value
