@@ -24,6 +24,7 @@ import chardet
 import pandas as pd
 from datetime import datetime, time
 from django.utils import timezone
+from io import BytesIO
 from rest_framework.request import Request
 
 
@@ -1550,3 +1551,117 @@ class FRASurveyorSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIVi
             return create_api_response(status_code=status.HTTP_200_OK,
                                        message="surveyor data",
                                        data=data)
+    
+class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View to get the listing of all contacts.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = BulkRequirementAddSerializer
+    default_fieldset = ['RBNO', 'UPRN', 'action','description','site_address','due_date']
+    EXCEL = ['xlsx', 'xls', 'ods']
+    CSV = ['csv',]
+
+    # File operation Functions ----------------------------------------------
+    def get_file_ext(self, file_name:str) -> str:
+        """
+        Get the file extension for a given file name.
+
+        Args:
+            file_name (str): The name of the file.
+
+        Returns:
+            str: The file extension in lowercase.
+        """
+
+        ext = file_name.split('.')[-1].lower()
+
+        return ext
+
+    # Excel File Supporter Functions ---------------------------------------------
+    def get_excel_engine(self, file_ext: str) -> str or None:
+        """
+        Get the engine to use for reading an Excel file based on its extension.
+
+        Args:
+            file_ext (str): The file extension in lowercase.
+
+        Returns:
+            str or None: The engine to use, or None if the file is not an Excel file.
+        """
+
+        engines = {'xlsx': 'openpyxl', 'xls': 'xlrd', 'ods': 'odf'}
+        return  engines[file_ext]
+
+    def read_file_to_df(self, file) -> pd.DataFrame:
+        """
+        Read a file from an in-memory upload and convert it into a DataFrame.
+
+        Parameters:
+        - file (InMemoryUploadedFile): The in-memory uploaded file.
+
+        Returns:
+        - pd.DataFrame or None: The DataFrame containing the data from the file, or None if an error occurs.
+        """
+        ext = self.get_file_ext(file.name)
+
+        # Convert the in-memory file to a BytesIO object
+        content = BytesIO(file.read())
+
+        if ext in self.EXCEL:
+            engine = self.get_excel_engine(ext)
+            data_frame = pd.read_excel(content, engine=engine)
+            return data_frame
+        
+        if ext in self.CSV:
+            data_frame = pd.read_csv(content)
+            return data_frame
+
+        raise ValueError('The file type is not supported.')
+    
+    def post(self, request, *args, **kwargs):
+        customer_id = kwargs.get('customer_id', None)
+        customer_data = User.objects.filter(id=customer_id).first()
+        
+        if not customer_data:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+        data = request.data.copy()
+
+
+        # Create a mapping dictionary from the request data
+        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
+        
+        # Check if any keys have the same value
+        values_set = set()
+        duplicate_values = set()
+        for key, value in mapping_dict.items():
+            if value in values_set:
+                duplicate_values.add(value)
+            values_set.add(value)
+
+        if duplicate_values:
+            # Handle the case where some keys have the same value
+            # You can raise an error or take appropriate action
+            messages.error(request, 'Please select correct headers to upload bulk item file')
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs['customer_id']}))
+        
+        df = self.read_file_to_df(request.FILES.get('excel_file'))
+
+        items_data_list = []
+        for index, row in df.iterrows():
+            items_data = {}
+            for key, value in mapping_dict.items():
+                items_data[key] = row[value]
+
+            items_data_list.append(items_data)
+        serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save(customer_id=customer_data, user_id=request.user)
+            messages.success(request, 'Bulk FRA uploaded successfully.')
+        else:
+            messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
+    
+        return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs['customer_id']}))
+        
