@@ -254,7 +254,6 @@ class SORCategory(models.Model):
     class Meta:
         verbose_name = _('SOR Category')
         verbose_name_plural = _('SOR Category')
-        ordering = ['-id']  # Order by the default primary key in descending order
 
 class SORItem(models.Model):
     """
@@ -325,7 +324,7 @@ class SORItemProxy(SORItem):
     """
         proxy = True
         verbose_name = 'SOR Item'
-        verbose_name_plural = 'SOR Item'
+        verbose_name_plural = 'SOR Items'
 
 class SORItemImage(models.Model):
     sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)
