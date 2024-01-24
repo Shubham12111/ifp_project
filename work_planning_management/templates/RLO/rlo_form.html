@@ -44,7 +44,7 @@
               Save
             </button>
 
-            <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'rlo_list' %}">Back</a>
+            {% include 'components/back_button.html' %}
           </form>
 
           {% include 'components/loader.html' %}

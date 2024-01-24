@@ -33,7 +33,7 @@
             <a class="btn bg-gradient-primary btn-sm float-end mt-2 mb-0 mx-2" 
             href="{{report_instance.pdf_url}}" download="">Download PDF</a>
             {% endif %}
-            <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_reports' customer_id requirement_instance.id %}">Back</a>
+            {% include 'components/back_button.html' %}
             
 
         </div>

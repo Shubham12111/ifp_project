@@ -81,7 +81,7 @@
         </div>
         
           <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" onclick="viewEvents()">View Events</a> 
-          <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'stw_customers_list' %}">Back</a>
+          {% include 'components/back_button.html' %}
       </div>
     </div>
   </div>

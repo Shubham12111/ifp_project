@@ -15,7 +15,7 @@
                 <h5>{% if conversation_data %}Edit {% else %} New {% endif %} Conversation</h5>
               </div>
               <div class="col-6 text-end">
-                <a class="btn bg-gradient-secondary mb-0 btn-sm js-btn-prev " href="{% url 'contact_list' %}" title="Back">Back</a>
+                {% include 'components/back_button.html' %}
               </div>
           </div>
         </div>
