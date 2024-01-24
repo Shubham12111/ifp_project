@@ -1679,4 +1679,50 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
             messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
     
         return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs['customer_id']}))
-        
+
+class RequirementSurveyorCalendarView(CustomAuthenticationMixin, generics.ListAPIView):
+    """
+    View to get the listing of all requirements.
+    Supports both HTML and JSON response formats.
+    """
+
+    serializer_class = RequirementCalendarSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'surveyor_calander_view.html'
+    queryset = Requirement.objects.filter(surveyor__isnull=False).all()
+    
+    # ordering_fields = ['created_at'] 
+
+    common_get_response = {
+        status.HTTP_200_OK: docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message="Data retrieved",
+        )
+    }
+
+    @swagger_auto_schema(operation_id='Requirement Listing', responses={**common_get_response})
+    def get(self, request, *args, **kwargs):
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access.
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'events': serializer.data
+            }
+            return render(request, self.template_name, context)
+        else:
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Data retrieved",
+                data=serializer.data
+            )
