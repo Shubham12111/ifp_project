@@ -1333,3 +1333,49 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
             if Requirement.objects.filter(UPRN=value).exists():
                 raise serializers.ValidationError("UPRN already exists.")
         return value
+
+
+class RequirementCalendarSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Requirement model.
+
+    This serializer is used to get Requirements for a Surveyor and convert Requirement model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+
+    class Meta:
+        model = Requirement
+        fields = ('action', 'survey_start_date', 'survey_end_date', 'due_date', 'status', 'surveyor')
+
+    def to_representation(self, instance: Requirement):
+        try:
+            soup = BeautifulSoup(instance.action, 'html.parser')
+            title = soup.get_text().strip()
+
+            # Assuming that the Requirement model has a foreign key 'customer' pointing to the User model
+            
+            surveyor_first_name = instance.surveyor.first_name
+            surveyor_last_name = instance.surveyor.last_name
+            
+            start = instance.survey_start_date.isoformat()
+            end = instance.survey_end_date.isoformat()
+            className = 'bg-gradient-warning'
+
+            if instance.status == 'assigned-to-surveyor' and instance.survey_end_date < timezone.now():
+                className = 'bg-gradient-danger'
+
+            if instance.status == 'surveyed':
+                className = 'bg-gradient-success'
+
+            return {
+                'id': instance.id,
+                'title': f'{surveyor_first_name} {surveyor_last_name}',
+                'description': f'{title}',
+                'start': f'{start}',
+                'end': f'{end}',
+                'className': f'{className}'
+            }
+        except Exception as e:
+            return {}
