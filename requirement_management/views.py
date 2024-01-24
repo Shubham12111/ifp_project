@@ -592,10 +592,12 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     # Retrieve users associated with these roles
                     users_with_survey_permission = User.objects.filter(roles__name= "surveyor")
                     
+                    page_number = request.GET.get('page', 1)
+                    
                     context = {
                         'serializer': serializer, 
                         'requirement_instance': instance, 
-                        'requirement_defect': requirement_defect, 
+                        'requirement_defect': Paginator(requirement_defect, 10).get_page(page_number), 
                         'document_paths': document_paths,
                         'surveyers': users_with_survey_permission,
                         'customer_id': kwargs.get('customer_id'),
@@ -956,6 +958,9 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
            self,"fire_risk_assessment", HasCreateDataPermission, 'view'
         )
         
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
         queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
         
@@ -971,6 +976,9 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing Requirement object.
         requirement_instance = self.get_queryset()
+        if isinstance(requirement_instance, HttpResponseRedirect):
+            return requirement_instance
+        
         document_paths = requirement_image(requirement_instance)
         
         requirement_defects = self.get_queryset_defect()
@@ -1008,6 +1016,9 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         file_list = data.getlist('file_list', [])
         
         requirement_instance = self.get_queryset()
+        if isinstance(requirement_instance, HttpResponseRedirect):
+            return requirement_instance
+        
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
         
         if not any(file_list):

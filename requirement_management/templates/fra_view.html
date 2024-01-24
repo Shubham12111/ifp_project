@@ -4,8 +4,8 @@
             <div class="col-6">
                 <h5> FRA Actions </h5>
             </div>
-            <div class="col-6">
-                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_list' customer_id%}">Back</a>
+            <div class="col-6 text-end">
+                {% include 'components/back_button.html' %}
             </div>
         </div>
     </div>
@@ -62,12 +62,12 @@
                     <b>Action</b>
                     <p class="text-sm mt-2" style="text-align: justify;">
 
-                        {{ requirement_instance.action}}
+                        {{ requirement_instance.action|safe}}
                     </p>
                     <b>Description</b>
                     <p class="text-sm mt-2" style="text-align: justify;">
 
-                        {{ requirement_instance.description}}
+                        {{ requirement_instance.description|safe}}
                     </p>
                     <hr class="horizontal gray-light">
                     <div class="row text-sm">

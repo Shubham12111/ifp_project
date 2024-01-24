@@ -19,7 +19,7 @@
             <div class="ms-auto my-auto mt-lg-0 mt-4">
              
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'work planning' module -->
-                <a href="{% url 'sitepack_document_list' %}" class="btn bg-gradient-secondary btn-sm mb-0"  style="float: right;">Back</a>
+                {% include 'components/back_button.html' %}
 
             </div>
           </div>

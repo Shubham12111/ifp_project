@@ -10,16 +10,16 @@
       <div class="card">
         <!-- Card header -->
         <div class="card-header pb-0">
-          <div class="d-lg-flex">
+          <div class="d-lg-flex mb-3">
             <div>
               <h4 class="mb-0">FRA Quotation Customer List</h4>
             </div>
           </div>
           {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
         </div>
-        <div class="card-body px-0 pb-0">
+        <div class="card-body pt-0">
           <div class="table-responsive">
-            <table class="table table-flush text-dark" id="requirement-customer-list">
+            <table class="table table-hover text-dark" id="requirement-customer-list">
               <thead class="thead-light">
                 <tr>
                   <th>Customer Name</th>
@@ -32,20 +32,85 @@
                 {% for query_obj  in queryset %}
                     <tr class="text-sm">
                       <td>
-                        <a class="font-weight-bolder" href="{% url 'view_customer_fra_list_report' query_obj.id %}"  data-bs-toggle="tooltip" data-bs-original-title="Click For View Reports">
+                        <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
                           {{ query_obj.first_name|truncatechars:20|title }} {{ query_obj.last_name|truncatechars:20|lower }}
                         </a> 
                        
                       </td>
                          
-                      <td>{{query_obj.company_name|default:''|title}}</td>
-                      <td>{{query_obj.email}}</td>
-                      <td >{{query_obj.phone_number|default:''}}</td>
+                      <td>
+                        <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="text-decoration-none w-100 nav-link">
+                          {{query_obj.company_name|default:''|title}}
+                        </a>
+                      </td>
+                      <td>
+                        <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="text-decoration-none w-100 nav-link">
+                          {{query_obj.email}}
+                        </a>
+                      </td>
+                      <td >
+                        <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="text-decoration-none w-100 nav-link">
+                          {{query_obj.phone_number|default:''}}
+                        </a>
+                      </td>
                      </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+
+          {% if queryset.paginator.num_pages > 1 %}
+          <div class="row justify-content-start justify-content-lg-between pagination-row">
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">
+                Showing {{queryset.number}} of {{queryset.paginator.num_pages}} pages
+              </div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                  {% if queryset.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ queryset.previous_page_number }}">
+                      <i class="fas fa-angle-left"></i>
+                    </a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                      <i class="fas fa-angle-left"></i>
+                    </a>
+                  </li>
+                  {% endif %} 
+                  {% for i in queryset.paginator.page_range %}
+                    {% if queryset.number == i %}
+                  <li class="page-item active">
+                    <a class="page-link" href="#">{{ i }}</a>
+                  </li>
+                    {% else%}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                  </li>
+                    {% endif %} 
+                  {% endfor %} 
+                  {% if queryset.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ queryset.next_page_number }}">
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#">
+                      <i class="fas fa-angle-right"></i>
+                    </a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -57,23 +122,4 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script>
-if (document.getElementById('requirement-customer-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#requirement-customer-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 10,
-    });
-
-  
-    const searchInput = document.getElementById('searchInput');
-      searchInput.addEventListener('input', function() {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
-      });
-  }
-
-
-
-</script>
 {% endblock %}

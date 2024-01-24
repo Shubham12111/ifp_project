@@ -52,6 +52,9 @@
     color: #000;
     /* Replace #000 with the desired text color */
   }
+  table > tbody > tr > td > a > p, ul, b, i{
+    margin-bottom: 0 !important;
+}
 </style>
 {% endblock %}
 {% load rest_framework %}
@@ -84,9 +87,9 @@
         <div class="card-body mt-0 text-sm">
           <b>Action</b>
           <p class="text-sm mt-2" style="text-align: justify;">
-            <span id="actionText">{{ requirement_instance.action|truncatechars:300 }}</span>
-            <span id="actionMore" style="display: none;">{{ requirement_instance.action }}</span>
-            {% if requirement_instance.action|length > 300 %}
+            <span id="actionText">{{ requirement_instance.action|safe|truncatechars:300 }}</span>
+            <span id="actionMore" style="display: none;">{{ requirement_instance.action|safe }}</span>
+            {% if requirement_instance.action|safe|length > 300 %}
             <span class="read-more text-primary" id="actionToggle"
               onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
               Read More
@@ -96,9 +99,9 @@
 
           <b>Description</b>
           <p class="text-sm mt-2" style="text-align: justify;">
-            <span id="descriptionText">{{ requirement_instance.description|truncatechars:300 }}</span>
-            <span id="descriptionMore" style="display: none;">{{ requirement_instance.description }}</span>
-            {% if requirement_instance.description|length > 300 %}
+            <span id="descriptionText">{{ requirement_instance.description|safe|truncatechars:300 }}</span>
+            <span id="descriptionMore" style="display: none;">{{ requirement_instance.description|safe }}</span>
+            {% if requirement_instance.description|safe|length > 300 %}
             <span class="read-more text-primary" id="descriptionToggle"
               onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
               Read More
@@ -114,7 +117,6 @@
         <div class="card-header pb-0">
           <h5>Client Details</h5>
         </div>
-        <div class="row">
           <div class="card-body mt-0 text-sm">
             <div class="row mb-2">
               <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
@@ -123,7 +125,7 @@
             <div class="row mb-2">
               <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
               <div class="col-7 text-sm" style="margin: 5px 0;">
-                {{ customer_address.address }}
+                {{ customer_address.address|default:'-' }}
                 {% if customer_address.town %}
                   {{ customer_address.town.name }},
                 {% endif %}
@@ -151,8 +153,6 @@
               <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.RBNO|default:''|title }}</div>
             </div>
           </div>
-        </div>
-        
       </div>
     </div>
 
@@ -172,10 +172,10 @@
                 <button class="accordion-button " type="button" data-bs-toggle="collapse"
                   data-bs-target="#collapse{{ forloop.counter }}"
                   aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
-                  <div class="col-9">
+                  <div class="col-7">
                     <strong>{{ forloop.counter }} - </strong>{{ defect.action|truncatechars:150 }}
                   </div>
-                  <div class="col-3 text-end">
+                  <div class="col-5 text-end">
                     <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
                     <i class="fas fa-chevron-down  mx-2 " aria-hidden="true"></i>
                   </div>
@@ -542,6 +542,20 @@
 
     rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
 
+    const existingSelectedSORs = []
+    existingTableRows = existingTable.querySelectorAll('tr')
+    if(existingTableRows){
+      existingTableRows.forEach(row=>{ 
+        if (!row.id.includes('header'))
+        {
+          rowSorIdInput = row.querySelector('input[name=sor-id]')
+          if (rowSorIdInput){
+            existingSelectedSORs.push(rowSorIdInput.value)
+          }
+        } 
+      });
+    }
+
 
     // Add the first <td> with the dropdown <select> element
     var firstCell = document.createElement('td');
@@ -552,10 +566,12 @@
     defaultOption.textContent = ' ';
     select.appendChild(defaultOption);
     allSors.forEach(sor => {
-      var option = document.createElement('option');
-      option.value = sor.reference_number;
-      option.textContent = sor.reference_number;
-      select.appendChild(option);
+      if (!existingSelectedSORs.includes(sor.id.toString())){
+        var option = document.createElement('option');
+        option.value = sor.reference_number;
+        option.textContent = sor.reference_number;
+        select.appendChild(option);
+      }
     });
     firstCell.appendChild(select);
     newRow.appendChild(firstCell);
@@ -847,7 +863,7 @@
             if (response.ok) {
               // Request was successful, handle the server's response if needed
 
-              window.location.href = "{% if quotation_data %}{% url 'view_customer_quotation_list' customer_id %}{% else %}{% url 'view_customer_fra_list_report' customer_id %}{% endif %}";
+              window.location.href = "{% url 'view_customer_quotation_list' customer_id %}";
             } else {
               // Handle errors or failed requests
               console.error('Error sending data to the server');

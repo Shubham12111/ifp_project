@@ -50,7 +50,7 @@
                   <p class="text-secondary text-sm">Hint: You must select a minimum of 2 and a maximum of 6 members to save a team (press CTRL to select multiple users).</p>
                 </div>
                 <button type="submit" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'teams_list' %}">Back</a>
+                {% include 'components/back_button.html' %}
               </div>
             </form>
           </div>
