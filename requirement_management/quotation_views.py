@@ -16,6 +16,7 @@ from datetime import datetime
 from infinity_fire_solutions.email import *
 import uuid
 from work_planning_management.models import Job
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -29,6 +30,22 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     def get_queryset(self):
             queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
+    
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -41,7 +58,8 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         
 
         if request.accepted_renderer.format == 'html':
-            context = {'queryset': queryset}  # Pass the list of customers with counts to the template
+
+            context = {'queryset': self.get_paginated_queryset(queryset)}  # Pass the list of customers with counts to the template
             return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -54,15 +72,65 @@ class QuotationCustomerReportListView(CustomAuthenticationMixin,generics.ListAPI
     serializer_class = QuotationCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    search_fields = ['requirement_id__action', 'requirement_id__description', 'requirement_id__UPRN']
     template_name = 'quote/quotation_customer_report_list.html'
     ordering_fields = ['created_at'] 
 
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
+    def get_filtered_queryset(self, queryset):
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'surveyor': self.request.GET.get('surveyor'),
+        }
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                value_list = filter_value.split()
+                if 2 >= len(value_list) > 1:
+                    queryset = queryset.filter(requirement_id__surveyor__first_name=value_list[0], requirement_id__surveyor__last_name=value_list[1])
+                else:
+                    queryset = queryset.filter(requirement_id__surveyor__first_name = filter_value)
+                    
+        
+        return self.get_searched_queryset(queryset)
+
     def get_queryset(self):
 
-            queryset = Report.objects.filter(requirement_id__customer_id=self.kwargs.get('customer_id'), 
-            status = 'submit')
-            return queryset
+            queryset = Report.objects.filter(
+                requirement_id__customer_id=self.kwargs.get('customer_id'), 
+                status = 'submit'
+            )
+            return self.get_paginated_queryset(self.get_filtered_queryset(queryset))
 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -79,7 +147,9 @@ class QuotationCustomerReportListView(CustomAuthenticationMixin,generics.ListAPI
             if request.accepted_renderer.format == 'html':
                 context = {'report_list': queryset,
                 'customer_id': customer_id,
-                'customer_data':customer_data}  # Pass the list of customers with counts to the template
+                'customer_data':customer_data,
+                'search_fields': self.search_fields,
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))}  # Pass the list of customers with counts to the template
                 return render_html_response(context, self.template_name)
             else:
                 serializer = self.serializer_class(queryset, many=True)
@@ -341,13 +411,61 @@ class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
     
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    search_fields = ['requirement_id__action', 'requirement_id__description', 'requirement_id__UPRN']
     template_name = 'quote/customer_quotation_list.html'
     ordering_fields = ['created_at'] 
 
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
+    def get_filtered_queryset(self, queryset):
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'surveyor': self.request.GET.get('surveyor'),
+        }
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                value_list = filter_value.split()
+                if 2 >= len(value_list) > 1:
+                    queryset = queryset.filter(requirement_id__surveyor__first_name=value_list[0], requirement_id__surveyor__last_name=value_list[1])
+                else:
+                    queryset = queryset.filter(requirement_id__surveyor__first_name = filter_value)
+                    
+        
+        return self.get_searched_queryset(queryset)
+
     def get_queryset(self):
         queryset = Quotation.objects.filter(requirement_id__customer_id=self.kwargs.get('customer_id'))
-        return queryset
+        return self.get_paginated_queryset(self.get_filtered_queryset(queryset))
 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -365,7 +483,9 @@ class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
             if request.accepted_renderer.format == 'html':
                 context = {'quotation_list': queryset,
                 'customer_id': customer_id,
-                'customer_data':customer_data}  # Pass the list of customers with counts to the template
+                'customer_data':customer_data,
+                'search_fields': self.search_fields,
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))}  # Pass the list of customers with counts to the template
                 return render_html_response(context, self.template_name)
         else:
             messages.error(request, "You are not authorized to perform this action")

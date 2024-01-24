@@ -8,43 +8,49 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
-<div class="container-fluid my-3 py-3">
-    <div class="col-lg-12 mt-4">
-         <!-- Card Basic Info -->
-        <div class="card mb-4" id="basic-info">
-            <div class="card-header">
-                <h5> {% if defect_instance %} Edit {% else %} Add {% endif %}  Defect</h5>
-            </div>
-            <div class="card-body pt-0">
-                <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()" >
-                    <div class='row'>
-                        {% csrf_token %}
-                        {% render_form serializer %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12 m-auto">
+            <!-- Card Basic Info -->
+            <div class="card p-3 bg-white" data-animation="FadeIn" id="basic-info">
+                <div class="card-header">
+                    <div class="row justify-content-between">
+                        <div class="col-6">
+                            <h5> {% if defect_instance %} Edit {% else %} Add {% endif %}  Defect</h5>
+                        </div>
+                        <div class="col-6 text-end">
+                            {% include 'components/back_button.html' %}
+                        </div>
                     </div>
-                    
-                        {% if serializer.data.document_paths and  defect_instance %}
-                            {% for document in serializer.data.document_paths %}
-                                <div class="col-lg-12">
-                                    <div style="position: relative;">
-                                    <a href="{{ document.presigned_url }}" download>
-                                        <span class="text-sm me-2">{{ document.filename }}</span>
-                                    </a>
-                                    <a href="#" class="delete-icon" onclick="CustomconfirmDelete('{{requirement_instance.id}}{{defect_instance.id}} {{document.id}}','Are you sure you want to delete this requirement defect document?','The requirement defect document has been deleted successfully.',
-                                            '{% url 'remove_requirement_defect_document' defect_instance.id  document.id %}')" class="delete-link ms-2" data-title="{{ requirement_instance.title}}">
-                                            <i class="fas fa-times-circle text-danger">  </i> 
+                </div>
+                <div class="card-body pt-0">
+                    <form role="form"  method="POST" autocomplete="off" enctype="multipart/form-data" onsubmit="showLoader()" >
+                        <div class='row'>
+                            {% csrf_token %}
+                            {% render_form serializer %}
+                        </div>
+                            {% if serializer.data.document_paths and  defect_instance %}
+                                {% for document in serializer.data.document_paths %}
+                                    <div class="col-lg-12">
+                                        <div style="position: relative;">
+                                        <a href="{{ document.presigned_url }}" download>
+                                            <span class="text-sm me-2">{{ document.filename }}</span>
                                         </a>
+                                        <a href="#" class="delete-icon" onclick="CustomconfirmDelete('{{requirement_instance.id}}{{defect_instance.id}} {{document.id}}','Are you sure you want to delete this requirement defect document?','The requirement defect document has been deleted successfully.',
+                                                '{% url 'remove_requirement_defect_document' defect_instance.id  document.id %}')" class="delete-link ms-2" data-title="{{ requirement_instance.title}}">
+                                                <i class="fas fa-times-circle text-danger">  </i> 
+                                            </a>
+                                        </div>
                                     </div>
-                                </div>
-                            {% endfor %}
-                    {% endif %}
-                    <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                    {% include 'components/back_button.html' %}
-        
-                    </form>
-                    {% include 'components/loader.html' %}
+                                {% endfor %}
+                        {% endif %}
+                        <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
+                        </form>
+                        {% include 'components/loader.html' %}
+                </div>
             </div>
+            {% comment %} {% include 'defect_fra.html' %} {% endcomment %}
         </div>
-        {% include 'defect_fra.html' %}
     </div>
 </div>
 {% endblock %}

@@ -4,7 +4,7 @@
             <div class="col-6">
                 <h5> FRA Actions </h5>
             </div>
-            <div class="col-6">
+            <div class="col-6 text-end">
                 {% include 'components/back_button.html' %}
             </div>
         </div>
@@ -62,12 +62,12 @@
                     <b>Action</b>
                     <p class="text-sm mt-2" style="text-align: justify;">
 
-                        {{ requirement_instance.action}}
+                        {{ requirement_instance.action|safe}}
                     </p>
                     <b>Description</b>
                     <p class="text-sm mt-2" style="text-align: justify;">
 
-                        {{ requirement_instance.description}}
+                        {{ requirement_instance.description|safe}}
                     </p>
                     <hr class="horizontal gray-light">
                     <div class="row text-sm">
