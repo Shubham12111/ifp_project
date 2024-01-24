@@ -752,6 +752,15 @@
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/fullcalendar.min.js' %}"></script>
 <script>
+  const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
+
+  function showLoader() {
+      loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+  }
+
+  function hideLoader() {
+      loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+  }
   // Initialize Choices.js
   if (document.getElementById("qsSelect")) {
     var element = document.getElementById("qsSelect");
@@ -827,7 +836,21 @@
     submitButton.addEventListener("click", function () {
       showLoader();
       const selectForm = document.getElementById("selectForm");
-      selectForm.submit(); // Submit the form
+      if (document.querySelector('input[name="surevey_start_date"').value == document.querySelector('input[name="surevey_end_date"').value){
+        const surevey_start_date_errorElement = document.createElement('div');
+        surevey_start_date_errorElement.classList.add('help-block', 'mt-2');
+        surevey_start_date_errorElement.textContent = 'Survey Start Date and Time cannot be same as Survey End Date and Time';
+
+        const surevey_end_date_errorElement = document.createElement('div');
+        surevey_end_date_errorElement.classList.add('help-block', 'mt-2');
+        surevey_end_date_errorElement.textContent = 'Survey End Date and Time cannot be same as Survey Start Date and Time';
+        
+        document.querySelector('input[name="surevey_start_date"').parentElement.appendChild(surevey_start_date_errorElement);
+        document.querySelector('input[name="surevey_end_date"').parentElement.appendChild(surevey_end_date_errorElement);
+        hideLoader();
+      }else{
+        selectForm.submit(); // Submit the form
+      }
     });
 
     const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
@@ -942,15 +965,15 @@
       var calendar = new FullCalendar.Calendar(
         document.getElementById("calendar"),
         {
-          initialView: "dayGridMonth",
+          initialView: "dayGridWeek",
           headerToolbar: {
             start: "title", // will normally be on the left. if RTL, will be on the right
             center: "",
-            end: "today prev,next", // will normally be on the right. if RTL, will be on the left
+            end: "today dayGridWeek dayGridMonth prev,next", // will normally be on the right. if RTL, will be on the left
           },
           selectable: true,
           editable: false,
-          initialDate: "2024-01-18",
+          initialDate: "{% now 'Y-m-d' %}",
           timeZone: "UTC",
           displayEventEnd: true,
           eventTimeFormat: {
