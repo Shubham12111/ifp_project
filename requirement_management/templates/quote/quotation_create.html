@@ -542,6 +542,20 @@
 
     rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
 
+    const existingSelectedSORs = []
+    existingTableRows = existingTable.querySelectorAll('tr')
+    if(existingTableRows){
+      existingTableRows.forEach(row=>{ 
+        if (!row.id.includes('header'))
+        {
+          rowSorIdInput = row.querySelector('input[name=sor-id]')
+          if (rowSorIdInput){
+            existingSelectedSORs.push(rowSorIdInput.value)
+          }
+        } 
+      });
+    }
+
 
     // Add the first <td> with the dropdown <select> element
     var firstCell = document.createElement('td');
@@ -551,12 +565,12 @@
     var defaultOption = document.createElement('option');
     defaultOption.textContent = ' ';
     select.appendChild(defaultOption);
-    allSors.forEach(sor => {
-      var option = document.createElement('option');
-      option.value = sor.reference_number;
-      option.textContent = sor.reference_number;
-      select.appendChild(option);
-    });
+    if (!existingSelectedSORs.includes(sor.id.toString())){
+        var option = document.createElement('option');
+        option.value = sor.reference_number;
+        option.textContent = sor.reference_number;
+        select.appendChild(option);
+      }
     firstCell.appendChild(select);
     newRow.appendChild(firstCell);
 
