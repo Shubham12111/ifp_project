@@ -1381,6 +1381,10 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
                     messages.error(request, "Survey ending date cannot be greater than FRA Due Date.")
                     return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
                 
+                if survey_start_date >= survey_end_date:
+                    messages.error(request, "Survey ending date cannot be smaller than or equal to Survey start Date.")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+                
                 for requirement in requirments:
                     requirement.surveyor = sureveyor
                     requirement.status = "assigned-to-surveyor"
