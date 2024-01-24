@@ -236,18 +236,14 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
             if 'defectSorValues' in data:
                 defect_sor_values = data['defectSorValues']
 
-            for key in defect_sor_values:
-                for sub_key in defect_sor_values[key]:
-                    sor_id = defect_sor_values[key][sub_key].get('sor-id')
+                # Extract 'sor-id' values from the JSON data and initialize corresponding lists
+                for key in defect_sor_values:
+                    sor_items_dict[key] = {}
 
-                    if sor_id:
-                        # Check if the SOR ID is already encountered
-                        if sor_id in sor_id_list:
-                            # Handle the case where the SOR ID is repeated
-                            messages.error(request, f"SOR Code is repeated. Please check the Sor ")
-                            return JsonResponse({'success': False, 'message': 'SOR ID repeated'})
-
-                        sor_id_list.append(sor_id)  # Add the SOR ID to the list
+                    for sub_key in defect_sor_values[key]:
+                        sor_id = defect_sor_values[key][sub_key].get('sor-id')
+                        if sor_id:
+                            sor_id_list.append(sor_id)
 
                 # Fetch SORItem objects based on 'sor-id'
                 sor_items = SORItem.objects.filter(id__in=sor_id_list)
