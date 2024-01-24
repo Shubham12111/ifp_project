@@ -82,7 +82,7 @@
                         <input type="checkbox" name="defect_checkbox" value="{{ defect.id }}">
                     </td>
                     <td class="align-middle">{{ defect.get_defect_type_display}}</td>
-                    <td class="align-middle">{{ defect.action|truncatechars:30 }}</td>
+                    <td class="align-middle">{{ defect.action|truncatechars:30|safe|truncatechars:20|title|default:''}}</td>
                     <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.description|safe|truncatechars:50 }}</td>
                     <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.rectification_description|safe|truncatechars:50 }}</td>
                     {% if request.user|has_update_permission:"fire_risk_assessment" or request.user|has_add_permission:"fire_risk_assessment" or request.user|has_delete_permission:"fire_risk_assessment" or request.user|has_view_permission:"fire_risk_assessment" %}
@@ -152,9 +152,17 @@
               <div class="row mt-4">
                 <div class="col-12">
                   <label>Comments <span class="text-sm text-danger">*</span></label>
-                  <textarea name="comments" class="form-control" required></textarea>
+                  <div id="editor" class="ql-toolbar ql-snow">
+                    <span class="ql-formats">
+                      <button type="button" class="ql-bold"></button>
+                      <button type="button" class="ql-italic"></button>
+                      <button type="button" class="ql-underline"></button>
+                      <button type="button" class="ql-list" value="bullet"></button>
+                    </span>
+                  </div>
+                  <div id="quill-editor" style="height: 300px;"></div>
                 </div>
-                <div id="error-messages-comment" ></div>
+                <div name = "comments" id="error-messages-comment" ></div>
                 
                  <div class="col-4 mt-4">
                   <label>Signature <span class="text-sm text-danger">*</span></label> 
@@ -197,6 +205,8 @@
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/signature_pad.min.js' %}"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>  
 
 <script>
 
@@ -495,7 +505,70 @@ function hideLoader() {
     loaderOverlay.classList.add("d-none"); // Hide the loader overlay
 }
 
+
+
+
+
+
 function saveFormData(formData) {
+    // Define the URL for saving the data
+    const saveUrl = "{% url 'customer_requirement_view' customer_id requirement_instance.id %}";
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const errorMessages = document.getElementById('error-messages-comment');
+    const commentsTextarea = document.querySelector('textarea[name="comments"]');
+    
+    const errorMessageSignature = document.getElementById('error-messages-signature');
+    const signatureUrl = document.querySelector('input[name="signature_data"]');
+    
+    // Clear previous error messages
+    errorMessages.innerHTML = '';
+
+    // Flag to track if there are any errors
+    let hasErrors = false;
+
+    // Get Quill's HTML content
+    const quillContent = document.querySelector('#quill-editor').children[0].innerHTML;
+
+    // Check if Quill's content is empty
+    if (!quillContent.trim()) {
+        errorMessages.innerHTML += '<p class="help-block text-sm text-dnage mt-2">Comments are required.</p>';
+        hasErrors = true;
+        hideLoader();
+        return;
+    }
+
+    // Clear previous error messages
+    errorMessageSignature.innerHTML = '';
+
+    // Add Quill's HTML content to formData
+    formData.append('comments', quillContent);
+
+    // Continue with the rest of your saveFormData logic...
+    
+    // Send the data to the backend using fetch
+    fetch(saveUrl, {
+        method: "POST",
+        body: formData,
+        headers: {
+            "X-CSRFToken": csrfToken // Include the CSRF token in the request headers
+        }
+    })
+    .then(data => {
+        // Hide the loader overlay after processing the response
+        hideLoader();
+        // Reload the page after processing the response
+        window.location.reload();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Hide the loader overlay in case of an error
+        hideLoader();
+    });
+}
+
+
+
+{% comment %} function saveFormData(formData) {
     // Define the URL for saving the data
     const saveUrl = "{% url 'customer_requirement_view' customer_id requirement_instance.id %}";
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -550,9 +623,13 @@ function saveFormData(formData) {
         // Hide the loader overlay in case of an error
         hideLoader();
     });
-}
-
-
+} {% endcomment %}
+var quill = new Quill('#quill-editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: '#editor',
+    },
+  });
 </script>
 
 {% endblock %}
