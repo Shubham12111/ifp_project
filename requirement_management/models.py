@@ -293,7 +293,7 @@ class SORItem(models.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'user_id': self.user_id.id,
+            'user_id': self.user_id.id if self.user_id else '',
             'customer_id': self.customer_id.id if self.customer_id else '',
             'category_id': self.category_id.name,
             'name': self.name,
