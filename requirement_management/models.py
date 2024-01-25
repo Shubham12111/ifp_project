@@ -294,7 +294,7 @@ class SORItem(models.Model):
         return {
             'id': self.id,
             'user_id': self.user_id.id,
-            'customer_id': self.customer_id.id,
+            'customer_id': self.customer_id.id if self.customer_id else '',
             'category_id': self.category_id.name,
             'name': self.name,
             'price': str(self.price),
