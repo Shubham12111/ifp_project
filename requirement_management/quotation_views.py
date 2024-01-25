@@ -254,6 +254,9 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 quotation_data, report_instance, requirement_instance, requiremnt_defect_instances = self.get_quotation_data(quotation_id)
                 all_sors = SORItem.objects.filter(customer_id=customer_data).values('id','name','reference_number', 'category_id__name', 'price',)
 
+                if not all_sors:
+                    all_sors = SORItem.objects.filter(customer_id__isnull=True).values('id','name','reference_number', 'category_id__name', 'price',)
+
                 # Convert the queryset of dictionaries to a list
                 all_sors_list = list(all_sors)
 
