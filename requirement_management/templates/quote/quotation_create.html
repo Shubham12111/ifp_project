@@ -103,6 +103,25 @@
   table > tbody > tr > td > a > i{
     margin-bottom: 0 !important;
   }
+
+  table > tbody > tr > td > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > i{
+    margin-bottom: 0 !important;
+  }
+
+
+  div#accordionDefect > div > h5 > button > div#defectHeading > p {
+    margin-left: 0.25rem !important;
+    margin-bottom: 0 !important;
+  }
 </style>
 {% endblock %}
 {% load rest_framework %}
@@ -226,8 +245,8 @@
                 <button class="accordion-button " type="button" data-bs-toggle="collapse"
                   data-bs-target="#collapse{{ forloop.counter }}"
                   aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
-                  <div class="col-7">
-                    <strong>{{ forloop.counter }} - </strong>{{ defect.action|truncatechars:150 }}
+                  <div class="col-7 d-flex" id="defectHeading">
+                    <strong class="pt-1">{{ forloop.counter }} - </strong>{{ defect.action|safe|truncatechars:150 }}
                   </div>
                   <div class="col-5 text-end">
                     <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
@@ -241,10 +260,11 @@
                 class="accordion-collapse  collapse {% if forloop.first %}show {% endif %} "
                 aria-labelledby="heading{{ forloop.counter }}">
                 <div class="accordion-body text-sm">
-                  <p class="text-sm"><strong>Action: </strong>{{ defect.action }}</p>
-                  <p class="text-sm"><strong>Description: </strong>{{ defect.description }}</p>
-                  <p class="text-sm"><strong>Rectification Description: </strong>{{ defect.rectification_description }}
-                  </p>
+                  <div class="row">
+                    <div class="col-12 text-sm d-flex"><strong class="pe-1" style="padding-top: 0.2rem !important;">Action: </strong>{{ defect.action|safe }}</div>
+                    <div class="col-12 text-sm d-flex"><strong class="pe-1" style="padding-top: 0.2rem !important;">Description: </strong>{{ defect.description|safe }}</div>
+                    <div class="col-12 text-sm d-flex"><strong class="pe-1" style="padding-top: 0.2rem !important;">Rectification Description: </strong>{{ defect.rectification_description|safe }}</div>
+                  </div>
                   <div class="col-lg-12 col-sm-12">
                     {% csrf_token %}
 
