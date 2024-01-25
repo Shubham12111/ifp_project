@@ -122,6 +122,11 @@
     margin-left: 0.25rem !important;
     margin-bottom: 0 !important;
   }
+
+  div#accordionDefect > div > div > div > div#defectIntroduction > div.col-12.text-sm.d-flex.align-items-center > p {
+    margin-left: 0.25rem !important;
+    margin-bottom: 0 !important;
+  }
 </style>
 {% endblock %}
 {% load rest_framework %}
@@ -245,8 +250,8 @@
                 <button class="accordion-button " type="button" data-bs-toggle="collapse"
                   data-bs-target="#collapse{{ forloop.counter }}"
                   aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
-                  <div class="col-7 d-flex" id="defectHeading">
-                    <strong class="pt-1">{{ forloop.counter }} - </strong>{{ defect.action|safe|truncatechars:150 }}
+                  <div class="col-7 d-flex align-items-center" id="defectHeading">
+                    <p><strong>{{ forloop.counter }} - </strong></p>{{ defect.action|safe|truncatechars:150 }}
                   </div>
                   <div class="col-5 text-end">
                     <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
@@ -260,10 +265,10 @@
                 class="accordion-collapse  collapse {% if forloop.first %}show {% endif %} "
                 aria-labelledby="heading{{ forloop.counter }}">
                 <div class="accordion-body text-sm">
-                  <div class="row">
-                    <div class="col-12 text-sm d-flex"><strong class="pe-1" style="padding-top: 0.2rem !important;">Action: </strong>{{ defect.action|safe }}</div>
-                    <div class="col-12 text-sm d-flex"><strong class="pe-1" style="padding-top: 0.2rem !important;">Description: </strong>{{ defect.description|safe }}</div>
-                    <div class="col-12 text-sm d-flex"><strong class="pe-1" style="padding-top: 0.2rem !important;">Rectification Description: </strong>{{ defect.rectification_description|safe }}</div>
+                  <div class="row" id="defectIntroduction">
+                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Action: </strong>{{ defect.action|safe }}</div>
+                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Description: </strong>{{ defect.description|safe }}</div>
+                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Rectification Description: </strong>{{ defect.rectification_description|safe }}</div>
                   </div>
                   <div class="col-lg-12 col-sm-12">
                     {% csrf_token %}
@@ -731,6 +736,9 @@
       source: allSORSRefrenceNumber,
       minLength: 1,
       select: function(event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click'){
+          event.target.value = ui.item.value
+        }
         try{
           if (event.target.parentElement.querySelector('div.help-block')){
             event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
@@ -755,6 +763,9 @@
       source: allSORSNames,
       minLength: 1,
       select: function(event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click'){
+          event.target.value = ui.item.value
+        }
         try{
           if (event.target.parentElement.querySelector('div.help-block')){
             event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
@@ -1013,6 +1024,9 @@
       source: allSORSRefrenceNumber,
       minLength: 1,
       select: function(event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click'){
+          event.target.value = ui.item.value
+        }
         try{
           if (event.target.parentElement.querySelector('div.help-block')){
             event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
@@ -1030,13 +1044,16 @@
             event.target.parentElement.appendChild(errorElement);
           }
         }
-        return false;
+        return true;
       }
     });
     $(`#sor-name-${defectId}-${rowId}`).autocomplete({
       source: allSORSNames,
       minLength: 1,
       select: function(event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click'){
+          event.target.value = ui.item.value
+        }
         try{
           if (event.target.parentElement.querySelector('div.help-block')){
             event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
@@ -1124,7 +1141,7 @@
   var submitButton = document.getElementById('submit-button');
   var saveDraftButton = document.getElementById('submit-darft-button');
   var submitApproved = document.getElementById('submit-approved');
-  const modalContainer = document.querySelector('.container-fluid.mt-3');
+  const modalContainer = document.querySelector('.container-fluid.py-4');
 
   function addBlur() {
     modalContainer.classList.add('blur-background');
