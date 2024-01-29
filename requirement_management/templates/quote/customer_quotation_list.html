@@ -95,12 +95,12 @@
                                 <tr class="text-sm">
                                     <td>
                                         <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{ quotation.requirement_id.action|safe|truncatechars:30}}
+                                            {{ quotation.requirement_id.action|safe|truncatechars_html:30}}
                                         </a>
                                     </td>
                                     <td>
                                         <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{ quotation.requirement_id.description|safe|truncatechars:30}}
+                                            {{ quotation.requirement_id.description|safe|truncatechars_html:30}}
                                         </a>
                                     </td>
                                     <td>
