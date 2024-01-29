@@ -106,7 +106,7 @@ table > tbody > tr > td > i{
                   </td>
                   <td class="align-middle">
                     <a href="{% url 'customer_requirement_defect_detail' customer_id requirement_instance.id defect.id %}" class="text-decoration-none w-100 nav-link">
-                      {{ defect.get_defect_type_display}}
+                      {{ defect.defect_type}}
                     </a>
                   </td>
                   <td class="align-middle">
@@ -370,6 +370,31 @@ function removeBlur() {
     modalContainer.classList.remove('blur-background');
 }
 
+function stripTags(value) {
+  // Return the given HTML with all tags stripped.
+  // Note: in a typical case, this loop executes _stripOnce once.
+  // The loop condition is redundant but helps to reduce the number of executions of _stripOnce.
+  value = String(value);
+  
+  while (value.includes("<") && value.includes(">")) {
+    let newValue = _stripOnce(value);
+    
+    if (value.split("<").length === newValue.split("<").length) {
+      // _stripOnce wasn't able to detect more tags.
+      break;
+    }
+    
+    value = newValue;
+  }
+  
+  return value;
+}
+
+function _stripOnce(value) {
+  // Helper function to strip one occurrence of tags.
+  return value.replace(/<[^>]*>/g, "");
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   // Get the "Add Quantity Surveyor" button
   const cretaeReportButton = document.getElementById("createreportButton");
@@ -497,7 +522,7 @@ cretaeReportButton.addEventListener("click", function () {
 
           // Add the action text and a Font Awesome icon at the end
           titleElement.innerHTML = `
-          <strong>${titleText}</strong>
+          <strong>${stripTags(titleText)}</strong>
           <i class="fas fa-chevron-down mt-2" aria-hidden="true" style="float: right;"></i>
           <span class="badge badge-sm bg-gradient-dark" style="float: right; margin-top: 5px; margin-right: 7px;">${defectType}</span>
           `;

@@ -66,12 +66,12 @@
                             </td>
                             <td class="text-sm">
                                 <a href="{% url 'requirement_report_view' customer_id requirement_instance.id report.id %}" class="text-decoration-none w-100 nav-link">
-                                  {{report.get_status_display|default:''|title}}
+                                  {{report.status|default:''|title}}
                                 </a>
                             </td>
                             <td class="text-truncate">
                                 <a href="{% url 'requirement_report_view' customer_id requirement_instance.id report.id %}" class="text-decoration-none w-100 nav-link">
-                                  {{ report.created_at|date:"d/m/Y" }}
+                                  {{ report.created_at }}
                                 </a>
                             </td>
 

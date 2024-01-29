@@ -93,7 +93,7 @@ table > tbody > tr > td > a > p{
                         {% if requirement_instance %}
                             <tr>
                                 <th>FRA Action </th>
-                                <td class="text-wrap  text-sm">{{ requirement_instance.action }}</td>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.action|safe }}</td>
                             </tr>
                             <tr>
                                 <th>FRA Description </th>
@@ -121,15 +121,15 @@ table > tbody > tr > td > a > p{
                     <tbody> <!-- Use tbody for table body -->
                         <tr class=" text-sm">
                             <th>Action</th>
-                            <td class="text-wrap  text-sm">{{ defect.action }}</td>
+                            <td class="text-wrap  text-sm">{{ defect.action|safe }}</td>
                         </tr>
                         <tr class=" text-sm">
                             <th>Description of Defect</th>
-                            <td class="text-wrap  text-sm">{{ defect.description }}</td>
+                            <td class="text-wrap  text-sm">{{ defect.description|safe }}</td>
                         </tr>
                         <tr class=" text-sm">
                             <th>Rectification of Defect</th>
-                            <td class="text-wrap text-sm">{{ defect.rectification_description }}</td>
+                            <td class="text-wrap text-sm">{{ defect.rectification_description|safe }}</td>
                         </tr>
                         <tr class=" text-sm">
                             <th>Defect Type</th>
@@ -161,7 +161,7 @@ table > tbody > tr > td > a > p{
                         {% if report_instance.comments %}
                         <tr class=" text-sm">
                             <th>Report Comments</th>
-                            <td class="text-wrap text-sm">{{ report_instance.comments }}</td>
+                            <td class="text-wrap text-sm">{{ report_instance.comments|safe }}</td>
                         </tr>
                         {% endif %}
                         {% if report_instance.signature_path %}
