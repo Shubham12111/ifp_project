@@ -1303,7 +1303,7 @@
               // Also update the date range input field if needed
               document.getElementById('reportrange').value = formattedDateRange;
             }
-            else if (filterValue.length > 9) {
+            else if (filterValue.length > 16 && filterName != 'q') {
               // Truncate the filter value if it's longer than 5 characters
               displayedValue = filterValue.substring(0, 16) + '..';
             }

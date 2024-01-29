@@ -332,9 +332,9 @@
           if (filterValue) {
             let displayedValue = filterValue; // Default displayed value is the filter value itself
             
-            if (filterValue.length > 9) {
+            if (filterValue.length > 16 && filterName != 'q') {
               // Truncate the filter value if it's longer than 5 characters
-              displayedValue = filterValue.substring(0, 9) + '..';
+              displayedValue = filterValue.substring(0, 16) + '..';
             }
   
             // Update the dropdown element with the displayed value
