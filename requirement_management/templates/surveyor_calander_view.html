@@ -128,8 +128,10 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             },
             eventClick: function (info) {
-            var linkUrl = `/fra/{{ customer_id }}/view/${info.event.id}/`;
-            window.open(linkUrl, "_blank");
+                info.jsEvent.preventDefault(); // don't let the browser navigate
+                if (info.event.url) {
+                    window.open(info.event.url, "_blank");
+                }
             },
             eventDidMount: function(info) {
                 des = document.createElement('div')

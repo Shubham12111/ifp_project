@@ -14,6 +14,7 @@ from django.core.validators import FileExtensionValidator
 from collections import OrderedDict
 from collections.abc import Mapping
 from decimal import Decimal
+from django.urls import reverse
 
 class CustomerNameField(serializers.RelatedField):
     """
@@ -1377,7 +1378,8 @@ class RequirementCalendarSerializer(serializers.ModelSerializer):
                 'description': f'{title}',
                 'start': f'{start}',
                 'end': f'{end}',
-                'className': f'{className}'
+                'className': f'{className}',
+                'url': f"{reverse('customer_requirement_view', kwargs={'customer_id': instance.customer_id.id, 'pk': instance.id})}"
             }
         except Exception as e:
             return {}
