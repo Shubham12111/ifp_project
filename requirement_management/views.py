@@ -584,6 +584,8 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 if instance:
                     document_paths = []
                     requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
+                    requirement_defect = RequirementDefectListSerializer(requirement_defect, many=True).data
+
                     serializer = self.serializer_class(instance=instance, context={'request': request})
                     
                     

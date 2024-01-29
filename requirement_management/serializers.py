@@ -113,6 +113,8 @@ class RequirementDefectSerializer(serializers.ModelSerializer):
         """
         data = super().to_representation(instance)
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
+        data['rectification_description'] = strip_tags(data['rectification_description']) # to strip html tags attached to response by ckeditor RichText field.
         return data
 
 class RequirementDetailSerializer(serializers.ModelSerializer):
@@ -1379,3 +1381,72 @@ class RequirementCalendarSerializer(serializers.ModelSerializer):
             }
         except Exception as e:
             return {}
+
+class RequirementDefectListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for RequirementDefect model.
+
+    This serializer is used to convert RequirementDefect model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+    
+    class Meta:
+        model = RequirementDefect
+        fields = ('id', 'requirement_id', 'action', 'description', 'reference_number', 'rectification_description', 'defect_type', 'created_at', 'updated_at')
+
+    def to_representation(self, instance):
+        """
+        Convert the model instance to JSON representation.
+
+        Args:
+            instance (RequirementDefect): The RequirementDefect model instance.
+
+        Returns:
+            dict: JSON representation of the model instance.
+        """
+        data = super().to_representation(instance)
+        data['defect_type'] = instance.get_defect_type_display()
+        data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
+        data['rectification_description'] = strip_tags(data['rectification_description']) # to strip html tags attached to response by ckeditor RichText field.
+        return data
+
+class RequirementReportListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for RequirementReport model.
+
+    This serializer is used to convert RequirementReport model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+    
+    class Meta:
+        model = Report
+        fields = ('id', 'user_id', 'pdf_path', 'comments', 'status', 'created_at')
+
+    def to_representation(self, instance):
+        """
+        Convert the model instance to JSON representation.
+
+        Args:
+            instance (RequirementReport): The RequirementReport model instance.
+
+        Returns:
+            dict: JSON representation of the model instance.
+        """
+        data = super().to_representation(instance)
+        data['user_id'] = instance.user_id
+        data['comments'] = strip_tags(data['comments']) # to strip html tags attached to response by ckeditor RichText field.
+        data['status'] = instance.get_status_display() if instance.status else ''
+        if instance.pdf_path:
+            pdf_url =  generate_presigned_url(instance.pdf_path)
+            instance.pdf_url = pdf_url
+        else:
+            instance.pdf_url = None
+        
+        data['pdf_path'] = pdf_url
+        data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
+        return data

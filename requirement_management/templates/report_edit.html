@@ -24,20 +24,27 @@
 <div class="container-fluid my-3 py-3">
     <div class="row align-items-center mb-2">
         <div class="col-lg-12 col-sm-8">
-            {% if report_instance.pdf_url %}
-            <a class="btn bg-gradient-primary btn-sm float-end mt-2 mb-0 mx-2" 
-            href="{{report_instance.pdf_url}}" download="">Download PDF</a>
-            {% endif %}
-            {% if '/fra/report/' in request.path %}
-            {% include 'components/back_button.html' %}
-            {% endif %}
+            
 
         </div>
     </div>
     
     <div class="card h-100">
         <div class="card-header pb-0">
-            <h5>FRA Actions</h5>
+            <div class="row justify-content-between">
+                <div class="col-6">
+                    <h5>FRA Actions</h5>
+                </div>
+                <div class="col-6 text-end">
+                    {% if '/fra/report/' in request.path %}
+                    {% include 'components/back_button.html' %}
+                    {% endif %}
+                    {% if report_instance.pdf_url %}
+                    <a class="btn bg-gradient-primary btn-sm mb-0 mx-2" 
+                    href="{{report_instance.pdf_url}}" download="">Download PDF</a>
+                    {% endif %}
+                </div>
+            </div>
         </div>
         <div class="card-body">
             <div class="row">
@@ -91,13 +98,13 @@
                         <div class="mb-3">
                             <b>Action</b>
                             <p class="text-sm mt-2" style="text-align: justify;">
-                                {{ requirement_instance.action }}
+                                {{ requirement_instance.action|safe }}
                             </p>
                         </div>
                         <div class="mb-3">
                             <b>Description</b>
                             <p class="text-sm mt-2" style="text-align: justify;">
-                                {{ requirement_instance.description }}
+                                {{ requirement_instance.description|safe }}
                             </p>
                         </div>
                         <hr class="horizontal gray-light">
@@ -152,15 +159,15 @@
                 <tbody>
                     <tr>
                         <td><strong>Action</strong></td>
-                        <td>{{ defect.action }}</td>
+                        <td>{{ defect.action|safe }}</td>
                     </tr>
                     <tr>
                         <td><strong>Description</strong></td>
-                        <td>{{ defect.description }}</td>
+                        <td>{{ defect.description|safe }}</td>
                     </tr>
                     <tr>
                         <td><strong>Rectification</strong></td>
-                        <td>{{ defect.rectification_description }}</td>
+                        <td>{{ defect.rectification_description|safe }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -175,7 +182,26 @@
                         {% csrf_token %}
                         <tr>
                             <td class="col-2"><strong>Report Comments</strong></td>
-                            <td><textarea name="comments" class="form-control" value="{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}" required>{% if report_instance.comments %}{{ report_instance.comments }}{% endif %}</textarea>
+                            <td class="col-12">
+                                <label>Comments <span class="text-sm text-danger">*</span></label>
+                                <div id="editor" class="ql-toolbar ql-snow">
+                                  <span class="ql-formats">
+                                    <button type="button" class="ql-bold"></button>
+                                    <button type="button" class="ql-italic"></button>
+                                    <button type="button" class="ql-underline"></button>
+                                    <button type="button" class="ql-list" value="bullet"></button>
+                                  </span>
+                                </div>
+                                <div id="quill-editor" style="height: 300px;">{{ report_instance.comments|safe }}</div>
+                                <input
+                                    name="comments"
+                                    type="hidden"
+                                    {% if report_instance.comments is not None %}value="{{ report_instance.comments }}"{% endif %}
+                                    autocomplete="off"
+                                    required
+                                    id="quill-comments"
+                                />
+                              <div name="comments" id="error-messages-comment"></div>
                             </td>
                         </tr>
                     
@@ -205,6 +231,8 @@
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>  
 <script>
 
 function showLoader() {
@@ -269,7 +297,14 @@ function saveFormData(formData) {
             hideLoader();
         });
 }
-
-
+var quill = new Quill('#quill-editor', {
+    theme: 'snow',
+    modules: {
+      toolbar: '#editor',
+    },
+});
+quill.on('text-change', function () {
+    document.getElementById('quill-comments').value = quill.root.innerHTML;
+});
 </script>
 {% endblock %}

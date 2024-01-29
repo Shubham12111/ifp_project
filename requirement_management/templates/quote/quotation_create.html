@@ -265,7 +265,7 @@
                 class="accordion-collapse  collapse {% if forloop.first %}show {% endif %} "
                 aria-labelledby="heading{{ forloop.counter }}">
                 <div class="accordion-body text-sm">
-                  <div class="row" id="defectIntroduction">
+                  <div class="row mb-4" id="defectIntroduction">
                     <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Action: </strong>{{ defect.action|safe }}</div>
                     <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Description: </strong>{{ defect.description|safe }}</div>
                     <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Rectification Description: </strong>{{ defect.rectification_description|safe }}</div>
@@ -344,8 +344,8 @@
     <div class="modal-content ">
       <div class="modal-header">
         <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="btn btn-sm shadow-none py-0 mb-0 pe-2" data-bs-dismiss="modal" aria-label="Close">
+          <i class="fas fa-times fs-6"></i>
         </button>
       </div>
       <div class="modal-body">
@@ -1314,6 +1314,16 @@
       });
     }
   }
+
+  var acknowledgeModal = document.getElementById('confirmationModal');
+  acknowledgeModal.querySelector('[data-bs-dismiss="modal"]').addEventListener('click', function () {
+    // User clicked Cancel, do nothing
+    // Close the modal
+    removeBlur();
+    acknowledgeModal.classList.remove('show');
+    acknowledgeModal.style.display = 'none';
+    hideLoader();
+  });
 
 
 

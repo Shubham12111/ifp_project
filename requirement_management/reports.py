@@ -80,14 +80,7 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
                     document_paths = requirement_image(instance)
                     
                     report_list = Report.objects.filter(requirement_id=instance)
-                    for report in report_list:
-
-                        if report.pdf_path:
-                            pdf_url =  generate_presigned_url(report.pdf_path)
-                            report.pdf_url = pdf_url
-                        else:
-                            report.pdf_url = None
-
+                    report_list = RequirementReportListSerializer(report_list, many=True).data
                     page_number = request.GET.get('page', 1)
                     context = {
                         'requirement_instance': instance,  
