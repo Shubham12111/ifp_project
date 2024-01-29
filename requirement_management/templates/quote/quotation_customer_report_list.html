@@ -93,12 +93,12 @@
                                 <tr class="text-sm">
                                     <td>
                                         <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{ report.requirement_id.action|safe|truncatechars:30}}
+                                            {{ report.requirement_id.action|safe|truncatechars_html:30}}
                                         </a>
                                     </td>
                                     <td>
                                         <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{ report.requirement_id.description|safe|truncatechars:30}}
+                                            {{ report.requirement_id.description|safe|truncatechars_html:30}}
                                         </a>
                                     </td>
                                     <td>

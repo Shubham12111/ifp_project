@@ -163,7 +163,7 @@
             <div class="card-body mt-0 text-sm">
               <b>Action</b>
               <p class="text-sm mt-2" style="text-align: justify;">
-                <span id="actionText">{{ requirement_instance.action|safe|truncatechars:300 }}</span>
+                <span id="actionText">{{ requirement_instance.action|safe|truncatechars_html:300 }}</span>
                 <span id="actionMore" style="display: none;">{{ requirement_instance.action|safe }}</span>
                 {% if requirement_instance.action|safe|length > 300 %}
                 <span class="read-more text-primary" id="actionToggle"
@@ -175,7 +175,7 @@
     
               <b>Description</b>
               <p class="text-sm mt-2" style="text-align: justify;">
-                <span id="descriptionText">{{ requirement_instance.description|safe|truncatechars:300 }}</span>
+                <span id="descriptionText">{{ requirement_instance.description|safe|truncatechars_html:300 }}</span>
                 <span id="descriptionMore" style="display: none;">{{ requirement_instance.description|safe }}</span>
                 {% if requirement_instance.description|safe|length > 300 %}
                 <span class="read-more text-primary" id="descriptionToggle"
@@ -251,7 +251,7 @@
                   data-bs-target="#collapse{{ forloop.counter }}"
                   aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
                   <div class="col-7 d-flex align-items-center" id="defectHeading">
-                    <p><strong>{{ forloop.counter }} - </strong></p>{{ defect.action|safe|truncatechars:150 }}
+                    <p><strong>{{ forloop.counter }} - </strong></p>{{ defect.action|safe|truncatechars_html:150 }}
                   </div>
                   <div class="col-5 text-end">
                     <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>

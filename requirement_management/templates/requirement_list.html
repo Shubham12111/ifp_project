@@ -459,14 +459,14 @@
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.action|safe|truncatechars:20|title|default:''}}</a
+                      >{{requirement.action|safe|truncatechars_html:20|title|default:''}}</a
                     >
                   </td>
                   <td class="text-sm">
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.description|safe|truncatechars:20|title|default:''}}</a
+                      >{{requirement.description|safe|truncatechars_html:20|title|default:''}}</a
                     >
                   </td>
                   <td class="text-sm">
