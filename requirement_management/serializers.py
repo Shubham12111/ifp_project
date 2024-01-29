@@ -1443,9 +1443,8 @@ class RequirementReportListSerializer(serializers.ModelSerializer):
         data['status'] = instance.get_status_display() if instance.status else ''
         if instance.pdf_path:
             pdf_url =  generate_presigned_url(instance.pdf_path)
-            instance.pdf_url = pdf_url
         else:
-            instance.pdf_url = None
+            pdf_url = None
         
         data['pdf_path'] = pdf_url
         data['created_at'] = instance.created_at.strftime("%d/%m/%Y")

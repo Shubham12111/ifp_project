@@ -289,7 +289,7 @@ function saveFormData(formData) {
             // Hide the loader overlay after processing the response
             hideLoader();
             // Reload the page after processing the response
-            window.location.reload();
+            window.location.href = "{% url 'customer_requirement_reports' requirement_instance.customer_id.id requirement_instance.id %}";
         })
         .catch(error => {
             console.error('Error:', error);
