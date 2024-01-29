@@ -17,7 +17,7 @@
               <h5 class="mb-0">STW List</h5>
             </div>
             <div class="ms-auto my-auto mt-lg-0 mt-4">
-            <a href="{% url 'stw_customers_list' %}" class="btn bg-gradient-secondary btn-sm mb-0" style="float: left;">Back</a>
+              {% include 'components/back_button.html' %}
               {% if request.user|has_add_permission:"survey" %}
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'work planning' module -->
                 <a href="{% url 'customer_stw_add' customer_id %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New STW</a>

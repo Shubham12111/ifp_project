@@ -19,6 +19,30 @@
 .table tbody tr:last-child td {
     border: 1px solid #ddd !important;
 }
+table > tbody > tr > td > a > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > i{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > i{
+    margin-bottom: 0 !important;
+  }
 </style>
 {% endblock %}
 {% load rest_framework %}
@@ -26,22 +50,25 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
-<div class="container-fluid my-3 py-3">
-     <div class="row align-items-center mb-2">
-        <div class="col-lg-12 col-sm-8">
-            {% if report_instance.pdf_url %}
-            <a class="btn bg-gradient-primary btn-sm float-end mt-2 mb-0 mx-2" 
-            href="{{report_instance.pdf_url}}" download="">Download PDF</a>
-            {% endif %}
-            <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_reports' customer_id requirement_instance.id %}">Back</a>
-            
-
-        </div>
-    </div>
+<div class="container-fluid py-4">
     <div class="row align-items-center mb-2">
         <div class="card h-100">
-            <div class="card-body">
-            <h4 class="text-center mt-3" style="text-align: center;">Fire Risk Assessment Report</h4>
+            <div class="card-header pb-0">
+                <div class="row justify-content-between mb-3">
+                    <div class="col-6">
+                        <h4 class="mb-0">Report Survey Form</h4>
+                    </div>
+                    <div class="col-6 text-end">
+                        {% include 'components/back_button.html' %}
+                        {% if report_instance.pdf_url %}
+                        <a class="btn bg-gradient-primary btn-sm mb-0 mx-2" 
+                            href="{{report_instance.pdf_url}}" download="">Download PDF</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+            <h4 class="text-center" style="text-align: center;">Fire Risk Assessment Report</h4>
             <h6 class='section-header text-center' style="text-align: center;">{{ requirement_instance.customer_id.company_name|title}} Survey Form </h6>
                 <table class="table table-striped  text-sm  mt-4" id="fire_risk_assessment_report">
                     <tbody> <!-- Use thead for table headers -->
@@ -66,11 +93,11 @@
                         {% if requirement_instance %}
                             <tr>
                                 <th>FRA Action </th>
-                                <td class="text-wrap  text-sm">{{ requirement_instance.action }}</td>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.action|safe }}</td>
                             </tr>
                             <tr>
                                 <th>FRA Description </th>
-                                <td class="text-wrap  text-sm">{{ requirement_instance.description }}</td>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.description|safe }}</td>
                             </tr>
 
                             <tr>
@@ -94,15 +121,15 @@
                     <tbody> <!-- Use tbody for table body -->
                         <tr class=" text-sm">
                             <th>Action</th>
-                            <td class="text-wrap  text-sm">{{ defect.action }}</td>
+                            <td class="text-wrap  text-sm">{{ defect.action|safe }}</td>
                         </tr>
                         <tr class=" text-sm">
                             <th>Description of Defect</th>
-                            <td class="text-wrap  text-sm">{{ defect.description }}</td>
+                            <td class="text-wrap  text-sm">{{ defect.description|safe }}</td>
                         </tr>
                         <tr class=" text-sm">
                             <th>Rectification of Defect</th>
-                            <td class="text-wrap text-sm">{{ defect.rectification_description }}</td>
+                            <td class="text-wrap text-sm">{{ defect.rectification_description|safe }}</td>
                         </tr>
                         <tr class=" text-sm">
                             <th>Defect Type</th>
@@ -134,7 +161,7 @@
                         {% if report_instance.comments %}
                         <tr class=" text-sm">
                             <th>Report Comments</th>
-                            <td class="text-wrap text-sm">{{ report_instance.comments }}</td>
+                            <td class="text-wrap text-sm">{{ report_instance.comments|safe }}</td>
                         </tr>
                         {% endif %}
                         {% if report_instance.signature_path %}

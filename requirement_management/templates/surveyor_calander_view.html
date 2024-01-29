@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Calendar {{ block.super }}{% endblock %}
+
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+{% block content %}
+<style>
+    a.fc-daygrid-event {
+        cursor: pointer !important;
+    }
+
+    .fc-h-event .fc-event-main-frame {
+        display: block !important;
+    }
+    .fc-daygrid-block-event .fc-event-time,
+    .fc-daygrid-block-event .fc-event-title {
+        font-weight: 600 !important;
+        padding: 0rem 0.3rem !important;
+    }
+
+    .fc-daygrid-event-dot {
+        display: none !important;
+    }
+
+    a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past {
+        display: block !important;
+        color: white !important;
+        background-image: linear-gradient(
+        310deg,
+        #ea0606 0%,
+        #ff667c 100%
+        ) !important;
+    }
+
+    a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past.bg-gradient-danger {
+        display: block !important;
+        color: white !important;
+        background-image: linear-gradient(
+        310deg,
+        #ea0606 0%,
+        #ff667c 100%
+        ) !important;
+    }
+
+    a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-today {
+        display: block !important;
+        color: white !important;
+        background-image: linear-gradient(
+        310deg,
+        #ea0606 0%,
+        #ff667c 100%
+        ) !important;
+    }
+
+    div.fc-event-title {
+        padding: 0rem 0.3rem !important;
+    }
+    div.fc-toolbar-chunk {
+        display: flex !important;
+    }
+</style>
+
+<div class="container-fluid py-2">
+    <div class="card card-calendar">
+        <div class="card-header pb-0">
+            <div class="row justify-content-between mb-3">
+                <div class="col-6">
+                    <h4 class="mb-0">Surveyor Calendar</h4>
+                </div>
+                <div class="col-6 text-end">
+                    {% include 'components/back_button.html' %}
+                </div>
+            </div>
+        </div>
+        <div class="card-body pt-0">
+            <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/fullcalendar.min.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    var calendar = new FullCalendar.Calendar(
+        document.getElementById("calendar"),
+        {
+            initialView: "dayGridWeek",
+            headerToolbar: {
+            start: "title", // will normally be on the left. if RTL, will be on the right
+            center: "",
+            end: "today dayGridWeek dayGridMonth prev,next", // will normally be on the right. if RTL, will be on the left
+            },
+            selectable: true,
+            editable: false,
+            initialDate: "{% now 'Y-m-d' %}",
+            timeZone: "UTC",
+            displayEventEnd: true,
+            eventTimeFormat: {
+            hour: "numeric",
+            minute: "2-digit",
+            meridiem: "short",
+            },
+            events: {{ events|safe }},
+            views: {
+            month: {
+                titleFormat: {
+                month: "long",
+                year: "numeric",
+                },
+            },
+            agendaWeek: {
+                titleFormat: {
+                month: "long",
+                year: "numeric",
+                day: "numeric",
+                },
+            },
+            agendaDay: {
+                titleFormat: {
+                month: "short",
+                year: "numeric",
+                day: "numeric",
+                },
+            },
+            },
+            eventClick: function (info) {
+            var linkUrl = `/fra/{{ customer_id }}/view/${info.event.id}/`;
+            window.open(linkUrl, "_blank");
+            },
+            eventDidMount: function(info) {
+                des = document.createElement('div')
+                des.classList.add('fc-event-description-container')
+                if(info.event.extendedProps.description != '' && typeof info.event.extendedProps.description  !== "undefined")
+                {   
+                    des.innerText = info.event.extendedProps.description
+                    info.el.querySelector(".fc-event-title").append(des);
+                }
+            }
+        }
+    );
+
+    calendar.render();
+});
+</script>
+{% endblock %}

@@ -158,10 +158,10 @@ class RequirementDefect(models.Model):
         updated_at (DateTimeField): Date and time when the defect was last updated.
     """
     requirement_id = models.ForeignKey(Requirement, on_delete=models.CASCADE)
-    action = models.TextField()
-    description = models.TextField()
+    action = RichTextField()
+    description = RichTextField()
     reference_number = models.CharField(max_length=50, null=True)
-    rectification_description = models.TextField()
+    rectification_description = RichTextField()
     status = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_STATUS_CHOICES, default='pending')
     defect_type = models.CharField(max_length=30, choices=REQUIREMENT_DEFECT_CHOICES, default='actual_defect')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -206,7 +206,7 @@ class Report(models.Model):
         defect_id (ManyToManyField): The defects associated with the report.
         signature_path (CharField): Path to the report's signature.
         pdf_path (CharField): Path to the report's PDF.
-        comments (TextField): Comments for the report.
+        comments (RichTextField): Comments for the report.
         status (CharField): Status of the report (choices defined in STATUS_CHOICES).
         created_at (DateTimeField): Date and time when the report was created.
         updated_at (DateTimeField): Date and time when the report was last updated.
@@ -216,7 +216,7 @@ class Report(models.Model):
     defect_id = models.ManyToManyField(RequirementDefect, blank=True)
     signature_path = models.CharField(max_length=500,null=True)
     pdf_path = models.CharField(max_length=500,null=True)
-    comments = models.TextField(blank=True, null=True)
+    comments = RichTextField(blank=True, null=True)
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='draft')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -254,7 +254,6 @@ class SORCategory(models.Model):
     class Meta:
         verbose_name = _('SOR Category')
         verbose_name_plural = _('SOR Category')
-        ordering = ['-id']  # Order by the default primary key in descending order
 
 class SORItem(models.Model):
     """
@@ -294,8 +293,8 @@ class SORItem(models.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'user_id': self.user_id.id,
-            'customer_id': self.customer_id.id,
+            'user_id': self.user_id.id if self.user_id else '',
+            'customer_id': self.customer_id.id if self.customer_id else '',
             'category_id': self.category_id.name,
             'name': self.name,
             'price': str(self.price),
@@ -325,7 +324,7 @@ class SORItemProxy(SORItem):
     """
         proxy = True
         verbose_name = 'SOR Item'
-        verbose_name_plural = 'SOR Item'
+        verbose_name_plural = 'SOR Items'
 
 class SORItemImage(models.Model):
     sor_id = models.ForeignKey(SORItem, on_delete=models.CASCADE, null=True)

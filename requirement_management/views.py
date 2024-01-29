@@ -584,6 +584,8 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 if instance:
                     document_paths = []
                     requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
+                    requirement_defect = RequirementDefectListSerializer(requirement_defect, many=True).data
+
                     serializer = self.serializer_class(instance=instance, context={'request': request})
                     
                     
@@ -592,10 +594,12 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     # Retrieve users associated with these roles
                     users_with_survey_permission = User.objects.filter(roles__name= "surveyor")
                     
+                    page_number = request.GET.get('page', 1)
+                    
                     context = {
                         'serializer': serializer, 
                         'requirement_instance': instance, 
-                        'requirement_defect': requirement_defect, 
+                        'requirement_defect': Paginator(requirement_defect, 10).get_page(page_number), 
                         'document_paths': document_paths,
                         'surveyers': users_with_survey_permission,
                         'customer_id': kwargs.get('customer_id'),
@@ -956,6 +960,9 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
            self,"fire_risk_assessment", HasCreateDataPermission, 'view'
         )
         
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
         queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
         
@@ -971,6 +978,9 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
     def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing Requirement object.
         requirement_instance = self.get_queryset()
+        if isinstance(requirement_instance, HttpResponseRedirect):
+            return requirement_instance
+        
         document_paths = requirement_image(requirement_instance)
         
         requirement_defects = self.get_queryset_defect()
@@ -1008,6 +1018,9 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         file_list = data.getlist('file_list', [])
         
         requirement_instance = self.get_queryset()
+        if isinstance(requirement_instance, HttpResponseRedirect):
+            return requirement_instance
+        
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
         
         if not any(file_list):
@@ -1370,6 +1383,10 @@ class RequirementSurveyorAddView(CustomAuthenticationMixin, generics.CreateAPIVi
                     messages.error(request, "Survey ending date cannot be greater than FRA Due Date.")
                     return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
                 
+                if survey_start_date >= survey_end_date:
+                    messages.error(request, "Survey ending date cannot be smaller than or equal to Survey start Date.")
+                    return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+                
                 for requirement in requirments:
                     requirement.surveyor = sureveyor
                     requirement.status = "assigned-to-surveyor"
@@ -1664,4 +1681,50 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
             messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
     
         return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs['customer_id']}))
-        
+
+class RequirementSurveyorCalendarView(CustomAuthenticationMixin, generics.ListAPIView):
+    """
+    View to get the listing of all requirements.
+    Supports both HTML and JSON response formats.
+    """
+
+    serializer_class = RequirementCalendarSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'surveyor_calander_view.html'
+    queryset = Requirement.objects.filter(surveyor__isnull=False).all()
+    
+    # ordering_fields = ['created_at'] 
+
+    common_get_response = {
+        status.HTTP_200_OK: docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message="Data retrieved",
+        )
+    }
+
+    @swagger_auto_schema(operation_id='Requirement Listing', responses={**common_get_response})
+    def get(self, request, *args, **kwargs):
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        # Call the handle_unauthenticated method to handle unauthenticated access.
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'events': serializer.data
+            }
+            return render(request, self.template_name, context)
+        else:
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Data retrieved",
+                data=serializer.data
+            )

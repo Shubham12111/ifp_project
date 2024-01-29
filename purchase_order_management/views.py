@@ -65,13 +65,30 @@ def po_number_generated():
 
 def update_or_create_inventory(purchase_order, item, quantity):
     # Try to retrieve the existing inventory entry or create a new one
-    inventory, created = Inventory.objects.get_or_create(
-        item_id=item.item,
-        inventory_location = purchase_order.inventory_location_id,
-        defaults={
-            'total_inventory': quantity
-        }
-    )
+    if not purchase_order.site_address and not purchase_order.inventory_location_id:
+        raise ValueError('Inventory cannot be added if both Inventory Location and Site Address is not selected in purchase order, either of them is required.')
+    
+    inventory = None
+
+    if purchase_order.inventory_location_id and not inventory:
+
+        inventory, created = Inventory.objects.get_or_create(
+            item_id=item.item,
+            inventory_location = purchase_order.inventory_location_id,
+            defaults={
+                'total_inventory': quantity
+            }
+        )
+    
+    if purchase_order.site_address and not inventory:
+
+        inventory, created = Inventory.objects.get_or_create(
+            item_id=item.item,
+            site_address = purchase_order.site_address,
+            defaults={
+                'total_inventory': quantity
+            }
+        )
     
     if not created:
         # If the inventory entry already exists, update the total_inventory
@@ -764,8 +781,12 @@ class PurchaseOrderConvertToInvoiceView(CustomAuthenticationMixin,generics.ListA
                         cumulative_received_quantity += received_inventory.received_inventory
                     
                     received_inventory = serializer.save(purchase_order_invoice_id=invoice)
+                    try:
+                        update_or_create_inventory(purchase_order, serializer.validated_data['purchase_order_item_id'], cumulative_received_quantity)
+                    except ValueError as e:
+                        messages.error(request, str(e))
+                        return JsonResponse({'success': False, 'status':status.HTTP_400_BAD_REQUEST})
 
-                    update_or_create_inventory(purchase_order, serializer.validated_data['purchase_order_item_id'], cumulative_received_quantity)
 
             
             

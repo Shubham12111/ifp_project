@@ -3,6 +3,7 @@ from ckeditor.fields import RichTextField
 from cities_light.models import City, Country, Region
 from authentication.models import User
 from customer_management.constants import POST_CODE_LIST
+from customer_management.models import SiteAddress
 
 # Choices for Tax Preference
 TAX_PREFERENCE_CHOICES = (
@@ -171,7 +172,8 @@ class Inventory(models.Model):
     Inventory model represents the quantity of items stored at different locations.
     """
     item_id = models.ForeignKey(Item, on_delete=models.CASCADE, null=True)
-    inventory_location = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE)
+    inventory_location = models.ForeignKey(InventoryLocation, on_delete=models.CASCADE, null=True, blank=True)
+    site_address = models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True, blank=True)
     total_inventory = models.DecimalField(max_digits=10, decimal_places=2)
     assigned_inventory = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True )
     created_at = models.DateTimeField(auto_now_add=True)

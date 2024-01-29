@@ -80,6 +80,30 @@
   div.fc-toolbar-chunk {
     display: flex !important;
   }
+  table > tbody > tr > td > a > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > i{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > i{
+    margin-bottom: 0 !important;
+  }
 </style>
 {% include 'components/alert.html' %}
 <div class="container-fluid py-2">
@@ -435,14 +459,14 @@
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.action|safe|truncatechars:20|title|default:''}}</a
+                      >{{requirement.action|safe|truncatechars_html:20|title|default:''}}</a
                     >
                   </td>
                   <td class="text-sm">
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.description|safe|truncatechars:20|title|default:''}}</a
+                      >{{requirement.description|safe|truncatechars_html:20|title|default:''}}</a
                     >
                   </td>
                   <td class="text-sm">
@@ -749,6 +773,15 @@
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/fullcalendar.min.js' %}"></script>
 <script>
+  const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
+
+  function showLoader() {
+      loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+  }
+
+  function hideLoader() {
+      loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+  }
   // Initialize Choices.js
   if (document.getElementById("qsSelect")) {
     var element = document.getElementById("qsSelect");
@@ -824,7 +857,21 @@
     submitButton.addEventListener("click", function () {
       showLoader();
       const selectForm = document.getElementById("selectForm");
-      selectForm.submit(); // Submit the form
+      if (document.querySelector('input[name="surevey_start_date"').value == document.querySelector('input[name="surevey_end_date"').value){
+        const surevey_start_date_errorElement = document.createElement('div');
+        surevey_start_date_errorElement.classList.add('help-block', 'mt-2');
+        surevey_start_date_errorElement.textContent = 'Survey Start Date and Time cannot be same as Survey End Date and Time';
+
+        const surevey_end_date_errorElement = document.createElement('div');
+        surevey_end_date_errorElement.classList.add('help-block', 'mt-2');
+        surevey_end_date_errorElement.textContent = 'Survey End Date and Time cannot be same as Survey Start Date and Time';
+        
+        document.querySelector('input[name="surevey_start_date"').parentElement.appendChild(surevey_start_date_errorElement);
+        document.querySelector('input[name="surevey_end_date"').parentElement.appendChild(surevey_end_date_errorElement);
+        hideLoader();
+      }else{
+        selectForm.submit(); // Submit the form
+      }
     });
 
     const checkboxes = document.querySelectorAll('input[name="requirement_checkbox"]');
@@ -939,15 +986,15 @@
       var calendar = new FullCalendar.Calendar(
         document.getElementById("calendar"),
         {
-          initialView: "dayGridMonth",
+          initialView: "dayGridWeek",
           headerToolbar: {
             start: "title", // will normally be on the left. if RTL, will be on the right
             center: "",
-            end: "today prev,next", // will normally be on the right. if RTL, will be on the left
+            end: "today dayGridWeek dayGridMonth prev,next", // will normally be on the right. if RTL, will be on the left
           },
           selectable: true,
           editable: false,
-          initialDate: "2024-01-18",
+          initialDate: "{% now 'Y-m-d' %}",
           timeZone: "UTC",
           displayEventEnd: true,
           eventTimeFormat: {
@@ -1256,9 +1303,9 @@
               // Also update the date range input field if needed
               document.getElementById('reportrange').value = formattedDateRange;
             }
-            else if (filterValue.length > 9) {
+            else if (filterValue.length > 16 && filterName != 'q') {
               // Truncate the filter value if it's longer than 5 characters
-              displayedValue = filterValue.substring(0, 9) + '..';
+              displayedValue = filterValue.substring(0, 16) + '..';
             }
   
             // Update the dropdown element with the displayed value

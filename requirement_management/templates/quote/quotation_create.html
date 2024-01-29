@@ -1,6 +1,45 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block extra_css %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<style>
+   .ui-autocomplete {
+    max-height: 400px;
+    overflow-y: auto;
+    /* Add additional styles as needed */
+    border: 1px solid #ccc; /* Add border */
+    border-radius:10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15); /* Adjust shadow values as desired */
+  }
+
+  .ui-menu-item {
+    padding: 2px;
+    transition: background-color 0.3s; /* Smooth hover transition */
+   
+}
+
+.ui-menu .ui-menu-item-wrapper:hover {
+    background-color: #a6b3c3 !important; /* Desired hover color */
+    border: 1px solid #ccc; /* Add border on hover */
+    border-radius: 10px;   /* Maintain rounded corners on hover */
+    color:#344767;
+}
+.input-group {
+    position: relative; /* Allow positioning of child elements */
+    border-right: 1px solid #ccc; /* Add border */
+}
+
+.input-group-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%); /* Center the icon vertically */
+    right: 15px; /* Adjust right spacing as needed */
+    font-size: 10px;
+    font-weight: bold;
+
+}
+</style>
 <style>
   /* Add borders to the table */
   .custom-table th,
@@ -52,6 +91,42 @@
     color: #000;
     /* Replace #000 with the desired text color */
   }
+  table > tbody > tr > td > a > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > i{
+    margin-bottom: 0 !important;
+  }
+
+  table > tbody > tr > td > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > i{
+    margin-bottom: 0 !important;
+  }
+
+
+  div#accordionDefect > div > h5 > button > div#defectHeading > p {
+    margin-left: 0.25rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  div#accordionDefect > div > div > div > div#defectIntroduction > div.col-12.text-sm.d-flex.align-items-center > p {
+    margin-left: 0.25rem !important;
+    margin-bottom: 0 !important;
+  }
 </style>
 {% endblock %}
 {% load rest_framework %}
@@ -59,103 +134,106 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
-<div class="container-fluid mt-3">
-  <div class="row align-items-center mb-2">
-    <div class="col-lg-6 col-sm-12">
-      <h4> {% if quotation_data %} {% else %}Create {% endif %} Quotation</h4>
-    </div>
-    <div class="col-lg-6 col-sm-12">
-      {% if quotation_data %}
-      <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0"
-        href="{% url 'view_customer_quotation_list'  customer_id %}">Back</a>
-      {% else %}
-      <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0"
-        href="{% url 'view_customer_fra_list_report'  customer_id %}">Back</a>
-      {% endif %}
-    </div>
-  </div>
-  <div class="row ">
-    <div class="col-lg-6 col-sm-12">
-      <!-- Works Description and Defects Section -->
-      <div class="card">
-        <div class="card-header pb-0 mt-0">
-          <h5 class="card-title">FRA Details</h5>
+<div class="container-fluid py-4">
+  <div class="card">
+    <div class="card-header mb-3">
+      <div class="row align-items-center">
+        <div class="col-lg-6 col-sm-12">
+          <h4> {% if quotation_data %} {% else %}Create {% endif %} Quotation</h4>
         </div>
-        <div class="card-body mt-0 text-sm">
-          <b>Action</b>
-          <p class="text-sm mt-2" style="text-align: justify;">
-            <span id="actionText">{{ requirement_instance.action|truncatechars:300 }}</span>
-            <span id="actionMore" style="display: none;">{{ requirement_instance.action }}</span>
-            {% if requirement_instance.action|length > 300 %}
-            <span class="read-more text-primary" id="actionToggle"
-              onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
-              Read More
-            </span>
-            {% endif %}
-          </p>
-
-          <b>Description</b>
-          <p class="text-sm mt-2" style="text-align: justify;">
-            <span id="descriptionText">{{ requirement_instance.description|truncatechars:300 }}</span>
-            <span id="descriptionMore" style="display: none;">{{ requirement_instance.description }}</span>
-            {% if requirement_instance.description|length > 300 %}
-            <span class="read-more text-primary" id="descriptionToggle"
-              onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
-              Read More
-            </span>
-            {% endif %}
-          </p>
+        <div class="col-lg-6 col-sm-12">
+          {% if quotation_data %}
+          <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0"
+            href="{% url 'view_customer_quotation_list'  customer_id %}">Back</a>
+          {% else %}
+          <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0"
+            href="{% url 'view_customer_fra_list_report'  customer_id %}">Back</a>
+          {% endif %}
         </div>
       </div>
-
     </div>
-    <div class="col-lg-6 col-sm-12">
-      <div class="card">
-        <div class="card-header pb-0">
-          <h5>Client Details</h5>
-        </div>
-        <div class="row">
-          <div class="card-body mt-0 text-sm">
-            <div class="row mb-2">
-              <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
-              <div class="col-7 text-sm" style="margin: 5px 0;">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</div>
+    <div class="card-body p-0">
+      <div class="row ">
+        <div class="col-lg-6 col-sm-12">
+          <!-- Works Description and Defects Section -->
+          <div class="card shadow-none">
+            <div class="card-header py-0">
+              <h5 class="card-title">FRA Details</h5>
             </div>
-            <div class="row mb-2">
-              <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
-              <div class="col-7 text-sm" style="margin: 5px 0;">
-                {{ customer_address.address }}
-                {% if customer_address.town %}
-                  {{ customer_address.town.name }},
+            <div class="card-body mt-0 text-sm">
+              <b>Action</b>
+              <p class="text-sm mt-2" style="text-align: justify;">
+                <span id="actionText">{{ requirement_instance.action|safe|truncatechars_html:300 }}</span>
+                <span id="actionMore" style="display: none;">{{ requirement_instance.action|safe }}</span>
+                {% if requirement_instance.action|safe|length > 300 %}
+                <span class="read-more text-primary" id="actionToggle"
+                  onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
+                  Read More
+                </span>
                 {% endif %}
-                {% if customer_address.county %}
-                  {{ customer_address.county.name }},
+              </p>
+    
+              <b>Description</b>
+              <p class="text-sm mt-2" style="text-align: justify;">
+                <span id="descriptionText">{{ requirement_instance.description|safe|truncatechars_html:300 }}</span>
+                <span id="descriptionMore" style="display: none;">{{ requirement_instance.description|safe }}</span>
+                {% if requirement_instance.description|safe|length > 300 %}
+                <span class="read-more text-primary" id="descriptionToggle"
+                  onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
+                  Read More
+                </span>
                 {% endif %}
-                {% if customer_address.country %}
-                  {{ customer_address.country.name }}
-                {% endif %}
-                {% if customer_address.country.post_code %}
-                  {{ customer_address.country.post_code }}
-                {% endif %}
-              </div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
-              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.site_address }}</div>
-            </div>
-            <div class="row">
-              <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
-              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.UPRN|default:''|title }}</div>
-            </div>
-            <div class="row">
-              <div class="col-5 text-sm text-start"><strong>RBNO:</strong></div>
-              <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.RBNO|default:''|title }}</div>
+              </p>
             </div>
           </div>
+    
         </div>
-        
+        <div class="col-lg-6 col-sm-12">
+          <div class="card shadow-none">
+            <div class="card-header py-0">
+              <h5>Client Details</h5>
+            </div>
+              <div class="card-body mt-0 text-sm">
+                <div class="row mb-2">
+                  <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">
+                    {{ customer_address.address|default:'-' }}
+                    {% if customer_address.town %}
+                      {{ customer_address.town.name }},
+                    {% endif %}
+                    {% if customer_address.county %}
+                      {{ customer_address.county.name }},
+                    {% endif %}
+                    {% if customer_address.country %}
+                      {{ customer_address.country.name }}
+                    {% endif %}
+                    {% if customer_address.country.post_code %}
+                      {{ customer_address.country.post_code }}
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.site_address }}</div>
+                </div>
+                <div class="row">
+                  <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.UPRN|default:''|title }}</div>
+                </div>
+                <div class="row">
+                  <div class="col-5 text-sm text-start"><strong>RBNO:</strong></div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.RBNO|default:''|title }}</div>
+                </div>
+              </div>
+          </div>
+        </div>
+    
       </div>
     </div>
-
   </div>
   <div class="row ">
     <div class="col-lg-12 col-sm-12">
@@ -172,10 +250,10 @@
                 <button class="accordion-button " type="button" data-bs-toggle="collapse"
                   data-bs-target="#collapse{{ forloop.counter }}"
                   aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
-                  <div class="col-9">
-                    <strong>{{ forloop.counter }} - </strong>{{ defect.action|truncatechars:150 }}
+                  <div class="col-7 d-flex align-items-center" id="defectHeading">
+                    <p><strong>{{ forloop.counter }} - </strong></p>{{ defect.action|safe|truncatechars_html:150 }}
                   </div>
-                  <div class="col-3 text-end">
+                  <div class="col-5 text-end">
                     <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
                     <i class="fas fa-chevron-down  mx-2 " aria-hidden="true"></i>
                   </div>
@@ -187,10 +265,11 @@
                 class="accordion-collapse  collapse {% if forloop.first %}show {% endif %} "
                 aria-labelledby="heading{{ forloop.counter }}">
                 <div class="accordion-body text-sm">
-                  <p class="text-sm"><strong>Action: </strong>{{ defect.action }}</p>
-                  <p class="text-sm"><strong>Description: </strong>{{ defect.description }}</p>
-                  <p class="text-sm"><strong>Rectification Description: </strong>{{ defect.rectification_description }}
-                  </p>
+                  <div class="row mb-4" id="defectIntroduction">
+                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Action: </strong>{{ defect.action|safe }}</div>
+                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Description: </strong>{{ defect.description|safe }}</div>
+                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Rectification Description: </strong>{{ defect.rectification_description|safe }}</div>
+                  </div>
                   <div class="col-lg-12 col-sm-12">
                     {% csrf_token %}
 
@@ -198,7 +277,8 @@
                     <table id="table-{{ defect.id }}" class="custom-table text-sm" style="width:100%">
                       <!-- Table content will be added dynamically here -->
                       <tr id="header-{{ defect.id }}">
-                        <th class="col-4">SOR Code</th>
+                        <th class="col-3">SOR Code</th>
+                        <th class="col-3">SOR Name</th>
                         <th>Category</th>
                         <th>Price(£)</th>
                         <th class="col-1">Action</th>
@@ -264,8 +344,8 @@
     <div class="modal-content ">
       <div class="modal-header">
         <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="btn btn-sm shadow-none py-0 mb-0 pe-2" data-bs-dismiss="modal" aria-label="Close">
+          <i class="fas fa-times fs-6"></i>
         </button>
       </div>
       <div class="modal-body">
@@ -306,11 +386,37 @@
 
 {% endblock %}
 {% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+  $(function() {
+    function autocompletion() {
+      if ($('#sorCodeInput').length) {
+        
+      }
+    }
+  });
+</script>
+
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script>
+
+  const allSors = JSON.parse('{{ all_sors|safe }}');
+
+  const allSORSRefrenceNumber = []
+    allSors.forEach(sor => {
+        allSORSRefrenceNumber.push(sor.reference_number);
+    });
+
+  const allSORSNames = []
+    allSors.forEach(sor => {
+      allSORSNames.push(sor.name);
+    });
+
+  const existingSelectedSORs = []
 
   function resetPage() {
     // Reload the current page
@@ -428,20 +534,34 @@
         var newRow = document.createElement('tr');
         var rowId = inner_key; // Create a unique ID for each row
         newRow.id = rowId;
-        // Create and append the first <td> with the dropdown <select> element
+        
         var firstCell = document.createElement('td');
-        var select = document.createElement('select');
-        select.className = 'form-control';
-        select.id = 'choices-sor-' + defectId + '-' + rowId;
+        var sorCodeFormGroupDiv = document.createElement('div');
+        var sorCodeInput = document.createElement('input');
 
-        // Assuming sorItem has properties like 'id', 'user_id', 'customer_id', 'category_id', etc.
-        var option = document.createElement('option');
-        option.value = sorItem.id; // You can use any property you need here
-        option.textContent = sorItem.reference_number; // You can use any property you need here
+        sorCodeFormGroupDiv.className = 'form-group';
+        sorCodeInput.className = 'form-control';
+        sorCodeInput.type = 'text';
+        sorCodeInput.placeholder = 'Sor Code';
+        sorCodeInput.id = 'sor-code-' + defectId + '-' + rowId;
+        sorCodeInput.value = sorItem.reference_number;
 
-        select.appendChild(option);
-        firstCell.appendChild(select);
+        firstCell.appendChild(sorCodeInput);
         newRow.appendChild(firstCell);
+
+        var secondCell = document.createElement('td');
+        var sorNameFormGroupDiv = document.createElement('div');
+        var sorNameInput = document.createElement('input');
+
+        sorNameFormGroupDiv.className = 'form-group';
+        sorNameInput.className = 'form-control';
+        sorNameInput.type = 'text';
+        sorNameInput.placeholder = 'Sor Name';
+        sorNameInput.id = 'sor-name-' + defectId + '-' + rowId;
+        sorNameInput.value = sorItem.name;
+
+        secondCell.appendChild(sorNameInput);
+        newRow.appendChild(secondCell);
 
         // Create and append the second <td> for category
         var categoryCell = document.createElement('td');
@@ -489,6 +609,183 @@
         updateTotalPrice();
         // Append the new row to the table
         existingTable.appendChild(newRow);
+        
+
+        // Listen for changes in the dropdown and update other <td> elements
+    function populateOnSorCodeChange(){
+      var selectedValue = sorCodeInput.value; // Get the selected value
+      // Find the corresponding SOR object based on the selected value
+      var selectedSor = allSors.find(sor => sor.reference_number === selectedValue);
+      if (selectedSor) {
+
+        if (existingSelectedSORs.includes(selectedSor.id.toString())){
+          throw "The SOR is already selected please choose a different SOR.";
+        }
+
+        // Update category and price <td> elements with data from the selected SOR object
+        categoryCell.textContent = selectedSor.category_id__name; // Update category
+        priceCell.textContent = selectedSor.price;      // Update price
+        sorIdInput.value = selectedSor.id;      // Update price
+        sorNameInput.value = selectedSor.name
+        // Update the row price in the array
+
+        rowPrices[defectId][rowId] = selectedSor.price;
+
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+
+    };
+
+    function populateOnSorNameChange(){
+      var selectedValue = sorNameInput.value; // Get the selected value
+      // Find the corresponding SOR object based on the selected value
+      var selectedSor = allSors.find(sor => sor.name === selectedValue);
+      if (selectedSor) {
+
+        if (existingSelectedSORs.includes(selectedSor.id.toString())){
+          throw "The SOR is already selected please choose a different SOR.";
+        }
+
+        // Update category and price <td> elements with data from the selected SOR object
+        categoryCell.textContent = selectedSor.category_id__name; // Update category
+        priceCell.textContent = selectedSor.price;      // Update price
+        sorIdInput.value = selectedSor.id;      // Update price
+        sorCodeInput.value = selectedSor.reference_number
+        // Update the row price in the array
+
+        rowPrices[defectId][rowId] = selectedSor.price;
+
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+
+    }
+
+    function checkIfSORAlreadySelected(){
+      existingTableRows = existingTable.querySelectorAll('tr')
+      if(existingTableRows){
+        existingTableRows.forEach(row=>{ 
+          if (!row.id.includes('header'))
+          {
+            rowSorIdInput = row.querySelector('input[name=sor-id]')
+            if (rowSorIdInput){
+              if (rowSorIdInput.value){
+                existingSelectedSORs.push(rowSorIdInput.value)
+              }
+              
+            }
+          } 
+        });
+      }
+    }
+
+    function clearExistingRowValues(template='code'){
+      if (categoryCell.textContent){
+        categoryCell.textContent = ''; // Update category
+      }
+      if (priceCell.textContent){
+        priceCell.textContent = ''; // Update price
+
+        delete rowPrices[defectId][rowId];
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+      if (sorIdInput.value){
+        sorIdInput.value = ''; // Update id
+      }
+      if (template == 'code'){
+        if (sorNameInput.value){
+          sorNameInput.value = ''; // Update id
+        }
+      }else{
+        if (sorCodeInput.value){
+          sorCodeInput.value = '';
+        } 
+      }
+    }
+
+    $(`#sor-code-${defectId}-${rowId}`).autocomplete({
+      source: allSORSRefrenceNumber,
+      minLength: 1,
+      select: function(event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click'){
+          event.target.value = ui.item.value
+        }
+        try{
+          if (event.target.parentElement.querySelector('div.help-block')){
+            event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+          }
+          clearExistingRowValues();
+          checkIfSORAlreadySelected();
+          populateOnSorCodeChange();
+        }catch(err){
+          if(event.target.parentElement.querySelector('div.help-block')){
+            event.target.parentElement.querySelector('div.help-block').textContent = err
+          }else{
+            const errorElement = document.createElement('div');
+            errorElement.classList.add('help-block', 'mt-2');
+            errorElement.textContent = err;
+            event.target.parentElement.appendChild(errorElement);
+          }
+        }
+        return false;
+      }
+    });
+    $(`#sor-name-${defectId}-${rowId}`).autocomplete({
+      source: allSORSNames,
+      minLength: 1,
+      select: function(event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click'){
+          event.target.value = ui.item.value
+        }
+        try{
+          if (event.target.parentElement.querySelector('div.help-block')){
+            event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+          }
+          clearExistingRowValues('name');
+          checkIfSORAlreadySelected();
+          populateOnSorNameChange();
+        }catch(err){
+          if(event.target.parentElement.querySelector('div.help-block')){
+            event.target.parentElement.querySelector('div.help-block').textContent = err
+          }else{
+            const errorElement = document.createElement('div');
+            errorElement.classList.add('help-block', 'mt-2');
+            errorElement.textContent = err;
+            event.target.parentElement.appendChild(errorElement);
+          }
+        }
+        return false;
+      }
+    });
 
 
       });
@@ -534,7 +831,6 @@
     var headerRow = document.getElementById(headerId);
     headerRow.style.display = 'table-row';
 
-    const allSors = JSON.parse('{{ all_sors|safe }}');
     // Create a new row for the table
     var newRow = document.createElement('tr');
     var rowId = Date.now(); // Unique row ID
@@ -542,24 +838,33 @@
 
     rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
 
-
-    // Add the first <td> with the dropdown <select> element
     var firstCell = document.createElement('td');
-    var select = document.createElement('select');
-    select.className = 'form-control';
-    select.id = 'choices-sor-' + defectId + '-' + rowId; // Set the ID for the select element to include bot
-    var defaultOption = document.createElement('option');
-    defaultOption.textContent = ' ';
-    select.appendChild(defaultOption);
-    allSors.forEach(sor => {
-      var option = document.createElement('option');
-      option.value = sor.reference_number;
-      option.textContent = sor.reference_number;
-      select.appendChild(option);
-    });
-    firstCell.appendChild(select);
+    var sorCodeFormGroupDiv = document.createElement('div');
+    var sorCodeInput = document.createElement('input');
+
+    sorCodeFormGroupDiv.className = 'form-group';
+    sorCodeInput.className = 'form-control';
+    sorCodeInput.type = 'text';
+    sorCodeInput.placeholder = 'Sor Code';
+    sorCodeInput.id = 'sor-code-' + defectId + '-' + rowId;
+    sorCodeInput.autocomplete = 'on';
+
+    firstCell.appendChild(sorCodeInput);
     newRow.appendChild(firstCell);
 
+    var secondCell = document.createElement('td');
+    var sorNameFormGroupDiv = document.createElement('div');
+    var sorNameInput = document.createElement('input');
+
+    sorNameFormGroupDiv.className = 'form-group';
+    sorNameInput.className = 'form-control';
+    sorNameInput.type = 'text';
+    sorNameInput.placeholder = 'Sor Name';
+    sorNameInput.id = 'sor-name-' + defectId + '-' + rowId;
+    sorNameInput.autocomplete = 'on';
+
+    secondCell.appendChild(sorNameInput);
+    newRow.appendChild(secondCell);
 
     // Add a hidden input for the SOR ID
     var sorIdInput = document.createElement('input');
@@ -594,44 +899,22 @@
     // Append the new row to the table
     existingTable.appendChild(newRow);
 
-    // Initialize Choices.js for the dropdown
-    var element = document.getElementById('choices-sor-' + defectId + '-' + rowId);
-    const vendor_choices = new Choices(element, {
-      default: false,
-      items: [],
-      choices: [],
-      renderChoiceLimit: 5,
-      searchEnabled: true,
-      searchChoices: true,
-      searchFloor: 1,
-      searchResultLimit: 10,
-      resetScrollPosition: true,
-      shouldSort: true,
-      shouldSortItems: false,
-      searchPlaceholderValue: "Search Sor....",
-      fuseOptions: {
-        includeScore: true,
-        includeMatches: true,
-        threshold: 0, // Set to 0 for an exact match
-        location: 0,
-        distance: 100,
-        maxPatternLength: 32,
-        minMatchCharLength: 1
-      }
-    });
-
-
     // Listen for changes in the dropdown and update other <td> elements
-    element.addEventListener('change', function () {
-      var selectedValue = element.value; // Get the selected value
+    function populateOnSorCodeChange(){
+      var selectedValue = sorCodeInput.value; // Get the selected value
       // Find the corresponding SOR object based on the selected value
       var selectedSor = allSors.find(sor => sor.reference_number === selectedValue);
       if (selectedSor) {
+
+        if (existingSelectedSORs.includes(selectedSor.id.toString())){
+          throw "The SOR is already selected please choose a different SOR.";
+        }
 
         // Update category and price <td> elements with data from the selected SOR object
         categoryCell.textContent = selectedSor.category_id__name; // Update category
         priceCell.textContent = selectedSor.price;      // Update price
         sorIdInput.value = selectedSor.id;      // Update price
+        sorNameInput.value = selectedSor.name
         // Update the row price in the array
 
         rowPrices[defectId][rowId] = selectedSor.price;
@@ -649,6 +932,147 @@
         updateTotalPrice();
       }
 
+    };
+
+    function populateOnSorNameChange(){
+      var selectedValue = sorNameInput.value; // Get the selected value
+      // Find the corresponding SOR object based on the selected value
+      var selectedSor = allSors.find(sor => sor.name === selectedValue);
+      if (selectedSor) {
+
+        if (existingSelectedSORs.includes(selectedSor.id.toString())){
+          throw "The SOR is already selected please choose a different SOR.";
+        }
+
+        // Update category and price <td> elements with data from the selected SOR object
+        categoryCell.textContent = selectedSor.category_id__name; // Update category
+        priceCell.textContent = selectedSor.price;      // Update price
+        sorIdInput.value = selectedSor.id;      // Update price
+        sorCodeInput.value = selectedSor.reference_number
+        // Update the row price in the array
+
+        rowPrices[defectId][rowId] = selectedSor.price;
+
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+
+    }
+
+    function checkIfSORAlreadySelected(){
+      existingTableRows = existingTable.querySelectorAll('tr')
+      if(existingTableRows){
+        existingTableRows.forEach(row=>{ 
+          if (!row.id.includes('header'))
+          {
+            rowSorIdInput = row.querySelector('input[name=sor-id]')
+            if (rowSorIdInput){
+              if (rowSorIdInput.value){
+                existingSelectedSORs.push(rowSorIdInput.value)
+              }
+              
+            }
+          } 
+        });
+      }
+    }
+
+    function clearExistingRowValues(template='code'){
+      if (categoryCell.textContent){
+        categoryCell.textContent = ''; // Update category
+      }
+      if (priceCell.textContent){
+        priceCell.textContent = ''; // Update price
+
+        delete rowPrices[defectId][rowId];
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+      if (sorIdInput.value){
+        sorIdInput.value = ''; // Update id
+      }
+      if (template == 'code'){
+        if (sorNameInput.value){
+          sorNameInput.value = ''; // Update id
+        }
+      }else{
+        if (sorCodeInput.value){
+          sorCodeInput.value = '';
+        } 
+      }
+    }
+
+    $(`#sor-code-${defectId}-${rowId}`).autocomplete({
+      source: allSORSRefrenceNumber,
+      minLength: 1,
+      select: function(event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click'){
+          event.target.value = ui.item.value
+        }
+        try{
+          if (event.target.parentElement.querySelector('div.help-block')){
+            event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+          }
+          clearExistingRowValues();
+          checkIfSORAlreadySelected();
+          populateOnSorCodeChange();
+        }catch(err){
+          if(event.target.parentElement.querySelector('div.help-block')){
+            event.target.parentElement.querySelector('div.help-block').textContent = err
+          }else{
+            const errorElement = document.createElement('div');
+            errorElement.classList.add('help-block', 'mt-2');
+            errorElement.textContent = err;
+            event.target.parentElement.appendChild(errorElement);
+          }
+        }
+        return true;
+      }
+    });
+    $(`#sor-name-${defectId}-${rowId}`).autocomplete({
+      source: allSORSNames,
+      minLength: 1,
+      select: function(event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click'){
+          event.target.value = ui.item.value
+        }
+        try{
+          if (event.target.parentElement.querySelector('div.help-block')){
+            event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+          }
+          clearExistingRowValues('name');
+          checkIfSORAlreadySelected();
+          populateOnSorNameChange();
+        }catch(err){
+          if(event.target.parentElement.querySelector('div.help-block')){
+            event.target.parentElement.querySelector('div.help-block').textContent = err
+          }else{
+            const errorElement = document.createElement('div');
+            errorElement.classList.add('help-block', 'mt-2');
+            errorElement.textContent = err;
+            event.target.parentElement.appendChild(errorElement);
+          }
+        }
+        return false;
+      }
     });
 
   }
@@ -717,7 +1141,7 @@
   var submitButton = document.getElementById('submit-button');
   var saveDraftButton = document.getElementById('submit-darft-button');
   var submitApproved = document.getElementById('submit-approved');
-  const modalContainer = document.querySelector('.container-fluid.mt-3');
+  const modalContainer = document.querySelector('.container-fluid.py-4');
 
   function addBlur() {
     modalContainer.classList.add('blur-background');
@@ -847,7 +1271,7 @@
             if (response.ok) {
               // Request was successful, handle the server's response if needed
 
-              window.location.href = "{% if quotation_data %}{% url 'view_customer_quotation_list' customer_id %}{% else %}{% url 'view_customer_fra_list_report' customer_id %}{% endif %}";
+              window.location.href = "{% url 'view_customer_quotation_list' customer_id %}";
             } else {
               // Handle errors or failed requests
               console.error('Error sending data to the server');
@@ -890,6 +1314,16 @@
       });
     }
   }
+
+  var acknowledgeModal = document.getElementById('confirmationModal');
+  acknowledgeModal.querySelector('[data-bs-dismiss="modal"]').addEventListener('click', function () {
+    // User clicked Cancel, do nothing
+    // Close the modal
+    removeBlur();
+    acknowledgeModal.classList.remove('show');
+    acknowledgeModal.style.display = 'none';
+    hideLoader();
+  });
 
 
 

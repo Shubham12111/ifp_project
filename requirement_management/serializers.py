@@ -113,6 +113,8 @@ class RequirementDefectSerializer(serializers.ModelSerializer):
         """
         data = super().to_representation(instance)
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
+        data['rectification_description'] = strip_tags(data['rectification_description']) # to strip html tags attached to response by ckeditor RichText field.
         return data
 
 class RequirementDetailSerializer(serializers.ModelSerializer):
@@ -548,28 +550,35 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
         rectification_description (serializers.CharField): Char field for the rectification description.
         file_list (serializers.ListField): List field for multiple files associated with the defect.
     """
-    action = serializers.CharField(
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Action is required.",
-        },
-        validators=[no_spaces_or_tabs_validator],
+
+    description = serializers.CharField(
+            max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
     )
     
-    
+    # Custom CharField for the message with more rows (e.g., 5 rows)
+    action = serializers.CharField(
+            max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
+    )
     
     rectification_description = serializers.CharField(
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Rectification description is required.",
-        },
-        validators=[validate_rectification_description],
+            max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
     )
-    
+
     file_list = serializers.ListField(
         child=serializers.FileField(
                 allow_empty_file=False,
@@ -637,6 +646,49 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequirementDefect
         fields = ('action',  'description', 'rectification_description',  'defect_type','file_list')
+
+    def validate_description(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Description is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Description cannot consist of only spaces and tabs.")
+
+        return value
+    
+    def validate_action(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Action is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Action cannot consist of only spaces and tabs.")
+
+        return value
+    
+    def validate_rectification_description(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Rectification Description is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Rectification Description cannot consist of only spaces and tabs.")
+
+        return value
+    
 
     
     def create(self, validated_data):
@@ -1283,3 +1335,117 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
             if Requirement.objects.filter(UPRN=value).exists():
                 raise serializers.ValidationError("UPRN already exists.")
         return value
+
+
+class RequirementCalendarSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Requirement model.
+
+    This serializer is used to get Requirements for a Surveyor and convert Requirement model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+
+    class Meta:
+        model = Requirement
+        fields = ('action', 'survey_start_date', 'survey_end_date', 'due_date', 'status', 'surveyor')
+
+    def to_representation(self, instance: Requirement):
+        try:
+            soup = BeautifulSoup(instance.action, 'html.parser')
+            title = soup.get_text().strip()
+
+            # Assuming that the Requirement model has a foreign key 'customer' pointing to the User model
+            
+            surveyor_first_name = instance.surveyor.first_name
+            surveyor_last_name = instance.surveyor.last_name
+            
+            start = instance.survey_start_date.isoformat()
+            end = instance.survey_end_date.isoformat()
+            className = 'bg-gradient-warning'
+
+            if instance.status == 'assigned-to-surveyor' and instance.survey_end_date < timezone.now():
+                className = 'bg-gradient-danger'
+
+            if instance.status == 'surveyed':
+                className = 'bg-gradient-success'
+
+            return {
+                'id': instance.id,
+                'title': f'{surveyor_first_name} {surveyor_last_name}',
+                'description': f'{title}',
+                'start': f'{start}',
+                'end': f'{end}',
+                'className': f'{className}'
+            }
+        except Exception as e:
+            return {}
+
+class RequirementDefectListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for RequirementDefect model.
+
+    This serializer is used to convert RequirementDefect model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+    
+    class Meta:
+        model = RequirementDefect
+        fields = ('id', 'requirement_id', 'action', 'description', 'reference_number', 'rectification_description', 'defect_type', 'created_at', 'updated_at')
+
+    def to_representation(self, instance):
+        """
+        Convert the model instance to JSON representation.
+
+        Args:
+            instance (RequirementDefect): The RequirementDefect model instance.
+
+        Returns:
+            dict: JSON representation of the model instance.
+        """
+        data = super().to_representation(instance)
+        data['defect_type'] = instance.get_defect_type_display()
+        data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
+        data['rectification_description'] = strip_tags(data['rectification_description']) # to strip html tags attached to response by ckeditor RichText field.
+        return data
+
+class RequirementReportListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for RequirementReport model.
+
+    This serializer is used to convert RequirementReport model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+    
+    class Meta:
+        model = Report
+        fields = ('id', 'user_id', 'pdf_path', 'comments', 'status', 'created_at')
+
+    def to_representation(self, instance):
+        """
+        Convert the model instance to JSON representation.
+
+        Args:
+            instance (RequirementReport): The RequirementReport model instance.
+
+        Returns:
+            dict: JSON representation of the model instance.
+        """
+        data = super().to_representation(instance)
+        data['user_id'] = instance.user_id
+        data['comments'] = strip_tags(data['comments']) # to strip html tags attached to response by ckeditor RichText field.
+        data['status'] = instance.get_status_display() if instance.status else ''
+        if instance.pdf_path:
+            pdf_url =  generate_presigned_url(instance.pdf_path)
+        else:
+            pdf_url = None
+        
+        data['pdf_path'] = pdf_url
+        data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
+        return data

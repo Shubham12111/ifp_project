@@ -40,7 +40,7 @@
                  <div class="row mt-4">
                  <div class="col-6 col-lg-6 m-auto text-end"></div>
                  <div class="col-md-6 m-auto text-center text-md-end">
-                   <a class="btn bg-gradient-secondary btn-sm mb-0 js-btn-prev"  href="{% url 'item_list' %}" title="Back">Back</a>
+                  {% include 'components/back_button.html' %}
                    <button class="btn btn-md bg-gradient-primary btn-sm ms-2 mb-0 js-btn-next" id="submitBtn" title="Submit">Submit</button>
                  </div>
                </div>

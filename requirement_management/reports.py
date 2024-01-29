@@ -13,6 +13,7 @@ from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 from django.http import JsonResponse
 from .views import filter_requirements,requirement_image
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import ast
 import os
 import pdfkit
@@ -54,6 +55,8 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
         authenticated_user, data_access_value = check_authentication_and_permissions(
            self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
         )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
         
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
         queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
@@ -68,26 +71,22 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
             # This method handles GET requests for updating an existing Requirement object.
             if request.accepted_renderer.format == 'html':
                 instance = self.get_queryset()
+
+                if isinstance(instance, HttpResponseRedirect):
+                    return instance  # Redirect the user to the page specified in the HttpResponseRedirect
                 
                 if instance:
                     document_paths = []
                     document_paths = requirement_image(instance)
                     
                     report_list = Report.objects.filter(requirement_id=instance)
-                    for report in report_list:
-
-                        if report.pdf_path:
-                            pdf_url =  generate_presigned_url(report.pdf_path)
-                            report.pdf_url = pdf_url
-                        else:
-                            report.pdf_url = None
-
-
+                    report_list = RequirementReportListSerializer(report_list, many=True).data
+                    page_number = request.GET.get('page', 1)
                     context = {
                         'requirement_instance': instance,  
                         'document_paths': document_paths,
                         'customer_id': kwargs.get('customer_id'),
-                        'report_list':report_list,
+                        'report_list': Paginator(report_list, 10).get_page(page_number),
                         'customer_data':customer_data
                         }
                 

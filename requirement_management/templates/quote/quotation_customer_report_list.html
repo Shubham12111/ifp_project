@@ -7,10 +7,46 @@
 {% block title %}FRA Reports{{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
+<style>
+    table > tbody > tr > td > a > p{
+        margin-bottom: 0 !important;
+      }
+      table > tbody > tr > td > a > ul{
+        margin-bottom: 0 !important;
+      }
+      table > tbody > tr > td > a > b{
+        margin-bottom: 0 !important;
+      }
+      table > tbody > tr > td > a > i{
+        margin-bottom: 0 !important;
+      }
+      table > tbody > tr > td > p{
+        margin-bottom: 0 !important;
+      }
+      table > tbody > tr > td > ul{
+        margin-bottom: 0 !important;
+      }
+      table > tbody > tr > td > b{
+        margin-bottom: 0 !important;
+      }
+      table > tbody > tr > td > i{
+        margin-bottom: 0 !important;
+      }
+</style>
+<style>
+    div.choices__list.choices__list--dropdown.is-active {
+        z-index: 100 !important;
+    }
+</style>
+<style>
+    ul li input[type="text"] {
+        display: inline-block;
+    }
+</style>
 {% include 'components/alert.html' %}
-<div class="container-fluid mt-2">
+<div class="container-fluid py-4">
     <div class="row align-items-center">
-        <div class="col-lg-12 col-sm-8">
+        <div class="col-lg-12">
             <div class="nav-wrapper position-relative end-0">
               <ul class="nav nav-tabs">
                 <li class="nav-item">
@@ -24,65 +60,130 @@
               </ul>
             </div>
         </div>
-      </div>
-    <div class="col-lg-12 mt-4">
+        <div class="col-lg-12 mt-4">
          <!-- Card Basic Info -->
-        <div class="card" id="basic-info">
-            <div class="card-header pb-0">
-                <div class="row">
-                  <div class="col-lg-5 col-12 mb-lg-0 mb-3">
-                    <h4 class="mb-0">Reports</h4>
-                    {% include 'customer_info.html' %}
-                </div>
-            </div>
-            </div>
-      
-            <div class="card-body px-0 pb-0">
-                <table class="table table-flush text-dark" id="report-requirement-list">
-                    <thead class="thead-light">
-                        <tr class="text-sm">
-                            <th>Action</th>
-                            <th>Description</th>
-                            <th>Quantity Surveyor</th>
-                            <th>Surveyor</th>
-                            <th>No of Defects</th>
-                            <th class="custom-last-column">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="ml-4">
-                        {% for report in report_list %}
-                        <tr class="text-sm">
-                            <td>{{ report.requirement_id.action|truncatechars:30}}</td>
-                            <td>{{ report.requirement_id.description|truncatechars:30}}</td>
-                            <td class="text-sm">{{report.requirement_id.quantity_surveyor.first_name|default:''|title}}
-                                {{report.requirement_id.quantity_surveyor.last_name|default:''|title}}
-                            </td>
-                            <td class="text-sm">{{report.requirement_id.surveyor.first_name|default:''|title}} {{report.requirement_id.surveyor.last_name|default:''|title}}</td>
-                            <td class="text-truncate">{{ report.defect_id.all|length }}</td>
+            <div class="card" id="basic-info">
+                <div class="card-header pb-0 mb-3">
+                    <div class="row">
+                        <div class="col-12">
+                            <h4 class="mb-0">Reports</h4>
+                            {% include 'customer_info.html' %}
+                        </div>
+                    </div>
 
-                            <td>
-                                <div class="dropstart ms-auto pe-0">
-                                    <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
-                                    </a>
-                                    <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                                        <li> <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="dropdown-item border-radius-md">
-                                            View Report
-                                            </a>
-                                        </li>
-                                        <li> 
-                                            <a href="{% url 'add_customer_estimation' report.requirement_id.customer_id.id report.id %}" class="dropdown-item border-radius-md">
-                                            Create Quotation
-                                            </a>
-                                        </li>
-                                </ul>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    {% include "quote/report_quotation_filters.html" %}
                 </div>
-            </div> 
+        
+                <div class="card-body pt-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover text-dark" id="report-requirement-list">
+                            <thead class="thead-light">
+                                <tr class="text-sm">
+                                    <th>Action</th>
+                                    <th>Description</th>
+                                    {% comment %} <th>Quantity Surveyor</th> {% endcomment %}
+                                    <th>UPRN</th>
+                                    <th>Surveyor</th>
+                                    <th>No of Defects</th>
+                                    <th class="custom-last-column">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="ml-4">
+                                {% for report in report_list %}
+                                <tr class="text-sm">
+                                    <td>
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{ report.requirement_id.action|safe|truncatechars_html:30}}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{ report.requirement_id.description|safe|truncatechars_html:30}}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{ report.requirement_id.UPRN}}
+                                        </a>
+                                    </td>
+                                    {% comment %} <td class="text-sm">{{report.requirement_id.quantity_surveyor.first_name|default:''|title}}
+                                        {{report.requirement_id.quantity_surveyor.last_name|default:''|title}}
+                                    </td> {% endcomment %}
+                                    <td class="text-sm">
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{report.requirement_id.surveyor.first_name|default:''|title}} {{report.requirement_id.surveyor.last_name|default:''|title}}
+                                        </a>
+                                    </td>
+                                    <td class="text-truncate">
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{ report.defect_id.all|length }}
+                                        </a>
+                                    </td>
+                                    <td class="text-truncate">
+                                        <a href="{% url 'add_customer_estimation' report.requirement_id.customer_id.id report.id %}" class="text-decoration-none nav-link">
+                                            <i class="fas fa-file" data-bs-toggle="tooltip" data-bs-placement="top"
+                                            data-bs-title="Create Quotation"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if report_list.paginator.num_pages > 1 %}
+                    <div class="row justify-content-start justify-content-lg-between pagination-row">
+                        <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+                            <div class="pagination-info mt-auto mb-auto">
+                                Showing {{report_list.number}} of {{report_list.paginator.num_pages}} pages
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 align-self-center">
+                            <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                                <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                                {% if report_list.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ report_list.previous_page_number }}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                                {% endif %} 
+                                {% for i in report_list.paginator.page_range %}
+                                    {% if report_list.number == i %}
+                                <li class="page-item active">
+                                    <a class="page-link" href="#">{{ i }}</a>
+                                </li>
+                                    {% else%}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                </li>
+                                    {% endif %} 
+                                {% endfor %} 
+                                {% if report_list.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ report_list.next_page_number }}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div> 
+            </div>
         </div>
     </div>
 </div>
@@ -93,31 +194,124 @@
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+
 <script>
+    const searchInput = document.getElementById('searchSurveyor');
+    const applySearchButton = document.getElementById('applySearch');
+    const searchResults = document.getElementById('searchResults');
+    const assignedToDropdown = document.getElementById('surveyorDropdown'); // Assigned To dropdown element
+
+    let currentSearchResults = []; // Store the current search results
+    let isDropdownOpen = false; // Variable to track dropdown open state
+
+    // Function to update search results
+    function updateSearchResults(results) {
+      currentSearchResults = results; // Store the results
+      searchResults.innerHTML = '';
+
+      if (results.length > 0) {
+        results.forEach(result => {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.classList.add('dropdown-item', 'border-radius-md');
+          link.href = '#';
+          link.textContent = result;
+          // Add the click event to apply the filter
+          link.onclick = function () {
+            applyFilter('surveyor', result);
+          };
+          li.appendChild(link);
+          searchResults.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.classList.add('dropdown-item', 'text-muted');
+        li.textContent = 'No results found.';
+        searchResults.appendChild(li);
+      }
+    }
+
+    // Function to handle Apply Filter button click
+    function handleApplyFilter() {
+      const searchTerm = searchInput.value;
+
+      // Make a request to your backend API with the searchTerm
+      // Example using fetch:
+      fetch(`/fra/surveyor/search?term=${searchTerm}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Update the search results
+          updateSearchResults(data.data.results);
+
+        })
+        .catch(error => console.error(error, "error"));
+    }
+
+    // Function to toggle dropdown visibility
+    function toggleDropdown() {
+      isDropdownOpen = !isDropdownOpen;
+    }
+
+    const inputField = document.getElementById('searchSurveyor');
+
+    inputField.addEventListener('input', () => {
+      handleApplyFilter();
+      toggleDropdown();
+      event.stopPropagation();
+    });
+</script>
+
+<script>
+    // JavaScript code to apply the filter on each field
+    function applyFilter(filterName, filterValue) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set(filterName, filterValue);
+        window.location.href = currentUrl.toString();
+    }
+
+    // JavaScript code to clear single filter on onclick event
+    function clearFilter(filterName) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete(filterName);
+        window.location.href = currentUrl.toString();
+      }
+    // JavaScript code to clear all the filters
+    function clearAllFilters() {
+        const currentUrl = new URL(window.location.href);
+        const queryParams = new URLSearchParams(currentUrl.search);
+        const filterNames = ['surveyor', 'q']; // Add dateRange to the filterNames array
+  
+        filterNames.forEach(filterName => {
+          queryParams.delete(filterName);
+        });
+        window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+        window.location.reload(); // Reload the page after clearing all filters
+    }
 
 
-
-     if (document.getElementById('report-requirement-list')) {
-        const dataTableSearch = new simpleDatatables.DataTable("#report-requirement-list", {
-          searchable: true,
-          fixedHeight: false,
-          perPage: 10,
+    // Check URL parameters on page load and update search and filter selections
+    window.addEventListener('DOMContentLoaded', function () {
+        const filterNames = ['surveyor', 'q'];
+        filterNames.forEach(filterName => {
+          const filterValue = new URLSearchParams(window.location.search).get(filterName);
+  
+          if (filterValue) {
+            let displayedValue = filterValue; // Default displayed value is the filter value itself
+            
+            if (filterValue.length > 16 && filterName != 'q') {
+              // Truncate the filter value if it's longer than 5 characters
+              displayedValue = filterValue.substring(0, 16) + '..';
+            }
+  
+            // Update the dropdown element with the displayed value
+            document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+          }
+        });
       });
-
-      
-
-      
-      const searchInput = document.getElementById('searchInput');
-      const createreportButton = document.getElementById('createreportButton');
-
-      searchInput.addEventListener('input', function () {
-          const searchText = searchInput.value.toLowerCase();
-          dataTableSearch.search(searchText).draw();
-      });
-     }
-
-
-
-
 </script>
 {% endblock %}

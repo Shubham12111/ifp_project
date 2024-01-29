@@ -15,8 +15,8 @@
                   <h5>FRA Summary</h5>
                   {% include 'customer_info.html' %}
                 </div>
-                <div class="col-6">
-                  <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0" href="{% url 'customer_requirement_list' customer_id %}">Back</a>
+                <div class="col-6 text-end">
+                  {% include 'components/back_button.html' %}
                 </div>
               </div>
             </div>

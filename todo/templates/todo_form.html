@@ -18,7 +18,7 @@
                         <h5> {% if instance %} Edit {% else %}Add {% endif %} Task</h5>
                     </div>
                     <div class="col-6 text-end">
-                        <a class="btn bg-gradient-secondary mb-0 js-btn-prev btn-sm" href="{% url 'todo_list' %}" title="Back">Back</a>
+                        {% include 'components/back_button.html' %}
                     </div>
                 </div>
                   
