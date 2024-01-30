@@ -93,11 +93,11 @@
                         {% if requirement_instance %}
                             <tr>
                                 <th>FRA Action </th>
-                                <td class="text-wrap  text-sm">{{ requirement_instance.action }}</td>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.action|safe }}</td>
                             </tr>
                             <tr>
                                 <th>FRA Description </th>
-                                <td class="text-wrap  text-sm">{{ requirement_instance.description }}</td>
+                                <td class="text-wrap  text-sm">{{ requirement_instance.description|safe }}</td>
                             </tr>
 
                             <tr>
@@ -123,15 +123,15 @@
                     <tbody> <!-- Use tbody for table body -->
                         <tr class=" text-sm">
                             <th>Action</th>
-                            <td class="text-wrap  text-sm">{{ defect.action }}</td>
+                            <td class="text-wrap  text-sm">{{ defect.action|safe }}</td>
                         </tr>
                         <tr>
                             <th>Description of Defect</th>
-                            <td class="text-wrap  text-sm">{{ defect.description }}</td>
+                            <td class="text-wrap  text-sm">{{ defect.description|safe }}</td>
                         </tr>
                         <tr>
                             <th>Rectification of Defect</th>
-                            <td class="text-wrap text-sm">{{ defect.rectification_description }}</td>
+                            <td class="text-wrap text-sm">{{ defect.rectification_description|safe }}</td>
                         </tr>
                         
                         {% if requirement_defect_images %}
@@ -158,7 +158,7 @@
                 <table class="table table-striped " id="fire_risk_assessment_report">
                     <tr>
                         <th>Comment</th>
-                        <td class="text-wrap">{{ comment }}</td>
+                        <td class="text-wrap">{{ comment|safe }}</td>
                     </tr>
                     <tr>
                         <th>Signature</th>
