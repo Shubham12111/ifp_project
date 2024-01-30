@@ -34,7 +34,7 @@
           </div>
         </div>
         <div class="card-body pt-0 text-center">
-          <div class="row justify-content-between">
+          <div class="row justify-content-between mb-4">
             <div class="col-md-6 text-start">
               <h6 class="text-sm">
                 Infinity Fire Prevention Ltd Infinity House
@@ -59,16 +59,16 @@
                 <div class="col-7 text-sm">
                   {{ customer_address.address }}
                   {% if customer_address.town %}
-                  {{ customer_address.town.name }},
+                  {{ customer_address.town }},
                   {% endif %}
                   {% if customer_address.county %}
-                  {{ customer_address.county.name }},
+                  {{ customer_address.county }},
                   {% endif %}
                   {% if customer_address.country %}
-                  {{ customer_address.country.name }}
+                  {{ customer_address.country }},
                   {% endif %}
-                  {% if customer_address.country.post_code %}
-                  {{ customer_address.country.post_code }}
+                  {% if customer_address.post_code %}
+                  {{ customer_address.post_code }}
                   {% endif %}
                 </div>
               </div>

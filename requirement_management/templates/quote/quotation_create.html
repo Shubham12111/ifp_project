@@ -203,16 +203,16 @@
                   <div class="col-7 text-sm" style="margin: 5px 0;">
                     {{ customer_address.address|default:'-' }}
                     {% if customer_address.town %}
-                      {{ customer_address.town.name }},
+                      {{ customer_address.town }},
                     {% endif %}
                     {% if customer_address.county %}
-                      {{ customer_address.county.name }},
+                      {{ customer_address.county }},
                     {% endif %}
                     {% if customer_address.country %}
-                      {{ customer_address.country.name }}
+                      {{ customer_address.country }},
                     {% endif %}
-                    {% if customer_address.country.post_code %}
-                      {{ customer_address.country.post_code }}
+                    {% if customer_address.post_code %}
+                      {{ customer_address.post_code }}
                     {% endif %}
                   </div>
                 </div>
