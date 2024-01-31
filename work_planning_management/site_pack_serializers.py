@@ -86,7 +86,7 @@ class DocumentSerializer(serializers.ModelSerializer):
     
     
     class Meta:
-        model = SitepackDocument
+        model = SitePack
         fields = ('name','file_list',)
 
 
@@ -188,7 +188,7 @@ class SitePackJobSerializer(serializers.ModelSerializer):
 class DocumentSelectSerializer(serializers.ModelSerializer):
     sitepack_document = serializers.PrimaryKeyRelatedField(
         label=('Select Document'),
-        queryset = SitepackAsset.objects.all(),
+        queryset = SitePack.objects.all(),
         style={'base_template': 'custom_select.html'},
         error_messages={
             "required": "This field is required.",

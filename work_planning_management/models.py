@@ -142,68 +142,21 @@ class STWDefectDocument(models.Model):
     class Meta:
         verbose_name = _('STW Defect Document')
         verbose_name_plural = _('STW Defect Document')
-    
 
-class Job(models.Model):
-    quotation = models.ForeignKey(Quotation, on_delete=models.CASCADE)  
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        max_length = 30  # Adjust this to your desired character count
-        action_text = self.quotation.requirement_id.action[:max_length]
-
-        if len(self.quotation.requirement_id.action) > max_length:
-            action_text += "..."
-        
-        return action_text
-    
-    class Meta:
-        ordering =['id']
-
-
-
-class STWJob(models.Model):
-    stw = models.ForeignKey(STWRequirements,on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = _('STW Job')
-        verbose_name_plural = _('STW Job')
-        ordering =['id']
-
-    def __str__(self):
-        return f" Job {self.id} for STW{self.stw.id}"
-        
-
-class SitepackDocument(models.Model):
+class SitePack(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_pack_user')
     name = models.CharField(max_length=255, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"name -{self.name}"
-    
-    class Meta:
-        ordering =['id']
-    
-
-class SitepackAsset(models.Model):
-    sitepack_id = models.ForeignKey(SitepackDocument, on_delete=models.CASCADE)
     document_path = models.CharField(max_length=256)
     create_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name = _('Sitepack Asset')
-        verbose_name_plural = _('Sitepack Asset')
+        verbose_name = _('Site Pack')
+        verbose_name_plural = _('Site Packs')
         ordering =['id']
 
     def __str__(self):
-        return f" {self.sitepack_id.name}-{self.document_path}"
-
+        return f"{self.name}-{self.document_path}"
 
 class RLOLetterTemplate(models.Model):
     name = models.CharField(max_length=100, null=True)
@@ -215,24 +168,6 @@ class RLOLetterTemplate(models.Model):
     class Meta:
         verbose_name = _('RLO Letter Template')
         verbose_name_plural = _('RLO Letter Templates')
-
-    def __str__(self):
-        return self.name
-
-class RLO(models.Model):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rlo_user')
-    name = models.CharField(max_length=100, null=True)
-    status = models.CharField(max_length=30, choices=RLO_STATUS_CHOICES, default='pending')
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    base_template = models.ForeignKey(RLOLetterTemplate, on_delete=models.CASCADE, null=True)
-    edited_content =  models.TextField(blank=True, null=True)  # New field to store edited template content 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-        verbose_name = _('RLO')
-        verbose_name_plural = _('RLO')
-        ordering =['id']
 
     def __str__(self):
         return self.name
@@ -270,18 +205,6 @@ class Team(models.Model):
     def __str__(self):
         return self.team_name
 
-
-class JobDocument(models.Model):
-    job=models.ForeignKey(Job,on_delete=models.CASCADE)
-    sitepack_document=models.ForeignKey(SitepackAsset,on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at =models.DateTimeField(auto_now=True)
-    class Meta:
-        verbose_name = _('Job Document')
-        verbose_name_plural = _('Job Documents')
-        ordering =['created_at']
-
-
 class Events(models.Model):
     name = models.CharField(max_length=255,null=True,blank=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE, null=True, blank=True)
@@ -298,31 +221,55 @@ class Events(models.Model):
         verbose_name_plural = _('Calendar Events')
         ordering =['id']
         
-    
-
-
-class STWJobAssignment(models.Model):
-    stw_job = models.ForeignKey(Job, on_delete=models.CASCADE)
+class Job(models.Model):
+    quotation = models.ManyToManyField(Quotation, verbose_name=_("Quotation"))
+    stw = models.ManyToManyField(STWRequirements, verbose_name=_("STW Quotation"))
     assigned_to_member = models.ManyToManyField(Member) 
     assigned_to_team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.CASCADE)
     event = models.ForeignKey(Events, on_delete=models.CASCADE, null=True, blank=True)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    start_time = models.TimeField()
-    end_time = models.TimeField()
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        max_length = 30  # Adjust this to your desired character count
+        action_text = self.quotation.requirement_id.action[:max_length]
+
+        if len(self.quotation.requirement_id.action) > max_length:
+            action_text += "..."
+        
+        return action_text
+    
     class Meta:
-        verbose_name = _('STW Job Assign')
-        verbose_name_plural = _('STW Job Assign')
+        ordering = ['id']
+
+class JobDocument(models.Model):
+    job = models.ForeignKey(Job,on_delete=models.CASCADE)
+    sitepack_document = models.ForeignKey(SitePack,on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at =models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Job Document')
+        verbose_name_plural = _('Job Documents')
         ordering =['created_at']
 
 
-
+class RLO(models.Model):
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rlo_user')
+    name = models.CharField(max_length=100, null=True)
+    status = models.CharField(max_length=30, choices=RLO_STATUS_CHOICES, default='pending')
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    base_template = models.ForeignKey(RLOLetterTemplate, on_delete=models.CASCADE, null=True)
+    edited_content =  models.TextField(blank=True, null=True)  # New field to store edited template content 
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
-    
+    class Meta:
+        verbose_name = _('RLO')
+        verbose_name_plural = _('RLO')
+        ordering =['id']
 
-
-
-
+    def __str__(self):
+        return self.name

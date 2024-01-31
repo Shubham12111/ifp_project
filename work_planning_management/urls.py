@@ -24,6 +24,7 @@ urlpatterns = [
     path('jobs/<int:customer_id>/list/', JobsListView.as_view(), name='jobs_list'),
     path('job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
     path('job/<int:job_id>/', JobDetailView.as_view(), name='job_detail'),
+    path('job-site-packs/<int:job_id>/', JobSTWDetailView.as_view(), name='job_site_packs_detail'),
 
 
 
@@ -81,7 +82,7 @@ urlpatterns = [
     path('event_view/<int:event_id>/',EventdetailView.as_view() , name='event_view'),
     # path('remove/', views.remove, name='remove'),
     path('get_event_details/<int:event_id>/', views.get_event_details, name='get_event_details'),
-    path('stw/job_schedule/',AssignscheduleView.as_view(),name='job_schedule'),
+    # path('stw/job_schedule/',AssignscheduleView.as_view(),name='job_schedule'),
 
 
     # RLO views:-

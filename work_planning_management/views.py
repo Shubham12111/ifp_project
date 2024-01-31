@@ -22,7 +22,7 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,AssignJobSerializer,EventSerializer,STWJobListSerializer
+from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,EventSerializer,STWJobListSerializer
 
 from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
@@ -1840,12 +1840,17 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         return queryset
 
     def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
         job_id = self.kwargs.get('job_id')
         queryset = self.get_queryset()
 
         try:
             job = queryset.get(id=job_id)
-            print(job)
         except Job.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -1864,7 +1869,65 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
             return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
+
+class JobSTWDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    View for retrieving job details.
+
+    This view retrieves details of a job, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class (JobSerializer): The serializer class for the job.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+    """
+
+    serializer_class = STWJobListSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'job_site_packs_detail.html'
+
+    def get_queryset(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        # Your queryset logic to filter jobs goes here
+        queryset = Job.objects.all()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
         
+        job_id = self.kwargs.get('job_id')
+        queryset = self.get_queryset()
+
+        try:
+            job = queryset.get(id=job_id)
+        except Job.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # Additional job data can be retrieved here based on your requirements
+        # For example, get related data or perform other queries to obtain additional job details
+
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'job': job,
+                'job_id':job_id,
+                # Add more job-related data to the context as needed
+            }
+            return render(request, self.template_name, context)
+        else:
+            serializer = self.serializer_class(job)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
 
 
 class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -2798,100 +2861,100 @@ def get_event_details(request, event_id):
         return JsonResponse({'error': 'Event not found'}, status=404)
     
 
-class AssignscheduleView(CustomAuthenticationMixin, generics.CreateAPIView):
-    """
-    View for adding or add job.
-    Supports both HTML and JSON response formats.
-    """
-    serializer_class = AssignJobSerializer
-    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'assign_job/assign_schedule.html'
+# class AssignscheduleView(CustomAuthenticationMixin, generics.CreateAPIView):
+#     """
+#     View for adding or add job.
+#     Supports both HTML and JSON response formats.
+#     """
+#     serializer_class = AssignJobSerializer
+#     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+#     template_name = 'assign_job/assign_schedule.html'
 
 
-    def get_queryset(self):
-        queryset = STWJobAssignment.objects.filter(pk=self.kwargs.get('pk')).order_by('-created_at').first()
-        return queryset
+#     def get_queryset(self):
+#         queryset = STWJobAssignment.objects.filter(pk=self.kwargs.get('pk')).order_by('-created_at').first()
+#         return queryset
 
-    @swagger_auto_schema(auto_schema=None) 
-    def get(self, request, *args, **kwargs):
-        """
-        Handle GET request to display a form for updating a  job.
-        If the  job exists, retrieve the serialized data and render the HTML template.
-        If the  job does not exist, render the HTML template with an empty serializer.
-        """
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"survey", HasCreateDataPermission, 'add'
-        )
+#     @swagger_auto_schema(auto_schema=None) 
+#     def get(self, request, *args, **kwargs):
+#         """
+#         Handle GET request to display a form for updating a  job.
+#         If the  job exists, retrieve the serialized data and render the HTML template.
+#         If the  job does not exist, render the HTML template with an empty serializer.
+#         """
+#         # Call the handle_unauthenticated method to handle unauthenticated access
+#         authenticated_user, data_access_value = check_authentication_and_permissions(
+#            self,"survey", HasCreateDataPermission, 'add'
+#         )
         
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+#         if isinstance(authenticated_user, HttpResponseRedirect):
+#             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
 
-        if request.accepted_renderer.format == 'html':
-            context = {'serializer':self.serializer_class()}
-            return render_html_response(context,self.template_name)
-        else:
-            return create_api_response(status_code=status.HTTP_201_CREATED,
-                                message="GET Method Not Alloweded",)
+#         if request.accepted_renderer.format == 'html':
+#             context = {'serializer':self.serializer_class()}
+#             return render_html_response(context,self.template_name)
+#         else:
+#             return create_api_response(status_code=status.HTTP_201_CREATED,
+#                                 message="GET Method Not Alloweded",)
         
-    common_post_response = {
-        status.HTTP_200_OK: 
-            docs_schema_response_new(
-                status_code=status.HTTP_200_OK,
-                serializer_class=serializer_class,
-                message = "Job has been assigned successfully.",
-                ),
-        status.HTTP_400_BAD_REQUEST: 
-            docs_schema_response_new(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                serializer_class=serializer_class,
-                message = "We apologize for the inconvenience, but please review the below information.",
-                ),
+#     common_post_response = {
+#         status.HTTP_200_OK: 
+#             docs_schema_response_new(
+#                 status_code=status.HTTP_200_OK,
+#                 serializer_class=serializer_class,
+#                 message = "Job has been assigned successfully.",
+#                 ),
+#         status.HTTP_400_BAD_REQUEST: 
+#             docs_schema_response_new(
+#                 status_code=status.HTTP_400_BAD_REQUEST,
+#                 serializer_class=serializer_class,
+#                 message = "We apologize for the inconvenience, but please review the below information.",
+#                 ),
 
-    }  
+#     }  
 
-    @swagger_auto_schema(operation_id='Add Job', responses={**common_post_response})
-    def post(self, request, *args, **kwargs):
-        """
-        Handle POST request to add a job.
-        """
-        # Call the handle_unauthenticated method to handle unauthenticated access
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"survey", HasCreateDataPermission, 'add'
-        )
-        message = "Job has been assigned successfully."
-        stw_job_id = self.request.query_params.get('job_id')
-        print(stw_job_id)
-        jobs_with_quotation = Job.objects.filter(quotation=int(stw_job_id)).first()
-        print(jobs_with_quotation)
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            # stw_job_instance = STWJob.objects.get(pk=1)
-            serializer.validated_data['stw_job'] = jobs_with_quotation
-            user = serializer.save()
-            user.save()
-            if request.accepted_renderer.format == 'html':
-                messages.success(request, message)
-                return redirect(reverse('job_customers_list'))
+#     @swagger_auto_schema(operation_id='Add Job', responses={**common_post_response})
+#     def post(self, request, *args, **kwargs):
+#         """
+#         Handle POST request to add a job.
+#         """
+#         # Call the handle_unauthenticated method to handle unauthenticated access
+#         authenticated_user, data_access_value = check_authentication_and_permissions(
+#            self,"survey", HasCreateDataPermission, 'add'
+#         )
+#         message = "Job has been assigned successfully."
+#         stw_job_id = self.request.query_params.get('job_id')
+#         print(stw_job_id)
+#         jobs_with_quotation = Job.objects.filter(quotation=int(stw_job_id)).first()
+#         print(jobs_with_quotation)
+#         serializer = self.serializer_class(data=request.data)
+#         if serializer.is_valid():
+#             # stw_job_instance = STWJob.objects.get(pk=1)
+#             serializer.validated_data['stw_job'] = jobs_with_quotation
+#             user = serializer.save()
+#             user.save()
+#             if request.accepted_renderer.format == 'html':
+#                 messages.success(request, message)
+#                 return redirect(reverse('job_customers_list'))
 
-            else:
-                # Return JSON response with success message and serialized data
-                return create_api_response(status_code=status.HTTP_201_CREATED,
-                                    message=message,
-                                    data=serializer.data
-                                    )
-        else:
-            # Invalid serializer data
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                context = {'serializer':serializer}
-                return render_html_response(context,self.template_name)
-            else:   
-                # Return JSON response with error message
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                    message="We apologize for the inconvenience, but please review the below information.",
-                                    data=convert_serializer_errors(serializer.errors))
+#             else:
+#                 # Return JSON response with success message and serialized data
+#                 return create_api_response(status_code=status.HTTP_201_CREATED,
+#                                     message=message,
+#                                     data=serializer.data
+#                                     )
+#         else:
+#             # Invalid serializer data
+#             if request.accepted_renderer.format == 'html':
+#                 # Render the HTML template with invalid serializer data
+#                 context = {'serializer':serializer}
+#                 return render_html_response(context,self.template_name)
+#             else:   
+#                 # Return JSON response with error message
+#                 return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
+#                                     message="We apologize for the inconvenience, but please review the below information.",
+#                                     data=convert_serializer_errors(serializer.errors))
             
 class EventAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     """

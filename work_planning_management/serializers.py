@@ -722,22 +722,42 @@ class AddJobSerializer(serializers.ModelSerializer):
 
    
 class JobAssignmentSerializer(serializers.ModelSerializer):
-    assigned_to_team = serializers.PrimaryKeyRelatedField(
-        queryset=Team.objects.all(),
-        required=False,
-        label="Select Team",
-        allow_null=True,  # Set allow_null to True
+    start_date = serializers.DateTimeField(
+        label='Start Date',
+        required=True,
+        input_formats=['%d/%m/%Y','iso-8601'],
         style={
-            "autofocus": False,
-            "autocomplete": "off",
-            "base_template":'custom_select.html'
+            'base_template': 'custom_date_time.html',
+            'custom_class': 'col-12 col-md-4'
         },
+        # Add any additional styles or validators if needed
+    )
+
+    end_date = serializers.DateTimeField(
+        label='End Date',
+        required=True,
+        input_formats=['%d/%m/%Y','iso-8601'],
+        style={
+            'base_template': 'custom_date_time.html',
+            'custom_class': 'col-12 col-md-4'
+        },
+        # Add any additional styles or validators if needed
     )
 
 
     class Meta:
-        model = STWJobAssignment
-        fields = ['assigned_to_team']
+        model = Job
+        fields = ['start_date', 'end_date']
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        if start_date and end_date and start_date > end_date:
+            raise ValidationError({'end_date':'End Date/Time should be greater than the Start Date/Time.'})
+        
+        return data
 
 
 class EventSerializer(serializers.ModelSerializer):
@@ -814,85 +834,26 @@ class EventSerializer(serializers.ModelSerializer):
         model = Events
         fields = ['name', 'team','description','member','start', 'end'] 
 
-
-class AssignJobSerializer(serializers.ModelSerializer):
-    start_date = serializers.DateField(
-        label='Start Date',
-        required=True,
-        input_formats=['iso-8601'],
-        style={
-            'base_template': 'custom_datepicker.html',
-            'custom_class': 'col-6'
-        },
-        # Add any additional styles or validators if needed
-    )
-    end_date = serializers.DateField(
-        label='End Date',
-        required=True,
-        input_formats=['iso-8601'],
-        style={
-            'base_template': 'custom_datepicker.html',
-            'custom_class': 'col-6'
-        },
-       
-    )
-
-    start_time = serializers.TimeField(
-        label='Start Time',
-        required=True,
-        input_formats=['iso-8601'],
-        style={
-            'base_template': 'custom_datepicker.html',
-            'custom_class': 'col-6'
-        },
-        # Add any additional styles or validators if needed
-    )
-    end_time = serializers.TimeField(
-        label='End Time',
-        required=True,
-        input_formats=['iso-8601'],
-        style={
-            'base_template': 'custom_datepicker.html',
-            'custom_class': 'col-6'
-        },
-       
-    )
-    
-
-    class Meta:
-        model = STWJobAssignment
-        fields = ['start_date', 'end_date','start_time','end_time'] 
-
-    def validate(self, data):
-        start_date = data.get('start_date')
-        end_date = data.get('end_date')
-
-        if start_date and end_date and start_date > end_date:
-            raise ValidationError({'end_date':'End date should be greater than the start date.'})
-
-        return data
-    
-
 class STWJobListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = STWJobAssignment
+        model = Job
         fields = [
             'id',
-            'stw_job',
+            'quotation',
+            'stw',
             'assigned_to_member',
             'assigned_to_team',
             'event',
             'start_date',
             'end_date',
-            'start_time',
-            'end_time',
             'created_at',
             'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     # If you want to provide custom representation for related fields, you can do so like this:
-    stw_job = STWRequirementSerializer()
+    quotation = QuotationSerializer()
+    stw = STWRequirementSerializer()
     assigned_to_member = MemberSerializer(many=True)
     assigned_to_team = TeamSerializer()
     event = EventSerializer()
