@@ -1,13 +1,13 @@
-<div class="container-fluid mt-4">
+<div class="container-fluid my-4">
     <div class="row align-items-center">
         <div class="col-lg-12 col-sm-8">
             <div class="nav-wrapper position-relative end-0">
                 <ul class="nav nav-tabs">
                     <li class="nav-item">
                         {% if customer_instance %}
-                            <a class="nav-link {% if '/work_planning/approved_quotation/' in request.path %}active{% endif %}" href="{% url 'approved_quotation_view' %}">Quotation Reports</a>
+                            <a class="nav-link {% if '/work_planning/approved_quotation/' in request.path %}active{% endif %}" href="{% url 'approved_quotation_view' %}">Approved Quotation </a>
                       {% else %}
-                      <a class="nav-link {% if '/work_planning/approved_quotation/' in request.path %}active{% endif %}" href="{% url 'approved_quotation_view' %}">Quotation Reports</a>
+                      <a class="nav-link {% if '/work_planning/approved_quotation/' in request.path %}active{% endif %}" href="{% url 'approved_quotation_view' %}">Approved Quotation </a>
                         {% endif %}
                     </li>
 
