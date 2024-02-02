@@ -1,9 +1,7 @@
 from django.contrib import admin
 
-from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,Team,Member,JobDocument,Events
-
-
-
+from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,Team,Member,JobDocument,Events,SitePack
+from work_planning_management.forms import SitePackAdminForm
 
 class STWRequirementsAdmin(admin.ModelAdmin):
     """
@@ -66,9 +64,10 @@ class JobAdmin(admin.ModelAdmin):
     list_filter = ('created_at', 'updated_at') 
     search_fields = ('quotation__title',)
 
-class SitepackAssetAdmin(admin.ModelAdmin):
-    list_display = ('id','sitepack_id','document_path' )
-
+class SitePackAdmin(admin.ModelAdmin):
+    
+    list_display = ('id','name', 'document_path', 'create_at',)
+    form = SitePackAdminForm
 
 class JobDocumentAdmin(admin.ModelAdmin):
     list_display = ('job', 'sitepack_document', 'created_at', 'updated_at')
@@ -84,6 +83,4 @@ admin.site.register(Member, MemberAdmin)
 admin.site.register(Team, TeamAdmin)
 admin.site.register(JobDocument,JobDocumentAdmin)
 admin.site.register(Events)
-
-
-
+admin.site.register(SitePack, SitePackAdmin)

@@ -2023,7 +2023,6 @@ class JobSTWDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
                                     message="Data retrieved",
                                     data=serializer.data)
 
-
 class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
     View for listing job Requirement customers.
@@ -2041,7 +2040,7 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    search_fields = ['first_name', 'last_name','email','company_name']
     template_name = 'job_customer_list.html'
     ordering_fields = ['created_at'] 
 
@@ -2054,7 +2053,32 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
 
-
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+            queryset = queryset.filter(q_objects)
+        return queryset
 
     def get(self, request, *args, **kwargs):
         """
@@ -2071,6 +2095,7 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = self.get_queryset()
+        queryset = self.get_searched_queryset(queryset)
         all_quotes = Quotation.objects.filter(status="approved")
         
         customers_with_counts = []  # Create a list to store customer objects with counts
@@ -2080,7 +2105,11 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             customers_with_counts.append({'customer': customer, 'quote_counts': quote_counts})
 
         if request.accepted_renderer.format == 'html':
-            context = {'customers_with_counts': customers_with_counts}  # Pass the list of customers with counts to the template
+            # context = {'customers_with_counts': customers_with_counts,'queryset': self.get_paginated_queryset(queryset)}
+            
+            context = { 'customers_with_counts': self.get_paginated_queryset(customers_with_counts),
+                'search_fields': ['first_name', 'last_name','email','company_name'],
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),}
             return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
