@@ -233,13 +233,7 @@ class Job(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        max_length = 30  # Adjust this to your desired character count
-        action_text = self.quotation.requirement_id.action[:max_length]
-
-        if len(self.quotation.requirement_id.action) > max_length:
-            action_text += "..."
-        
-        return action_text
+        return f'IFP-Job-{self.id}'
     
     class Meta:
         ordering = ['id']

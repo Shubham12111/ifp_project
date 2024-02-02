@@ -22,7 +22,7 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,EventSerializer,STWJobListSerializer
+from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,EventSerializer,STWJobListSerializer, JobCreateSerializer, MemberCalendarSerializer
 
 from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
@@ -44,7 +44,23 @@ from django.http import (
     HttpResponseRedirect,
     JsonResponse,
 )
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+def get_customer_data(customer_id):
+
+    """
+    Get customer data by customer ID.
+
+    Args:
+        customer_id (int): The ID of the customer.
+
+    Returns:
+        User: The customer data if found, otherwise None.
+    """
+    customer_data = User.objects.filter(id=customer_id, is_active=True,
+                                        roles__name__icontains='customer').first()
+    
+    return customer_data
 
 class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.ListAPIView):
     
@@ -123,54 +139,98 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     serializer_class = QuotationSerializer
     filter_backends = [filters.SearchFilter]
-    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    search_fields = ['requirement_id__action', 'requirement_id__description']
     template_name = 'approved_quotation_list.html'
 
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+    
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
     def get_queryset(self,**kwargs):
         customer_id = self.kwargs.get('customer_id') 
-        print(customer_id)
-        print
         queryset = Quotation.objects.filter(status="approved")
         if customer_id:
             queryset = queryset.filter(customer_id=customer_id)
+        
+        if queryset:
+            filters = {
+                'surveyor': self.request.GET.get('surveyor'),
+                'dateRange': self.request.GET.get('dateRange'),
+            }
+            date_format = '%d/%m/%Y'
+
+            # Apply additional filters based on the received parameters
+            for filter_name, filter_value in filters.items():
+                if filter_value:
+                    if filter_name == 'dateRange':
+                        # If 'dateRange' parameter is provided, filter TODO items within the date range
+                        start_date_str, end_date_str = filter_value.split('-')
+                        start_date = datetime.datetime.strptime(start_date_str.strip(), date_format).date()
+                        end_date = datetime.datetime.strptime(end_date_str.strip(), date_format).date()
+                        queryset = queryset.filter(created_at__gte=start_date, created_at__lte=end_date)
+                    elif filter_name == 'surveyor':
+                        value_list = filter_value.split()
+                        if 2 >= len(value_list) > 1:
+                            queryset = queryset.filter(requirement_id__surveyor__first_name=value_list[0], requirement_id__surveyor__last_name=value_list[1])
+                        else:
+                            queryset = queryset.filter(requirement_id__surveyor__first_name = filter_value)
+
         return queryset
     
     def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
         queryset = self.get_queryset()
+        queryset = self.get_searched_queryset(queryset)
         customer_id = self.kwargs.get('customer_id')
-        print(customer_id)
-        print(queryset)
-        customer_data = {}
-         # Retrieve the list of Sitepack documents
-        sitepack_documents = SitepackDocument.objects.all()
+        customer_data = get_customer_data(customer_id)
+        if not customer_data:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('approved_quotation_view'))
+        
         if request.accepted_renderer.format == 'html':
             context = {
-                'approved_quotation': queryset,
+                'approved_quotation': self.get_paginated_queryset(queryset),
                 'customer_id': customer_id,
                 'customer_data': customer_data,
-                'sitepack_documents': sitepack_documents,
-                }
+                'search_fields': self.search_fields,
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+            }
             return render(request, self.template_name, context)
         else:
             messages.error(request, "You are not authorized to perform this action")
             return Response(status=status.HTTP_403_FORBIDDEN)
-
-def get_customer_data(customer_id):
-
-    """
-    Get customer data by customer ID.
-
-    Args:
-        customer_id (int): The ID of the customer.
-
-    Returns:
-        User: The customer data if found, otherwise None.
-    """
-    customer_data = User.objects.filter(id=customer_id, is_active=True,
-                                        roles__name__icontains='customer').first()
-    
-    return customer_data
-
 
 def get_selected_defect_data(request, customer_id, pk):
     """
@@ -1574,7 +1634,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             "self": Q(user_id=self.request.user),
             "all": Q(),
         }
-        base_queryset = STWJobAssignment.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        base_queryset = Job.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
         # Order the queryset based on the 'ordering_fields'
         ordering = self.request.GET.get('ordering')
         if ordering in self.ordering_fields:
@@ -1599,7 +1659,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             queryset = self.get_queryset()
 
             if request.accepted_renderer.format == 'html':
-                context = {'stw_job_assignments': queryset, 'customer_id': customer_id, 'customer_data': customer_data}
+                context = {'jobs': queryset, 'customer_id': customer_id, 'customer_data': customer_data}
                 return render_html_response(context, self.template_name)
             else:
                 serializer = self.serializer_class(queryset, many=True)
@@ -2727,37 +2787,64 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
     renderer_classes = [renderers.TemplateHTMLRenderer, renderers.JSONRenderer]
     template_name = 'assign_job/schedule_job.html'  # Replace with the actual path to your template
     serializer_class = JobAssignmentSerializer
-
+    
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         """
         Handle GET request to display a form for creating a assigned job.
         Render the HTML template with an empty serializer.
         """
-
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "survey", HasCreateDataPermission, 'add'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
+        customer_id = self.kwargs.get('customer_id', None)
+        customer_data = get_customer_data(customer_id)
+        if not customer_data:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('approved_quotation_view'))
 
-        job_id = kwargs.get('job_id') 
-        print(job_id) # Retrieve job_id from URL parameters
-        # job = get_object_or_404(Job, id=job_id)
-         # Retrieve the members data
+        quotation_ids = request.query_params.get('quotation', [])
+        
+        if not quotation_ids:
+            messages.error(request, 'No quotations was selected to create a Job, please choose a Quotation and try again.')
+            return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
+        
+        quotation_ids = [i for i in quotation_ids.split(',') if i.isdigit()]
+
+        if not quotation_ids:
+            messages.error(request, 'No quotations was selected to create a Job, please choose a Quotation and try again.')
+            return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
+
         members = Member.objects.all()
         team = Team.objects.all()
-        # events = Event.objects.all()
-        serializer = self.serializer_class(context={'request': request})
+
+        serializer = self.serializer_class(
+            data={
+                'quotation':quotation_ids,
+                'start_date': timezone.now(),
+                'end_date': timezone.now()
+            },
+            context={'request': request}
+        )
+        if not serializer.is_valid():
+            messages.error(request, 'Something when wrong while creating the job. Please try again.')
+            return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
+        
+        quotations = serializer.validated_data.get('quotation')
+        for quotation in quotations:
+            if quotation.job_set.all():
+                messages.error(request, 'You are not authorised to perform this operation')
+                return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
 
         if request.accepted_renderer.format == 'html':
-            context = {'serializer': serializer,
-                       'members': members,
-                       'teams':team,
-                    #    'job': job,  # Add the job to the context
-                    #    'events': events
-                       }
+            context = {
+                'serializer': serializer,
+                'members': members,
+                'teams':team,
+            }
             return render(request, self.template_name, context)
         else:
             return create_api_response(status_code=status.HTTP_201_CREATED, message="GET Method Not Allowed")
@@ -2766,25 +2853,34 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
         """
         Handle POST request to add or update a job.
         """
-      
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        customer_id = self.kwargs.get('customer_id', None)
+        customer_data = get_customer_data(customer_id)
+        if not customer_data:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('approved_quotation_view'))
+
         serializer_data = request.data
-        serializer = self.serializer_class(data=serializer_data, context={'request': request})
+        serializer = JobCreateSerializer(data=serializer_data, context={'request': request})
 
         if serializer.is_valid():
-            try:
-                stw_requirements = STWRequirements.objects.get(pk=serializer.data.get('stw_id'))
-                stw_job = STWJob.objects.create(stw=stw_requirements)
-                serializer.save(stw_job=stw_job)  # Assign the created STWJob instance
-
-                message = "Job assignment created successfully."
-            except STWRequirements.DoesNotExist:
-                message = "STW Requirements not found."
-            except IntegrityError:
-                message = "Job assignment already exists."
+            quotations = serializer.validated_data.get('quotation')
+            for quotation in quotations:
+                if quotation.job_set.all():
+                    messages.error(request, 'You are not authorised to perform this operation')
+                    return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
+            
+            serializer.save()  # Assign the created STWJob instance
+            message = "Job created and assigned successfully."
 
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
-                return redirect(reverse('job_assign_stw'))
+                return redirect(reverse('jobs_list', kwargs={'customer_id': customer_data.id}))
             else:
                 return create_api_response(
                     status_code=status.HTTP_201_CREATED,
@@ -2792,9 +2888,28 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
                     data=serializer.data
                 )
         else:
+            members = Member.objects.all()
+            team = Team.objects.all()
+            view_serializer = self.serializer_class(
+                data=serializer_data,
+                context={'request': request}
+            )
+            view_serializer.is_valid()
+            
+            quotations = view_serializer.validated_data.get('quotation')
+            for quotation in quotations:
+                if quotation.job_set.all():
+                    messages.error(request, 'You are not authorised to perform this operation')
+                    return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
+            
+            view_serializer._errors = serializer.errors
             # Invalid serializer data
             if request.accepted_renderer.format == 'html':
-                context = {'serializer': serializer}
+                context = {
+                    'serializer': view_serializer,
+                    'members': members,
+                    'teams':team,
+                }
                 return render_html_response(context, self.template_name)
             else:
                 return create_api_response(
@@ -3262,6 +3377,33 @@ class EventdetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
                                     message="Data retrieved",
                                     data=serializer.data)
 
+def retriveMembersAssignedJobs(request):
+    if request.method == "GET":
+        teamId = request.GET.get('team', None)
+        membersIds = request.GET.get('members', None)
+        
+        if not teamId and not membersIds:
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Assigned Jobs",
+                data=[]
+            )
 
+        team = Team.objects.filter(id__in=[i for i in teamId.split(',') if i.isdigit()]).all() if teamId else None
+        members = Member.objects.filter(id__in=[i for i in membersIds.split(',') if i.isdigit()]).all() if membersIds else None
+        
+        if not team and not members:
+            return create_api_response(
+                status_code=status.HTTP_200_OK,
+                message="Assigned Jobs",
+                data=[]
+            )
+        
+        serializer = MemberCalendarSerializer([member for t in team for member in t.members.all()] if team else members)
+        return create_api_response(
+            status_code=status.HTTP_200_OK,
+            message="Assigned Jobs",
+            data=serializer.data.get('jobs')
+        )
 
-
+    return JsonResponse({"error": "Invalid request"}, status=400)

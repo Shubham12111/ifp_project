@@ -725,10 +725,10 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
     start_date = serializers.DateTimeField(
         label='Start Date',
         required=True,
-        input_formats=['%d/%m/%Y','iso-8601'],
+        input_formats=['%d-%m-%Y %H:%M','iso-8601'],
         style={
             'base_template': 'custom_date_time.html',
-            'custom_class': 'col-12 col-md-4'
+            'custom_class': 'col-12 col-md-6'
         },
         # Add any additional styles or validators if needed
     )
@@ -736,18 +736,37 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
     end_date = serializers.DateTimeField(
         label='End Date',
         required=True,
-        input_formats=['%d/%m/%Y','iso-8601'],
+        input_formats=['%d-%m-%Y %H:%M','iso-8601'],
         style={
             'base_template': 'custom_date_time.html',
-            'custom_class': 'col-12 col-md-4'
+            'custom_class': 'col-12 col-md-6'
         },
         # Add any additional styles or validators if needed
     )
 
+    quotation = serializers.PrimaryKeyRelatedField(
+        queryset = Quotation.objects.all(),
+        many=True,
+        style={
+            'base_template': 'custom_hidden_select_input.html',
+            'custom_class': 'd-none'
+        },
+        required=False
+    )
+
+    stw = serializers.PrimaryKeyRelatedField(
+        queryset = STWRequirements.objects.all(),
+        many=True,
+        style={
+            'base_template': 'custom_hidden_select_input.html',
+            'custom_class': 'd-none'
+        },
+        required=False
+    )
 
     class Meta:
         model = Job
-        fields = ['start_date', 'end_date']
+        fields = ['quotation', 'stw', 'start_date', 'end_date']
     
     def validate(self, attrs):
         data = super().validate(attrs)
@@ -757,6 +776,108 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
         if start_date and end_date and start_date > end_date:
             raise ValidationError({'end_date':'End Date/Time should be greater than the Start Date/Time.'})
         
+        return data
+
+class JobCreateSerializer(serializers.ModelSerializer):
+    
+    start_date = serializers.DateTimeField(
+        label='Start Date',
+        required=True,
+        input_formats=['%d-%m-%Y %H:%M','iso-8601'],
+        # Add any additional styles or validators if needed
+    )
+
+    end_date = serializers.DateTimeField(
+        label='End Date',
+        required=True,
+        input_formats=['%d-%m-%Y %H:%M','iso-8601'],
+        # Add any additional styles or validators if needed
+    )
+
+    quotation = serializers.PrimaryKeyRelatedField(
+        queryset = Quotation.objects.all(),
+        many=True,
+        required=False
+    )
+
+    stw = serializers.PrimaryKeyRelatedField(
+        queryset = STWRequirements.objects.all(),
+        many=True,
+        required=False
+    )
+
+    assigned_to_member = serializers.PrimaryKeyRelatedField(
+        queryset = Member.objects.all(),
+        many=True,
+        required=False
+    )
+
+    assigned_to_team = serializers.PrimaryKeyRelatedField(
+        queryset = Team.objects.all(),
+        required=False
+    )
+
+    class Meta:
+        model = Job
+        fields = ['quotation', 'stw', 'start_date', 'end_date', 'assigned_to_team', 'assigned_to_member']
+    
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        start_date = data.get('start_date', None)
+        end_date = data.get('end_date', None)
+
+        if start_date and end_date and start_date > end_date:
+            raise ValidationError({'end_date':'End Date/Time should be greater than the Start Date/Time.'})
+        
+        team = data.get('assigned_to_team', None)
+        members = data.get('assigned_to_member', None)
+
+        if not team and not members:
+            raise ValidationError(
+                {
+                    'assigned_to_team':[
+                        'Either team or member must be selected.'
+                    ], 
+                    'assigned_to_member': [
+                        'Either team or member must be selected.'
+                    ]
+                }
+            )
+
+        errors = []
+
+        if team:
+            members_list = [member for member in team.members.all()]
+        
+        if members:
+            members_list.extend([member for member in members])
+        
+        if members_list:
+            for member in members_list:
+                teams = member.team_set.all()
+                member_jobs = [job for team in teams for job in team.job_set.all()]
+                member_jobs.extend(
+                    [job for job in member.job_set.all().exclude(
+                            id__in=[job.id for job in member_jobs]
+                        )
+                    ]
+                )
+
+                for job in member_jobs:
+                    if (start_date <= job.start_date and job.end_date <= end_date) \
+                            or (start_date <= job.start_date and job.end_date >= end_date) \
+                                or (job.start_date <= start_date <= job.end_date):
+                        errors.append(f"A Member {'from this team' if team else ''} is already assigned to a job in the specified range.")
+        
+        if errors:
+            errors = list(set(errors))
+            raise ValidationError(
+                    {
+                        'start_date':errors, 
+                        'end_date': errors
+                    }
+                )
+
         return data
 
 
@@ -859,3 +980,46 @@ class STWJobListSerializer(serializers.ModelSerializer):
     event = EventSerializer()
     
 
+class MemberCalendarSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Requirement model.
+
+    This serializer is used to get Requirements for a Surveyor and convert Requirement model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+
+    class Meta:
+        model = Member
+        fields = ('name', )
+
+    def to_representation(self, instance: Member):
+        try:
+            ret = []
+            for ins in instance:
+                className = 'bg-gradient-warning'
+                teams = ins.team_set.all()
+                jobs = [job for team in teams for job in team.job_set.all()]
+                jobs.extend([job for job in ins.job_set.all().exclude(id__in=[job.id for job in jobs])])
+                
+
+                for job in jobs:
+                    title = job.__str__()
+                    member = ins.name
+                    start = job.start_date.strftime('%Y-%m-%dT%H:%M:%S')
+                    end = job.end_date.strftime('%Y-%m-%dT%H:%M:%S')
+                    ret.append(
+                        {
+                            'id': job.id,
+                            'title': f'{member}',
+                            'description': f'{title}',
+                            'start': f'{start}',
+                            'end': f'{end}',
+                            'className': f'{className}',
+                            # 'url': f"{reverse('customer_requirement_view', kwargs={'customer_id': instance.customer_id.id, 'pk': instance.id})}"
+                        }
+                    )
+            return {'jobs': ret}
+        except Exception as e:
+            return {}

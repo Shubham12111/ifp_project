@@ -71,7 +71,7 @@ urlpatterns = [
 
     # add job for stw
     path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
-    path('stw/job_assign/<int:job_id>/',AssignJobView.as_view(),name='job_assign_stw'),
+    path('stw/customer/<int:customer_id>/job_assign/', AssignJobView.as_view(), name='job_assign_stw'),
 
     # calendar urls
     path('member_calendar/', views.index, name='member_calendar'), 
@@ -103,5 +103,8 @@ urlpatterns = [
     path('sitepack/job/list/', SitepackJobListView.as_view(), name='sitepack_job_list'),
     # path('sitepack/job_document/add/', DocumentSelectView.as_view(), name='job_document_add'),
     path('sitepack/job_document/delete/<int:pk>/',DocumentJobDeleteView.as_view(),name="job_document_delete"),
+
+
+    path('assigned-jobs/list/', retriveMembersAssignedJobs, name='list_assigned_jobs_of_members'),
 
 ]

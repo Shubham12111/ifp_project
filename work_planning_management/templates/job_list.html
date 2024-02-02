@@ -31,30 +31,37 @@
             <table class="table table-flush text-dark" id="job-list">
               <thead class="thead-light">
                 <tr>
-                  <th>UPRN</th>
-                  <th>RBNO</th>
-                  <th>Action</th>
-                  <th>Description</th>
+                  <th>Reference Number</th>
                   <th>Start Date</th>
                   <th>End Date</th>
+                  <th>Team</th>
                   {% comment %} <th>Surveyor Name</th> {% endcomment %}
-                  <th>Number of Defects</th>
+                  {% comment %} <th>Number of Defects</th> {% endcomment %}
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <th class="custom-last-column">Actions</th>
                   {% endif %}
                 </tr>
               </thead>
               <tbody class="ml-4">
-                {% for job in stw_job_assignments %}
+                {% for job in jobs %}
                   <tr class="text-sm">
-                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.UPRN}}</td>
-                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.RBNO }}</td>
-                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.action| safe|truncatechars:20 }}</td>
-                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.description| safe|truncatechars:20 }}</td>
+                    <td class="text-sm">{{ job }}</td>
                     <td class="text-sm">{{ job.start_date|date:"d/m/Y" }}</td>
                     <td class="text-sm">{{ job.end_date|date:"d/m/Y" }}</td>
                     {% comment %} <td class="text-sm">{{ job.quotation.requirement_id.surveyor.first_name}} {{ job.quotation.requirement_id.surveyor.last_name}}</td> {% endcomment %}
-                    <td class="text-sm">{{ job.stw_job.quotation.defect_id.count}}</td>
+                    <td class="text-sm">
+                      {% if job.assigned_to_team %}
+                        {% for member in job.assigned_to_team.members.all %}
+                        {{ member.email }}{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                      {% elif job.assigned_to_member %}
+                        {% for member in job.assigned_to_member.all %}
+                        {{ member.email }}{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </td>
                     {% comment %} <td class="text-sm">{{ item.Defects description and option icon }}</td> {% endcomment %}
                     {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                     <td class="align-middle">
