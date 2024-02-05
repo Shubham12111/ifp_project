@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Job RLOs {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<style>
+    span>p {
+        margin-bottom: 0 !important;
+    }
+</style>
+{% include "job_stw_rlo_actions.html" %}
+<div class="container-fluid pt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <!-- Card header -->
+                <div class="card-header">
+                    <div class="row mb-3 justify-content-between">
+                        <div class="col-6">
+                            <h4>RLOs</h4>
+                        </div>
+                        <div class="col-6 text-end">
+                            {% include 'components/back_button.html' %}
+                            <a href="{% url 'job_rlo_add' job.customer_id.id job.id %}" class="btn bg-gradient-primary btn-sm mb-0">+&nbsp; Add RLO</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body pt-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover text-dark">
+                          <thead class="thead-light">
+                            <tr>
+                              <th>RLO name</th>
+                              <th>RLO status</th>
+                              <th>Created Date</th>
+                              {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                              <th class="custom-last-column">Actions</th>
+                              {% endif %}
+                            </tr>
+                          </thead>
+                          <tbody class="ml-4"> 
+                            {% for rlo in rlo_list %}
+                            <tr class="text-sm">
+                                <td class="text-sm">{{rlo.name}}</td>
+                                <td class="text-sm">{{rlo.status|title}}</td>
+                                <td class="text-sm">{{rlo.created_at|date:"d/m/Y"}}</td>
+            
+                                {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                                <td>
+                                    <div class="dropstart ms-auto pe-0">
+                                        <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
+                                        </a>
+                                        <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
+                 
+                                            {% comment %} <li>
+                                                <a href="{% url 'job_rlo_download' job.customer_id.id job.id rlo.id %}" class="dropdown-item border-radius-md" download>
+                                                    Download
+                                                </a>
+                                            </li> {% endcomment %}
+                                             
+                                            {% if request.user|has_delete_permission:"survey" %}
+                                            <li>
+                                                <a href="{% url 'job_rlo_delete' job.customer_id.id job.id rlo.id %}" type="button" class="dropdown-item border-radius-md">
+                                                    Delete
+                                                </a>
+                                            </li>
+                                            {% endif %}
+                                            
+                                            <li>
+                                                <a href="{% url 'job_rlo_reject' job.customer_id.id job.id rlo.id %}" type="button" class="dropdown-item border-radius-md">
+                                                    Reject
+                                                </a>
+                                            </li>
+
+                                            <li>
+                                                <a href="{% url 'job_rlo_approve' job.customer_id.id job.id rlo.id %}" type="button" class="dropdown-item border-radius-md">
+                                                    Approve
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {% if rlo_list.paginator.num_pages > 1 %}
+                    <div class="row justify-content-start justify-content-lg-between pagination-row">
+                        <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+                        <div class="pagination-info mt-auto mb-auto">Showing {{rlo_list.number}} of
+                            {{rlo_list.paginator.num_pages}} pages</div>
+                        </div>
+                        <div class="col-12 col-lg-6 align-self-center">
+                        <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                            <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                            {% if rlo_list.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ rlo_list.previous_page_number }}"><i
+                                    class="fas fa-angle-left"></i></a></li>
+                            {% else %}
+                            <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
+                            </li>
+                            {% endif %}
+                            {% for i in rlo_list.paginator.page_range %}
+                            {% if rlo_list.number == i %}
+                            <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                            {% else%}
+                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                            {% endif %}
+                            {% endfor %}
+                            {% if rlo_list.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ rlo_list.next_page_number }}"><i
+                                    class="fas fa-angle-right"></i></a></li>
+                            {% else %}
+                            <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
+                            </li>
+                            {% endif %}
+                            </ul>
+                        </nav>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

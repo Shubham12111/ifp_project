@@ -4,31 +4,77 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
+<link
+  id="pagestyle"
+  href="{% static 'assets/css/daterangepicker.css' %}"
+  rel="stylesheet"
+/>
+<style>
+  div.choices__list.choices__list--dropdown.is-active {
+    z-index: 100 !important;
+  }
+</style>
+<style>
+  ul li input[type="text"] {
+    display: inline-block;
+  }
+</style>
+
+<style>
+  .daterangepicker .ranges ul li.active {
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+  }
+  table > tbody > tr > td > a > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > i{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > i{
+    margin-bottom: 0 !important;
+  }
+</style>
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-12">
       <div class="card">
-        <!-- Card header -->
         <div class="card-header pb-0">
-          <div class="d-lg-flex justify-content-between">
-            <div>
+          <div class="row justify-content-between">
+            <div class="col-6">
               <h4 class="mb-0">Approved Quotation List</h4>
+              {% include 'customer_info.html' %}
             </div>
-
-            <div class="d-flex justify-content-between">
-            
-            {% comment %} <button type="button" class="btn bg-gradient-primary btn-sm mb-2 mx-2" id="data1" disabled>
-               Assign Document
-            </button>  {% endcomment %}
-
-            {% include 'components/back_button.html' %}
-             <button id="addSurveyorButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Add Job</button>
-
+            <div class="col-6 text-end">
+              {% include 'components/back_button.html' %}
+              <button id="addJob" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>+&nbsp;Add Job</button>
             </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              {% include "work_planning_filters.html" %}
+            </div>
+          </div>
         </div>
-        <div class="card-body px-0 pb-0">
-         <div class="table-responsive">
-            <table class="table table-flush text-dark" id="contact-list">
+        <div class="card-body pt-0">
+          <div class="table-responsive">
+            <table class="table table-hover text-dark">
               <thead class="thead-light">
                 <tr>
                   <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th>
@@ -41,23 +87,78 @@
               </thead>
               <tbody class="ml-4">
                 {% for item in approved_quotation %}
-                  <tr class="text-sm">
-                    <td class="text-sm">
-                      <input type="checkbox" class="checkbox-item" name="requirement_checkbox" value="{{ item.id }}">
-                    </td>
-                    <td class="text-sm">{{ item.requirement_id.action| safe|truncatechars:20}}</td>
-                    <td class="text-sm">{{ item.requirement_id.description | safe|truncatechars:20 }}</td>
-                    <td class="text-sm">{{ item.created_at |date:"d/m/Y "}}</td>
-                    <td class="text-sm">{{ item.requirement_id.surveyor.email }}</td>
-                    <td class="text-sm">{{ item.defect_id.count }}</td>
-                    {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
-                      <td class="custom-last-column">
-                      </td>
-                    {% endif %}
-                  </tr>
+                <tr class="text-sm">
+                  <td class="text-sm">
+                    <input type="checkbox" class="checkbox-item" name="requirement_checkbox" value="{{ item.id }}" 
+                    {% if item.job_set.all %}disabled{% endif %}>
+                  </td>
+                  <td class="text-sm">{{ item.requirement_id.action|safe|truncatechars_html:20}}</td>
+                  <td class="text-sm">{{ item.requirement_id.description | safe|truncatechars_html:20 }}</td>
+                  <td class="text-sm">{{ item.created_at |date:"d/m/Y "}}</td>
+                  <td class="text-sm">{{ item.requirement_id.surveyor|default:'' }}</td>
+                  <td class="text-sm">{{ item.defect_id.count }}</td>
+                </tr>
                 {% endfor %}
             </table>
           </div>
+          {% if approved_quotation.paginator.num_pages > 1 %}
+          <div
+            class="row justify-content-start justify-content-lg-between pagination-row"
+          >
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">
+                Showing {{approved_quotation.number}} of
+                {{approved_quotation.paginator.num_pages}} pages
+              </div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul
+                  class="pagination justify-content-start justify-content-lg-end mb-0 ps-0"
+                >
+                  {% if approved_quotation.has_previous %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ approved_quotation.previous_page_number }}"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% endif %} {% for i in approved_quotation.paginator.page_range %}
+                  {% if approved_quotation.number == i %}
+                  <li class="page-item active">
+                    <a class="page-link" href="#">{{ i }}</a>
+                  </li>
+                  {% else%}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                  </li>
+                  {% endif %} {% endfor %} {% if approved_quotation.has_next %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ approved_quotation.next_page_number }}"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -68,104 +169,243 @@
 
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
-<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/js/daterangepicker.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/custom_convert.js' %}"></script>
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const addSurveyorButton = document.getElementById("addSurveyorButton");
-    const assignDocumentButton = document.getElementById("data1"); // Assign Document button
+    const addJobButton = document.getElementById("addJob");
     const checkboxItems = document.querySelectorAll(".checkbox-item");
-
-
+    const quoteIds = []
 
     // Function to update the button state based on checkbox selection
     function updateButtonState() {
-      const selectedCheckboxes = document.querySelectorAll(".checkbox-item:checked");
-      const isChecked = selectedCheckboxes.length > 0;
-
+      const isChecked = quoteIds.length > 0;
       // Enable or disable the "Create Job" button based on checkbox selection
-      addSurveyorButton.disabled = !isChecked;
-
-      // Enable or disable the "Assign Document" button based on checkbox selection
-    assignDocumentButton.disabled = !isChecked;
-
-      // Disable all other checkboxes when one is checked
-      checkboxItems.forEach(function (checkbox) {
-        checkbox.disabled = isChecked && checkbox !== selectedCheckboxes[0];
-      });
+      addJobButton.disabled = !isChecked;
     }
 
     // Add event listeners to each checkbox
-    checkboxItems.forEach(function (checkbox) {
-      checkbox.addEventListener("change", updateButtonState);
+    checkboxItems.forEach(checkbox => {
+      checkbox.addEventListener("change", function () {
+        if (this.checked && !quoteIds.includes(this.value)) {
+          quoteIds.push(this.value);
+        } else if (!this.checked && quoteIds.includes(this.value)) {
+          quoteIds.pop(this.value);
+        }
+        updateButtonState();
+      });
     });
 
 
     // Add event listener to the "Create Job" button
-    addSurveyorButton.addEventListener("click", function () {
-      const selectedCheckbox = document.querySelector(".checkbox-item:checked");
-      if (selectedCheckbox) {
-        const selectedItemID = selectedCheckbox.value;
-        const createJobURL = window.location.origin + "/work_planning/jobs/add/"
-        const newURL = createJobURL + selectedItemID;
-        window.location.href = newURL;
-      }
-    });
-
-
-     // Add event listener to the "Create Job" button
-     assignDocumentButton.addEventListener("click", function () {
-      const selectedCheckbox = document.querySelector(".checkbox-item:checked");
-      if (selectedCheckbox) {
-        const selectedItemID = selectedCheckbox.value;
-        const createJobURL = window.location.origin + "/work_planning/sitepack/job_document/add/"
-        const newURL = createJobURL + selectedItemID;
-        window.location.href = newURL;
+    addJobButton.addEventListener("click", function () {
+      if (quoteIds != []) {
+        addJobUrl = `{% url "job_assign_stw" customer_data.id %}?quotation=${encodeURIComponent(
+          quoteIds.join(",")
+        )}`;
+        window.location.href = addJobUrl
       }
     });
 
     // Initial button state update
     updateButtonState();
   });
+</script>
+<script>
+    // Initialize the Date Range Picker
+    document.addEventListener('DOMContentLoaded', function () {
+      let initialStartDate, initialEndDate; // Variables to store the initial dates
 
- 
+      function cb(start, end) {
+        const formattedStartDate = start.format('DD/MM/YYYY');
+        const formattedEndDate = end.format('DD/MM/YYYY');
+        const formattedDateRange = formattedStartDate + ' - ' + formattedEndDate;
 
+        $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
+
+        applyFilter('dateRange', formattedDateRange);
+      }
+
+      // Initialize the Date Range Picker without setting an initial date range
+      const datePicker = $('#reportrange').daterangepicker({
+        autoUpdateInput: false,
+        autoApply: true,
+        showCustomRangeLabel: true, // Hide the "Custom Range" label
+        format: 'DD/MM/YYYY', // Change the format here
+        ranges: {
+          'Today': [moment(), moment()],
+          'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()]
+        },
+      });
+
+      if (datePicker.data('daterangepicker').showCustomRangeLabel) {
+        datePicker.data('daterangepicker').container.find('.ranges ul').append(
+          $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
+        );
+      }
+
+      datePicker.on('apply.daterangepicker', function (ev, picker) {
+        cb(picker.startDate, picker.endDate);
+      });
+
+      datePicker.on('show.daterangepicker', function (ev, picker) {
+        initialStartDate = picker.startDate.clone(); // Store initial start date
+        initialEndDate = picker.endDate.clone();     // Store initial end date
+      });
+
+      function dateclearFilter(filterType) {
+        if (filterType === 'dateRange') {
+          $('#reportrange').data('daterangepicker').setStartDate(moment());
+          $('#reportrange').data('daterangepicker').setEndDate(moment());
+          $('#reportrange span').html('');
+          clearFilter('dateRange'); // Apply empty filter value
+        }
+      }
+    });
 </script>
 
 <script>
+    const searchInput = document.getElementById('searchSurveyor');
+    const applySearchButton = document.getElementById('applySearch');
+    const searchResults = document.getElementById('searchResults');
+    const assignedToDropdown = document.getElementById('surveyorDropdown'); // Assigned To dropdown element
 
-if (document.getElementById('contact-list')) {
-  const dataTableSearch = new simpleDatatables.DataTable("#contact-list", {
-    searchable: true,
-    fixedHeight: false,
-    perPage: 10,
+    let currentSearchResults = []; // Store the current search results
+    let isDropdownOpen = false; // Variable to track dropdown open state
 
-  });
-  const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', function() {
-      const searchText = searchInput.value.toLowerCase();
-      dataTableSearch.search(searchText).draw();
+    // Function to update search results
+    function updateSearchResults(results) {
+      currentSearchResults = results; // Store the results
+      searchResults.innerHTML = '';
+
+      if (results.length > 0) {
+        results.forEach(result => {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.classList.add('dropdown-item', 'border-radius-md');
+          link.href = '#';
+          link.textContent = result;
+          // Add the click event to apply the filter
+          link.onclick = function () {
+            applyFilter('surveyor', result);
+          };
+          li.appendChild(link);
+          searchResults.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.classList.add('dropdown-item', 'text-muted');
+        li.textContent = 'No results found.';
+        searchResults.appendChild(li);
+      }
+    }
+
+    // Function to handle Apply Filter button click
+    function handleApplyFilter() {
+      const searchTerm = searchInput.value;
+
+      // Make a request to your backend API with the searchTerm
+      // Example using fetch:
+      fetch(`/fra/surveyor/search?term=${searchTerm}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Update the search results
+          updateSearchResults(data.data.results);
+
+        })
+        .catch(error => console.error(error, "error"));
+    }
+
+    // Function to toggle dropdown visibility
+    function toggleDropdown() {
+      isDropdownOpen = !isDropdownOpen;
+    }
+
+    const inputField = document.getElementById('searchSurveyor');
+
+    inputField.addEventListener('input', () => {
+      handleApplyFilter();
+      toggleDropdown();
+      event.stopPropagation();
     });
-}
-  // JavaScript code to handle removing the contact_type filter
-  const removeContactTypeFilter = () => {
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.delete('contact_type');
-    window.location.href = currentUrl.toString(); // Redirect to the URL without the contact_type parameter
-  };
-  function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
+</script>
+
+<script>
+    // JavaScript code to apply the filter on each field
+    function applyFilter(filterName, filterValue) {
+
+        // Handle date range filter
+        if (filterName === 'dateRange') {
+          filterValue = filterValue; // Use a custom delimiter to separate start and end dates
+  
+  
+        }
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set(filterName, filterValue);
+        window.location.href = currentUrl.toString();
+  
+  
+    }
+
+    // JavaScript code to clear single filter on onclick event
+    function clearFilter(filterName) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete(filterName);
+        window.location.href = currentUrl.toString();
+      }
+    // JavaScript code to clear all the filters
+    function clearAllFilters() {
+        const currentUrl = new URL(window.location.href);
+        const queryParams = new URLSearchParams(currentUrl.search);
+        const filterNames = ['surveyor', 'dateRange', 'q']; // Add dateRange to the filterNames array
+  
+        filterNames.forEach(filterName => {
+          queryParams.delete(filterName);
+        });
+        window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+        window.location.reload(); // Reload the page after clearing all filters
+    }
 
 
-
-
-    
+    // Check URL parameters on page load and update search and filter selections
+    window.addEventListener('DOMContentLoaded', function () {
+        const filterNames = ['surveyor', 'dateRange', 'q'];
+        filterNames.forEach(filterName => {
+          const filterValue = new URLSearchParams(window.location.search).get(filterName);
+  
+          if (filterValue) {
+            let displayedValue = filterValue; // Default displayed value is the filter value itself
+  
+            if (filterName === 'dateRange') {
+              const formattedDateRange = filterValue.replace('_', ' to ');
+              displayedValue = formattedDateRange;
+  
+              // Also update the date range input field if needed
+              document.getElementById('reportrange').value = formattedDateRange;
+            }
+            else if (filterValue.length > 16 && filterName != 'q') {
+              // Truncate the filter value if it's longer than 5 characters
+              displayedValue = filterValue.substring(0, 16) + '..';
+            }
+  
+            // Update the dropdown element with the displayed value
+            document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+          }
+        });
+      });
 </script>
 {% endblock %}
