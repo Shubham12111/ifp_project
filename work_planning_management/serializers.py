@@ -722,371 +722,23 @@ class AddJobSerializer(serializers.ModelSerializer):
 
    
 class JobAssignmentSerializer(serializers.ModelSerializer):
-    start_date = serializers.DateTimeField(
-        label='Start Date',
-        required=True,
-        input_formats=['%d-%m-%Y %H:%M','iso-8601'],
-        style={
-            'base_template': 'custom_date_time.html',
-            'custom_class': 'col-12 col-md-6'
-        },
-        # Add any additional styles or validators if needed
-    )
-
-    end_date = serializers.DateTimeField(
-        label='End Date',
-        required=True,
-        input_formats=['%d-%m-%Y %H:%M','iso-8601'],
-        style={
-            'base_template': 'custom_date_time.html',
-            'custom_class': 'col-12 col-md-6'
-        },
-        # Add any additional styles or validators if needed
-    )
-
-    quotation = serializers.PrimaryKeyRelatedField(
-        queryset = Quotation.objects.all(),
-        many=True,
-        style={
-            'base_template': 'custom_hidden_select_input.html',
-            'custom_class': 'd-none'
-        },
-        required=False
-    )
-
-    stw = serializers.PrimaryKeyRelatedField(
-        queryset = STWRequirements.objects.all(),
-        many=True,
-        style={
-            'base_template': 'custom_hidden_select_input.html',
-            'custom_class': 'd-none'
-        },
-        required=False
-    )
-
-    class Meta:
-        model = Job
-        fields = ['quotation', 'stw', 'start_date', 'end_date']
-    
-    def validate(self, attrs):
-        customer = self.context.get('customer')
-        attrs = super().validate(attrs)
-
-        # get the quotations list
-        quotations = attrs.get('quotation', [])
-        quotations = [quotation for quotation in quotations if quotation.customer_id == customer]
-        quotations = [quotation for quotation in quotations if not quotation.job_set.all()]
-        
-        stws = attrs.get('stw', [])
-        stws = [stw for stw in stws if stw.customer_id == customer]
-        stws = [stw for stw in stws if not stw.job_set.all()]
-
-        if not stws and not quotations:
-            raise serializers.ValidationError({
-                'quotation': ['This field is required.'],
-                'stw': ['This field is required.']
-            })
-
-        return attrs
-
-class JobCreateSerializer(serializers.ModelSerializer):
-    
-    start_date = serializers.DateTimeField(
-        label='Start Date',
-        required=True,
-        input_formats=['%d-%m-%Y %H:%M','iso-8601'],
-        # Add any additional styles or validators if needed
-    )
-
-    end_date = serializers.DateTimeField(
-        label='End Date',
-        required=True,
-        input_formats=['%d-%m-%Y %H:%M','iso-8601'],
-        # Add any additional styles or validators if needed
-    )
-
-    quotation = serializers.PrimaryKeyRelatedField(
-        queryset = Quotation.objects.all(),
-        many=True,
-        required=False
-    )
-
-    stw = serializers.PrimaryKeyRelatedField(
-        queryset = STWRequirements.objects.all(),
-        many=True,
-        required=False
-    )
-
-    assigned_to_member = serializers.PrimaryKeyRelatedField(
-        queryset = Member.objects.all(),
-        many=True,
-        required=False
-    )
-
     assigned_to_team = serializers.PrimaryKeyRelatedField(
-        queryset = Team.objects.all(),
-        required=False
+        queryset=Team.objects.all(),
+        required=False,
+        label="Select Team",
+        allow_null=True,  # Set allow_null to True
+        style={
+            "autofocus": False,
+            "autocomplete": "off",
+            "base_template":'custom_select.html'
+        },
     )
+
 
     class Meta:
-        model = Job
-        fields = ['quotation', 'stw', 'start_date', 'end_date', 'assigned_to_team', 'assigned_to_member']
-    
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        start_date = data.get('start_date', None)
-        end_date = data.get('end_date', None)
+        model = STWJobAssignment
+        fields = ['assigned_to_team']
 
-        if start_date and end_date and start_date > end_date:
-            raise ValidationError({'end_date':'End Date/Time should be greater than the Start Date/Time.'})
-        
-        team = data.get('assigned_to_team', None)
-        members = data.get('assigned_to_member', None)
-
-        if not team and not members:
-            raise ValidationError(
-                {
-                    'assigned_to_team':[
-                        'Either team or member must be selected.'
-                    ], 
-                    'assigned_to_member': [
-                        'Either team or member must be selected.'
-                    ]
-                }
-            )
-
-        errors = []
-        members_list = []
-
-        if team:
-            members_list = [member for member in team.members.all()]
-        
-        if members:
-            members_list.extend([member for member in members])
-        
-        if members_list:
-            for member in members_list:
-                teams = member.team_set.all()
-                member_jobs = [job for team in teams for job in team.job_set.all()]
-                member_jobs.extend(
-                    [job for job in member.job_set.all().exclude(
-                            id__in=[job.id for job in member_jobs]
-                        )
-                    ]
-                )
-
-                for job in member_jobs:
-                    if start_date <= job.start_date <= end_date \
-                        or job.start_date <= start_date <= job.end_date:
-                        errors.append(f"A Member {'from this team' if team else ''} is already assigned to a job in the specified range.")
-        
-        if errors:
-            errors = list(set(errors))
-            raise ValidationError(
-                    {
-                        'start_date':errors, 
-                        'end_date': errors
-                    }
-                )
-
-        customer = self.context.get('customer')
-
-        # get the quotations list
-        quotations = data.get('quotation', [])
-        quotations = [quotation for quotation in quotations if quotation.customer_id == customer]
-        quotations = [quotation for quotation in quotations if not quotation.job_set.all()]
-        
-        stws = data.get('stw', [])
-        stws = [stw for stw in stws if stw.customer_id == customer]
-        stws = [stw for stw in stws if not stw.job_set.all()]
-
-        data['stw'] = stws
-        data['quotation'] = quotations
-
-        return data
-
-class AttachSitePackSerializer(serializers.ModelSerializer):
-
-    job = serializers.PrimaryKeyRelatedField(
-        queryset=Job.objects.all(),
-        required=True,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "job is required.",
-        },
-    )
-
-    sitepack_document = serializers.PrimaryKeyRelatedField(
-        queryset=SitePack.objects.all(),
-        required=True,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Site Pack is required.",
-        },
-    )
-
-    class Meta:
-        model = JobDocument
-        fields = ['job', 'sitepack_document']
-    
-    def validate(self, attrs):
-        job = attrs.get('job', None)
-        site_pack = attrs.get('sitepack_document', None)
-
-        if not site_pack and not job:
-            raise serializers.ValidationError(
-                {
-                    'job': ['This field is required.'],
-                    'sitepack_document': ['This field is required.']
-                }
-            )
-
-        queryset = self.Meta.model.objects.filter(job=job).values_list('sitepack_document', flat=True).all()
-
-        if site_pack.id in queryset:
-            raise serializers.ValidationError(
-                {
-                    'sitepack_document': ['The site pack is already attached to this job, please choose some another site pack.']
-                }
-            )
-
-        return super().validate(attrs)
-
-class AddAndAttachSitePackSerializer(serializers.ModelSerializer):
-
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        required=True,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Name is required.",
-        },
-    )
-
-    job = serializers.PrimaryKeyRelatedField(
-        queryset=Job.objects.all(),
-        required=True,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Name is required.",
-        },
-    )
-
-    name = serializers.CharField(
-        required=True,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Name is required.",
-        },
-    )
-
-    document_path = serializers.FileField(
-        allow_empty_file=False,
-        validators=[CustomFileValidator()],
-        required=True,
-    )
-
-    class Meta:
-        model = SitePack
-        fields = ['user_id', 'job', 'name', 'document_path']
-    
-    def create(self, validated_data):
-
-        document = validated_data.pop('document_path', None)
-        job = validated_data.pop('job', None)
-        try:
-            orignal_document_name = f'{document.name}'
-            document.name = f"{str(uuid.uuid4())}_{document.name}"
-            # upload the document to the s3
-            upload_file_to_s3(document.name, document, f'sitepack_doc')
-            validated_data['document_path'] = f'{document.name}'
-            validated_data['orignal_document_name'] = orignal_document_name
-            instance = super().create(validated_data)
-            serializer = AttachSitePackSerializer(data={
-                'job': job.id,
-                'sitepack_document': instance.id
-            })
-
-            if serializer.is_valid():
-                serializer.save()
-                return instance
-            
-            raise serializer.errors
-        except Exception as e:
-            raise e
-
-    def delete(self, instance):
-        site_pack = instance.sitepack_document
-
-        if site_pack.user_id.is_staff:
-            instance.delete()
-        
-        else:
-            instance.delete()
-            deleted = delete_file_from_s3(site_pack.document_path, f'sitepack_doc')
-            site_pack.delete()
-
-
-class CreateRLOSeirlaizer(serializers.ModelSerializer):
-
-    name = serializers.CharField(
-        required=True,
-        max_length=255,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Name is required.",
-            "invalid": "Invalid Name",
-        }, 
-    )
-
-    job = serializers.PrimaryKeyRelatedField(
-        queryset=Job.objects.all(),
-        required=True,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "job is required.",
-        },
-    )
-
-    base_template = serializers.PrimaryKeyRelatedField(
-        queryset=RLOLetterTemplate.objects.all(),
-        required=True,
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Base Template is required.",
-        },
-    )
-
-    class Meta:
-        model = RLO
-        fields = ('name', 'job', 'base_template', 'edited_content')
-    
-    def validate(self, attr):
-
-        edited_content = attr.get('edited_content', None)
-        base_template = attr.get('base_template', None)
-
-        if not base_template:
-            raise serializers.ValidationError(
-                {
-                    'base_template': ['This field is required.']
-                }
-            )
-
-        if edited_content is not None:
-            edited_content = edited_content
-        else:
-            edited_content = base_template.complete_template
-        
-        attr['edited_content'] = edited_content
-
-        return super().validate(attr)
-
-class UpdateRLOSeirlaizer(serializers.ModelSerializer):
-
-    class Meta:
-        model = RLO
-        fields = ('status',)
 
 class EventSerializer(serializers.ModelSerializer):
     name = serializers.CharField(
@@ -1162,71 +814,87 @@ class EventSerializer(serializers.ModelSerializer):
         model = Events
         fields = ['name', 'team','description','member','start', 'end'] 
 
+
+class AssignJobSerializer(serializers.ModelSerializer):
+    start_date = serializers.DateField(
+        label='Start Date',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+        # Add any additional styles or validators if needed
+    )
+    end_date = serializers.DateField(
+        label='End Date',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+       
+    )
+
+    start_time = serializers.TimeField(
+        label='Start Time',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+        # Add any additional styles or validators if needed
+    )
+    end_time = serializers.TimeField(
+        label='End Time',
+        required=True,
+        input_formats=['iso-8601'],
+        style={
+            'base_template': 'custom_datepicker.html',
+            'custom_class': 'col-6'
+        },
+       
+    )
+    
+
+    class Meta:
+        model = STWJobAssignment
+        fields = ['start_date', 'end_date','start_time','end_time'] 
+
+    def validate(self, data):
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        if start_date and end_date and start_date > end_date:
+            raise ValidationError({'end_date':'End date should be greater than the start date.'})
+
+        return data
+    
+
 class STWJobListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Job
+        model = STWJobAssignment
         fields = [
             'id',
-            'quotation',
-            'stw',
+            'stw_job',
             'assigned_to_member',
             'assigned_to_team',
             'event',
             'start_date',
             'end_date',
+            'start_time',
+            'end_time',
             'created_at',
             'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     # If you want to provide custom representation for related fields, you can do so like this:
-    quotation = QuotationSerializer()
-    stw = STWRequirementSerializer()
+    stw_job = STWRequirementSerializer()
     assigned_to_member = MemberSerializer(many=True)
     assigned_to_team = TeamSerializer()
     event = EventSerializer()
     
 
-class MemberCalendarSerializer(serializers.ModelSerializer):
-    """
-    Serializer for Requirement model.
-
-    This serializer is used to get Requirements for a Surveyor and convert Requirement model instances to JSON representations.
-
-    Methods:
-        to_representation: Convert the model instance to JSON representation.
-    """
-
-    class Meta:
-        model = Member
-        fields = ('name', )
-
-    def to_representation(self, instance: Member):
-        try:
-            ret = []
-            for ins in instance:
-                className = 'bg-gradient-warning'
-                teams = ins.team_set.all()
-                jobs = [job for team in teams for job in team.job_set.all()]
-                jobs.extend([job for job in ins.job_set.all().exclude(id__in=[job.id for job in jobs])])
-                
-
-                for job in jobs:
-                    title = job.__str__()
-                    member = ins.name
-                    start = job.start_date.strftime('%Y-%m-%dT%H:%M:%S')
-                    end = job.end_date.strftime('%Y-%m-%dT%H:%M:%S')
-                    ret.append(
-                        {
-                            'id': job.id,
-                            'title': f'{member}',
-                            'description': f'{title}',
-                            'start': f'{start}',
-                            'end': f'{end}',
-                            'className': f'{className}',
-                            # 'url': f"{reverse('customer_requirement_view', kwargs={'customer_id': instance.customer_id.id, 'pk': instance.id})}"
-                        }
-                    )
-            return {'jobs': ret}
-        except Exception as e:
-            return {}

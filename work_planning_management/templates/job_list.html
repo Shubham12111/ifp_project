@@ -4,97 +4,88 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
+<div>
+
+</div>
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-12">
       <div class="card">
         <!-- Card header -->
-        <div class="card-header">
-          <div class="row justify-content-between">
-            <div class="col-6">
+        <div class="card-header pb-0">
+          <div class="d-lg-flex justify-content-between">
+            
+            <div>
               <h4 class="mb-0">Jobs List</h4>
-              {% include 'customer_info.html' %}
             </div>
-            <div class="col-6 text-end">
+
+            <div class="ms-auto my-auto mt-lg-0 mt-4">
               {% include 'components/back_button.html' %}
             </div>
-          </div>
 
-          <div class="row">
-            
           </div>
+          {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
         </div>
-        <div class="card-body pt-0">
+        <div class="card-body px-0 pb-0">
           <div class="table-responsive">
-            <table class="table table-hover text-dark" id="job-list">
+            <table class="table table-flush text-dark" id="job-list">
               <thead class="thead-light">
                 <tr>
-                  <th>Reference Number</th>
+                  <th>UPRN</th>
+                  <th>RBNO</th>
+                  <th>Action</th>
+                  <th>Description</th>
                   <th>Start Date</th>
                   <th>End Date</th>
-                  <th>Team</th>
+                  {% comment %} <th>Surveyor Name</th> {% endcomment %}
+                  <th>Number of Defects</th>
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <th class="custom-last-column">Actions</th>
                   {% endif %}
                 </tr>
               </thead>
               <tbody class="ml-4">
-                {% for job in jobs %}
-                <tr class="text-sm align-middle">
-                  <td class="text-sm">
-                    <a href="{% url 'job_detail' customer_data.id job.id %}"
-                    class="text-decoration-none w-100 nav-link" >
-                      {{ job }}
-                    </a>
+                {% for job in stw_job_assignments %}
+                  <tr class="text-sm">
+                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.UPRN}}</td>
+                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.RBNO }}</td>
+                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.action| safe|truncatechars:20 }}</td>
+                    <td class="text-sm">{{ job.stw_job.quotation.requirement_id.description| safe|truncatechars:20 }}</td>
+                    <td class="text-sm">{{ job.start_date|date:"d/m/Y" }}</td>
+                    <td class="text-sm">{{ job.end_date|date:"d/m/Y" }}</td>
+                    {% comment %} <td class="text-sm">{{ job.quotation.requirement_id.surveyor.first_name}} {{ job.quotation.requirement_id.surveyor.last_name}}</td> {% endcomment %}
+                    <td class="text-sm">{{ job.stw_job.quotation.defect_id.count}}</td>
+                    {% comment %} <td class="text-sm">{{ item.Defects description and option icon }}</td> {% endcomment %}
+                    {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                    <td class="align-middle">
+                      <div class="dropstart ms-auto pe-0">
+                          <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
+                          </a>
+                          <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
+                              {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user %}
+                        
+                                  {% if request.user|has_view_permission:"fire_risk_assessment" %}
+                                  <li>
+                                    <a href="{% url 'job_detail' job.id %}" class="dropdown-item border-radius-md">
+                                    View
+                                    </a>
+                                  </li>
+                                {% endif %}
+                                {% if request.user|has_delete_permission:"fire_risk_assessment" %}                                    
+                                  <a href="#" type="button" class="dropdown-item border-radius-md" onclick="CustomconfirmDelete({{ job.id }}, 'Are you sure you want to delete this Job?','The Job has been deleted successfully.','{% url 'job_delete'  job.id %}')">
+                                    Delete
+                                  </a>
+                                {% endif %}
+                              {% else %}
+                              
+                            {% endif %}
+
+                          </ul>
+                      </div>
                   </td>
-                  <td class="text-sm">
-                    <a href="{% url 'job_detail' customer_data.id job.id %}"
-                    class="text-decoration-none w-100 nav-link" >
-                      {{ job.start_date|date:"d/m/Y" }}
-                    </a>
-                  </td>
-                  <td class="text-sm">
-                    <a href="{% url 'job_detail' customer_data.id job.id %}"
-                    class="text-decoration-none w-100 nav-link" >
-                      {{ job.end_date|date:"d/m/Y" }}
-                    </a>
-                  </td>
-                  <td class="text-sm">
-                    <a href="{% url 'job_detail' customer_data.id job.id %}"
-                    class="text-decoration-none w-100 nav-link" >
-                      {% if job.assigned_to_team %}
-                      {% for member in job.assigned_to_team.members.all %}
-                      {{ member }}{% if not forloop.last %},<br>{% endif %}
-                      {% endfor %}
-                      {% elif job.assigned_to_member %}
-                      {% for member in job.assigned_to_member.all %}
-                      {{ member }}{% if not forloop.last %},<br>{% endif %}
-                      {% endfor %}
-                      {% else %}
-                      -
-                      {% endif %}
-                    </a>
-                  </td>
-                  {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
-                  <td class="align-middle">
-                    <div class="dropstart ms-auto pe-0">
-                      <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
-                      </a>
-                      <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                        {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user %}
-                        {% if request.user|has_delete_permission:"fire_risk_assessment" %}
-                        <a href="#" type="button" class="dropdown-item border-radius-md">
-                          Delete
-                        </a>
-                        {% endif %}
-                        {% endif %}
-                      </ul>
-                    </div>
-                  </td>
-                  {% endif %}
-                </tr>
+                    {% endif %}
+                  </tr>
                 {% endfor %}
             </table>
           </div>
@@ -105,7 +96,57 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="{% static 'assets/js/custom_convert.js' %}"></script>
+<script>
+
+  if (document.getElementById('job-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#job-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 10,
+    });
+  
+  
+    const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value.toLowerCase();
+        dataTableSearch.search(searchText).draw();
+      });
+  }
+
+
+document.addEventListener("DOMContentLoaded", function () {
+  const stwCheckboxes = document.querySelectorAll('.quotation-checkbox');
+  const createJobButton = document.getElementById("createJobButton");
+
+  // Function to check if at least one checkbox is selected
+  function updateCreateJobButton() {
+    const atLeastOneSelected = Array.from(stwCheckboxes).some(checkbox => checkbox.checked);
+    createJobButton.disabled = !atLeastOneSelected;
+  }
+
+  // Function to handle checkbox change and allow only a single checkbox to be selected
+  function handleCheckboxChange(checkbox) {
+    stwCheckboxes.forEach(cb => {
+      if (cb !== checkbox) {
+        cb.checked = false;
+      }
+    });
+    updateCreateJobButton();
+  }
+
+  // Add event listeners to checkboxes
+  stwCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener("change", function() {
+      handleCheckboxChange(checkbox);
+    });
+  });
+
+  // Initial check
+  updateCreateJobButton();
+});
+</script>
 {% endblock %}
