@@ -19,12 +19,19 @@ urlpatterns = [
     path('approved_list/<int:customer_id>/list/', ApprovedQuotationListView.as_view(), name='approved_quotation_list'),
 
 
-    path('job_customers/', JobCustomerListView.as_view(), name='job_customers_list'),
-    path('jobs/add/<int:qoute_id>/', QuoteJobView.as_view(), name='job_add'),
-    path('jobs/<int:customer_id>/list/', JobsListView.as_view(), name='jobs_list'),
-    path('job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
-    path('job/<int:job_id>/', JobDetailView.as_view(), name='job_detail'),
-    path('job-site-packs/<int:job_id>/', JobSTWDetailView.as_view(), name='job_site_packs_detail'),
+    path('job-customers/', JobCustomerListView.as_view(), name='job_customers_list'),
+    
+    path('customer/<int:customer_id>/jobs/', JobsListView.as_view(), name='jobs_list'),
+    path('customer/<int:customer_id>/jobs/job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
+    path('customer/<int:customer_id>/jobs/job/<int:job_id>/details/', JobDetailView.as_view(), name='job_detail'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/', JobSitePacksDetailView.as_view(), name='job_site_packs_detail'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/<int:site_pack_id>/delete/', JobSitePacksDeleteView.as_view(), name='job_site_packs_delete'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/', JobRLODetailView.as_view(), name='job_rlo_detail'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/add/', JobRLOAddView.as_view(),name='job_rlo_add'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/delete/', JobRLODeleteView.as_view(),name='job_rlo_delete'),
+    # path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/download/', JobRLODownloadView.as_view(),name='job_rlo_download'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/approve/', JobRLOApproveView.as_view(),name='job_rlo_approve'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/reject/', JobRLORejectView.as_view(),name='job_rlo_reject'),
 
 
 

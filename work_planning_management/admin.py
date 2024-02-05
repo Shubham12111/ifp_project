@@ -1,7 +1,10 @@
+from typing import Any
 from django.contrib import admin
+from django.db.models.query import QuerySet
+from django.http.request import HttpRequest
 
 from . models import Job, STWRequirements,STWAsset,STWDefect,STWDefectDocument,RLO,RLOLetterTemplate,Team,Member,JobDocument,Events,SitePack
-from work_planning_management.forms import SitePackAdminForm
+from work_planning_management.forms import SitePackAdminForm, delete_file_from_s3
 
 class STWRequirementsAdmin(admin.ModelAdmin):
     """
@@ -66,8 +69,17 @@ class JobAdmin(admin.ModelAdmin):
 
 class SitePackAdmin(admin.ModelAdmin):
     
-    list_display = ('id','name', 'document_path', 'create_at',)
+    list_display = ('id','name', 'orignal_document_name', 'create_at',)
     form = SitePackAdminForm
+
+    def delete_queryset(self, request, queryset) -> None:
+        for obj in queryset:
+            deleted = delete_file_from_s3(obj.document_path, f'sitepack_doc')
+        return super().delete_queryset(request, queryset)
+    
+    def delete_model(self, request, obj) -> None:
+        deleted = delete_file_from_s3(obj.document_path, f'sitepack_doc')
+        return super().delete_model(request, obj)
 
 class JobDocumentAdmin(admin.ModelAdmin):
     list_display = ('job', 'sitepack_document', 'created_at', 'updated_at')
@@ -84,3 +96,4 @@ admin.site.register(Team, TeamAdmin)
 admin.site.register(JobDocument,JobDocumentAdmin)
 admin.site.register(Events)
 admin.site.register(SitePack, SitePackAdmin)
+admin.site.register(Job)

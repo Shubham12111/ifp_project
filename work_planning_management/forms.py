@@ -32,16 +32,6 @@ class SitePackAdminForm(forms.ModelForm):
         model = SitePack
         fields = ['name', 'document_path', 'user_id']
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Initialize the document_path field with the existing file
-        instance = kwargs.get('instance')
-        if instance and instance.document_path:
-            # Fetch the file from S3 and initialize the file field
-            file_content = fetch_file_from_s3(f'{instance.document_path}', f'sitepack_doc')
-            file_content = file_content.read()
-            self.initial['document_path'] = ContentFile(file_content, name=instance.document_path)
-    
     def clean_user_id(self):
         user = self._meta.formfield_callback.keywords.get('request').user._wrapped
         return user
@@ -52,7 +42,6 @@ class SitePackAdminForm(forms.ModelForm):
             raise forms.ValidationError(
                 'this field is required.'
             )
-        document.name = f"{str(uuid.uuid4())}_{document.name}"
         return document
 
     def save(self, commit: bool = False) -> Any:
@@ -63,14 +52,20 @@ class SitePackAdminForm(forms.ModelForm):
             previous_file = self.instance.document_path or ''
 
         # get the document from the cleaned data and generate a unique name for the document
-        document:InMemoryUploadedFile = self.cleaned_data.get('document_path', None)
+        document:InMemoryUploadedFile = self.cleaned_data.pop('document_path', None)
         try:
+            orignal_document_name = f'{document.name}'
+            document.name = f"{str(uuid.uuid4())}_{document.name}"
             # upload the document to the s3
             upload_file_to_s3(document.name, document, f'sitepack_doc')
             self.cleaned_data['document_path'] = f'/sitepack_doc/{document.name}'
             if previous_file:
                 deleted = delete_file_from_s3(previous_file, f'sitepack_doc')
-            return super().save(commit)
+            instance = super().save(commit)
+            instance.document_path = f'{document.name}'
+            instance.orignal_document_name = orignal_document_name
+            instance.save()
+            return instance
         
         except Exception as e:
             raise e

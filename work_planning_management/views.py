@@ -22,7 +22,7 @@ from infinity_fire_solutions.permission import *
 from infinity_fire_solutions.utils import docs_schema_response_new
 
 from .models import *
-from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,EventSerializer,STWJobListSerializer, JobCreateSerializer, MemberCalendarSerializer
+from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,EventSerializer,STWJobListSerializer, JobCreateSerializer, MemberCalendarSerializer, AttachSitePackSerializer, AddAndAttachSitePackSerializer, CreateRLOSeirlaizer, UpdateRLOSeirlaizer
 
 from requirement_management.serializers import SORSerializer
 from requirement_management.models import SORItem
@@ -1625,7 +1625,7 @@ class QuoteJobView(CustomAuthenticationMixin, generics.CreateAPIView):
 
 def filter_job(data_access_value, user, customer=None):
     # Define a base queryset that contains all jobs
-    base_queryset = STWJobAssignment.objects.all()
+    base_queryset = Job.objects.all()
 
     # Define a mapping of data access values to corresponding filters.
     filter_mapping = {
@@ -1647,6 +1647,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
     search_fields = ['stw_job__quotation__action', 'stw_job__quotation__description', 'stw_job__quotation__RBNO', 'stw_job__quotation__UPRN']
     template_name = 'job_list.html'
     ordering_fields = ['created_at']
+    queryset = Job.objects.all()
 
     common_get_response = {
         status.HTTP_200_OK: docs_schema_response_new(
@@ -1655,45 +1656,43 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             message="Data retrieved",
         )
     }
-    def get_queryset(self):
+    def get_queryset(self, data_access_value, customer_data):
         """
         Get the queryset based on filtering parameters from the request.
         """
+        queryset = super().get_queryset()
+        filter_mapping = {
+            "self": Q(user_id=self.request.user),
+            "all": Q(),
+        }
+        queryset = queryset.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        queryset = queryset.filter(customer_id=customer_data).all()
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            queryset = queryset.order_by(ordering)
+
+        return queryset.order_by('-created_at')
+
+    @swagger_auto_schema(operation_id='STW Job Assignment Listing', responses={**common_get_response})
+    def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "survey", HasListDataPermission, 'list'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user
-        filter_mapping = {
-            "self": Q(user_id=self.request.user),
-            "all": Q(),
-        }
-        base_queryset = Job.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
-        # Order the queryset based on the 'ordering_fields'
-        ordering = self.request.GET.get('ordering')
-        if ordering in self.ordering_fields:
-            base_queryset = base_queryset.order_by(ordering)
 
-        return base_queryset.order_by('-created_at')
-
-    @swagger_auto_schema(operation_id='STW Job Assignment Listing', responses={**common_get_response})
-    def get(self, request, *args, **kwargs):
         customer_id = kwargs.get('customer_id', None)
-
-        customer_data = User.objects.filter(id=customer_id).first()
+        customer_data = get_customer_data(customer_id)
 
         if customer_data:
-            # Call the handle_unauthenticated method to handle unauthenticated access.
-            authenticated_user, data_access_value = check_authentication_and_permissions(
-                self, "survey", HasListDataPermission, 'list'
-            )
-            if isinstance(authenticated_user, HttpResponseRedirect):
-                return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
-            queryset = self.get_queryset()
+            queryset = self.get_queryset(data_access_value, customer_data)
 
             if request.accepted_renderer.format == 'html':
-                context = {'jobs': queryset, 'customer_id': customer_id, 'customer_data': customer_data}
+                context = {
+                    'jobs': queryset,
+                    'customer_data': customer_data
+                }
                 return render_html_response(context, self.template_name)
             else:
                 serializer = self.serializer_class(queryset, many=True)
@@ -1702,7 +1701,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
                                            data=serializer.data)
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id}))
+            return redirect(reverse('job_customers_list'))
 
         
 class AddJobView(CustomAuthenticationMixin, generics.CreateAPIView):
@@ -1859,7 +1858,7 @@ class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     template_name = 'job_list.html'
 
     def get_queryset(self):
-        return STWJobAssignment.objects.filter()
+        return Job.objects.filter()
 
     def get(self, request, *args, **kwargs):
         job_id = self.kwargs.get('job_id')
@@ -1869,7 +1868,7 @@ class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         try:
             job = queryset.get(id=job_id)
-        except STWJobAssignment.DoesNotExist:
+        except Job.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         if request.accepted_renderer.format == 'html':
@@ -1890,7 +1889,7 @@ class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         try:
             job = queryset.get(id=job_id)
-        except STWJobAssignment.DoesNotExist:
+        except Job.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         # You can add permission checks here to ensure the user has the right to delete the job.
@@ -1921,6 +1920,7 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
     serializer_class = STWJobListSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'job_detail.html'
+    queryset = Job.objects.all()
 
     def get_queryset(self):
         """
@@ -1929,8 +1929,14 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         Returns:
         QuerySet: A queryset of jobs.
         """
-        # Your queryset logic to filter jobs goes here
-        queryset = STWJobAssignment.objects.all()
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = super().get_queryset().filter(id=job_id, customer_id=customer_id).first()
+
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -1940,31 +1946,30 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
         
-        job_id = self.kwargs.get('job_id')
-        queryset = self.get_queryset()
+        customer_id = self.kwargs.get('customer_id')
 
-        try:
-            job = queryset.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        instance = self.get_queryset()
+        
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
 
         # Additional job data can be retrieved here based on your requirements
         # For example, get related data or perform other queries to obtain additional job details
 
         if request.accepted_renderer.format == 'html':
             context = {
-                'job': job,
-                'job_id':job_id,
+                'job': instance,
                 # Add more job-related data to the context as needed
             }
             return render(request, self.template_name, context)
         else:
-            serializer = self.serializer_class(job)
+            serializer = self.serializer_class(instance)
             return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
 
-class JobSTWDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+class JobSitePacksDetailView(CustomAuthenticationMixin, generics.GenericAPIView):
     """
     View for retrieving job details.
 
@@ -1977,9 +1982,43 @@ class JobSTWDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         template_name (str): The template name for HTML rendering.
     """
 
-    serializer_class = STWJobListSerializer
+    serializer_class = AttachSitePackSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'job_site_packs_detail.html'
+    queryset = JobDocument.objects.all()
+    
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+
+    def get_job_instance(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+        return queryset
 
     def get_queryset(self):
         """
@@ -1988,8 +2027,14 @@ class JobSTWDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         Returns:
         QuerySet: A queryset of jobs.
         """
-        # Your queryset logic to filter jobs goes here
-        queryset = Job.objects.all()
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = super().get_queryset().filter(job=job_id, job__customer_id=customer_id).all()
+
         return queryset
 
     def get(self, request, *args, **kwargs):
@@ -1998,30 +2043,753 @@ class JobSTWDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-        
-        job_id = self.kwargs.get('job_id')
+
+        customer_id = self.kwargs.get('customer_id')
+
+        instance = self.get_job_instance()
         queryset = self.get_queryset()
-
-        try:
-            job = queryset.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
+        
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
         # Additional job data can be retrieved here based on your requirements
         # For example, get related data or perform other queries to obtain additional job details
 
         if request.accepted_renderer.format == 'html':
             context = {
-                'job': job,
-                'job_id':job_id,
+                'job': instance,
+                'site_packs': self.get_paginated_queryset(queryset),
+                'default_site_packs': SitePack.objects.filter(user_id__is_staff=True).all()
                 # Add more job-related data to the context as needed
             }
             return render(request, self.template_name, context)
         else:
-            serializer = self.serializer_class(job)
+            serializer = self.serializer_class(instance)
             return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
+    
+    def post(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = self.kwargs.get('customer_id')
+
+        instance = self.get_job_instance()
+        queryset = self.get_queryset()
+        
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action.")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+
+        serializer_data = request.data.copy()
+        serializer_class_type = serializer_data.get('type', 'default')
+        serializer_data['job'] = instance.id
+        
+        if serializer_class_type == 'default':
+            serializer = self.serializer_class(data=serializer_data)
+        elif serializer_class_type == 'new':
+            serializer_data['user_id'] = request.user.id
+            serializer = AddAndAttachSitePackSerializer(data=serializer_data)
+        else:
+            messages.error(request, "You are not authorized to perform this action.")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+        
+        if serializer.is_valid():
+            serializer.save()
+            messages.success(request, "Site Pack has been added successfully.")
+            if request.accepted_renderer.format == 'html':
+                context = {
+                    'job': instance,
+                    'site_packs': queryset,
+                    'default_site_packs': SitePack.objects.filter(user_id__is_staff=True).all()
+                    # Add more job-related data to the context as needed
+                }
+                return render(request, self.template_name, context)
+            else:
+                serializer = self.serializer_class(instance)
+                return create_api_response(status_code=status.HTTP_200_OK,
+                                        message="Data retrieved",
+                                        data=serializer.data)
+        
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'job': instance,
+                'site_packs': queryset,
+                'default_site_packs': SitePack.objects.filter(user_id__is_staff=True).all(),
+                'default_site_packs_erros' if serializer_class_type == 'default' else  'new_site_packs_erros': convert_serializer_errors(serializer.errors)
+                # Add more job-related data to the context as needed
+            }
+            return render(request, self.template_name, context)
+        else:
+            serializer = self.serializer_class(instance)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
+
+class JobSitePacksDeleteView(CustomAuthenticationMixin, generics.GenericAPIView):
+    """
+    View for retrieving job details.
+
+    This view retrieves details of a job, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class (JobSerializer): The serializer class for the job.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+    """
+
+    serializer_class = AddAndAttachSitePackSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'job_site_packs_detail.html'
+    queryset = JobDocument.objects.all()
+
+    def get_job_instance(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+        return queryset
+
+    def get_queryset(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = super().get_queryset().filter(job=job_id, job__customer_id=customer_id).all()
+
+        return queryset
+
+    def get_object(self):
+        job = self.get_job_instance()
+        queryset = self.get_queryset()
+        site_pack_id = self.kwargs.get('site_pack_id', None)
+
+        if queryset and site_pack_id:
+
+            instance = queryset.filter(job=job, id=site_pack_id).first()
+            return instance
+        
+        return None
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = self.kwargs.get('customer_id')
+
+        instance = self.get_job_instance()
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+
+        site_pack_instance = self.get_object()
+        if not site_pack_instance:
+            messages.error(request, "No site pack found.")
+            return redirect(reverse('job_site_packs_detail', kwargs={'customer_id': customer_id, 'job_id': instance.id}))
+        
+        serializer = self.serializer_class(instance=site_pack_instance)
+        serializer.delete(site_pack_instance)
+
+        queryset = self.get_queryset()
+        # Additional job data can be retrieved here based on your requirements
+        # For example, get related data or perform other queries to obtain additional job details
+
+        if request.accepted_renderer.format == 'html':
+            messages.success(request, "Site pack deleted Successfully.")
+            return redirect(reverse('job_site_packs_detail', kwargs={'customer_id': customer_id, 'job_id': instance.id}))
+        else:
+            serializer = self.serializer_class(instance)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
+
+class JobRLODetailView(CustomAuthenticationMixin, generics.GenericAPIView):
+    """
+    View for retrieving job details.
+
+    This view retrieves details of a job, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class (JobSerializer): The serializer class for the job.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+    """
+
+    serializer_class = AttachSitePackSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'job_rlo_detail.html'
+    queryset = RLO.objects.all()
+
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+
+    def get_job_instance(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+        return queryset
+
+    def get_queryset(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job = self.get_job_instance()
+        queryset = None
+
+        if job:
+            # Your queryset logic to filter jobs goes here
+            queryset = super().get_queryset().filter(job=job).all()
+
+        return queryset
+    
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = self.kwargs.get('customer_id')
+
+        instance = self.get_job_instance()
+        queryset = self.get_queryset()
+        
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+        # Additional job data can be retrieved here based on your requirements
+        # For example, get related data or perform other queries to obtain additional job details
+
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'job': instance,
+                'rlo_list': self.get_paginated_queryset(queryset),
+                # Add more job-related data to the context as needed
+            }
+            return render(request, self.template_name, context)
+        else:
+            serializer = self.serializer_class(instance)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
+
+class JobRLOAddView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding  a RLO ADD.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = CreateRLOSeirlaizer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'RLO/rlo_form.html'
+    queryset = RLOLetterTemplate.objects.all()
+
+    def get_job_instance(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = self.kwargs.get('customer_id')
+
+        instance = self.get_job_instance()
+        queryset = self.get_queryset()
+
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+            
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'default_rlo': queryset,
+            }
+                
+            return render_html_response(context, self.template_name)
+        else:
+            return create_api_response(status_code=status.HTTP_201_CREATED,
+                                    message="GET Method Not Alloweded",)
+    
+    def post(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        customer_id = self.kwargs.get('customer_id')
+        instance = self.get_job_instance()
+        queryset = self.get_queryset()
+
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+
+        serializer_data = request.data.copy()
+        serializer_data['job'] = instance.id
+        serializer = self.serializer_class(data=serializer_data)       
+        message = "Your RLO has been added successfully."
+        if serializer.is_valid():
+            serializer.save(user_id = request.user)
+
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, message)
+                return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": instance.id}))
+            else:
+                # Return JSON response with success message and serialized data.
+                return create_api_response(
+                    status_code=status.HTTP_201_CREATED, 
+                    message=message, data=serializer.data
+                )
+
+        else:
+            if request.accepted_renderer.format == 'html':
+                context = {
+                    'default_rlo': queryset,
+                    'errors': convert_serializer_errors(serializer.errors)
+                }
+                return render_html_response(context, self.template_name)
+            else:
+                # Return JSON response with success message and serialized data.
+                return create_api_response(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message="We apologize for the inconvenience, but please review the below information.",
+                    data=convert_serializer_errors(serializer.errors)
+                )
+
+# class JobRLODownloadView(CustomAuthenticationMixin, generics.CreateAPIView):
+#     """
+#     View for adding  a RLO ADD.
+#     Supports both HTML and JSON response formats.
+#     """
+#     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+#     template_name = 'RLO/rlo_pdf.html'
+#     queryset = RLO.objects.all()
+#     serializer_class = RLOAddSerializer
+    
+#     pdf_options = {
+#         'page-size': 'A4',  # You can change this to 'A4' or custom size
+#         'margin-top': '10mm',
+#         'margin-right': '0mm',
+#         'margin-bottom': '0mm',
+#         'margin-left': '0mm',
+#     }
+#     def save_pdf_from_html(self, context, file_name):
+#         """
+#         Save the PDF file from the HTML content.
+#         Args:
+#             context (dict): Context data for rendering the HTML template.
+#             file_name (str): Name of the PDF file.
+#         Returns:
+#             Output file path or None.
+#         """
+#         output_file = None
+#         local_folder = '/tmp'
+
+#         if local_folder:
+#             try:
+#                 os.makedirs(local_folder, exist_ok=True)
+#                 output_file = os.path.join(local_folder, file_name)
+
+#                 # get the html text from the tmplate
+#                 html_content = render_to_string('RLO/rlo_pdf.html', context)
+
+#                 # create the PDF file for the invoice
+#                 pdfkit.from_string(html_content, output_file, options=self.pdf_options)
+                
+#             except Exception as e:
+#                 # Handle any exceptions that occur during PDF generation
+#                 print("error")
+
+#         return output_file
+
+
+#     def get_job_instance(self):
+#         """
+#         Get the queryset of jobs.
+
+#         Returns:
+#         QuerySet: A queryset of jobs.
+#         """
+#         job_id = self.kwargs.get('job_id', None)
+#         customer_id = self.kwargs.get('customer_id', None)
+#         queryset = None
+
+#         if job_id and customer_id:
+#             # Your queryset logic to filter jobs goes here
+#             queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+#         return queryset
+
+#     def get_object(self):
+#         job = self.get_job_instance()
+#         rlo_id = self.kwargs.get('rlo_id', None)
+
+#         if job:
+#             instance = self.get_queryset().filter(job=job, id=rlo_id).first()
+#             return instance
+        
+#         return None
+    
+
+#     @swagger_auto_schema(auto_schema=None)
+#     def get(self, request, *args, **kwargs):
+#         """
+#         Handle GET requests for RLO.
+
+#         Args:
+#             request (HttpRequest): The HTTP request object.
+
+#         Returns:
+#             HttpResponse: The response, either HTML or JSON.
+#         """
+       
+#         authenticated_user, data_access_value = check_authentication_and_permissions(
+#             self, "survey", HasListDataPermission, 'list'
+#         )
+#         if isinstance(authenticated_user, HttpResponseRedirect):
+#             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+#         customer_id = self.kwargs.get('customer_id')
+
+#         job = self.get_job_instance()
+#         instance = self.get_object()
+
+#         if not job:
+#             messages.error(request, "You are not authorized to perform this action")
+#             return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+        
+#         if not instance:
+#             messages.success(request, 'No RLO Found.')
+#             return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": instance.id}))
+        
+#         template_content = instance.edited_content
+#         serializer = self.serializer_class(instance=instance, context={'request': request})        
+#         context = {
+#             'serializer': serializer, 
+#             'instance': instance, 
+#             'template_content': template_content,
+#         }
+#         if request.accepted_renderer.format == 'html':
+#             return render_html_response(context, self.template_name)
+#         else:
+#             messages.error(request, "You are not authorized to perform this action")
+#             return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": instance.id}))
+
+
+class JobRLODeleteView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding  a RLO ADD.
+    Supports both HTML and JSON response formats.
+    """
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'RLO/rlo_form.html'
+    queryset = RLO.objects.all()
+
+    def get_job_instance(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+        return queryset
+
+    def get_object(self):
+        job = self.get_job_instance()
+        rlo_id = self.kwargs.get('rlo_id', None)
+
+        if job:
+            instance = self.get_queryset().filter(job=job, id=rlo_id).first()
+            return instance
+        
+        return None
+
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = self.kwargs.get('customer_id')
+
+        job = self.get_job_instance()
+        instance = self.get_object()
+
+        if not job:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+        
+        if not instance:
+            messages.success(request, 'No RLO Found.')
+            return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": job.id}))
+        
+        instance.delete()
+            
+        if request.accepted_renderer.format == 'html':
+                messages.success(request, 'RLO Deleted successfully!')
+                return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": job.id}))
+        else:
+            # Return JSON response with success message and serialized data.
+            return create_api_response(
+                status_code=status.HTTP_201_CREATED, 
+                message='RLO Deleted successfully!'
+            )
+
+class JobRLOApproveView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding  a RLO ADD.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = UpdateRLOSeirlaizer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'RLO/rlo_form.html'
+    queryset = RLO.objects.all()
+
+    def get_job_instance(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+        return queryset
+
+    def get_object(self):
+        job = self.get_job_instance()
+        rlo_id = self.kwargs.get('rlo_id', None)
+
+        if job:
+            instance = self.get_queryset().filter(job=job, id=rlo_id).first()
+            return instance
+        
+        return None
+
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = self.kwargs.get('customer_id')
+
+        job = self.get_job_instance()
+        instance = self.get_object()
+        if not job:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+        
+        if not instance:
+            messages.success(request, 'No RLO Found.')
+            return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": job.id}))
+        
+        serializer = self.serializer_class(
+            data={
+                'status': 'approved'
+            },
+            instance=instance
+        )
+        if serializer.is_valid():
+            serializer.update(instance, serializer.validated_data)
+            
+            if request.accepted_renderer.format == 'html':
+                    messages.success(request, 'RLO Approved successfully!')
+                    return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": job.id}))
+            else:
+                # Return JSON response with success message and serialized data.
+                return create_api_response(
+                    status_code=status.HTTP_201_CREATED, 
+                    message='RLO Approved successfully!'
+                )
+
+        if request.accepted_renderer.format == 'html':
+                messages.success(request, 'Something Went wrong while approving the RLO please try again later.')
+                return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": job.id}))
+        else:
+            # Return JSON response with success message and serialized data.
+            return create_api_response(
+                status_code=status.HTTP_201_CREATED, 
+                message='Something Went wrong while approving the RLO please try again later.',
+                data = convert_serializer_errors(serializer.errors)
+            )
+
+class JobRLORejectView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View for adding  a RLO ADD.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = UpdateRLOSeirlaizer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'RLO/rlo_form.html'
+    queryset = RLO.objects.all()
+
+    def get_job_instance(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+        return queryset
+
+    def get_object(self):
+        job = self.get_job_instance()
+        rlo_id = self.kwargs.get('rlo_id', None)
+
+        if job:
+            instance = self.get_queryset().filter(job=job, id=rlo_id).first()
+            return instance
+        
+        return None
+
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = self.kwargs.get('customer_id')
+
+        job = self.get_job_instance()
+        instance = self.get_object()
+
+        if not job:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+        
+        if not instance:
+            messages.success(request, 'No RLO Found.')
+            return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": job.id}))
+        
+        serializer = self.serializer_class(
+            data={
+                'status': 'rejected'
+            },
+            instance=instance
+        )
+        if serializer.is_valid():
+            serializer.update(instance, serializer.validated_data)
+            
+            if request.accepted_renderer.format == 'html':
+                    messages.success(request, 'RLO Rejected successfully!')
+                    return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": job.id}))
+            else:
+                # Return JSON response with success message and serialized data.
+                return create_api_response(
+                    status_code=status.HTTP_201_CREATED, 
+                    message='RLO Rejected successfully!'
+                )
+
+        if request.accepted_renderer.format == 'html':
+                messages.success(request, 'Something Went wrong while rejecting the RLO please try again later.')
+                return redirect(reverse('job_rlo_detail', kwargs={"customer_id": customer_id, "job_id": job.id}))
+        else:
+            # Return JSON response with success message and serialized data.
+            return create_api_response(
+                status_code=status.HTTP_201_CREATED, 
+                message='Something Went wrong while rejecting the RLO please try again later.',
+                data = convert_serializer_errors(serializer.errors)
+            )
 
 class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     """
@@ -2890,17 +3658,11 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
                 'start_date': timezone.now(),
                 'end_date': timezone.now()
             },
-            context={'request': request}
+            context={'request': request, 'customer': customer_data}
         )
         if not serializer.is_valid():
-            messages.error(request, 'Something when wrong while creating the job. Please try again.')
+            messages.error(request, 'You are not authorised to perform this operation')
             return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
-        
-        quotations = serializer.validated_data.get('quotation')
-        for quotation in quotations:
-            if quotation.job_set.all():
-                messages.error(request, 'You are not authorised to perform this operation')
-                return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
 
         if request.accepted_renderer.format == 'html':
             context = {
@@ -2929,16 +3691,15 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
             return redirect(reverse('approved_quotation_view'))
 
         serializer_data = request.data
-        serializer = JobCreateSerializer(data=serializer_data, context={'request': request})
+        serializer = JobCreateSerializer(data=serializer_data, context={'request': request, 'customer': customer_data})
 
         if serializer.is_valid():
             quotations = serializer.validated_data.get('quotation')
-            for quotation in quotations:
-                if quotation.job_set.all():
-                    messages.error(request, 'You are not authorised to perform this operation')
-                    return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
+            if not quotations:
+                messages.error(request, 'You are not authorised to perform this operation')
+                return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
             
-            serializer.save()  # Assign the created STWJob instance
+            serializer.save(customer_id=customer_data)  # Assign the created STWJob instance
             message = "Job created and assigned successfully."
 
             if request.accepted_renderer.format == 'html':
@@ -2955,15 +3716,11 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
             team = Team.objects.all()
             view_serializer = self.serializer_class(
                 data=serializer_data,
-                context={'request': request}
+                context={'request': request, 'customer': customer_data}
             )
-            view_serializer.is_valid()
-            
-            quotations = view_serializer.validated_data.get('quotation')
-            for quotation in quotations:
-                if quotation.job_set.all():
-                    messages.error(request, 'You are not authorised to perform this operation')
-                    return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
+            if not view_serializer.is_valid():
+                messages.error(request, 'You are not authorised to perform this operation')
+                return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
             
             view_serializer._errors = serializer.errors
             # Invalid serializer data
@@ -3050,7 +3807,7 @@ def get_event_details(request, event_id):
 
 
 #     def get_queryset(self):
-#         queryset = STWJobAssignment.objects.filter(pk=self.kwargs.get('pk')).order_by('-created_at').first()
+#         queryset = Job.objects.filter(pk=self.kwargs.get('pk')).order_by('-created_at').first()
 #         return queryset
 
 #     @swagger_auto_schema(auto_schema=None) 

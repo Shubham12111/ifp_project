@@ -144,11 +144,12 @@ class STWDefectDocument(models.Model):
         verbose_name_plural = _('STW Defect Document')
 
 class SitePack(models.Model):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_pack_user')
-    name = models.CharField(max_length=255, null=True)
-    document_path = models.CharField(max_length=256)
-    create_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_pack_user', verbose_name="Site Pack USer")
+    name = models.CharField(max_length=255, null=True, verbose_name="Site Pack Name")
+    orignal_document_name = models.CharField(max_length=256, null=True, verbose_name="Site Pack Document")
+    document_path = models.CharField(max_length=256, verbose_name="Site Pack Path")
+    create_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
     
     class Meta:
         verbose_name = _('Site Pack')
@@ -222,6 +223,7 @@ class Events(models.Model):
         ordering =['id']
         
 class Job(models.Model):
+    customer_id = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     quotation = models.ManyToManyField(Quotation, verbose_name=_("Quotation"))
     stw = models.ManyToManyField(STWRequirements, verbose_name=_("STW Quotation"))
     assigned_to_member = models.ManyToManyField(Member) 

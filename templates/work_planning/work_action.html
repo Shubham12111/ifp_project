@@ -21,9 +21,9 @@
 
                     <li class="nav-item">
                         {% if customer_instance %}
-                            <a class="nav-link {% if '/work_planning/job_customers/' in request.path %}active{% endif %}" href="{% url 'job_customers_list' %}">Jobs</a>
+                            <a class="nav-link {% if '/work_planning/job-customers/' in request.path %}active{% endif %}" href="{% url 'job_customers_list' %}">Jobs</a>
                             {% else %}
-                            <a class="nav-link {% if '/work_planning/job_customers/' in request.path %}active{% endif %}" href="{% url 'job_customers_list' %}">Jobs</a>
+                            <a class="nav-link {% if '/work_planning/job-customers/' in request.path %}active{% endif %}" href="{% url 'job_customers_list' %}">Jobs</a>
                         {% endif %}
                     </li>
                 </ul>
