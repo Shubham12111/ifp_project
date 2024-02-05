@@ -1,33 +1,6 @@
 {% load static %}
 
 <div class="row w-100 px-3 mt-3 justify-content-start">
-    <!-- Status list filter-->
-    {% if  'fra/quotation/list/' in request.path %}
-    <div class="dropdown d-inline me-2 col-auto px-0 mb-2">
-        <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 "
-            data-bs-toggle="dropdown" id="statusDropdown">
-            <span class="flex-grow-1 text-start custom-search">Status</span>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3 " aria-labelledby="statusDropdown"
-            data-popper-placement="bottom-end">
-
-            {% for status in status_values %}
-            <li>
-                <a class="dropdown-item border-radius-md text-start " href="#"
-                    onclick="applyFilter('status', '{{ status.0 }}')">{{ status.1 }}</a>
-            </li>
-            {% endfor %}
-            <li>
-                <hr class="horizontal dark my-2">
-            </li>
-            <li>
-                <a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('status')">Remove
-                    Filter</a>
-            </li>
-
-        </ul>
-    </div>
-    {% endif %}
     <!-- Surveyor list filter-->
     <div class="dropdown d-inline me-2 col-auto px-0 mb-2">
         <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 "
