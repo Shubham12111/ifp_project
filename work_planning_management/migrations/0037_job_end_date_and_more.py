@@ -28,11 +28,11 @@ class Migration(migrations.Migration):
             name='start_date',
             field=models.DateTimeField(null=True),
         ),
-        migrations.AddField(
-            model_name='job',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('in-progress', 'In Progress'), ('completed', 'Completed')], default='pending', max_length=30),
-        ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='status',
+        #     field=models.CharField(choices=[('pending', 'Pending'), ('in-progress', 'In Progress'), ('completed', 'Completed')], default='pending', max_length=30),
+        # ),
         migrations.AddField(
             model_name='job',
             name='stw',
