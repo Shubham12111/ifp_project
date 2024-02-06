@@ -313,7 +313,7 @@
     function clearAllFilters() {
         const currentUrl = new URL(window.location.href);
         const queryParams = new URLSearchParams(currentUrl.search);
-        const filterNames = ['surveyor', 'q']; // Add dateRange to the filterNames array
+        const filterNames = ['status', 'surveyor', 'q']; // Add dateRange to the filterNames array
   
         filterNames.forEach(filterName => {
           queryParams.delete(filterName);
@@ -325,7 +325,7 @@
 
     // Check URL parameters on page load and update search and filter selections
     window.addEventListener('DOMContentLoaded', function () {
-        const filterNames = ['surveyor', 'q'];
+        const filterNames = ['status', 'surveyor', 'q'];
         filterNames.forEach(filterName => {
           const filterValue = new URLSearchParams(window.location.search).get(filterName);
   

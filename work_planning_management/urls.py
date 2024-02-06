@@ -19,11 +19,19 @@ urlpatterns = [
     path('approved_list/<int:customer_id>/list/', ApprovedQuotationListView.as_view(), name='approved_quotation_list'),
 
 
-    path('job_customers/', JobCustomerListView.as_view(), name='job_customers_list'),
-    path('jobs/add/<int:qoute_id>/', QuoteJobView.as_view(), name='job_add'),
-    path('jobs/<int:customer_id>/list/', JobsListView.as_view(), name='jobs_list'),
-    path('job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
-    path('job/<int:job_id>/', JobDetailView.as_view(), name='job_detail'),
+    path('job-customers/', JobCustomerListView.as_view(), name='job_customers_list'),
+    
+    path('customer/<int:customer_id>/jobs/', JobsListView.as_view(), name='jobs_list'),
+    path('customer/<int:customer_id>/jobs/job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
+    path('customer/<int:customer_id>/jobs/job/<int:job_id>/details/', JobDetailView.as_view(), name='job_detail'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/', JobSitePacksDetailView.as_view(), name='job_site_packs_detail'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/<int:site_pack_id>/delete/', JobSitePacksDeleteView.as_view(), name='job_site_packs_delete'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/', JobRLODetailView.as_view(), name='job_rlo_detail'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/add/', JobRLOAddView.as_view(),name='job_rlo_add'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/delete/', JobRLODeleteView.as_view(),name='job_rlo_delete'),
+    # path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/download/', JobRLODownloadView.as_view(),name='job_rlo_download'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/approve/', JobRLOApproveView.as_view(),name='job_rlo_approve'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/reject/', JobRLORejectView.as_view(),name='job_rlo_reject'),
 
 
 
@@ -70,7 +78,7 @@ urlpatterns = [
 
     # add job for stw
     path('stw_job/add/<int:stw_id>/', AddJobView.as_view(), name='stw_job'),
-    path('stw/job_assign/<int:job_id>/',AssignJobView.as_view(),name='job_assign_stw'),
+    path('stw/customer/<int:customer_id>/job_assign/', AssignJobView.as_view(), name='job_assign_stw'),
 
     # calendar urls
     path('member_calendar/', views.index, name='member_calendar'), 
@@ -81,7 +89,7 @@ urlpatterns = [
     path('event_view/<int:event_id>/',EventdetailView.as_view() , name='event_view'),
     # path('remove/', views.remove, name='remove'),
     path('get_event_details/<int:event_id>/', views.get_event_details, name='get_event_details'),
-    path('stw/job_schedule/',AssignscheduleView.as_view(),name='job_schedule'),
+    # path('stw/job_schedule/',AssignscheduleView.as_view(),name='job_schedule'),
 
 
     # RLO views:-
@@ -102,5 +110,8 @@ urlpatterns = [
     path('sitepack/job/list/', SitepackJobListView.as_view(), name='sitepack_job_list'),
     # path('sitepack/job_document/add/', DocumentSelectView.as_view(), name='job_document_add'),
     path('sitepack/job_document/delete/<int:pk>/',DocumentJobDeleteView.as_view(),name="job_document_delete"),
+
+
+    path('assigned-jobs/list/', retriveMembersAssignedJobs, name='list_assigned_jobs_of_members'),
 
 ]
