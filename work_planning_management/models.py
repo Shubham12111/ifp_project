@@ -33,6 +33,12 @@ RLO_STATUS_CHOICES = (
     ('rejected', 'Rejected')
 )
 
+Job_STATUS_CHOICES = (
+    ('pending', 'Pending'),
+    ('in-progress', 'In Progress'),
+    ('completed', 'Completed')
+)
+
 class STWRequirements(models.Model):
     """
     Model for storing STW.
@@ -229,6 +235,7 @@ class Job(models.Model):
     assigned_to_member = models.ManyToManyField(Member) 
     assigned_to_team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.CASCADE)
     event = models.ForeignKey(Events, on_delete=models.CASCADE, null=True, blank=True)
+    status = models.CharField(max_length=30, choices=Job_STATUS_CHOICES, default='pending')
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
