@@ -407,10 +407,6 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 if request.data.get('status') == "approved":
                     # Ensure that the Quotation is saved before creating the Job
                     quotation_instance.save()
-                    # Create a Job associated with this Quotation
-                    job_instance = Job(quotation=quotation_instance)
-                    # Save the Job instance
-                    job_instance.save()
 
 
             if request.data.get('status') == "send_for_approval":
