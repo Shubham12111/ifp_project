@@ -2,7 +2,7 @@
 echo "[+] ------ Apply database migrations ------ [+]"
 
 # python3 manage.py makemigrations --merge --no-input 
-python3 manage.py migrate --fake work_planning_management 0034_alter_events_members.py
+python3 manage.py migrate 
 
 # echo "[+] ------ Populating Cities Light Data ------ [+]"
 # python3 manage.py cities_light
