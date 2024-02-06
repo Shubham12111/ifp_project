@@ -3,186 +3,491 @@
 {% load rest_framework %}
 {% block title %} Assign Job {{ block.super }}{% endblock %}
 {% block content %}
-  <!-- Your existing content -->
-<div class="container-fluid my-3 py-3">
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="card" id="basic-info">
-          <div class="card-header">
-            <h5>Assign Job</h5>
-          </div>
-          <div class="card-body pt-0">
-            <div class="col-12 mb-4">
-              <label for="select-type">Select Type:</label>
-              <select id="select-type" name="select-type">
-                <option value="team">Team</option>
-                <option value="members">Members</option>
-              </select>
+<style>
+  .choices__inner{
+    padding: 0.2rem 0.75rem 0.1rem 0.75rem !important; 
+  }
+
+  a.fc-daygrid-event {
+    cursor: pointer !important;
+  }
+
+  .fc-h-event .fc-event-main-frame {
+    display: block !important;
+  }
+  .fc-daygrid-block-event .fc-event-time,
+  .fc-daygrid-block-event .fc-event-title {
+    font-weight: 600 !important;
+    padding: 0rem 0.3rem !important;
+  }
+
+  .fc-daygrid-event-dot {
+    display: none !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past.bg-gradient-danger {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-today {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
+
+  div.fc-event-title {
+    padding: 0rem 0.3rem !important;
+  }
+  div.fc-toolbar-chunk {
+    display: flex !important;
+  }
+</style>
+<!-- Your existing content -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="card" id="basic-info">
+        <div class="card-header pb-0 mb-3">
+          <div class="row">
+            <div class="col-6">
+              <h5>Assign Job</h5>
             </div>
-            <div id="form-container"  style="display: block;">
-            <form role="form" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
-              <div class="row">
-                <div class="col-12">
-                  {% csrf_token %}
-                {% render_form serializer %} 
-              </div>
-            </form> 
-                  </div>
-                </div>
-                  
-  <div class="container-fluid py-3">
-    <div class="row">
-      <div class="col-12">
-        <div class="card">
-          <!-- Card header -->
-          <div class="card-header pb-0">
-            <div class="d-lg-flex">
-              <div>
-                <h5 class="mb-0">Select Members</h5>
-              </div>
-            
+            <div class="col-6 text-end">
+              {% include 'components/back_button.html' %}
+              <button id="addJobButton" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>
+                Assign Job
+              </button>
             </div>
-          
-          </div>
-          <div class="card-body px-0 pb-0">
-           <div class="table-responsive">
-              <table class="table table-flush text-dark" id="rlo-list">
-                <thead class="thead-light">
-                  <tr>
-                    <th class="custom-last-column text-sm text-secondary"></th>
-                    <th>Name</th>
-                    <th>Address</th>
-                    <th>Email</th>
-                    <th>Trade Type</th>
-                    <th>Phone number</th>
-                    <th>Created Date</th>
-                  
-                  </tr>
-                </thead>
-                <tbody class="ml-4">
-                  {% for item in members %}
-                    <tr class="text-sm">
-                      <td class="text-sm">
-                          <input type="checkbox" name="doc_checkbox" value="{{ item.members.id  }}"  data-job-id="{{ item.members.id }}">
-                        </td>
-                  <td class="text-sm">{{ item.name}}</td>
-                  <td class="text-sm">{{ item.address}}</td>
-                  <td class="text-sm">{{ item.email}}</td>
-                  <td class="text-sm">{{ item.trade_type }}</td>
-                  <td class="text-sm">{{ item.mobile_number }}</td>
-                  <td class="text-sm">{{ item.created_at|date:"d/m/Y"}}</td>
-                </tr>
-                  {% endfor %}
-              </table>
-              </table>
-            </div>
-          
           </div>
         </div>
-        
-          <a class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" id="assignJobButton" onclick="viewEvents()">View Events</a> 
-          {% include 'components/back_button.html' %}
+        <div class="card-body pt-0">
+          <form method="post" id="assignJobForm">
+            <div class="row">
+              <div class="col-12 col-lg-6">
+                <div class="row pt-1">
+                  <div class="nav-wrapper position-relative end-0">
+                    <ul class="nav nav-pills nav-fill p-1" role="tablist">
+                      <li class="nav-item">
+                        <a class="nav-link mb-0 px-0 py-1 active" data-bs-toggle="tab" href="#team" role="tab"
+                          aria-controls="team" aria-selected="true">
+                          Team
+                        </a>
+                      </li>
+                      <li class="nav-item">
+                        <a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" href="#members" role="tab"
+                          aria-controls="members" aria-selected="false">
+                          Members
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="team" role="tabpanel" aria-labelledby="team-tab">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="card shadow-none">
+                            <!-- Card header -->
+                            <div class="card-header px-0 pb-0">
+                              <div class="row">
+                                <div class="col-12">
+                                  <div class="form-group">
+                                    <select class="form-control" multiple id="teams-choices" name="assigned_to_team">
+                                      <option value="">Select Team</option>
+                                      {% for team in teams %}
+                                          <option value="{{team.id}}">{{team.team_name}}</option>
+                                      {% endfor %}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tab-pane fade" id="members" role="tabpanel" aria-labelledby="members-tab">
+                      <div class="row">
+                        <div class="col-12">
+                          <div class="card shadow-none">
+                            <!-- Card header -->
+                            <div class="card-header px-0 pb-0">
+                              <div class="row">
+                                <div class="col-12">
+                                  <div class="form-group">
+                                    <select class="form-control" multiple id="members-choices" name="assigned_to_member">
+                                      <option value="">Select Members</option>
+                                      {% for member in members %}
+                                          <option value="{{member.id}}">{{member.name}}</option>
+                                      {% endfor %}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-lg-6">
+                <div class="row justify-content-between">
+                    {% csrf_token %}
+                    {% render_form serializer %}
+                </div>
+              </div>
+            </div>
+          </form>
+          <div class="row">
+            <div class="card card-calendar" id="calendarCard">
+              <div class="card-body p-3">
+                <div class="calendar" data-bs-toggle="calendar" id="calendar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+</div>
+
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
-<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-
+<script src="{% static 'assets/js/plugins/fullcalendar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script>
-  if (document.getElementById('rlo-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#rlo-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 25,
-      perPageSelect: false,
-    });
-  
-    const dataTableTop = document.querySelector('.dataTable-top');
-    if (dataTableTop) {
-      dataTableTop.parentNode.removeChild(dataTableTop);
-    }
-    const searchInput = document.getElementById('searchInput');
-      searchInput.addEventListener('input', function() {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
+  document.addEventListener('DOMContentLoaded', function () {
+    const addJobButton = document.getElementById('addJobButton');
+
+    function showCalendar(jobs) {
+      if (calendar){
+        calendar.destroy()
+      }
+      var calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+        initialView: "dayGridWeek",
+        headerToolbar: {
+          start: "title", // will normally be on the left. if RTL, will be on the right
+          center: "",
+          end: "today dayGridWeek dayGridMonth prev,next", // will normally be on the right. if RTL, will be on the left
+        },
+        selectable: true,
+        editable: false,
+        initialDate: "{% now 'Y-m-d' %}",
+        timeZone: "UTC",
+        displayEventEnd: true,
+        eventTimeFormat: {
+          hour: "numeric",
+          minute: "2-digit",
+          meridiem: "short",
+        },
+        events: jobs,
+        views: {
+          month: {
+            titleFormat: {
+              month: "long",
+              year: "numeric",
+            },
+          },
+          agendaWeek: {
+            titleFormat: {
+              month: "long",
+              year: "numeric",
+              day: "numeric",
+            },
+          },
+          agendaDay: {
+            titleFormat: {
+              month: "short",
+              year: "numeric",
+              day: "numeric",
+            },
+          },
+        }
       });
-  }
-  </script>
+      calendar.render();
+    }
+    showCalendar([]);
 
-<script>
-  // Function to enable or disable the selection based on the user's choice
-  function toggleSelection() {
-    var selectType = document.getElementById("select-type").value;
-    var checkboxes = document.querySelectorAll('input[name="doc_checkbox"]');
-    var formContainer = document.getElementById("form-container");
-  
-    checkboxes.forEach(function (checkbox) {
-      checkbox.disabled = selectType === "members" ? false : true;
+    let members_choice = null;
+    let teams_choice = null;
+
+    if (document.getElementById('members-choices')) {
+      var members_element = document.getElementById('members-choices');
+      members_choice = new Choices(members_element, {
+        default: false,
+        items: [],
+        choices: [],
+        renderChoiceLimit: 10,
+        maxItemCount: -1,
+        searchEnabled: true,
+        searchChoices: true,
+        searchFloor: 1,
+        searchResultLimit: 4,
+        resetScrollPosition: true,
+        shouldSort: true,
+        shouldSortItems: false,
+        searchFields: ['label'],
+        duplicateItemsAllowed: false,
+        removeItemButton: true,
+        searchPlaceholderValue: "Search Members",
+        placeholderValue: "Select Members",
+        fuseOptions: {
+          includeScore: true,
+          includeMatches: true,
+          threshold: 0, // Set to 0 for exact match
+          location: 0,
+          distance: 100,
+          maxPatternLength: 32,
+          minMatchCharLength: 1
+        }
+      });
+
+      members_element.addEventListener(
+        'addItem',
+        function(event) {
+          selectedItems = members_choice.getValue();
+          if (selectedItems){
+            var selectedMembers = [];
+            selectedItems.forEach( item => {
+              selectedMembers.push(item.value);
+            });
+            renderCalendar(selectedMembers, "members");
+            addJobButton.disabled = false;
+          }
+        }
+      );
+      members_element.addEventListener(
+        'removeItem',
+        function(event) {
+          selectedItems = members_choice.getValue();
+          if (selectedItems){
+            var selectedMembers = [];
+            selectedItems.forEach( item => {
+              selectedMembers.push(item.value);
+            });
+            renderCalendar(selectedMembers, "members");
+          }else{
+            addJobButton.disabled = true;
+          }
+        }
+      );
+    }
+    if (document.getElementById('teams-choices')) {
+      var teams_element = document.getElementById('teams-choices');
+      teams_choice = new Choices(teams_element, {
+        default: false,
+        items: [],
+        choices: [],
+        renderChoiceLimit: 10,
+        maxItemCount: 1,
+        searchEnabled: true,
+        searchChoices: true,
+        searchFloor: 1,
+        searchResultLimit: 4,
+        resetScrollPosition: true,
+        shouldSort: true,
+        shouldSortItems: false,
+        searchFields: ['label'],
+        duplicateItemsAllowed: false,
+        removeItemButton: true,
+        searchPlaceholderValue: "Search Team",
+        placeholderValue: "Select Team",
+        fuseOptions: {
+          includeScore: true,
+          includeMatches: true,
+          threshold: 0, // Set to 0 for exact match
+          location: 0,
+          distance: 100,
+          maxPatternLength: 32,
+          minMatchCharLength: 1
+        }
+      });
+
+      teams_element.addEventListener(
+        'addItem',
+        function(event) {
+          selectedItems = teams_choice.getValue();
+          if (selectedItems){
+            var selectedTeams = [];
+            selectedItems.forEach( item => {
+              selectedTeams.push(item.value);
+            });
+            renderCalendar(selectedTeams);
+            addJobButton.disabled = false;
+          }
+        }
+      );
+      teams_element.addEventListener(
+        'removeItem',
+        function(event) {
+          selectedItems = teams_choice.getValue();
+          if (selectedItems){
+            var selectedTeams = []
+            selectedItems.forEach( item => {
+              selectedTeams.push(item.value)
+            });
+            renderCalendar(selectedTeams)
+          }else{
+            addJobButton.disabled = true
+          }
+        }
+      );
+    }
+
+    async function renderCalendar(selectedItem, type='team') {
+      var jobResponse = await fetch(
+        `{% url "list_assigned_jobs_of_members" %}?${type}=${selectedItem}`
+      );
+      var jobData = await jobResponse.json();
+      var jobArray = Array.isArray(jobData.data)
+        ? jobData.data
+        : [jobData.data];
+      showCalendar(jobArray);
+    }
+
+    // Function to be executed when the tab is changed
+    function handleTabChange(tabId) {
+      // Your task or action based on the selected tab
+      if (tabId === "team") {
+        var selected_items = members_choice.getValue();
+        if (selected_items){
+          members_choice.destroy();
+          if (document.getElementById('members-choices')) {
+            var members_element = document.getElementById('members-choices');
+            members_choice = new Choices(members_element, {
+              default: false,
+              items: [],
+              choices: [],
+              renderChoiceLimit: 10,
+              maxItemCount: -1,
+              searchEnabled: true,
+              searchChoices: true,
+              searchFloor: 1,
+              searchResultLimit: 4,
+              resetScrollPosition: true,
+              shouldSort: true,
+              shouldSortItems: false,
+              searchFields: ['label'],
+              duplicateItemsAllowed: false,
+              removeItemButton: true,
+              searchPlaceholderValue: "Search Members",
+              placeholderValue: "Select Members",
+              fuseOptions: {
+                includeScore: true,
+                includeMatches: true,
+                threshold: 0, // Set to 0 for exact match
+                location: 0,
+                distance: 100,
+                maxPatternLength: 32,
+                minMatchCharLength: 1
+              }
+            });
+          }
+        }
+        renderCalendar([]);
+      } else if (tabId === "members") {
+        var selected_items = teams_choice.getValue();
+        if (selected_items){
+          teams_choice.destroy();
+          if (document.getElementById('teams-choices')) {
+            var teams_element = document.getElementById('teams-choices');
+            teams_choice = new Choices(teams_element, {
+              default: false,
+              items: [],
+              choices: [],
+              renderChoiceLimit: 10,
+              maxItemCount: 1,
+              searchEnabled: true,
+              searchChoices: true,
+              searchFloor: 1,
+              searchResultLimit: 4,
+              resetScrollPosition: true,
+              shouldSort: true,
+              shouldSortItems: false,
+              searchFields: ['label'],
+              duplicateItemsAllowed: false,
+              removeItemButton: true,
+              searchPlaceholderValue: "Search Team",
+              placeholderValue: "Select Team",
+              fuseOptions: {
+                includeScore: true,
+                includeMatches: true,
+                threshold: 0, // Set to 0 for exact match
+                location: 0,
+                distance: 100,
+                maxPatternLength: 32,
+                minMatchCharLength: 1
+              }
+            });
+          }
+        }
+        renderCalendar([]);
+      }
+    }
+
+    // Event listener for tab change
+    var tabs = document.querySelectorAll('a[data-bs-toggle="tab"]');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('shown.bs.tab', function (e) {
+        var tabId = e.target.getAttribute("href").substring(1); // Get the id of the selected tab
+        handleTabChange(tabId); // Call the function with the selected tab id
+        if(!addJobButton.disabled){
+          addJobButton.disabled = true;
+        }
+      });
     });
-  
-    // Hide or show the form container based on the selection
-    formContainer.style.display = selectType === "members" ? "none" : "block";
-  }
-  
-  // Add a change event handler to the select element
-  document.addEventListener("DOMContentLoaded", function () {
-    var selectType = document.getElementById("select-type");
-  
-    selectType.addEventListener("change", toggleSelection);
-  
-    // Initial call to set the initial state based on the user's choice
-    toggleSelection();
+
+    function minMemberCheck(){
+      var minMemberRequiredLength = 2;
+      var minMemberCheckResult = true;
+
+      activeTab = document.querySelector('[data-bs-toggle="tab"]:is(.active)');
+      activeTabRefrence = activeTab.getAttribute('href');
+
+      if (activeTabRefrence == '#members'){
+        selectedMembers = members_choice.getValue();
+        return selectedMembers >= minMemberRequiredLength;
+      }
+      return minMemberCheckResult;
+    }
+
+    // Event listener to submit the form
+    function submitForm() {
+      var form = document.getElementById("assignJobForm");
+      form.submit();
+    }
+
+    // handle click event and submit the form for job assign
+    addJobButton.addEventListener('click', () => { submitForm() });
   });
 </script>
-
-
-<script>
-  function viewEvents() {
-    const selectedCheckboxes = document.querySelectorAll('input[name="doc_checkbox"]:checked');
-    const selectedIds = [];
-  
-    selectedCheckboxes.forEach(function (checkbox) {
-      selectedIds.push(checkbox.value);
-    });
-
-  
-    const selectType = document.getElementById("select-type").value;
-    
-    if (selectType === "members"  && selectedIds.length < 2)  {
-      alert("Select atleast 2 members.");
-      return;
-    }
-  
-    window.location.href = `/work_planning/member_calendar/`;
-
-    const currentUrl = window.location.href; 
-    console.log(currentUrl); 
-    const match = currentUrl.match(/\/(\d+)\/?$/);
-    
-    // Check if a match is found
-    if (!match || match.length < 2) {
-      alert("Could not extract the last integer value from the URL.");
-      return;
-    }
-
-    const job_id = match[1];
-    console.log(job_id)
-
-
-   
-    // Collect the selected member IDs and include them in the redirect URL
-    // Use the job_id in the URL for the redirect
-    const redirectUrl = `/work_planning/member_calendar/?job_id=${job_id}`;
-    window.location.href = redirectUrl;
-  }
-  
-</script>
-
 
 
 {% endblock %}
