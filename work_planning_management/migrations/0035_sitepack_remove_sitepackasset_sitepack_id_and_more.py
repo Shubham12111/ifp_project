@@ -67,11 +67,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='job',
-            name='customer_id',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
-        migrations.AddField(
-            model_name='job',
             name='end_date',
             field=models.DateTimeField(null=True),
         ),
