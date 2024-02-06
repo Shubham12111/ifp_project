@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='job',
-            name='end_date',
-            field=models.DateTimeField(null=True),
-        ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='end_date',
+        #     field=models.DateTimeField(null=True),
+        # ),
         # migrations.AddField(
         #     model_name='job',
         #     name='event',
