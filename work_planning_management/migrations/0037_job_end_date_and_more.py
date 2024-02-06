@@ -13,55 +13,55 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='job',
-            name='end_date',
-            field=models.DateTimeField(null=True),
-        ),
-        migrations.AddField(
-            model_name='job',
-            name='event',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='work_planning_management.events'),
-        ),
-        migrations.AddField(
-            model_name='job',
-            name='start_date',
-            field=models.DateTimeField(null=True),
-        ),
-        migrations.AddField(
-            model_name='job',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('in-progress', 'In Progress'), ('completed', 'Completed')], default='pending', max_length=30),
-        ),
-        migrations.AddField(
-            model_name='job',
-            name='stw',
-            field=models.ManyToManyField(to='work_planning_management.stwrequirements', verbose_name='STW Quotation'),
-        ),
-        migrations.RemoveField(
-            model_name='job',
-            name='quotation',
-        ),
-        migrations.DeleteModel(
-            name='SitepackDocument',
-        ),
-        migrations.DeleteModel(
-            name='STWJob',
-        ),
-        migrations.DeleteModel(
-            name='STWJobAssignment',
-        ),
-        migrations.AddField(
-            model_name='job',
-            name='quotation',
-            field=models.ManyToManyField(to='requirement_management.quotation', verbose_name='Quotation'),
-        ),
-        migrations.AlterField(
-            model_name='jobdocument',
-            name='sitepack_document',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='work_planning_management.sitepack'),
-        ),
-        migrations.DeleteModel(
-            name='SitepackAsset',
-        ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='end_date',
+        #     field=models.DateTimeField(null=True),
+        # ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='event',
+        #     field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='work_planning_management.events'),
+        # ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='start_date',
+        #     field=models.DateTimeField(null=True),
+        # ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='status',
+        #     field=models.CharField(choices=[('pending', 'Pending'), ('in-progress', 'In Progress'), ('completed', 'Completed')], default='pending', max_length=30),
+        # ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='stw',
+        #     field=models.ManyToManyField(to='work_planning_management.stwrequirements', verbose_name='STW Quotation'),
+        # ),
+        # migrations.RemoveField(
+        #     model_name='job',
+        #     name='quotation',
+        # ),
+        # migrations.DeleteModel(
+        #     name='SitepackDocument',
+        # ),
+        # migrations.DeleteModel(
+        #     name='STWJob',
+        # ),
+        # migrations.DeleteModel(
+        #     name='STWJobAssignment',
+        # ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='quotation',
+        #     field=models.ManyToManyField(to='requirement_management.quotation', verbose_name='Quotation'),
+        # ),
+        # migrations.AlterField(
+        #     model_name='jobdocument',
+        #     name='sitepack_document',
+        #     field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='work_planning_management.sitepack'),
+        # ),
+        # migrations.DeleteModel(
+        #     name='SitepackAsset',
+        # ),
     ]
