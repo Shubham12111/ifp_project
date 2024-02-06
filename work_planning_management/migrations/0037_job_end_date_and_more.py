@@ -33,11 +33,11 @@ class Migration(migrations.Migration):
         #     name='status',
         #     field=models.CharField(choices=[('pending', 'Pending'), ('in-progress', 'In Progress'), ('completed', 'Completed')], default='pending', max_length=30),
         # ),
-        migrations.AddField(
-            model_name='job',
-            name='stw',
-            field=models.ManyToManyField(to='work_planning_management.stwrequirements', verbose_name='STW Quotation'),
-        ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='stw',
+        #     field=models.ManyToManyField(to='work_planning_management.stwrequirements', verbose_name='STW Quotation'),
+        # ),
         migrations.RemoveField(
             model_name='job',
             name='quotation',
