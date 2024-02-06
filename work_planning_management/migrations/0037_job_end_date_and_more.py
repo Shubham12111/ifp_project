@@ -23,11 +23,11 @@ class Migration(migrations.Migration):
         #     name='event',
         #     field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='work_planning_management.events'),
         # ),
-        migrations.AddField(
-            model_name='job',
-            name='start_date',
-            field=models.DateTimeField(null=True),
-        ),
+        # migrations.AddField(
+        #     model_name='job',
+        #     name='start_date',
+        #     field=models.DateTimeField(null=True),
+        # ),
         # migrations.AddField(
         #     model_name='job',
         #     name='status',
