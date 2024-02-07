@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import generics, permissions, filters, status, renderers
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+from rest_framework.request import Request
 
 import json
 from drf_yasg.utils import swagger_auto_schema
@@ -335,7 +336,7 @@ def stw_requirement_image(stw_instance):
         })
     return document_paths   
 
-def filter_requirements(data_access_value, user, customer=None):
+def filter_requirements(data_access_value, user, customer=None, request=None):
     """
     Filter STW Requirement objects based on data access and user roles.
 
@@ -361,6 +362,29 @@ def filter_requirements(data_access_value, user, customer=None):
     else: 
         queryset = queryset.filter(filter_mapping.get(data_access_value, Q()))
 
+    if isinstance(request, Request):
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'dateRange': request.GET.get('dateRange'),
+        }
+        date_format = '%d/%m/%Y'
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.datetime.strptime(end_date_str.strip(), date_format).date()
+                    queryset = queryset.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                    }
+                    queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
+
     return queryset 
 
 
@@ -383,7 +407,7 @@ class STWCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    search_fields = ['first_name', 'last_name', 'company_name', 'email']
     template_name = 'stw_customer_list.html'
     ordering_fields = ['created_at'] 
 
@@ -397,7 +421,35 @@ class STWCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
         
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
 
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
 
     def get(self, request, *args, **kwargs):
         """
@@ -416,6 +468,7 @@ class STWCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = self.get_queryset()
+        queryset = self.get_searched_queryset(queryset)
         all_stw = STWRequirements.objects.filter()
         
         customers_with_counts = []  # Create a list to store customer objects with counts
@@ -425,7 +478,10 @@ class STWCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             customers_with_counts.append({'customer': customer, 'stw_counts': stw_counts})
 
         if request.accepted_renderer.format == 'html':
-            context = {'customers_with_counts': customers_with_counts}  # Pass the list of customers with counts to the template
+            context = {'customers_with_counts': self.get_paginated_queryset(customers_with_counts),
+                'search_fields': ['name', 'email','company name'],
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
+                }  # Pass the list of customers with counts to the template
             return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -453,6 +509,37 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
             message = "Data retrieved",
             )
     }
+
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+    
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
     def get_queryset(self):
         """
         Get the queryset based on filtering parameters from the request.
@@ -492,12 +579,15 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
             if isinstance(authenticated_user, HttpResponseRedirect):
                 return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-            queryset = filter_requirements(data_access_value, self.request.user, customer_data)
+            queryset = filter_requirements(data_access_value, self.request.user, customer_data, request)
+            queryset = self.get_searched_queryset(queryset)
 
 
             if request.accepted_renderer.format == 'html':
-                context = {'stw_requirements':queryset, 'customer_id':customer_id,
+                context = {'stw_requirements':self.get_paginated_queryset(queryset), 'customer_id':customer_id,
                         'customer_data':customer_data,
+                        'search_fields': self.search_fields,
+                        'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
                      }
                 return render_html_response(context,self.template_name)
             else:
