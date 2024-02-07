@@ -301,7 +301,7 @@
     // Add event listener to the "Create Job" button
     addJobButton.addEventListener("click", function () {
       if (quoteIds != []) {
-        addJobUrl = `{% url "job_assign_stw" customer_data.id %}?quotation=${encodeURIComponent(
+        addJobUrl = `{% url "job_assign_stw" customer_data.id %}?stw=${encodeURIComponent(
           quoteIds.join(",")
         )}`;
         window.location.href = addJobUrl
@@ -312,6 +312,7 @@
     updateButtonState();
   });
 </script>
+
 <script>
     // Initialize the Date Range Picker
     document.addEventListener('DOMContentLoaded', function () {

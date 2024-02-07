@@ -103,15 +103,12 @@ class STWRequirementSerializer(serializers.ModelSerializer):
     """
     action = serializers.CharField(
         label=('STW Action'),
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Action is required.",
-            "null": "Action is required."
-        },
-        validators=[action_description],
-        
+        max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
     )
     
     RBNO = serializers.CharField(
@@ -138,15 +135,12 @@ class STWRequirementSerializer(serializers.ModelSerializer):
 
     description = serializers.CharField(
         label=('STW Description'),
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Description is required.",
-            "null": "Description is required."
-        },
-        validators=[validate_description],
-        
+        max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
     )
     
     site_address =SiteAddressField(
@@ -289,6 +283,33 @@ class STWRequirementSerializer(serializers.ModelSerializer):
             if not field.read_only
         ])
     
+    def validate_description(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Description is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Description cannot consist of only spaces and tabs.")
+
+        return value
+    
+    def validate_action(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Action is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Action cannot consist of only spaces and tabs.")
+
+        return value
     
     def create(self, validated_data):
         """
@@ -395,35 +416,34 @@ class STWDefectSerializer(serializers.ModelSerializer):
         rectification_description (serializers.CharField): Char field for the rectification description.
         file_list (serializers.ListField): List field for multiple files associated with the defect.
     """
+      # Custom CharField for the message with more rows (e.g., 5 rows)
     action = serializers.CharField(
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Action is required.",
-        },
-        validators=[no_spaces_or_tabs_validator],
+            max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
     )
     
     description = serializers.CharField(
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Description is required.",
-        },
-        validators=[validate_description],
+            max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
     )
     
     rectification_description = serializers.CharField(
-        required=True, 
-        style={'base_template': 'textarea.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Rectification description is required.",
-        },
-        validators=[validate_rectification_description],
+            max_length=1000, 
+            required=True, 
+            style={'base_template': 'rich_textarea.html', 'rows': 5},
+            error_messages={
+                "required": "This field is required.",
+                "blank": "Message is required.",},
     )
+
     
     file_list = serializers.ListField(
         child=serializers.FileField(
@@ -493,7 +513,48 @@ class STWDefectSerializer(serializers.ModelSerializer):
         model = STWDefect
         fields = ('action',  'description', 'rectification_description',  'defect_type','file_list')
 
+    def validate_description(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Description is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Description cannot consist of only spaces and tabs.")
+
+        return value
     
+    def validate_action(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Action is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Action cannot consist of only spaces and tabs.")
+
+        return value
+    
+    def validate_rectification_description(self, value):
+        # Custom validation for the message field to treat <p><br></p> as blank
+        soup = BeautifulSoup(value, 'html.parser')
+        cleaned_comment = soup.get_text().strip()
+
+        # Check if the cleaned comment consists only of whitespace characters
+        if not cleaned_comment:
+            raise serializers.ValidationError("Rectification Description is required.")
+
+        if all(char.isspace() for char in cleaned_comment):
+            raise serializers.ValidationError("Rectification Description cannot consist of only spaces and tabs.")
+
+        return value
+
     def create(self, validated_data):
         """
         Create a new STW  Defect instance with associated documents.

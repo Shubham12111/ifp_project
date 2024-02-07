@@ -3728,25 +3728,33 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
             return redirect(reverse('approved_quotation_view'))
 
         quotation_ids = request.query_params.get('quotation', [])
+        stw_ids = request.query_params.get('stw', [])
         
-        if not quotation_ids:
+        if not quotation_ids and not stw_ids:
             messages.error(request, 'No quotations was selected to create a Job, please choose a Quotation and try again.')
             return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
         
-        quotation_ids = [i for i in quotation_ids.split(',') if i.isdigit()]
+        quotation_ids = [i for i in quotation_ids.split(',') if i.isdigit()] if quotation_ids else []
+        stw_ids = [i for i in stw_ids.split(',') if i.isdigit()] if stw_ids else []
 
-        if not quotation_ids:
+        if not quotation_ids and not stw_ids:
             messages.error(request, 'No quotations was selected to create a Job, please choose a Quotation and try again.')
             return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
 
         members = Member.objects.all()
         team = Team.objects.all()
+        
+        requirements_dict = {'quotation':quotation_ids} if quotation_ids else {'stw':stw_ids} if stw_ids else {}
+
+        if not requirements_dict:
+            messages.error(request, 'No quotations was selected to create a Job, please choose a Quotation and try again.')
+            return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
 
         serializer = self.serializer_class(
             data={
-                'quotation':quotation_ids,
                 'start_date': timezone.now(),
-                'end_date': timezone.now()
+                'end_date': timezone.now(),
+                **requirements_dict
             },
             context={'request': request, 'customer': customer_data}
         )
@@ -3785,7 +3793,8 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
 
         if serializer.is_valid():
             quotations = serializer.validated_data.get('quotation')
-            if not quotations:
+            stw = serializer.validated_data.get('stw')
+            if not quotations and not stw:
                 messages.error(request, 'You are not authorised to perform this operation')
                 return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
             
