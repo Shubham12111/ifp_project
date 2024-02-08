@@ -51,12 +51,12 @@
                     <b>Action</b>
                     <p class="text-sm mt-2" style="text-align: justify;">
 
-                        {{ stw_instance.action}}
+                        {{ stw_instance.action|safe|truncatechars:50}}
                     </p>
                     <b>Description</b>
                     <p class="text-sm mt-2" style="text-align: justify;">
 
-                        {{ stw_instance.description}}
+                        {{ stw_instance.description|safe|truncatechars:50}}
                     </p>
                     <hr class="horizontal gray-light">
                     <div class="row text-sm">

@@ -1,5 +1,5 @@
 from django.db import models
-
+from ckeditor.fields import RichTextField
 
 
 from django.utils.translation import gettext_lazy as _
@@ -58,8 +58,8 @@ class STWRequirements(models.Model):
     customer_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stw_requirement')
     UPRN = models.CharField(max_length=255, null=True)
     RBNO = models.CharField(max_length=255, null=True)
-    description = models.TextField()
-    action = models.TextField()
+    description = RichTextField()
+    action = RichTextField()
     building_name = models.CharField(max_length=255, null=True)
     postcode = models.CharField(max_length=255)
     site_address =  models.ForeignKey(SiteAddress, on_delete=models.CASCADE, null=True)
@@ -110,10 +110,10 @@ class STWDefect(models.Model):
         updated_at (DateTimeField): Date and time when the defect was last updated.
     """
     stw_id = models.ForeignKey(STWRequirements, on_delete=models.CASCADE)
-    action = models.TextField()
-    description = models.TextField()
+    action = RichTextField()
+    description = RichTextField()
     reference_number = models.CharField(max_length=50, null=True)
-    rectification_description = models.TextField()
+    rectification_description = RichTextField()
     status = models.CharField(max_length=30, choices=STW_DEFECT_STATUS_CHOICES, default='pending')
     defect_type = models.CharField(max_length=30, choices=STW_DEFECT_CHOICES, default='actual_defect')
     # JSONField to store SOR-related data
