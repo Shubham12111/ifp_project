@@ -71,7 +71,7 @@
                     <tr class="text-sm">
     
                         <td class="align-middle">{{ defect.get_defect_type_display }}</td>
-                        <td class="align-middle">{{ defect.action|truncatechars:30 }}</td>
+                        <td class="align-middle text-truncate">{{ defect.action|safe|truncatechars:50 }}</td>
                         <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.description|safe|truncatechars:50 }}</td>
                         <td class="align-middle text-truncate" style="max-width: 150px;">{{ defect.rectification_description|safe|truncatechars:50 }}</td>
                         {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
