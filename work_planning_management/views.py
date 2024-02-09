@@ -14,8 +14,9 @@ from rest_framework.request import Request
 import json
 from drf_yasg.utils import swagger_auto_schema
 
-from requirement_management.models import Requirement, Quotation
-from .serializers import QuotationSerializer
+from requirement_management.models import Requirement, Quotation,RequirementDefect
+from .serializers import QuotationSerializer, ConvertSTWToFRASerializer, STWDefectSerializer, ConvertSTWDefectsToFRADefectsSerializer, STWDefectsDetailedSerializer, STWRequirementDetailsSerializer
+from requirement_management.serializers  import RequirementAddSerializer,RequirementDefectAddSerializer,RequirementAssetSerializer
 
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
 from infinity_fire_solutions.aws_helper import *
@@ -25,7 +26,7 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 from .models import *
 from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,EventSerializer,STWJobListSerializer, JobCreateSerializer, MemberCalendarSerializer, AttachSitePackSerializer, AddAndAttachSitePackSerializer, CreateRLOSeirlaizer, UpdateRLOSeirlaizer
 
-from requirement_management.serializers import SORSerializer
+from requirement_management.serializers import SORSerializer,RequirementDefectSerializer,RequirementDefectAddSerializer
 from requirement_management.models import SORItem
 from django.http.response import JsonResponse
 from django.db import IntegrityError
@@ -895,7 +896,92 @@ class STWRequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIVie
             messages.error(request, "STW Requirement not found OR You are not authorized to perform this action.")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
                                         message="STW Requirement not found OR You are not authorized to perform this action.", )
-    
+
+class ConvertToFRAView(CustomAuthenticationMixin, generics.UpdateAPIView):
+    serializer_class = STWRequirementDetailsSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    swagger_schema = None
+    queryset = STWRequirements.objects.all()
+    customer = None
+
+
+    def get_queryset(self) -> STWRequirements:
+        """
+        Get the queryset for listing STW Requirement items.
+        Returns:
+            QuerySet: A queryset of STW Requirements items filtered based on the authenticated user's ID.
+        """
+        # Extract customer_id from kwargs
+        pk = self.kwargs.get('pk')
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+        
+        if customer_id and pk:
+            queryset = super().get_queryset()
+            queryset = queryset.filter(id=pk, customer_id=customer_id).first()
+            
+            if queryset.job_set.all():
+                return None
+
+        return queryset
+
+    def convert_and_attach_defects_to_fra(self, stw_instance: STWRequirements, fra_instance: Requirement):
+
+        stw_defects = STWDefect.objects.filter(stw_id=stw_instance).all()
+        if not stw_defects:
+            return True, []
+
+        serializer = STWDefectsDetailedSerializer(instance=stw_defects, many=True)
+        convert_defect_serializer = ConvertSTWDefectsToFRADefectsSerializer(data=serializer.data, many=True)
+        if convert_defect_serializer.is_valid():
+            fra_defects = convert_defect_serializer.save(requirement_id=fra_instance)
+            stw_defects.delete()
+            return True, []
+        
+        return False, convert_defect_serializer.errors
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET request to display a form for adding a STW requirement.
+        If the STW requirement exists, retrieve the serialized data and render the HTML template.
+        If the STW requirement does not exist, render the HTML template with an empty serializer.http://127.0.0.1:8000/work_planning/7/convert-to-fra/1/
+        """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        customer_id = kwargs.get('customer_id', None)
+        instance = self.get_queryset()
+        if not instance:
+            messages.error(request, 'You are not authorised to perform this operation')
+            return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id}))
+
+        self.customer = instance.customer_id
+        stw_requirements_serializer = self.get_serializer(instance=instance)
+        convert_stw_to_fra_serializer = ConvertSTWToFRASerializer(data=stw_requirements_serializer.data)
+        if convert_stw_to_fra_serializer.is_valid():
+            try:
+                fra_requirement: Requirement = convert_stw_to_fra_serializer.save(user_id=request.user, customer_id=self.customer)
+
+                defectCreated, defectErrors = self.convert_and_attach_defects_to_fra(instance, fra_requirement)
+                if not defectCreated and defectErrors:
+                    fra_requirement.delete()
+                    messages.error(request, 'Unable to validate the STW Defects data to convert it to a FRA Defects, aborting the converstion.')
+                    return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id}))
+
+                instance.delete()
+                messages.success(request, 'STW Successfully Converted to the FRA.')
+                return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+            
+            except Exception as e:
+                messages.error(request, 'Something went wrong while converting the to FRA, please try again later.')
+                return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id}))
+
+        messages.error(request, 'Unable to validate the STW data to convert it to a FRA.')
+        return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id}))
 
 class STWRemoveDocumentView(generics.DestroyAPIView):
     """

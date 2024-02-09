@@ -80,7 +80,7 @@ def fetch_file_from_s3(unique_filename, s3_folder=''):
         BytesIO: A BytesIO object containing the file content.
     """
     try:
-        s3_key = f"{s3_folder}/{unique_filename}"
+        s3_key = f"{s3_folder}/{unique_filename}" if s3_folder else f'{unique_filename}'
 
         # Download the file from S3
         file_object = BytesIO()
@@ -90,6 +90,13 @@ def fetch_file_from_s3(unique_filename, s3_folder=''):
     
     except Exception as e:
         return None
+
+def move_s3_file(source_key, destination_key):
+    # Copy the file
+    s3_client.copy_object(Bucket=settings.AWS_BUCKET_NAME, CopySource={'Bucket': settings.AWS_BUCKET_NAME, 'Key': source_key}, Key=destination_key)
+
+    # Delete the original file if needed
+    s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=source_key)
 
 
 def delete_file_from_s3(file_key, s3_folder=''):
