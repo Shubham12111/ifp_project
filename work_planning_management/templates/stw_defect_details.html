@@ -57,14 +57,14 @@
             <div class="col-lg-7">
                 <div class="card-body p-0">
                     <b>Action</b>
-                    <p class="text-sm mt-2" style="text-align: justify;">{{ defect_instance.action }}</p>
+                    <p class="text-sm mt-2" style="text-align: justify;">{{ defect_instance.action|safe|truncatechars_html:20|title|default:'' }}</p>
                     <strong class="text-dark text-sm mt-2">Description:</strong>
                     <p class="text-sm mt-2" style="text-align: justify;">
-                      {{ defect_instance.description}}
+                      {{ defect_instance.description|safe|truncatechars_html:50|title|default:''}}
                     </p>
                     <strong class="text-dark text-sm mt-2">Rectification:</strong>
                     <p class="text-sm mt-2" style="text-align: justify;">
-                      {{ defect_instance.rectification_description}}
+                      {{ defect_instance.rectification_description|safe|truncatechars_html:50|title|default:''}}
                     </p>
                     <hr class="horizontal gray-light my-4">
                     
