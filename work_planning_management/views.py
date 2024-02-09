@@ -955,6 +955,36 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         
 
         return queryset
+    
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 1 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
@@ -986,21 +1016,17 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
                     context = {
                         'serializer': serializer, 
                         'stw_instance': instance, 
-                        'stw_defect': stw_defect, 
+                        'stw_defect': self.get_paginated_queryset(stw_defect),
                         'document_paths': document_paths,
                         'customer_id': kwargs.get('customer_id'),
                         'customer_data':customer_data
                         }
-               
-
                     return render_html_response(context, self.template_name)
             else:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-
-
-
-# Custom JSON encoder that can handle Decimal instances
+            
+ # Custom JSON encoder that can handle Decimal instances           
 class DecimalEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
@@ -1636,8 +1662,6 @@ class SORUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
             messages.error(request, "The specified STW does not exist or you are not authorized to view it.")
             return redirect(reverse('stw_list'))
             
-
-
 
 
 class QuoteJobView(CustomAuthenticationMixin, generics.CreateAPIView):
