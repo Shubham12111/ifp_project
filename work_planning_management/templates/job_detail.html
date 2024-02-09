@@ -8,6 +8,30 @@
   span>p {
     margin-bottom: 0 !important;
   }
+  div.defect-safed-text.mt-1.mb-2 > p {
+    margin-bottom: 0 !important;
+  }
+  .accordion-button {
+    background-color: #eff0f18a;
+    color: #344767;
+    padding: 10px 20px;
+    border: none;
+    border: 1px solid #ccc;
+    outline: none !important;
+  }
+
+  .accordion-button[aria-expanded="true"] {
+    background-color: #8fa0be66;
+    border: 1px solid #ccc;
+    outline: none !important;
+  }
+
+  .accordion-button:focus {
+      z-index: 3;
+      border-color: #ccc;
+      outline: 0;
+      box-shadow: var(--bs-accordion-btn-focus-box-shadow);
+  }
 </style>
 {% include "job_stw_rlo_actions.html" %}
 <div class="container-fluid pt-4">
@@ -17,8 +41,22 @@
         <!-- Card header -->
         <div class="card-header pb-0">
           <div class="row mb-3 justify-content-between">
-            <div class="col-6">
-              <h4>Job Details</h4>
+            <div class="col-6 d-flex align-items-center">
+              <h4 class="mb-0">Job Details</h4>
+              {% if job.status %}
+              <div class="ps-2"> 
+                <span class="badge 
+                {% if job.status == 'pending' %}
+                bg-gradient-info
+                {% elif job.status == 'in-progress' %}
+                bg-gradient-warning
+                {% elif job.status == 'completed' %}
+                bg-gradient-success
+                {% endif %}">
+                {{ job.status|title }}
+                </span>
+              </div>
+              {% endif %}
             </div>
             <div class="col-6 text-end">
               {% include 'components/back_button.html' %}
@@ -31,17 +69,19 @@
             <div class="col-12 col-lg-4">
               <div class="row">
                 <label class="ms-0">Team/members: </label><br>
+                <ul class="ms-3 mb-0">
                 {% if job.assigned_to_team %}
                 {% for member in job.assigned_to_team.members.all %}
-                <span>{{ member }} - <i>{{ member.email }}</i></span>
+                <li>{{ member }} - <i>{{ member.email }}</i></li>
                 {% endfor %}
                 {% elif job.assigned_to_member %}
                 {% for member in job.assigned_to_member.all %}
-                <span>{{ member }} - <i>{{ member.email }}</i></span>
+                <li>{{ member }} - <i>{{ member.email }}</i></li>
                 {% endfor %}
                 {% else %}
-                <span>-</span>
+                <li>-</li>
                 {% endif %}
+                </ul>
               </div>
             </div>
 
@@ -51,16 +91,21 @@
               {% for quotation in job.quotation.all %}
               {% if forloop.first %}
               <div class="col-12">
-                <label class="ms-0">Site Name: </label><br>
-                <span>{{ quotation.requirement_id.site_address.site_name|title }}</span>
+                <label class="ms-0">Site Address: </label><br>
+                <span>{{ quotation.requirement_id.site_address.site_name|title }}</span><br>
+                <span>{{ quotation.requirement_id.site_address.address }}, {{ quotation.requirement_id.site_address.town|title }}, {{ quotation.requirement_id.site_address.country|title }}</span><br>
+                <span>{{ quotation.requirement_id.site_address.post_code }}</span>
               </div>
+              {% endif %}
+              {% endfor %}
+              {% elif job.stw.all %}
+              {% for stw in job.stw.all %}
+              {% if forloop.first %}
               <div class="col-12">
                 <label class="ms-0">Site Address: </label><br>
-                <span>{{ quotation.requirement_id.site_address.address }}, {{ quotation.requirement_id.site_address.town|title }}, {{ quotation.requirement_id.site_address.country|title }}</span>
-              </div>
-              <div class="col-12">
-                <label class="ms-0">Site Post Code: </label><br>
-                <span>{{ quotation.requirement_id.site_address.post_code }}</span>
+                <span>{{ stw.site_address.site_name|title }}</span><br>
+                <span>{{ stw.site_address.address }}, {{ stw.site_address.town|title }}, {{ stw.site_address.country|title }}</span><br>
+                <span>{{ stw.site_address.post_code }}</span>
               </div>
               {% endif %}
               {% endfor %}
@@ -86,69 +131,114 @@
           <div class="row mb-3">
             <label class="ms-0">Defects</label>
             <div class="accordion" id="accordion">
-              {% for quotation in job.quotation.all %}
-                {% for defect in quotation.defect_id.all %}
-                <div class="accordion-item mb-3 shadow-md">
-                  <div class="accordion-header fs-6">
-                    <button class="accordion-button bg-secondary text-white" type="button" data-bs-toggle="collapse"
-                      data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.parentloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
-                      <div class="col-7 d-flex" id="defectHeading">
-                        <strong>{{ forloop.counter }} -</strong>&nbsp;<span>{{ defect.action|safe|truncatechars_html:150 }}</span>
-                      </div>
-                      <div class="col-5 text-end">
-                        <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
-                        <i class="fas fa-chevron-down mx-2" aria-hidden="true"></i>
-                      </div>
-                    </button>
-                  </div>
-                  <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.parentloop.first %}show {% endif %}"
-                    data-bs-parent="#accordion{{ defect.id }}">
-                    <div class="accordion-body">
-                      <div class="row gap-2 mb-3" id="defectIntroduction">
-                        <div class="col-12 text-sm d-flex align-items-center">
-                          <strong>Action:</strong>&nbsp;<span>{{defect.action|safe }}</span>
+              {% if job.quotation.all %}
+                {% for quotation in job.quotation.all %}
+                  {% for defect in quotation.defect_id.all %}
+                  <div class="accordion-item mb-3 shadow-md">
+                    <div class="accordion-header fs-6">
+                      <button class="accordion-button py-2" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.parentloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                        <div class="col-7 d-flex" id="defectHeading">
+                          <strong>{{ forloop.counter }} -</strong>&nbsp;<span>{{ defect.action|safe|truncatechars_html:50 }}</span>
                         </div>
-                        <div class="col-12 text-sm d-flex align-items-center">
-                          <strong>Description: </strong>&nbsp;<span>{{defect.description|safe }}</span>
+                        <div class="col-5 text-end">
+                          <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
+                          <i class="fas fa-chevron-down mx-2" aria-hidden="true"></i>
                         </div>
-                        <div class="col-12 text-sm d-flex align-items-center">
-                          <strong>Rectification Description:</strong>&nbsp;<span>{{defect.rectification_description|safe }}</span>
+                      </button>
+                    </div>
+                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.parentloop.first %}show {% endif %}"
+                      data-bs-parent="#accordion{{ defect.id }}">
+                      <div class="accordion-body">
+                        <div class="row gap-2 mb-3" id="defectIntroduction">
+                          <div class="col-12 text-sm">
+                            <strong>Action: </strong><br>
+                            <div class="defect-safed-text mt-1 mb-2">{{ defect.action|safe }}</div>
+                          </div>
+                          <div class="col-12 text-sm">
+                            <strong>Description: </strong><br>
+                            <div class="defect-safed-text mt-1 mb-2">{{ defect.description|safe }}</div>
+                          </div>
+                          <div class="col-12 text-sm">
+                            <strong>Rectification Description: </strong><br>
+                            <div class="defect-safed-text mt-1">{{ defect.rectification_description|safe }}</div>
+                          </div>
                         </div>
-                      </div>
 
-                      <div class="row" id="defectSors">
-                        {% for defectId, sorTableList in quotation.quotation_json.defectSorValues.items %}
-                        {% if defect.id|stringformat:"s" == defectId %}
-                        <div class="table-responsive">
-                          <table class="table align-items-center">
-                            <thead class="bg-default">
-                              <tr class="text-sm">
-                                <th scope="col-auto" class="text-center">SOR Code </th>
-                                <th scope="col-auto" class="text-center">SOR Name </th>
-                                <th scope="col-auto" class="text-center">Category</th>
-                                <th scope="col-auto" class="text-center">Price(£)</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {% for uniqueId, sorDict in sorTableList.items %}
-                                <tr id="{{ uniqueId }}">
-                                  <td scope="col-auto" class="text-center">{{ sorDict.sor_items.reference_number }}</td>
-                                  <td scope="col-auto" class="text-center">{{ sorDict.sor_items.name }}</td>
-                                  <td scope="col-auto" class="text-center">{{ sorDict.sor_items.category_id }}</td>
-                                  <td scope="col-auto" class="text-center">{{ sorDict.sor_items.price }}</td>
+                        <div class="row" id="defectSors">
+                          {% for defectId, sorTableList in quotation.quotation_json.defectSorValues.items %}
+                          {% if defect.id|stringformat:"s" == defectId %}
+                          <div class="table-responsive">
+                            <table class="table align-items-center">
+                              <thead class="bg-default">
+                                <tr class="text-sm">
+                                  <th scope="col-auto" class="text-center">SOR Code </th>
+                                  <th scope="col-auto" class="text-center">SOR Name </th>
+                                  <th scope="col-auto" class="text-center">Category</th>
+                                  <th scope="col-auto" class="text-center">Price(£)</th>
                                 </tr>
-                              {% endfor %}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {% for uniqueId, sorDict in sorTableList.items %}
+                                  <tr id="{{ uniqueId }}">
+                                    <td scope="col-auto" class="text-center">{{ sorDict.sor_items.reference_number }}</td>
+                                    <td scope="col-auto" class="text-center">{{ sorDict.sor_items.name }}</td>
+                                    <td scope="col-auto" class="text-center">{{ sorDict.sor_items.category_id }}</td>
+                                    <td scope="col-auto" class="text-center">{{ sorDict.sor_items.price }}</td>
+                                  </tr>
+                                {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                          {% endif %}
+                          {% endfor %}
                         </div>
-                        {% endif %}
-                        {% endfor %}
                       </div>
                     </div>
                   </div>
-                </div>
+                  {% endfor %}
                 {% endfor %}
+              {% elif job.stw.all %}
+                {% for stw in job.stw.all %}
+                  {% for defect in stw.stwdefect_set.all %}
+                  <div class="accordion-item mb-3 shadow-md">
+                    <div class="accordion-header fs-6">
+                      <button class="accordion-button py-2" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.parentloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                        <div class="col-7 d-flex" id="defectHeading">
+                          <strong>{{ forloop.counter }} -</strong>&nbsp;<span>{{ defect.action|safe|truncatechars_html:50 }}</span>
+                        </div>
+                        <div class="col-5 text-end">
+                          <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
+                          <i class="fas fa-chevron-down mx-2" aria-hidden="true"></i>
+                        </div>
+                      </button>
+                    </div>
+                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.parentloop.first %}show {% endif %}"
+                      data-bs-parent="#accordion{{ defect.id }}">
+                      <div class="accordion-body">
+                        <div class="row gap-2 mb-3" id="defectIntroduction">
+                          <div class="col-12 text-sm">
+                            <strong>Action: </strong><br>
+                            <div class="defect-safed-text mt-1 mb-2">{{ defect.action|safe }}</div>
+                          </div>
+                          <div class="col-12 text-sm">
+                            <strong>Description: </strong><br>
+                            <div class="defect-safed-text mt-1 mb-2">{{ defect.description|safe }}</div>
+                          </div>
+                          <div class="col-12 text-sm">
+                            <strong>Rectification Description: </strong><br>
+                            <div class="defect-safed-text mt-1">{{ defect.rectification_description|safe }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
                 {% endfor %}
+              {% else %}
+              <span>-</span>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -156,7 +246,4 @@
     </div>
   </div>
 </div>
-{% endblock %}
-{% block extra_js %}
-<script src="{% static 'assets/js/custom.js' %}"></script>
 {% endblock %}

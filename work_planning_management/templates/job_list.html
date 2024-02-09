@@ -4,7 +4,30 @@
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
-<div class="container-fluid py-4">
+<link
+  id="pagestyle"
+  href="{% static 'assets/css/daterangepicker.css' %}"
+  rel="stylesheet"
+/>
+<style>
+  div.choices__list.choices__list--dropdown.is-active {
+    z-index: 100 !important;
+  }
+</style>
+<style>
+  ul li input[type="text"] {
+    display: inline-block;
+  }
+</style>
+<style>
+  .daterangepicker .ranges ul li.active {
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+  }
+</style>
+{% include 'work_planning/customer_work_action.html'%}
+<div class="container-fluid py-2">
   <div class="row">
     <div class="col-12">
       <div class="card">
@@ -21,7 +44,7 @@
           </div>
 
           <div class="row">
-            
+            {% include "job_list_filters.html" %}
           </div>
         </div>
         <div class="card-body pt-0">
@@ -30,9 +53,11 @@
               <thead class="thead-light">
                 <tr>
                   <th>Reference Number</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
+                  <th>Start Date/Time</th>
+                  <th>End Date/Time</th>
+                  <th>Site Address</th>
                   <th>Team</th>
+                  <th>Status</th>
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <th class="custom-last-column">Actions</th>
                   {% endif %}
@@ -50,13 +75,33 @@
                   <td class="text-sm">
                     <a href="{% url 'job_detail' customer_data.id job.id %}"
                     class="text-decoration-none w-100 nav-link" >
-                      {{ job.start_date|date:"d/m/Y" }}
+                      {{ job.start_date|date:"d/m/Y - h:m A" }}
                     </a>
                   </td>
                   <td class="text-sm">
                     <a href="{% url 'job_detail' customer_data.id job.id %}"
                     class="text-decoration-none w-100 nav-link" >
-                      {{ job.end_date|date:"d/m/Y" }}
+                      {{ job.end_date|date:"d/m/Y - h:m A" }}
+                    </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'job_detail' customer_data.id job.id %}"
+                    class="text-decoration-none w-100 nav-link" >
+                      {% if job.quotation.all %}
+                      {% for quotation in job.quotation.all %}
+                      {% if forloop.first %}
+                      {{ quotation.requirement_id.site_address|title|default:'' }}
+                      {% endif %}
+                      {% endfor %}
+                      {% elif job.stw.all %}
+                      {% for stw in job.stw.all %}
+                      {% if forloop.first %}
+                      {{ stw.site_address|title|default:'' }}
+                      {% endif %}
+                      {% endfor %}
+                      {% else %}
+                      -
+                      {% endif %}
                     </a>
                   </td>
                   <td class="text-sm">
@@ -75,6 +120,12 @@
                       {% endif %}
                     </a>
                   </td>
+                  <td class="text-sm">
+                    <a href="{% url 'job_detail' customer_data.id job.id %}"
+                    class="text-decoration-none w-100 nav-link" >
+                      {{ job.status|title }}
+                    </a>
+                  </td>
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <td class="align-middle">
                     <div class="dropstart ms-auto pe-0">
@@ -84,17 +135,49 @@
                       </a>
                       <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
                         {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user %}
-                        {% if request.user|has_delete_permission:"fire_risk_assessment" %}
-                        <a href="#" type="button" class="dropdown-item border-radius-md">
-                          Delete
-                        </a>
-                        {% endif %}
+                          {% if request.user|has_delete_permission:"fire_risk_assessment" %}
+                          <a type="button" class="dropdown-item border-radius-md" data-bs-toggle="modal" data-bs-target="#confirmationModal{{ job.id }}">
+                            Delete
+                          </a>
+                          {% endif %}
                         {% endif %}
                       </ul>
                     </div>
                   </td>
                   {% endif %}
                 </tr>
+
+                <!-- Modal -->
+                <div class="modal fade" id="confirmationModal{{ job.id }}" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel{{ job.id }}" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="confirmationModalLabel{{ job.id }}">Confirm Delete</h5>
+                        <button type="button" class="btn-close text-dark" data-bs-dismiss="modal" aria-label="Close">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row text-wrap">
+                          <p class="mb-0">Would you really like to remove this job?<br>
+                            The following data will be lost if this job is deleted:</p>
+                          <ul class="ms-4 mb-0">
+                            <li>Site Packs uploaded especially for this job.</li>
+                            <li>RLOs made and are linked to this job.</li>
+                            <li>Events and Progress of the job.</li>
+                          </ul>
+                          <p class="mb-0">will be removed, and it won't be retrieved.</p>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-sm mb-0 bg-gradient-secondary " data-bs-dismiss="modal">No</button>
+                        <a href='#' type="button" class="btn btn-sm mb-0 bg-gradient-primary">
+                          Yes
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 {% endfor %}
             </table>
           </div>
@@ -105,7 +188,128 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
-<script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script src="{% static 'assets/js/custom_convert.js' %}"></script>
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/js/daterangepicker.js' %}"></script>
+<script>
+    // Initialize the Date Range Picker
+    document.addEventListener('DOMContentLoaded', function () {
+      let initialStartDate, initialEndDate; // Variables to store the initial dates
+
+      function cb(start, end) {
+        const formattedStartDate = start.format('DD/MM/YYYY');
+        const formattedEndDate = end.format('DD/MM/YYYY');
+        const formattedDateRange = formattedStartDate + ' - ' + formattedEndDate;
+
+        $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
+
+        applyFilter('dateRange', formattedDateRange);
+      }
+
+      // Initialize the Date Range Picker without setting an initial date range
+      const datePicker = $('#reportrange').daterangepicker({
+        autoUpdateInput: false,
+        autoApply: true,
+        showCustomRangeLabel: true, // Hide the "Custom Range" label
+        format: 'DD/MM/YYYY', // Change the format here
+        ranges: {
+          'Today': [moment(), moment()],
+          'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()]
+        },
+      });
+
+      if (datePicker.data('daterangepicker').showCustomRangeLabel) {
+        datePicker.data('daterangepicker').container.find('.ranges ul').append(
+          $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
+        );
+      }
+
+      datePicker.on('apply.daterangepicker', function (ev, picker) {
+        cb(picker.startDate, picker.endDate);
+      });
+
+      datePicker.on('show.daterangepicker', function (ev, picker) {
+        initialStartDate = picker.startDate.clone(); // Store initial start date
+        initialEndDate = picker.endDate.clone();     // Store initial end date
+      });
+
+      function dateclearFilter(filterType) {
+        if (filterType === 'dateRange') {
+          $('#reportrange').data('daterangepicker').setStartDate(moment());
+          $('#reportrange').data('daterangepicker').setEndDate(moment());
+          $('#reportrange span').html('');
+          clearFilter('dateRange'); // Apply empty filter value
+        }
+      }
+    });
+</script>
+
+<script>
+    // JavaScript code to apply the filter on each field
+    function applyFilter(filterName, filterValue) {
+
+        // Handle date range filter
+        if (filterName === 'dateRange') {
+          filterValue = filterValue; // Use a custom delimiter to separate start and end dates
+  
+  
+        }
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set(filterName, filterValue);
+        window.location.href = currentUrl.toString();
+  
+  
+    }
+
+    // JavaScript code to clear single filter on onclick event
+    function clearFilter(filterName) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete(filterName);
+        window.location.href = currentUrl.toString();
+      }
+    // JavaScript code to clear all the filters
+    function clearAllFilters() {
+        const currentUrl = new URL(window.location.href);
+        const queryParams = new URLSearchParams(currentUrl.search);
+        const filterNames = ['status', 'dateRange', 'q']; // Add dateRange to the filterNames array
+  
+        filterNames.forEach(filterName => {
+          queryParams.delete(filterName);
+        });
+        window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+        window.location.reload(); // Reload the page after clearing all filters
+    }
+
+
+    // Check URL parameters on page load and update search and filter selections
+    window.addEventListener('DOMContentLoaded', function () {
+        const filterNames = ['status', 'dateRange', 'q'];
+        filterNames.forEach(filterName => {
+          const filterValue = new URLSearchParams(window.location.search).get(filterName);
+  
+          if (filterValue) {
+            let displayedValue = filterValue; // Default displayed value is the filter value itself
+  
+            if (filterName === 'dateRange') {
+              const formattedDateRange = filterValue.replace('_', ' to ');
+              displayedValue = formattedDateRange;
+  
+              // Also update the date range input field if needed
+              document.getElementById('reportrange').value = formattedDateRange;
+            }
+            else if (filterValue.length > 16 && filterName != 'q') {
+              // Truncate the filter value if it's longer than 5 characters
+              displayedValue = filterValue.substring(0, 16) + '..';
+            }
+  
+            // Update the dropdown element with the displayed value
+            document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+          }
+        });
+      });
+</script>
 {% endblock %}

@@ -31,8 +31,9 @@
                         <table class="table table-hover text-dark">
                           <thead class="thead-light">
                             <tr>
-                              <th>RLO name</th>
-                              <th>RLO status</th>
+                              <th>RLO Name</th>
+                              <th>Base Template</th>
+                              <th>RLO Status</th>
                               <th>Created Date</th>
                               {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                               <th class="custom-last-column">Actions</th>
@@ -43,12 +44,13 @@
                             {% for rlo in rlo_list %}
                             <tr class="text-sm">
                                 <td class="text-sm">{{rlo.name}}</td>
+                                <td class="text-sm">{{rlo.base_template|title}}</td>
                                 <td class="text-sm">{{rlo.status|title}}</td>
                                 <td class="text-sm">{{rlo.created_at|date:"d/m/Y"}}</td>
             
                                 {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                                 <td>
-                                    <div class="dropstart ms-auto pe-0">
+                                    <div class="dropstart btn-group">
                                         <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
                                             <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
                                         </a>

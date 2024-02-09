@@ -73,6 +73,13 @@
     border: 1px solid #ccc;
   }
 
+  .accordion-button:focus {
+    z-index: 3;
+    border-color: #ccc;
+    outline: 0;
+    box-shadow: var(--bs-accordion-btn-focus-box-shadow);
+  }
+
   /* Custom styles for the accordion body */
   .accordion-body {
     padding: 20px;
@@ -118,13 +125,12 @@
   }
 
 
-  div#accordionDefect > div > h5 > button > div#defectHeading > p {
+  div#defectHeading > span > p {
     margin-left: 0.25rem !important;
     margin-bottom: 0 !important;
   }
 
-  div#accordionDefect > div > div > div > div#defectIntroduction > div.col-12.text-sm.d-flex.align-items-center > p {
-    margin-left: 0.25rem !important;
+  div.defect-safed-text.mt-1.mb-2 > p {
     margin-bottom: 0 !important;
   }
 </style>
@@ -247,11 +253,11 @@
 
             <div class="accordion-item column-with-border mb-3 " data-defect-id="{{ defect.id }}">
               <h5 class="accordion-header text-sm" id="headingOne">
-                <button class="accordion-button " type="button" data-bs-toggle="collapse"
+                <button class="accordion-button py-2" type="button" data-bs-toggle="collapse"
                   data-bs-target="#collapse{{ forloop.counter }}"
                   aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
                   <div class="col-7 d-flex align-items-center" id="defectHeading">
-                    <p><strong>{{ forloop.counter }} - </strong></p>{{ defect.action|safe|truncatechars_html:150 }}
+                    <strong>{{ forloop.counter }} -</strong>&nbsp;<span>{{ defect.action|safe|truncatechars_html:50 }}</span>
                   </div>
                   <div class="col-5 text-end">
                     <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
@@ -263,28 +269,42 @@
               </h5>
               <div id="collapse{{ forloop.counter }}"
                 class="accordion-collapse  collapse {% if forloop.first %}show {% endif %} "
-                aria-labelledby="heading{{ forloop.counter }}">
+                aria-labelledby="heading{{ forloop.counter }}" id="accordionBody">
                 <div class="accordion-body text-sm">
                   <div class="row mb-4" id="defectIntroduction">
-                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Action: </strong>{{ defect.action|safe }}</div>
-                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Description: </strong>{{ defect.description|safe }}</div>
-                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Rectification Description: </strong>{{ defect.rectification_description|safe }}</div>
+                    <div class="col-12 text-sm">
+                      <strong>Action: </strong><br>
+                      <div class="defect-safed-text mt-1 mb-2">{{ defect.action|safe }}</div>
+                    </div>
+                    <div class="col-12 text-sm">
+                      <strong>Description: </strong><br>
+                      <div class="defect-safed-text mt-1 mb-2">{{ defect.description|safe }}</div>
+                    </div>
+                    <div class="col-12 text-sm">
+                      <strong>Rectification Description: </strong><br>
+                      <div class="defect-safed-text mt-1">{{ defect.rectification_description|safe }}</div>
+                    </div>
                   </div>
                   <div class="col-lg-12 col-sm-12">
                     {% csrf_token %}
-
-                    <!-- Empty table element with a unique ID -->
-                    <table id="table-{{ defect.id }}" class="custom-table text-sm" style="width:100%">
-                      <!-- Table content will be added dynamically here -->
-                      <tr id="header-{{ defect.id }}">
-                        <th class="col-3">SOR Code</th>
-                        <th class="col-3">SOR Name</th>
-                        <th>Category</th>
-                        <th>Price(£)</th>
-                        <th class="col-1">Action</th>
-                        <!-- Add more headers as needed -->
-                      </tr>
-                    </table>
+                    <div class="table-responsive">
+                      <!-- Empty table element with a unique ID -->
+                      <table id="table-{{ defect.id }}" class="table text-dark text-sm" style="width:100%">
+                        <thead class="bg-default">
+                          <!-- Table content will be added dynamically here -->
+                          <tr id="header-{{ defect.id }}">
+                            <th class="col-3">SOR Code</th>
+                            <th class="col-3">SOR Name</th>
+                            <th>Category</th>
+                            <th>Price(£)</th>
+                            <th class="col-1">Action</th>
+                            <!-- Add more headers as needed -->
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                   <div class="col-lg-12 col-sm-12 mb-0">
                     <button class="btn btn-outline-dotted text-lower btn-sm mt-4" data-defect-id="{{ defect.id }}"
@@ -526,6 +546,8 @@
 
         // Check if the table already exists, and if not, create it
         var existingTable = document.getElementById(tableId);
+        var tbody = document.createElement('tbody');
+        existingTable.appendChild(tbody)
 
 
         var savedRow = savedData.defectSorValues[defectId][inner_key];
@@ -565,11 +587,13 @@
 
         // Create and append the second <td> for category
         var categoryCell = document.createElement('td');
+        categoryCell.className = 'ps-2';
         categoryCell.textContent = sorItem.category_id;
         newRow.appendChild(categoryCell);
 
         // Create and append the third <td> for price
         var priceCell = document.createElement('td');
+        priceCell.className = 'ps-2';
         priceCell.textContent = sorItem.price;
         newRow.appendChild(priceCell);
 
@@ -608,7 +632,7 @@
         // Update the total price for all defect tables
         updateTotalPrice();
         // Append the new row to the table
-        existingTable.appendChild(newRow);
+        existingTable.querySelector('tbody').appendChild(newRow);
         
 
         // Listen for changes in the dropdown and update other <td> elements
@@ -813,6 +837,7 @@
     var existingTable = document.getElementById(tableId);
     if (!existingTable) {
       var table = document.createElement('table');
+      var tbody = document.createElement('tbody');
       table.id = tableId;
       table.className = 'custom-table mb-4 text-sm';
       table.style.width = '100%';
@@ -823,13 +848,13 @@
       tableHeader.style.display = 'none';
       tableHeader.innerHTML = '<th>SOR Column 1</th><th>SOR Column 2</th>'; // Add more headers as needed
       table.appendChild(tableHeader);
+      table.appendChild(tbody)
 
       document.querySelector('.col-lg-12.col-sm-12').appendChild(table);
     }
 
     // Show the headers
     var headerRow = document.getElementById(headerId);
-    headerRow.style.display = 'table-row';
 
     // Create a new row for the table
     var newRow = document.createElement('tr');
@@ -874,10 +899,12 @@
     newRow.appendChild(sorIdInput);
     // Add the second <td> for category
     var categoryCell = document.createElement('td');
+    categoryCell.className = 'ps-2';
     newRow.appendChild(categoryCell);
 
     // Add the third <td> for price
     var priceCell = document.createElement('td');
+    priceCell.className = 'ps-2';
     newRow.appendChild(priceCell);
 
 
@@ -897,7 +924,7 @@
     newRow.appendChild(deleteCell);
 
     // Append the new row to the table
-    existingTable.appendChild(newRow);
+    existingTable.querySelector('tbody').appendChild(newRow);
 
     // Listen for changes in the dropdown and update other <td> elements
     function populateOnSorCodeChange(){

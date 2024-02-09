@@ -1844,7 +1844,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
     serializer_class = STWJobListSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['stw_job__quotation__action', 'stw_job__quotation__description', 'stw_job__quotation__RBNO', 'stw_job__quotation__UPRN']
+    search_fields = ['assigned_to_team__members__name', 'assigned_to_member__name']
     template_name = 'job_list.html'
     ordering_fields = ['created_at']
     queryset = Job.objects.all()
@@ -1856,10 +1856,59 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             message="Data retrieved",
         )
     }
+
+    def get_filtered_queryset(self, queryset):
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'status': self.request.GET.get('status'),
+        }
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                # For other filters, apply the corresponding filters on the queryset
+                filter_mapping = {
+                    'status': 'status',
+                }
+                queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
+        
+        return queryset
+
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
     def get_queryset(self, data_access_value, customer_data):
         """
         Get the queryset based on filtering parameters from the request.
         """
+        from django.db.models import F
         queryset = super().get_queryset()
         filter_mapping = {
             "self": Q(user_id=self.request.user),
@@ -1872,7 +1921,11 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
         if ordering in self.ordering_fields:
             queryset = queryset.order_by(ordering)
 
-        return queryset.order_by('-created_at')
+        queryset = self.get_filtered_queryset(queryset)
+        queryset = self.get_searched_queryset(queryset.order_by('-created_at'))
+        queryset = self.get_paginated_queryset(queryset)
+
+        return queryset
 
     @swagger_auto_schema(operation_id='STW Job Assignment Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
@@ -1891,7 +1944,10 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             if request.accepted_renderer.format == 'html':
                 context = {
                     'jobs': queryset,
-                    'customer_data': customer_data
+                    'customer_data': customer_data,
+                    'status_values': Job_STATUS_CHOICES,
+                    'search_fields': self.search_fields,
+                    'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
                 }
                 return render_html_response(context, self.template_name)
             else:
@@ -2047,61 +2103,78 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
                                     data=serializer.data)
         
 
-class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
-    """
-    View for deleting a single job.
-    This view provides both HTML and JSON rendering.
-    """
+# class JobDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
+#     """
+#     View for deleting a single job.
+#     This view provides both HTML and JSON rendering.
+#     """
 
-    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    serializer_class = STWJobListSerializer
-    template_name = 'job_list.html'
+#     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+#     serializer_class = STWJobListSerializer
+#     template_name = 'job_list.html'
+#     queryset = Job.objects.filter()
 
-    def get_queryset(self):
-        return Job.objects.filter()
+#     def get_queryset(self):
+#         job_id = self.kwargs.get('job_id', None)
+#         customer_id = self.kwargs.get('customer_id', None)
+#         queryset = None
 
-    def get(self, request, *args, **kwargs):
-        job_id = self.kwargs.get('job_id')
-        print(job_id)
-        queryset = self.get_queryset()
-        print(queryset)
+#         if job_id and customer_id:
+#             queryset = super().get_queryset()
+#             queryset = queryset.filter(
+#                 pk = job_id,
+#                 customer_id = customer_id
+#             ).first()
 
-        try:
-            job = queryset.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+#         return queryset
 
-        if request.accepted_renderer.format == 'html':
-            context = {'job': job}
-            return render(request, self.template_name, context)
-        else:
-            serializer = self.serializer_class(job)
-            return create_api_response(status_code=status.HTTP_200_OK,
-                                       message="Data retrieved",
-                                       data=serializer.data)
+#     def get(self, request, *args, **kwargs):
+#         authenticated_user, data_access_value = check_authentication_and_permissions(
+#             self, "survey", HasListDataPermission, 'list'
+#         )
+#         if isinstance(authenticated_user, HttpResponseRedirect):
+#             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+#         customer_id = self.kwargs.get('customer_id', None)
 
-    def delete(self, request, *args, **kwargs):
-        job_id = self.kwargs.get('job_id')
-        print(job_id)
-        customer_id = self.kwargs.get('customer_id')
-        queryset = self.get_queryset()
-        print(queryset)
+#         breakpoint()
+#         instance = self.get_queryset()
+#         if not instance:
+#             messages.error(request, "You are not authorized to perform this action")
+#             return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
 
-        try:
-            job = queryset.get(id=job_id)
-        except Job.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+#         if request.accepted_renderer.format == 'html':
+#             context = {'job': job}
+#             return render(request, self.template_name, context)
+#         else:
+#             serializer = self.serializer_class(job)
+#             return create_api_response(status_code=status.HTTP_200_OK,
+#                                        message="Data retrieved",
+#                                        data=serializer.data)
 
-        # You can add permission checks here to ensure the user has the right to delete the job.
+#     def delete(self, request, *args, **kwargs):
+#         breakpoint()
+#         job_id = self.kwargs.get('job_id')
+#         print(job_id)
+#         customer_id = self.kwargs.get('customer_id')
+#         queryset = self.get_queryset()
+#         print(queryset)
 
-        job.delete()
+#         try:
+#             job = queryset.get(id=job_id)
+#         except Job.DoesNotExist:
+#             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if request.accepted_renderer.format == 'html':
-            messages.success(request, "Job has been deleted successfully.")
-            return redirect(reverse('job_list'))
-        else:
-            return create_api_response(status_code=status.HTTP_204_NO_CONTENT,
-                                       message="Job deleted successfully.")
+#         # You can add permission checks here to ensure the user has the right to delete the job.
+
+#         job.delete()
+
+#         if request.accepted_renderer.format == 'html':
+#             messages.success(request, "Job has been deleted successfully.")
+#             return redirect(reverse('job_list'))
+#         else:
+#             return create_api_response(status_code=status.HTTP_204_NO_CONTENT,
+#                                        message="Job deleted successfully.")
         
 
 class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):

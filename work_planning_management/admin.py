@@ -72,6 +72,14 @@ class SitePackAdmin(admin.ModelAdmin):
     list_display = ('id','name', 'orignal_document_name', 'create_at',)
     form = SitePackAdminForm
 
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Any]:
+        queryset = super().get_queryset(request)
+
+        if request.user.is_staff and not request.user.is_superuser:
+            return queryset.filter(user_id__is_staff=True).all()
+
+        return queryset
+
     def delete_queryset(self, request, queryset) -> None:
         for obj in queryset:
             deleted = delete_file_from_s3(obj.document_path, f'sitepack_doc')
