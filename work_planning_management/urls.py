@@ -16,13 +16,13 @@ from .rlo_views import *
 
 urlpatterns = [
     path('approved_quotation/', ApprovedQuotationCustomerListView.as_view(), name='approved_quotation_view'),
-    path('approved_list/<int:customer_id>/list/', ApprovedQuotationListView.as_view(), name='approved_quotation_list'),
+    path('customer/<int:customer_id>/approved-quotation/', ApprovedQuotationListView.as_view(), name='approved_quotation_list'),
 
 
     path('job-customers/', JobCustomerListView.as_view(), name='job_customers_list'),
     
     path('customer/<int:customer_id>/jobs/', JobsListView.as_view(), name='jobs_list'),
-    path('customer/<int:customer_id>/jobs/job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
+    # path('customer/<int:customer_id>/jobs/job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
     path('customer/<int:customer_id>/jobs/job/<int:job_id>/details/', JobDetailView.as_view(), name='job_detail'),
     path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/', JobSitePacksDetailView.as_view(), name='job_site_packs_detail'),
     path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/<int:site_pack_id>/delete/', JobSitePacksDeleteView.as_view(), name='job_site_packs_delete'),
@@ -37,12 +37,12 @@ urlpatterns = [
 
     # stw
     path('stw_customers/', STWCustomerListView.as_view(), name='stw_customers_list'),
-    path('stw_customers/<int:customer_id>/list/', STWRequirementListView.as_view(), name='customer_stw_list'),
-    path('stw_customers/<int:customer_id>/add/', STWRequirementAddView.as_view(), name='customer_stw_add'),
-    path('stw_customers/<int:customer_id>/edit/<int:pk>/', STWRequirementUpdateView.as_view(), name='customer_stw_edit'),
-    path('stw_customers/<int:customer_id>/delete/<int:pk>/',STWRequirementDeleteView.as_view(),name='customer_stw_delete'),
+    path('customer/<int:customer_id>/stw/', STWRequirementListView.as_view(), name='customer_stw_list'),
+    path('customer/<int:customer_id>/stw/<int:pk>/view/', STWDetailView.as_view(), name='customer_stw_view'),
+    path('customer/<int:customer_id>/stw/add/', STWRequirementAddView.as_view(), name='customer_stw_add'),
+    path('customer/<int:customer_id>/stw/<int:pk>/edit/', STWRequirementUpdateView.as_view(), name='customer_stw_edit'),
+    path('customer/<int:customer_id>/stw/<int:pk>/delete/',STWRequirementDeleteView.as_view(),name='customer_stw_delete'),
     path('delete/document/<int:stw_id>/<int:document_id>/', login_required(STWRemoveDocumentView.as_view()), name='remove_stw_document'),
-    path('<int:customer_id>/view/<int:pk>/', STWDetailView.as_view(), name='customer_stw_view'),
     path('customer/<int:customer_id>/convert-stw-to-fra/<int:pk>/', ConvertToFRAView.as_view(), name='convert_to_fra'),
 
 

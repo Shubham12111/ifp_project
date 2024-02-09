@@ -1,0 +1,56 @@
+{% load static %}
+
+<div class="row px-3 mt-3 justify-content-start">
+    <div class="dropdown d-inline me-2 col-auto px-0 mb-2">
+        <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 "
+            data-bs-toggle="dropdown" id="statusDropdown">
+            <span class="flex-grow-1 text-start custom-search">Status</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3 " aria-labelledby="statusDropdown"
+            data-popper-placement="bottom-end">
+
+            {% for status in status_values %}
+            <li>
+                <a class="dropdown-item border-radius-md text-start " href="#"
+                    onclick="applyFilter('status', '{{ status.0 }}')">{{ status.1 }}</a>
+            </li>
+            {% endfor %}
+            <li>
+                <hr class="horizontal dark my-2">
+            </li>
+            <li>
+                <a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('status')">Remove
+                    Filter</a>
+            </li>
+
+        </ul>
+    </div>
+
+    <!--  Date Range list filter-->
+    <div class="responsive-date-filter d-inline me-2 col-auto px-0 mb-2" style="width: auto;">
+        <input type="text" id="reportrange" class="form-control custom-date-search text-uppercase"
+            style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;"
+            placeholder="Select date range">
+    </div>
+
+    <div class="d-flex mt-0 col-auto px-0 mb-2" id="table-search-bar-form-row">
+        <form class="row justify-content-start justify-content-lg-end w-100" method="get" autocomplete="off" id="searchForm">
+            <div class="col-12 text-start text-md-end align-self-center pe-0">
+                <div class="p-0 d-flex">
+                    <input class="form-control me-2" id="searchbar" name="q" type="text" 
+                    placeholder="Search...", 
+                    value="{{search_value}}" aria-label="search-input" aira-autocomplete="off">
+                    <button type="submit" class="btn bg-gradient-secondary btn-sm mb-0 px-4"><i
+                        class="fas fa-search d-lg-none" style="font-size: 0.7rem"></i> <span class="d-none d-lg-block">Search</span></button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-auto px-0 mb-2">
+        <!--end of filter-->
+        <a href="" class="btn bg-gradient-secondary float-right mb-0 " onclick="clearAllFilters()">
+            Clear
+        </a>
+    </div>
+</div>

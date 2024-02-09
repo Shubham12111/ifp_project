@@ -149,7 +149,6 @@
         shouldSortItems: false,
         searchFields: ['label'],
         duplicateItemsAllowed: false,
-        removeItemButton: true,
         searchPlaceholderValue: "Search Base Template",
         placeholderValue: "Select Base Template",
         fuseOptions: {
@@ -162,6 +161,14 @@
           minMatchCharLength: 1
         }
       });
+
+      rlo_template_choices.passedElement.element.addEventListener(
+        'change',
+        function(event) {
+          showTemplate();
+        },
+        false,
+      );
     }
 
     // Handle the onchange event of both the CKEditor and editable format div
@@ -201,15 +208,17 @@
             editableHeader.style.display = "block";
             previewHeader.style.display = "block";
 
-            // Initialize CKEditor
-            CKEDITOR.replace('editor', {
-              // Add any CKEditor configurations as needed
-              toolbar: 'basic',
-              height: 500,
-              iconSize: 'small',  // Set the icon size to 'small'
-            }).on('change', function () {
-              change();
-            });
+            if (!CKEDITOR.instances.editor){
+              // Initialize CKEditor
+              CKEDITOR.replace('editor', {
+                // Add any CKEditor configurations as needed
+                toolbar: 'basic',
+                height: 500,
+                iconSize: 'small',  // Set the icon size to 'small'
+              }).on('change', function () {
+                change();
+              });
+            }
             // Set the value of the CKEditor instance
             CKEDITOR.instances.editor.setData(templateContent);
 

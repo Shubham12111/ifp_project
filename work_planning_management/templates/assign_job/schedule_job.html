@@ -61,6 +61,9 @@
   div.fc-toolbar-chunk {
     display: flex !important;
   }
+  div.choices__list.choices__list--dropdown.is-active {
+    z-index: 100 !important;
+  }
 </style>
 <!-- Your existing content -->
 <div class="container-fluid py-4">
@@ -83,71 +86,49 @@
         <div class="card-body pt-0">
           <form method="post" id="assignJobForm">
             <div class="row">
-              <div class="col-12 col-lg-6">
-                <div class="row pt-1">
-                  <div class="nav-wrapper position-relative end-0">
-                    <ul class="nav nav-pills nav-fill p-1" role="tablist">
-                      <li class="nav-item">
-                        <a class="nav-link mb-0 px-0 py-1 active" data-bs-toggle="tab" href="#team" role="tab"
-                          aria-controls="team" aria-selected="true">
-                          Team
-                        </a>
-                      </li>
-                      <li class="nav-item">
-                        <a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" href="#members" role="tab"
-                          aria-controls="members" aria-selected="false">
-                          Members
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
+              <div class="col-12 col-lg-2">
+                <div class="nav-wrapper position-relative end-0">
+                  <ul class="nav nav-pills nav-fill flex-column p-1" role="tablist">
+                    <li class="nav-item">
+                      <a class="nav-link mb-0 px-0 py-1 active" data-bs-toggle="tab" href="#team" role="tab"
+                        aria-controls="team" aria-selected="true">
+                        Team
+                      </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link mb-0 px-0 py-1" data-bs-toggle="tab" href="#members" role="tab"
+                        aria-controls="members" aria-selected="false">
+                        Members
+                      </a>
+                    </li>
+                  </ul>
                 </div>
-                <div class="row">
-                  <div class="tab-content" id="myTabContent">
-                    <div class="tab-pane fade show active" id="team" role="tabpanel" aria-labelledby="team-tab">
-                      <div class="row">
-                        <div class="col-12">
-                          <div class="card shadow-none">
-                            <!-- Card header -->
-                            <div class="card-header px-0 pb-0">
-                              <div class="row">
-                                <div class="col-12">
-                                  <div class="form-group">
-                                    <select class="form-control" multiple id="teams-choices" name="assigned_to_team">
-                                      <option value="">Select Team</option>
-                                      {% for team in teams %}
-                                          <option value="{{team.id}}">{{team.team_name}}</option>
-                                      {% endfor %}
-                                    </select>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+              </div>
+              <div class="col-12 col-lg-4 align-self-center">
+                <div class="tab-content" id="myTabContent">
+                  <div class="tab-pane fade show active" id="team" role="tabpanel" aria-labelledby="team-tab">
+                    <div class="row align-items-center">
+                      <div class="form-group">
+                        <label>Team  <span class="text-danger">*</span> </label>
+                        <select class="form-control" multiple id="teams-choices" name="assigned_to_team">
+                          <option value="">Select Team</option>
+                          {% for team in teams %}
+                              <option value="{{team.id}}">{{team.team_name}}</option>
+                          {% endfor %}
+                        </select>
                       </div>
                     </div>
-                    <div class="tab-pane fade" id="members" role="tabpanel" aria-labelledby="members-tab">
-                      <div class="row">
-                        <div class="col-12">
-                          <div class="card shadow-none">
-                            <!-- Card header -->
-                            <div class="card-header px-0 pb-0">
-                              <div class="row">
-                                <div class="col-12">
-                                  <div class="form-group">
-                                    <select class="form-control" multiple id="members-choices" name="assigned_to_member">
-                                      <option value="">Select Members</option>
-                                      {% for member in members %}
-                                          <option value="{{member.id}}">{{member.name}}</option>
-                                      {% endfor %}
-                                    </select>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                  </div>
+                  <div class="tab-pane fade" id="members" role="tabpanel" aria-labelledby="members-tab">
+                    <div class="row align-items-center">
+                      <div class="form-group">
+                        <label>Members  <span class="text-danger">*</span> </label>
+                        <select class="form-control mb-0" multiple id="members-choices" name="assigned_to_member">
+                          <option value="">Select Members</option>
+                          {% for member in members %}
+                              <option value="{{member.id}}">{{member.name}}</option>
+                          {% endfor %}
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -229,6 +210,21 @@
               day: "numeric",
             },
           },
+        },
+        eventClick: function (info) {
+            info.jsEvent.preventDefault(); // don't let the browser navigate
+            if (info.event.url) {
+                window.open(info.event.url, "_blank");
+            }
+        },
+        eventDidMount: function(info) {
+            des = document.createElement('div')
+            des.classList.add('fc-event-description-container')
+            if(info.event.extendedProps.description != '' && typeof info.event.extendedProps.description  !== "undefined")
+            {   
+                des.innerText = info.event.extendedProps.description
+                info.el.querySelector(".fc-event-title").append(des);
+            }
         }
       });
       calendar.render();

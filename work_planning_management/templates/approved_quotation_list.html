@@ -51,7 +51,8 @@
     margin-bottom: 0 !important;
   }
 </style>
-<div class="container-fluid py-4">
+{% include 'work_planning/customer_work_action.html'%}
+<div class="container-fluid py-2">
   <div class="row">
     <div class="col-12">
       <div class="card">
@@ -92,11 +93,31 @@
                     <input type="checkbox" class="checkbox-item" name="requirement_checkbox" value="{{ item.id }}" 
                     {% if item.job_set.all %}disabled{% endif %}>
                   </td>
-                  <td class="text-sm">{{ item.requirement_id.action|safe|truncatechars_html:20}}</td>
-                  <td class="text-sm">{{ item.requirement_id.description | safe|truncatechars_html:20 }}</td>
-                  <td class="text-sm">{{ item.created_at |date:"d/m/Y "}}</td>
-                  <td class="text-sm">{{ item.requirement_id.surveyor|default:'' }}</td>
-                  <td class="text-sm">{{ item.defect_id.count }}</td>
+                  <td class="text-sm">
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.requirement_id.action|safe|truncatechars_html:20}}
+                      </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.requirement_id.description | safe|truncatechars_html:20 }}
+                      </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.created_at |date:"d/m/Y "}}
+                      </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.requirement_id.surveyor|default:'' }}
+                      </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.defect_id.count }}
+                      </a>
+                  </td>
                 </tr>
                 {% endfor %}
             </table>

@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.html import strip_tags
 from django.core.validators import FileExtensionValidator
+from django.urls import reverse
 
 from rest_framework import serializers
 from rest_framework.fields import empty
@@ -1199,7 +1200,7 @@ class AddAndAttachSitePackSerializer(serializers.ModelSerializer):
 
     document_path = serializers.FileField(
         allow_empty_file=False,
-        validators=[CustomFileValidator()],
+        validators=[CustomFileValidator(allowed_extensions=settings.SUPPORTED_EXTENSIONS)],
         required=True,
     )
 
@@ -1429,21 +1430,22 @@ class MemberCalendarSerializer(serializers.ModelSerializer):
                 
 
                 for job in jobs:
-                    title = job.__str__()
-                    member = ins.name
-                    start = job.start_date.strftime('%Y-%m-%dT%H:%M:%S')
-                    end = job.end_date.strftime('%Y-%m-%dT%H:%M:%S')
-                    ret.append(
-                        {
-                            'id': job.id,
-                            'title': f'{member}',
-                            'description': f'{title}',
-                            'start': f'{start}',
-                            'end': f'{end}',
-                            'className': f'{className}',
-                            # 'url': f"{reverse('customer_requirement_view', kwargs={'customer_id': instance.customer_id.id, 'pk': instance.id})}"
-                        }
-                    )
+                    if job.status != 'completed':
+                        title = job.__str__()
+                        member = ins.name
+                        start = job.start_date.strftime('%Y-%m-%dT%H:%M:%S')
+                        end = job.end_date.strftime('%Y-%m-%dT%H:%M:%S')
+                        ret.append(
+                            {
+                                'id': job.id,
+                                'title': f'{member} - {ins.email}',
+                                'description': f'{title}',
+                                'start': f'{start}',
+                                'end': f'{end}',
+                                'className': f'{className}',
+                                'url': f"{reverse('job_detail', kwargs={'customer_id': job.customer_id.id, 'job_id': job.id})}"
+                            }
+                        )
             return {'jobs': ret}
         except Exception as e:
             return {}
