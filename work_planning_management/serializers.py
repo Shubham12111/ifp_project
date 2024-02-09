@@ -474,8 +474,7 @@ class ConvertSTWToFRASerializer(serializers.ModelSerializer):
                     move_s3_file(stw_document.document_path, file_path)
                     
                     document = RequirementAsset.objects.create(
-                        requirement_id=instance.requirement_id,
-                        defect_id = instance,
+                        requirement_id=instance,
                         document_path=file_path,
                     )
         except Exception as e:
