@@ -71,6 +71,12 @@
             <div class="col-12">
               {% include "work_planning_filters.html" %}
             </div>
+            <div class="col-12 mt-2">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="excludeQuoteInJobSwitch" {% if exclude %}checked{% endif %}>
+                <label class="form-check-label" for="excludeQuoteInJobSwitch">Exclude Quote in Jobs</label>
+              </div>
+            </div>
           </div>
         </div>
         <div class="card-body pt-0">
@@ -83,6 +89,7 @@
                   <th>Description</th>
                   <th>Date</th>
                   <th>Surveyor name</th>
+                  <th>Associated Job</th>
                   <th>No of Defects</th>
                 </tr>
               </thead>
@@ -94,27 +101,32 @@
                     {% if item.job_set.all %}disabled{% endif %}>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
                         {{ item.requirement_id.action|safe|truncatechars_html:20}}
                       </a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
                         {{ item.requirement_id.description | safe|truncatechars_html:20 }}
                       </a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
                         {{ item.created_at |date:"d/m/Y "}}
                       </a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
                         {{ item.requirement_id.surveyor|default:'' }}
                       </a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {% if item.job_set.first %}{{ item.job_set.first }}{% else %}-{% endif %}
+                      </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
                         {{ item.defect_id.count }}
                       </a>
                   </td>
@@ -200,6 +212,50 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
+    const excludeQuoteInJobSwitch = document.getElementById('excludeQuoteInJobSwitch');
+    if (excludeQuoteInJobSwitch){
+      excludeQuoteInJobSwitch.addEventListener( 'change', function(){
+        if (this.checked){
+
+          // Get the current page URL
+          var currentUrl = window.location.href;
+
+          // Check if the URL already contains a query string
+          if (currentUrl.indexOf('?') === -1) {
+              // If no query string exists, append '?exclude=True' to the URL
+              currentUrl += '?exclude=True';
+          } else {
+              // If a query string exists, check if it already contains 'exclude=True'
+              if (currentUrl.indexOf('exclude=True') === -1) {
+                  // If 'exclude=True' is not present, append it to the existing query string
+                  currentUrl += '&exclude=True';
+              }
+          }
+
+          // Redirect the user to the modified URL
+          window.location.href = currentUrl;
+
+        }else{
+          // Get the current page URL
+          var currentUrl = window.location.href;
+
+          // Check if the URL contains 'exclude=True'
+          if (currentUrl.indexOf('exclude=True') !== -1) {
+              // Remove 'exclude=True' from the URL
+              currentUrl = currentUrl.replace('&exclude=True', '');
+              currentUrl = currentUrl.replace('?exclude=True', '');
+              
+              // Redirect the user to the modified URL without 'exclude=True'
+              window.location.href = currentUrl;
+          }
+
+        }
+        
+
+        
+      } );
+    }
+
     const addJobButton = document.getElementById("addJob");
     const checkboxItems = document.querySelectorAll(".checkbox-item");
     const quoteIds = []
