@@ -25,6 +25,8 @@ from rest_framework.validators import UniqueValidator
 
 from .models import *
 
+from requirement_management.models import Requirement, RequirementDefect, RequirementDefectDocument, RequirementAsset
+
 
 class QuotationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -399,6 +401,160 @@ class STWRequirementSerializer(serializers.ModelSerializer):
         representation['document_paths'] = document_paths
 
         return representation
+    
+class STWRequirementDetailsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = STWRequirements
+        fields = ('RBNO','UPRN','action','description', 'site_address')
+    
+    def to_representation(self, instance):
+        """
+        Serialize the stw instance.
+
+        Parameters:
+            instance (Conversation): The stw instance.
+
+        Returns:
+            dict: The serialized representation of the stw.
+        """
+        representation = super().to_representation(instance)
+        representation['file_list'] = [
+            documents.id for documents in instance.stwasset_set.all()
+        ] if instance.stwasset_set.all() else []
+        return representation
+
+class ConvertSTWToFRASerializer(serializers.ModelSerializer):
+    action = serializers.CharField(
+        required=True, 
+        validators=[action_description],
+        
+    )
+    RBNO = serializers.CharField(
+        required=True,
+        max_length=12,
+        
+    )
+    UPRN = serializers.CharField(
+        required=True, 
+        max_length=12,
+       
+    )
+    description = serializers.CharField(
+        required=True, 
+        
+        validators=[validate_description],
+        
+    )
+    site_address = serializers.PrimaryKeyRelatedField(
+        required = True,
+        queryset = SiteAddress.objects.all()
+    )
+
+    file_list = serializers.PrimaryKeyRelatedField(
+        queryset = STWAsset.objects.all(),
+        many=True
+    )
+    
+    class Meta:
+        model = Requirement
+        fields = ('RBNO','UPRN','action','description', 'site_address', 'file_list')
+
+    def create(self, validated_data):
+        stw_documents = validated_data.pop('file_list', [])
+        instance = super().create(validated_data)
+        try:
+            if stw_documents:
+                for stw_document in stw_documents:
+                    # Generate a unique filename for each file
+                    unique_filename = f"{stw_document.document_path.split('/')[-1:][0]}"
+
+                    file_path = f'requirement/{instance.id}/{unique_filename}'
+                    move_s3_file(stw_document.document_path, file_path)
+                    
+                    document = RequirementAsset.objects.create(
+                        requirement_id=instance.requirement_id,
+                        defect_id = instance,
+                        document_path=file_path,
+                    )
+        except Exception as e:
+            if 'NoSuchKey' not in str(e):
+                instance.delete()
+                raise serializers.ValidationError({
+                    'file_list': str(e)
+                })
+
+        return instance
+
+class ConvertSTWDefectsToFRADefectsSerializer(serializers.ModelSerializer):
+    action = serializers.CharField(
+        max_length=1000, 
+        required=True, 
+    )
+    
+    description = serializers.CharField(
+        max_length=1000, 
+        required=True, 
+    )
+    
+    rectification_description = serializers.CharField(
+        max_length=1000, 
+        required=True, 
+    )
+
+    defect_type = serializers.ChoiceField(
+        choices=STW_DEFECT_CHOICES,
+        default='actual_defect',
+    )
+
+    file_list = serializers.PrimaryKeyRelatedField(
+        queryset = STWDefectDocument.objects.all(),
+        many=True
+    )
+    
+    class Meta:
+        model = RequirementDefect
+        fields = ('action', 'description', 'rectification_description', 'defect_type', 'reference_number', 'file_list')
+    
+    def create(self, validated_data):
+        stw_defect_documents = validated_data.pop('file_list', [])
+        instance = super().create(validated_data)
+        try:
+            if stw_defect_documents:
+                for stw_defect_document in stw_defect_documents:
+                    # Generate a unique filename for each file
+                    unique_filename = f"{stw_defect_document.document_path.split('/')[-1:][0]}"
+
+                    file_path = f'requirement/{instance.id}/defects/{unique_filename}'
+                    if stw_defect_document.document_path != 'work_planning/31/defects/6551be21-14f1-496f-a6b5-722e54ed684b_Screenshot from 2024-01-30 11-40-01.png':
+                        move_s3_file(stw_defect_document.document_path, file_path)
+                    
+                    document = RequirementDefectDocument.objects.create(
+                        requirement_id=instance.requirement_id,
+                        defect_id = instance,
+                        document_path=file_path,
+                    )
+        except Exception as e:
+            if 'NoSuchKey' not in str(e):
+                instance.delete()
+                raise serializers.ValidationError({
+                    'file_list': str(e)
+                })
+
+        return instance
+
+
+class STWDefectsDetailedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = STWDefect
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        ret['file_list'] = [
+            documents.id for documents in instance.stwdefectdocument_set.all()
+        ] if instance.stwdefectdocument_set.all() else []
+        return ret
     
 
 class STWDefectSerializer(serializers.ModelSerializer):

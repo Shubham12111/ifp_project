@@ -43,6 +43,8 @@ urlpatterns = [
     path('stw_customers/<int:customer_id>/delete/<int:pk>/',STWRequirementDeleteView.as_view(),name='customer_stw_delete'),
     path('delete/document/<int:stw_id>/<int:document_id>/', login_required(STWRemoveDocumentView.as_view()), name='remove_stw_document'),
     path('<int:customer_id>/view/<int:pk>/', STWDetailView.as_view(), name='customer_stw_view'),
+    path('customer/<int:customer_id>/convert-stw-to-fra/<int:pk>/', ConvertToFRAView.as_view(), name='convert_to_fra'),
+
 
     # defects
     path('stw_customers/<int:customer_id>/<int:stw_id>/defects/', STWDefectView.as_view(), name='customer_stw_defects'),
