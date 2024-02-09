@@ -208,11 +208,15 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
         
         return current_page
     
-    def get_queryset(self,**kwargs):
+    def get_queryset(self):
+        exclude_job_quote = self.request.query_params.get('exclude', False)
+
         customer_id = self.kwargs.get('customer_id') 
         queryset = Quotation.objects.filter(status="approved")
         if customer_id:
             queryset = queryset.filter(customer_id=customer_id)
+            if exclude_job_quote:
+                queryset = queryset.exclude(id__in=[quote.id for quote in queryset if quote.job_set.first()])
         
         if queryset:
             filters = {
@@ -260,6 +264,7 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
                 'approved_quotation': self.get_paginated_queryset(queryset),
                 'customer_id': customer_id,
                 'customer_data': customer_data,
+                'exclude': self.request.query_params.get('exclude', False),
                 'search_fields': self.search_fields,
                 'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
             }
