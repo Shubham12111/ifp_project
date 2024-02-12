@@ -391,8 +391,9 @@ class BillingAddressSerializer(serializers.ModelSerializer):
 
     purchase_order_required = serializers.BooleanField(
         label=_('Purchase Order Required'),
-        required = True,
+        default=False,
         style={
+            'custom_class': 'ms-3',
             'input_type':'checkbox',
             'base_template': 'custom_boolean_input.html'
         },

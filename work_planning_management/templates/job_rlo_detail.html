@@ -70,11 +70,11 @@
                                             </li>
                                             {% endif %}
                                             
-                                            <li>
+                                            {% comment %} <li>
                                                 <a href="{% url 'job_rlo_reject' job.customer_id.id job.id rlo.id %}" type="button" class="dropdown-item border-radius-md">
                                                     Reject
                                                 </a>
-                                            </li>
+                                            </li> {% endcomment %}
 
                                             <li>
                                                 <a href="{% url 'job_rlo_approve' job.customer_id.id job.id rlo.id %}" type="button" class="dropdown-item border-radius-md">

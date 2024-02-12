@@ -137,7 +137,7 @@
                   <div class="accordion-item mb-3 shadow-md">
                     <div class="accordion-header fs-6">
                       <button class="accordion-button py-2" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.parentloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                        data-bs-target="#collapse{{quotation.id}}{{ forloop.counter }}" aria-expanded="{% if forloop.parentloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
                         <div class="col-7 d-flex" id="defectHeading">
                           <strong>{{ forloop.counter }} -</strong>&nbsp;<span>{{ defect.action|safe|truncatechars_html:50 }}</span>
                         </div>
@@ -147,7 +147,7 @@
                         </div>
                       </button>
                     </div>
-                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.parentloop.first %}show {% endif %}"
+                    <div id="collapse{{quotation.id}}{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.parentloop.first %}show {% endif %}"
                       data-bs-parent="#accordion{{ defect.id }}">
                       <div class="accordion-body">
                         <div class="row gap-2 mb-3" id="defectIntroduction">
@@ -172,19 +172,19 @@
                             <table class="table align-items-center">
                               <thead class="bg-default">
                                 <tr class="text-sm">
-                                  <th scope="col-auto" class="text-center">SOR Code </th>
-                                  <th scope="col-auto" class="text-center">SOR Name </th>
-                                  <th scope="col-auto" class="text-center">Category</th>
-                                  <th scope="col-auto" class="text-center">Price(£)</th>
+                                  <th scope="col-auto" class="text-start">SOR Code </th>
+                                  <th scope="col-auto" class="text-start">SOR Name </th>
+                                  <th scope="col-auto" class="text-start">Category</th>
+                                  <th scope="col-auto" class="text-start">Price(£)</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {% for uniqueId, sorDict in sorTableList.items %}
                                   <tr id="{{ uniqueId }}">
-                                    <td scope="col-auto" class="text-center">{{ sorDict.sor_items.reference_number }}</td>
-                                    <td scope="col-auto" class="text-center">{{ sorDict.sor_items.name }}</td>
-                                    <td scope="col-auto" class="text-center">{{ sorDict.sor_items.category_id }}</td>
-                                    <td scope="col-auto" class="text-center">{{ sorDict.sor_items.price }}</td>
+                                    <td scope="col-auto" class="text-start">{{ sorDict.sor_items.reference_number }}</td>
+                                    <td scope="col-auto" class="text-start">{{ sorDict.sor_items.name }}</td>
+                                    <td scope="col-auto" class="text-start">{{ sorDict.sor_items.category_id }}</td>
+                                    <td scope="col-auto" class="text-start">{{ sorDict.sor_items.price }}</td>
                                   </tr>
                                 {% endfor %}
                               </tbody>
@@ -204,7 +204,7 @@
                   <div class="accordion-item mb-3 shadow-md">
                     <div class="accordion-header fs-6">
                       <button class="accordion-button py-2" type="button" data-bs-toggle="collapse"
-                        data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.parentloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                        data-bs-target="#collapse{{stw.id}}{{ forloop.counter }}" aria-expanded="{% if forloop.parentloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
                         <div class="col-7 d-flex" id="defectHeading">
                           <strong>{{ forloop.counter }} -</strong>&nbsp;<span>{{ defect.action|safe|truncatechars_html:50 }}</span>
                         </div>
@@ -214,7 +214,7 @@
                         </div>
                       </button>
                     </div>
-                    <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.parentloop.first %}show {% endif %}"
+                    <div id="collapse{{stw.id}}{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.parentloop.first %}show {% endif %}"
                       data-bs-parent="#accordion{{ defect.id }}">
                       <div class="accordion-body">
                         <div class="row gap-2 mb-3" id="defectIntroduction">

@@ -25,6 +25,7 @@ urlpatterns = [
     # path('customer/<int:customer_id>/jobs/job/<int:job_id>/delete/', views.JobDeleteView.as_view(), name='job_delete'),
     path('customer/<int:customer_id>/jobs/job/<int:job_id>/details/', JobDetailView.as_view(), name='job_detail'),
     path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/', JobSitePacksDetailView.as_view(), name='job_site_packs_detail'),
+    path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/<int:site_pack_id>/download/', JobSitePacksDownloadView.as_view(), name='job_site_packs_download'),
     path('customer/<int:customer_id>/jobs/<int:job_id>/site-packs/<int:site_pack_id>/delete/', JobSitePacksDeleteView.as_view(), name='job_site_packs_delete'),
     path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/', JobRLODetailView.as_view(), name='job_rlo_detail'),
     path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/add/', JobRLOAddView.as_view(),name='job_rlo_add'),

@@ -213,6 +213,9 @@ class SiteAddressField(serializers.PrimaryKeyRelatedField):
             return SiteAddress.objects.filter(user_id=user_id)
         else:
             return SiteAddress.objects.none()
+    
+    def display_value(self, instance):
+        return f'{instance.address}, {instance.town}, {instance.country}, {instance.post_code}'
 
 
 
@@ -251,7 +254,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         
     )
     
-    job_number = serializers.CharField(
+    RBNO = serializers.CharField(
         label=('Job Number'),
         required=True,
         max_length=12,

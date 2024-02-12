@@ -48,6 +48,9 @@ from django.http import (
     JsonResponse,
 )
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import FileResponse
+
+from infinity_fire_solutions.aws_helper import generate_presigned_url
 
 def get_customer_data(customer_id):
 
@@ -1904,16 +1907,25 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
         # Get the filtering parameters from the request's query parameters
         filters = {
             'status': self.request.GET.get('status'),
+            'dateRange': self.request.GET.get('dateRange'),
         }
+        date_format = '%d/%m/%Y'
 
         # Apply additional filters based on the received parameters
         for filter_name, filter_value in filters.items():
             if filter_value:
-                # For other filters, apply the corresponding filters on the queryset
-                filter_mapping = {
-                    'status': 'status',
-                }
-                queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.datetime.strptime(end_date_str.strip(), date_format).date()
+                    queryset = queryset.filter(start_date__date__gte=start_date, end_date__date__lte=end_date)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                    }
+                    queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
         
         return queryset
 
@@ -2440,6 +2452,105 @@ class JobSitePacksDetailView(CustomAuthenticationMixin, generics.GenericAPIView)
                 # Add more job-related data to the context as needed
             }
             return render(request, self.template_name, context)
+        else:
+            serializer = self.serializer_class(instance)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
+
+class JobSitePacksDownloadView(CustomAuthenticationMixin, generics.GenericAPIView):
+    """
+    View for retrieving job details.
+
+    This view retrieves details of a job, optionally filtered and searchable.
+    It provides both HTML and JSON rendering.
+
+    Attributes:
+        serializer_class (JobSerializer): The serializer class for the job.
+        renderer_classes (list): The renderer classes for HTML and JSON.
+        template_name (str): The template name for HTML rendering.
+    """
+
+    serializer_class = AddAndAttachSitePackSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'job_site_packs_detail.html'
+    queryset = JobDocument.objects.all()
+
+    def get_job_instance(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = Job.objects.filter(id=job_id, customer_id=customer_id).first()
+
+        return queryset
+
+    def get_queryset(self):
+        """
+        Get the queryset of jobs.
+
+        Returns:
+        QuerySet: A queryset of jobs.
+        """
+        job_id = self.kwargs.get('job_id', None)
+        customer_id = self.kwargs.get('customer_id', None)
+        queryset = None
+
+        if job_id and customer_id:
+            # Your queryset logic to filter jobs goes here
+            queryset = super().get_queryset().filter(job=job_id, job__customer_id=customer_id).all()
+
+        return queryset
+
+    def get_object(self):
+        job = self.get_job_instance()
+        queryset = self.get_queryset()
+        site_pack_id = self.kwargs.get('site_pack_id', None)
+
+        if queryset and site_pack_id:
+
+            instance = queryset.filter(job=job, id=site_pack_id).first()
+            return instance
+        
+        return None
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = self.kwargs.get('customer_id')
+
+        instance = self.get_job_instance()
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer_id}))
+
+        site_pack_instance = self.get_object()
+        if not site_pack_instance:
+            messages.error(request, "No site pack found.")
+            return redirect(reverse('job_site_packs_detail', kwargs={'customer_id': customer_id, 'job_id': instance.id}))
+        
+        try:
+            document = site_pack_instance.sitepack_document
+            presigned_url = generate_presigned_url(f'sitepack_doc/{document.document_path}')
+        except:
+            messages.error(request, "Something went wromg, please try again later.")
+            return redirect(reverse('job_site_packs_detail', kwargs={'customer_id': customer_id, 'job_id': instance.id}))
+        
+        if request.accepted_renderer.format == 'html':
+            messages.success(request, "Site pack downloaded Successfully.")
+            return redirect(presigned_url)
         else:
             serializer = self.serializer_class(instance)
             return create_api_response(status_code=status.HTTP_200_OK,
@@ -4016,8 +4127,15 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
 
         serializer_data = request.data
         serializer = JobCreateSerializer(data=serializer_data, context={'request': request, 'customer': customer_data})
+        serializer_valid = False
 
-        if serializer.is_valid():
+        try:
+            serializer_valid = serializer.is_valid()
+        except AssertionError as e:
+            messages.error(request, str(e))
+
+
+        if serializer_valid:
             quotations = serializer.validated_data.get('quotation')
             stw = serializer.validated_data.get('stw')
             if not quotations and not stw:
@@ -4046,14 +4164,21 @@ class AssignJobView(CustomAuthenticationMixin, generics.CreateAPIView):
             if not view_serializer.is_valid():
                 messages.error(request, 'You are not authorised to perform this operation')
                 return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer_data.id}))
-            
-            view_serializer._errors = serializer.errors
+            try:
+                errors = convert_serializer_errors(serializer.errors)
+                for field, error in errors.items():
+                    messages.error(request, error)
+            except:
+                messages.error(request, 'Something went wrong while assigning job, please try again later.')
+            # view_serializer._errors = serializer.errors
             # Invalid serializer data
             if request.accepted_renderer.format == 'html':
                 context = {
                     'serializer': view_serializer,
                     'members': members,
-                    'teams':team,
+                    'teams': team,
+                    'selected_team': serializer.data.get('assigned_to_team', None),
+                    'selected_members': serializer.data.get('assigned_to_member', None)
                 }
                 return render_html_response(context, self.template_name)
             else:

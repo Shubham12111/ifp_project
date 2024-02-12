@@ -31,7 +31,7 @@
         </div>
         <div class="card-body pt-0">
           <div class="table-responsive">
-            <table class="table table-flush text-dark" id="doc-list">
+            <table class="table table-hover text-dark" id="doc-list">
               <thead class="thead-light">
                 <tr>
                   <th>Name</th>
@@ -45,9 +45,20 @@
               <tbody class="ml-4">
                 {% for site_pack in site_packs %}
                 <tr class="text-sm">
-                  <td class="text-sm">{{site_pack.sitepack_document.name}}</td>
-                  <td class="text-sm">{{site_pack.sitepack_document.orignal_document_name }}</td>
-                  <td class="text-sm">{{site_pack.sitepack_document.create_at|date:"d/m/Y"}}</td>
+                  <td class="text-sm">
+                    <a href='{% url "job_site_packs_download" job.customer_id.id job.id site_pack.id %}' download="{{site_pack.sitepack_document.orignal_document_name }}" class="text-decoration-none w-100 nav-link">
+                      {{site_pack.sitepack_document.name}}
+                  </td>
+                  <td class="text-sm">
+                    <a href='{% url "job_site_packs_download" job.customer_id.id job.id site_pack.id %}' download="{{site_pack.sitepack_document.orignal_document_name }}" class="text-decoration-none w-100 nav-link">
+                      {{site_pack.sitepack_document.orignal_document_name }}
+                    </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href='{% url "job_site_packs_download" job.customer_id.id job.id site_pack.id %}' download="{{site_pack.sitepack_document.orignal_document_name }}" class="text-decoration-none w-100 nav-link">
+                      {{site_pack.sitepack_document.create_at|date:"d/m/Y"}}
+                    </a>
+                  </td>
 
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <td>

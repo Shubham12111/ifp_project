@@ -4,6 +4,7 @@ from requirement_management.models import Quotation
 from authentication.models import User
 import re
 import uuid
+from datetime import datetime, timezone
 from django.db import transaction
 
 from django.conf import settings
@@ -87,6 +88,9 @@ class SiteAddressField(serializers.PrimaryKeyRelatedField):
             return SiteAddress.objects.filter(user_id=user_id)
         else:
             return SiteAddress.objects.none()
+    
+    def display_value(self, instance):
+        return f'{instance.address}, {instance.town}, {instance.country}, {instance.post_code}'
 
 class STWRequirementSerializer(serializers.ModelSerializer):
     """
@@ -181,9 +185,10 @@ class STWRequirementSerializer(serializers.ModelSerializer):
             "input_type": "text",
             "autofocus": False,
             "autocomplete": "off",
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'placeholder': 'SW1A0NY'
         },
-   validators=[validate_uk_postcode]
+        validators=[validate_uk_postcode]
     )
 
     file_list = serializers.ListField(
@@ -1429,22 +1434,27 @@ class MemberCalendarSerializer(serializers.ModelSerializer):
                 
 
                 for job in jobs:
-                    if job.status != 'completed':
-                        title = job.__str__()
-                        member = ins.name
-                        start = job.start_date.strftime('%Y-%m-%dT%H:%M:%S')
-                        end = job.end_date.strftime('%Y-%m-%dT%H:%M:%S')
-                        ret.append(
-                            {
-                                'id': job.id,
-                                'title': f'{member} - {ins.email}',
-                                'description': f'{title}',
-                                'start': f'{start}',
-                                'end': f'{end}',
-                                'className': f'{className}',
-                                'url': f"{reverse('job_detail', kwargs={'customer_id': job.customer_id.id, 'job_id': job.id})}"
-                            }
-                        )
+                    if job.status == 'completed':
+                        className = 'bg-gradient-success'
+
+                    title = job.__str__()
+                    member = ins.name
+                    start = job.start_date.strftime('%Y-%m-%dT%H:%M:%S')
+                    end = job.end_date.strftime('%Y-%m-%dT%H:%M:%S')
+
+                    if job.status != 'completed' and job.end_date < datetime.now(timezone.utc):
+                        className = 'bg-gradient-danger'
+                    ret.append(
+                        {
+                            'id': job.id,
+                            'title': f'{member} - {ins.email}',
+                            'description': f'{title}',
+                            'start': f'{start}',
+                            'end': f'{end}',
+                            'className': f'{className}',
+                            'url': f"{reverse('job_detail', kwargs={'customer_id': job.customer_id.id, 'job_id': job.id})}"
+                        }
+                    )
             return {'jobs': ret}
         except Exception as e:
             return {}

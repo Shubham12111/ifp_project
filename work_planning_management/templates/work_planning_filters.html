@@ -46,10 +46,17 @@
         </form>
     </div>
 
-    <div class="col-auto px-0 mb-2">
+    <div class="col-auto px-0 mb-2 me-2">
         <!--end of filter-->
         <a href="" class="btn bg-gradient-secondary float-right mb-0 " onclick="clearAllFilters()">
             Clear
         </a>
+    </div>
+
+    <div class="col-auto px-0 ms-lg-auto me-lg-0 mb-2 align-self-center">
+        <div class="form-check form-switch mb-0">
+            <input class="form-check-input mb-0" type="checkbox" id="excludeQuoteInJobSwitch" {% if exclude %}checked{% endif %}>
+            <label class="form-check-label mb-0" for="excludeQuoteInJobSwitch">Exclude Quote in Jobs</label>
+          </div>
     </div>
 </div>
