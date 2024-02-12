@@ -506,6 +506,7 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
     search_fields = ['action', 'description','RBNO','UPRN']
     template_name = 'stw_list.html'
     ordering_fields = ['created_at'] 
+    queryset = STWRequirements.objects.all()
 
     common_get_response = {
     status.HTTP_200_OK: 
@@ -546,26 +547,54 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         
         return current_page
     
-    def get_queryset(self):
+    def get_filtered_queryset(self, queryset):
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'dateRange': self.request.GET.get('dateRange'),
+        }
+        date_format = '%d/%m/%Y'
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.datetime.strptime(end_date_str.strip(), date_format).date()
+                    queryset = queryset.filter(created_at__date__gte=start_date, created_at__date__lte=end_date)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                    }
+                    queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
+        
+        return queryset
+
+    def get_queryset(self, customer_data):
         """
         Get the queryset based on filtering parameters from the request.
         """
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "survey", HasListDataPermission, 'list'
-        )
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user
-        filter_mapping = {
-            "self": Q(user_id=self.request.user),
-            "all": Q(),
-        }
-        base_queryset = Requirement.objects.filter(filter_mapping.get(data_access_value, Q())).distinct()
-        # Order the queryset based on the 'ordering_fields'
-        ordering = self.request.GET.get('ordering')
-        if ordering in self.ordering_fields:
-            base_queryset = base_queryset.order_by(ordering)
 
-        return base_queryset.order_by('-created_at')
+        if customer_data:
+            queryset = super().get_queryset()
+            queryset = queryset.filter(
+                customer_id=customer_data
+            ).all()
+
+            # Order the queryset based on the 'ordering_fields'
+            ordering = self.request.GET.get('ordering')
+            if ordering in self.ordering_fields:
+                queryset = queryset.order_by(ordering)
+            
+            queryset = queryset.order_by('-created_at')
+            queryset = self.get_filtered_queryset(queryset)
+            queryset = self.get_searched_queryset(queryset)
+
+            return queryset
+
+        return None
     
     @swagger_auto_schema(operation_id='STW Requirement Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
@@ -573,28 +602,26 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         Handle both AJAX (JSON) and HTML requests.
         """
-        customer_id = kwargs.get('customer_id', None)
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
         
-        customer_data = User.objects.filter(id=customer_id).first()
+        customer_id = self.kwargs.get('customer_id', None)
+        customer_data = get_customer_data(customer_id)
         
         if customer_data:
-            # Call the handle_unauthenticated method to handle unauthenticated access.
-            authenticated_user, data_access_value = check_authentication_and_permissions(
-                self,"survey", HasListDataPermission, 'list'
-            )
-            if isinstance(authenticated_user, HttpResponseRedirect):
-                return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
-            queryset = filter_requirements(data_access_value, self.request.user, customer_data, request)
-            queryset = self.get_searched_queryset(queryset)
-
+            queryset = self.get_queryset(customer_data)
 
             if request.accepted_renderer.format == 'html':
-                context = {'stw_requirements':self.get_paginated_queryset(queryset), 'customer_id':customer_id,
-                        'customer_data':customer_data,
-                        'search_fields': self.search_fields,
-                        'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
-                     }
+                context = {
+                    'stw_requirements': self.get_paginated_queryset(queryset), 
+                    'customer_id':customer_id,
+                    'customer_data':customer_data,
+                    'search_fields': self.search_fields,
+                    'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+                }
                 return render_html_response(context,self.template_name)
             else:
                 serializer = self.serializer_class(queryset, many=True)
@@ -724,41 +751,52 @@ class STWRequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'stw_form.html'
     serializer_class = STWRequirementSerializer
-    
-    def get_queryset(self):
-        """
-        Get the queryset for listing STW Requirement items.
+    queryset = STWRequirements.objects.all()
 
-        Returns:
-            QuerySet: A queryset of STW Requirements items filtered based on the authenticated user's ID.
+    def get_queryset(self, customer_data):
         """
+        Get the queryset based on filtering parameters from the request.
+        """
+        pk = self.kwargs.get('pk', None)
+
+        if customer_data and pk:
+            queryset = super().get_queryset()
+            queryset = queryset.filter(
+                customer_id=customer_data,
+                id=pk
+            ).first()
+
+            return queryset
+
+        return None
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
         # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "survey", HasUpdateDataPermission, 'change'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
-        queryset = filter_requirements(data_access_value, self.request.user, customer=self.kwargs.get('customer_id'))
-        queryset = queryset.filter(pk=self.kwargs.get('pk')).first()
-        return queryset
-
-    @swagger_auto_schema(auto_schema=None)
-    def get(self, request, *args, **kwargs):
+        
         customer_id = self.kwargs.get('customer_id')
-        customer_data = User.objects.filter(id=customer_id).first()
+        customer_data = get_customer_data(customer_id)
         # This method handles GET requests for updating an existing STW Requirement object.
-        if request.accepted_renderer.format == 'html':
-            instance = self.get_queryset()
-            if instance:
-                serializer = self.serializer_class(instance=instance, context={'request': request})
-                context = {'serializer': serializer, 'stw_instance': instance, 
-                           'customer_id': self.kwargs.get('customer_id'),
-                           'customer_data':customer_data}
-                return render_html_response(context, self.template_name)
-            else:
-                messages.error(request, "You are not authorized to perform this action")
-                return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        if customer_data:
+            instance = self.get_queryset(customer_data)
+            if request.accepted_renderer.format == 'html':
+                if instance:
+                    serializer = self.serializer_class(instance=instance, context={'request': request})
+                    context = {'serializer': serializer, 'stw_instance': instance, 
+                            'customer_id': self.kwargs.get('customer_id'),
+                            'customer_data':customer_data}
+                    return render_html_response(context, self.template_name)
+                else:
+                    messages.error(request, "You are not authorized to perform this action")
+                    return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id})) 
     
     common_post_response = {
         status.HTTP_200_OK: 
@@ -799,51 +837,59 @@ class STWRequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView
                 If successful, the STW requirement is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
-        instance = self.get_queryset()
-        if instance:
-            data = request.data
-    
-            file_list = data.getlist('file_list', [])
-            
-            if not any(file_list):
-                data = data.copy()      # make a mutable copy of data before performing delete.
-                del data['file_list']
-            
-            serializer_data = request.data if any(file_list) else data
-            serializer_data['RBNO'] = instance.RBNO
-            serializer_data['UPRN'] = instance.UPRN
-            serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
-            if serializer.is_valid():
-                # If the serializer data is valid, save the updated STW requirement instance.
-                serializer.update(instance, validated_data=serializer.validated_data)
-                message = "Your STW requirement has been updated successfully!"
+        customer_id = self.kwargs.get('customer_id')
+        customer_data = get_customer_data(customer_id)
+        # This method handles GET requests for updating an existing STW Requirement object.
+        if customer_data:
+            instance = self.get_queryset(customer_data)
+            if instance:
+                data = request.data
+        
+                file_list = data.getlist('file_list', [])
+                
+                if not any(file_list):
+                    data = data.copy()      # make a mutable copy of data before performing delete.
+                    del data['file_list']
+                
+                serializer_data = request.data if any(file_list) else data
+                serializer_data['RBNO'] = instance.RBNO
+                serializer_data['UPRN'] = instance.UPRN
+                serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
+                if serializer.is_valid():
+                    # If the serializer data is valid, save the updated STW requirement instance.
+                    serializer.update(instance, validated_data=serializer.validated_data)
+                    message = "Your STW requirement has been updated successfully!"
+
+                    if request.accepted_renderer.format == 'html':
+                        # For HTML requests, display a success message and redirect to customer_stw_list.
+                        messages.success(request, message)
+                        return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+                    else:
+                        # For API requests, return a success response with serialized data.
+                        return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+                else:
+                    if request.accepted_renderer.format == 'html':
+                        # For HTML requests with invalid data, render the template with error messages.
+                        context = {'serializer': serializer,
+                        'stw_instance': instance,'customer_id':kwargs.get('customer_id')}
+                        return render(request, self.template_name, context)
+                    else:
+                        # For API requests with invalid data, return an error response with serializer errors.
+                        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                error_message = "You are not authorized to perform this action"
                 if request.accepted_renderer.format == 'html':
-                    # For HTML requests, display a success message and redirect to customer_stw_list.
-                    messages.success(request, message)
+                    # For HTML requests with no instance, display an error message and redirect to customer_stw_list.
+                    messages.error(request, error_message)
                     return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))
                 else:
-                    # For API requests, return a success response with serialized data.
-                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
-            else:
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer,
-                     'stw_instance': instance,'customer_id':kwargs.get('customer_id')}
-                    return render(request, self.template_name, context)
-                else:
-                    # For API requests with invalid data, return an error response with serializer errors.
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                    # For API requests with no instance, return an error response with an error message.
+                    return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            error_message = "You are not authorized to perform this action"
-            if request.accepted_renderer.format == 'html':
-                # For HTML requests with no instance, display an error message and redirect to customer_stw_list.
-                messages.error(request, error_message)
-                return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-            else:
-                # For API requests with no instance, return an error response with an error message.
-                return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer_id})) 
             
 class STWRequirementDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
@@ -1026,29 +1072,27 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     template_name = 'stw_details.html'
     serializer_class = STWRequirementSerializer
+    queryset = STWRequirements.objects.all()
 
-    def get_queryset(self):
+    def get_queryset(self, customer_data):
         """
-        Get the queryset for listing STW Requirement items.
-
-        Returns:
-            QuerySet: A queryset of STW Requirements items filtered based on the authenticated user's ID.
+        Get the queryset based on filtering parameters from the request.
         """
-        # Get the model class using the provided module_name string
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "survey", HasViewDataPermission, 'view'
-        )
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        pk = self.kwargs.get('pk', None)
 
-        queryset = filter_requirements(data_access_value, self.request.user, customer=self.kwargs.get('customer_id'))
-        queryset =  queryset.filter(pk=self.kwargs.get('pk')).first()
-        
+        if customer_data and pk:
+            queryset = super().get_queryset()
+            queryset = queryset.filter(
+                customer_id=customer_data,
+                id=pk
+            ).first()
 
-        return queryset
+            return queryset
+
+        return None
     
     def get_paginated_queryset(self, base_queryset):
-        items_per_page = 1 
+        items_per_page = 20
         paginator = Paginator(base_queryset, items_per_page)
         page_number = self.request.GET.get('page')
         
@@ -1063,19 +1107,6 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         
         return current_page
     
-    def get_searched_queryset(self, queryset):
-        search_params = self.request.query_params.get('q', '')
-        if search_params:
-            search_fields = self.search_fields
-            q_objects = Q()
-
-            # Construct a Q object to search across multiple fields dynamically
-            for field in search_fields:
-                q_objects |= Q(**{f'{field}__icontains': search_params})
-
-            queryset = queryset.filter(q_objects)
-        
-        return queryset
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
@@ -1088,34 +1119,41 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
         Returns:
             HttpResponse: The response, either HTML or JSON.
         """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasViewDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+
         customer_id = kwargs.get('customer_id')
         customer_data = User.objects.filter(id=customer_id).first()
         
         if customer_data:
-            # This method handles GET requests for updating an existing STW Requirement object.
-            if request.accepted_renderer.format == 'html':
-                instance = self.get_queryset()
-                if instance:
-                    document_paths = []
-                    stw_defect = STWDefect.objects.filter(stw_id=instance.id)
-                    serializer = self.serializer_class(instance=instance, context={'request': request})
-                    
-                    
-                    document_paths = stw_requirement_image(instance)
-                            
-                    
-                    context = {
-                        'serializer': serializer, 
-                        'stw_instance': instance, 
-                        'stw_defect': self.get_paginated_queryset(stw_defect),
-                        'document_paths': document_paths,
-                        'customer_id': kwargs.get('customer_id'),
-                        'customer_data':customer_data
-                        }
-                    return render_html_response(context, self.template_name)
-            else:
+            instance = self.get_queryset(customer_data)
+            if not instance:
                 messages.error(request, "You are not authorized to perform this action")
                 return redirect(reverse('customer_stw_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+            # This method handles GET requests for updating an existing STW Requirement object.
+            if request.accepted_renderer.format == 'html':
+                document_paths = []
+                stw_defect = STWDefect.objects.filter(stw_id=instance.id)
+                serializer = self.serializer_class(instance=instance, context={'request': request})
+                document_paths = stw_requirement_image(instance)
+                context = {
+                    'serializer': serializer, 
+                    'stw_instance': instance, 
+                    'stw_defect': self.get_paginated_queryset(stw_defect),
+                    'document_paths': document_paths,
+                    'customer_id': kwargs.get('customer_id'),
+                    'customer_data':customer_data
+                    }
+                return render_html_response(context, self.template_name)
+
+        messages.error(request, "You are not authorized to perform this action")
+        return redirect(reverse('stw_customers_list'))
             
  # Custom JSON encoder that can handle Decimal instances           
 class DecimalEncoder(json.JSONEncoder):
