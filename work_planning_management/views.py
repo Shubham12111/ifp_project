@@ -1919,7 +1919,10 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
                     start_date_str, end_date_str = filter_value.split('-')
                     start_date = datetime.datetime.strptime(start_date_str.strip(), date_format).date()
                     end_date = datetime.datetime.strptime(end_date_str.strip(), date_format).date()
-                    queryset = queryset.filter(start_date__date__gte=start_date, end_date__date__lte=end_date)
+                    queryset = queryset.filter(
+                        Q(start_date__date__gte=start_date, start_date__date__lte=end_date) |
+                        Q(end_date__date__lte=end_date, end_date__date__gte=start_date)
+                    )
                 else:
                     # For other filters, apply the corresponding filters on the queryset
                     filter_mapping = {
