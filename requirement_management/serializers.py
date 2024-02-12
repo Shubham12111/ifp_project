@@ -213,6 +213,8 @@ class SiteAddressField(serializers.PrimaryKeyRelatedField):
             return SiteAddress.objects.filter(user_id=user_id)
         else:
             return SiteAddress.objects.none()
+        
+    
 
 
 
@@ -345,7 +347,10 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = Requirement
         fields = ('RBNO', 'UPRN', 'action','description','site_address','due_date','file_list')
-
+    
+    
+    
+    
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
         soup = BeautifulSoup(value, 'html.parser')
@@ -509,6 +514,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
                         print(f"Error uploading file {file.name}: {str(e)}")
         
         return instance
+   
     
     def to_representation(self, instance):
         """
