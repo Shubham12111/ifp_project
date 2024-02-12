@@ -262,29 +262,47 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         Additional validation and error messages are defined for some fields.
     """
     
-    vat_number = serializers.CharField(
-        label=_('VAT Number'),
-        required=True,
+    contact_name = serializers.CharField(
+        label=_('Contact Name'),
         style={
-            'base_template': 'custom_input.html',
-            "placeholder":"Vat Number must be of 9 digits"
+            'base_template': 'custom_input.html'
         },
-
+    )
+    contact_email = serializers.EmailField(
+        label=_('Contact Email'),
+        validators=[UniqueValidator(queryset=BillingAddress.objects.all(), message="Email already exists. Please use a different email.")],
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "email",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
         error_messages={
             "required": "This field is required.",
-            "blank": "Vat Number is required.",
+            "blank": "Email is required.",
         },
-
     )
-    
-    tax_preference = serializers.ChoiceField(
-        label=_('Tax Preference'),
-        choices=TAX_PREFERENCE_CHOICES,
-        default='taxable',
+
+    contact_tel_no = serializers.CharField(
+        label=_('Contact Phone Number'),
+        max_length=14,
+        min_length=10,
+        required=True,
+        allow_null=True,
+        allow_blank=True,
         style={
-            'base_template': 'custom_select.html',
-            'custom_class': 'col-6'
+            'base_template': 'custom_input.html'
         },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Phone number field is required.",
+            "max_length": "Invalid Phone number and max limit should be 14.",
+            "min_length": "Invalid Phone number and min limit should be 10."
+        },
+        validators=[validate_phone_number]
     )
    
     address = serializers.CharField(
@@ -331,48 +349,31 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         },
     )
 
-    contact_name = serializers.CharField(
-        label=_('Contact Name'),
-        style={
-            'base_template': 'custom_input.html'
-        },
-    )
-    contact_email = serializers.EmailField(
-        label=_('Contact Email'),
-        validators=[UniqueValidator(queryset=BillingAddress.objects.all(), message="Email already exists. Please use a different email.")],
+    vat_number = serializers.CharField(
+        label=_('VAT Number'),
         required=True,
-        max_length=100,
         style={
-            "input_type": "email",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True,
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            "placeholder":"Vat Number must be of 9 digits"
         },
+
         error_messages={
             "required": "This field is required.",
-            "blank": "Email is required.",
+            "blank": "Vat Number is required.",
+        },
+
+    )
+    
+    tax_preference = serializers.ChoiceField(
+        label=_('Tax Preference'),
+        choices=TAX_PREFERENCE_CHOICES,
+        default='taxable',
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class': 'col-6'
         },
     )
 
-    contact_tel_no = serializers.CharField(
-        label=_('Contact Phone Number'),
-        max_length=14,
-        min_length=10,
-        required=True,
-        allow_null=True,
-        allow_blank=True,
-        style={
-            'base_template': 'custom_input.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Phone number field is required.",
-            "max_length": "Invalid Phone number and max limit should be 14.",
-            "min_length": "Invalid Phone number and min limit should be 10."
-        },
-        validators=[validate_phone_number]
-    )
     payment_terms = serializers.ChoiceField(
         label=_('Payment Terms'),
         required = True,
@@ -398,6 +399,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
             'base_template': 'custom_boolean_input.html'
         },
     )
+
     
     def validate_vat_number(self, value):
         """
@@ -420,7 +422,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BillingAddress
-        fields = ['vat_number', 'tax_preference', 'address', 'country', 'town', 'county', 'post_code', 'contact_name','contact_email','contact_tel_no','payment_terms','purchase_order_required']
+        fields = ['contact_name','contact_email','contact_tel_no','payment_terms', 'address', 'country', 'town', 'county', 'post_code','vat_number', 'tax_preference', 'purchase_order_required']
 
 # Define a serializer for SiteAddress model
 class SiteAddressSerializer(serializers.ModelSerializer):
