@@ -8,7 +8,6 @@ from rest_framework.validators import UniqueValidator
 from .models import *
 import re
 from customer_management.constants import POST_CODE_LIST
-
 import uuid
 from customer_management.models import SiteAddress
 from django.db import transaction
@@ -232,7 +231,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     customer_type = serializers.ChoiceField(
         label=_('Customer Type'),
         choices=CUSTOMER_TYPES,
-        default='individual',
+        default='public sector-NHS',
         style={
             'base_template': 'custom_select.html',
             'custom_class': 'col-6'
@@ -331,6 +330,74 @@ class BillingAddressSerializer(serializers.ModelSerializer):
             "blank": "Post Code is required.",
         },
     )
+
+    contact_name = serializers.CharField(
+        label=_('Contact Name'),
+        style={
+            'base_template': 'custom_input.html'
+        },
+    )
+    contact_email = serializers.EmailField(
+        label=_('Contact Email'),
+        validators=[UniqueValidator(queryset=BillingAddress.objects.all(), message="Email already exists. Please use a different email.")],
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "email",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Email is required.",
+        },
+    )
+
+    contact_tel_no = serializers.CharField(
+        label=_('Contact Phone Number'),
+        max_length=14,
+        min_length=10,
+        required=True,
+        allow_null=True,
+        allow_blank=True,
+        style={
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Phone number field is required.",
+            "max_length": "Invalid Phone number and max limit should be 14.",
+            "min_length": "Invalid Phone number and min limit should be 10."
+        },
+        validators=[validate_phone_number]
+    )
+    payment_terms = serializers.ChoiceField(
+        label=_('Payment Terms'),
+        required = True,
+        choices=PAYMENT_TERMS_CHOICES,
+        # default='30 days',
+
+        style={
+            'base_template': 'custom_select.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Payment Terms is required.",
+        },
+        # validators=[validate_uk_postcode] 
+    )
+
+    purchase_order_required = serializers.BooleanField(
+        label=_('Purchase Order Required'),
+        default=False,
+        style={
+            'custom_class': 'ms-3',
+            'input_type':'checkbox',
+            'base_template': 'custom_boolean_input.html'
+        },
+    )
     
     def validate_vat_number(self, value):
         """
@@ -353,7 +420,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BillingAddress
-        fields = ['vat_number', 'tax_preference', 'address', 'country', 'town', 'county', 'post_code']
+        fields = ['vat_number', 'tax_preference', 'address', 'country', 'town', 'county', 'post_code', 'contact_name','contact_email','contact_tel_no','payment_terms','purchase_order_required']
 
 # Define a serializer for SiteAddress model
 class SiteAddressSerializer(serializers.ModelSerializer):

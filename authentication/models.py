@@ -26,8 +26,12 @@ MODULE_CHOICES = [
 ]
 
 CUSTOMER_TYPES = (
-    ('business', 'Business'),
-    ('individual', 'Individual'),
+    ('public sector-NHS', 'Public Sector-NHS'),
+    ('public Sector-social housing', 'Public Sector-Social Housing'),
+    ('private Sector-social housing', 'Private Sector-Social Housing'),
+    ('facilities management', 'Facilities Management'),
+    ('commercial client', 'Commercial Client'),
+    ('private client', 'Private Client'),
 )
 
 ROLE_CHOICES = (
@@ -193,7 +197,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # relationship with UserRole
     company_name = models.CharField(max_length=100, blank=True, null=True)
-    customer_type = models.CharField(max_length=10, choices=CUSTOMER_TYPES, default='individual')
+    customer_type = models.CharField(max_length=100, choices=CUSTOMER_TYPES, default='public sector-NHS')
     roles = models.ForeignKey(UserRole,on_delete=models.PROTECT, null=True,verbose_name="UserRole")
     created_by = models.ForeignKey("self", on_delete=models.PROTECT, null=True, blank=True, related_name='created_users')
     enforce_password_change = models.BooleanField(default = False)

@@ -57,13 +57,13 @@
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 {% if requirement_instance %}
 <script>
-  var rbnoInput = document.querySelector('input[name="RBNO"]');
+  var job_numberInput = document.querySelector('input[name="job_number"]');
   var uprnInput = document.querySelector('input[name="UPRN"]');
   var editButton = document.getElementById('editButton');  // Add a button with id "editButton" for toggling edit mode
 
   // Function to toggle edit mode
   function toggleEditMode() {
-    rbnoInput.disabled = !rbnoInput.disabled;
+    job_numberInput.disabled = !job_numberInput.disabled;
     uprnInput.disabled = !uprnInput.disabled;
   }
 

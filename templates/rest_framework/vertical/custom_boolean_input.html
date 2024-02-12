@@ -1,0 +1,16 @@
+<div class="form-check {% if field.errors %}has-error{% endif %} {% if style.custom_class %} {{style.custom_class}} {% else %} col-6  {% endif %}">
+  <input class="form-check-input" type="checkbox" name="{{ field.name }}" value="True"  id="{{ field.name }}" {% if field.value %}checked{% endif %}>
+    {% if field.label %}
+        <label class="custom-control-label" for="{{ field.name }}">{{ field.label }} {% if field.required %} <span class="text-danger">*</span> {% endif %}</label>
+    {% endif %}
+
+    {% if field.errors %}
+    {% for error in field.errors %}
+      <span class="help-block">{{ error }}</span>
+    {% endfor %}
+    {% endif %}
+
+    {% if field.help_text %}
+        <span class="help-block">{{ field.help_text|safe }}</span>
+    {% endif %}
+</div> 

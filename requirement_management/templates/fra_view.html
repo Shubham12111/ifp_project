@@ -89,13 +89,21 @@
                                 {% endif %}
                                 {% if requirement_instance.RBNO %}
                                     <tr>
-                                        <td><strong class="text-dark">RBNO</strong></td>
+                                        <td><strong class="text-dark">Job Number</strong></td>
                                         <td>{{ requirement_instance.RBNO }}</td>
                                     </tr>
                                 {% endif %}
                                 <tr>
                                     <td><strong class="text-dark">Site Address</strong></td>
-                                    <td>{{ requirement_instance.site_address|title }}</td>
+                                    <td>
+                                        {{ requirement_instance.site_address.site_name|default:''|truncatechars:20 }},
+                                        {{ requirement_instance.site_address.address|default:''|truncatechars:20|title }},
+                                        {{ requirement_instance.site_address.town|default:''|title }},
+                                        {{ requirement_instance.site_address.county|default:''|title }},
+                                        {{ requirement_instance.site_address.country|default:''|title }},
+                                        {{ requirement_instance.site_address.post_code|default:'' }}
+                                    </td>
+                                </tr>
                                 </tr>
                                 {% if requirement_instance.surveyor %}
                                     <tr>

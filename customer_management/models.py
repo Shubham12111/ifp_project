@@ -7,6 +7,13 @@ TAX_PREFERENCE_CHOICES = (
     ('taxable', 'Taxable'),
     ('tax_exempt', 'Tax Exempt'),
 )
+
+PAYMENT_TERMS_CHOICES = (
+    ('30 days', '30 Days'),
+    ('45 days', '45 Days'),
+    ('60 days', '60 Days'),
+    )
+
 class BillingAddress(models.Model):
     """
     Billing Addresss model    
@@ -23,6 +30,16 @@ class BillingAddress(models.Model):
     post_code = models.CharField(max_length=10, choices=POST_CODE_LIST, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    contact_name = models.CharField(max_length=127,null=True)
+    contact_email = models.EmailField(max_length=254, null=True)
+    contact_tel_no = models.CharField(max_length=127,null=True)
+    payment_terms = models.CharField(max_length=20, choices=PAYMENT_TERMS_CHOICES, null=True, blank=True)
+    purchase_order_required = models.BooleanField(
+        default=True,  
+        verbose_name='Is a Purchase Order number required?'
+    )  
+
+
     class Meta:
         ordering =['id']
     

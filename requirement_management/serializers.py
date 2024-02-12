@@ -137,8 +137,8 @@ class RequirementDetailSerializer(serializers.ModelSerializer):
     requirementdefect_set = RequirementDefectSerializer(many=True, read_only=True)
     class Meta:
         model = Requirement
-        # fields = ('user_id', 'customer_id', 'description', 'RBNO', 'UPRN', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
-        fields = ('user_id', 'customer_id', 'description', 'RBNO', 'UPRN', 'status', 'customer_name', 'requirementdefect_set')
+        # fields = ('user_id', 'customer_id', 'description', 'job_number', 'UPRN', 'quantity_surveyor', 'status', 'customer_name', 'quantity_surveyor_name', 'requirementdefect_set')
+        fields = ('user_id', 'customer_id', 'description', 'job_number', 'UPRN', 'status', 'customer_name', 'requirementdefect_set')
 
     def to_representation(self, instance):
         """
@@ -213,6 +213,9 @@ class SiteAddressField(serializers.PrimaryKeyRelatedField):
             return SiteAddress.objects.filter(user_id=user_id)
         else:
             return SiteAddress.objects.none()
+    
+    def display_value(self, instance):
+        return f'{instance.address}, {instance.town}, {instance.country}, {instance.post_code}'
 
 
 
@@ -220,19 +223,19 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     """
     Serializer for creating and updating Requirement instances with additional fields.
 
-    This serializer includes additional fields such as 'action', 'RBNO', 'UPRN', 'description',
+    This serializer includes additional fields such as 'action', 'Job Number', 'UPRN', 'description',
     'site_address', and 'file_list' to create and update Requirement instances.
 
     Fields:
         action (str): The action associated with the Requirement.
-        RBNO (str): The RBNO (Reference Building Number) associated with the Requirement.
+        Job Number (str): The Job Number (Reference Building Number) associated with the Requirement.
         UPRN (str): The UPRN (Unique Property Reference Number) associated with the Requirement.
         description (str): The description of the Requirement.
         site_address (SiteAddressField): A field for selecting the site address.
         file_list (List[FileField]): A list of files associated with the Requirement.
 
     Methods:
-        validate_RBNO: Validate the uniqueness of RBNO.
+        validate_job_number: Validate the uniqueness of Job Number.
         validate_UPRN: Validate the uniqueness of UPRN.
         get_initial: Get the initial data for the serializer.
         create: Create a new Requirement instance with associated files.
@@ -252,13 +255,13 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     )
     
     RBNO = serializers.CharField(
-        label=('RBNO'),
+        label=('Job Number'),
         required=True,
         max_length=12,
         style={'base_template': 'custom_input.html'},
         error_messages={
             "required": "This field is required.",
-            "blank": "RBNO is required.",
+            "blank": "job_number is required.",
         },
     )
     
@@ -345,7 +348,10 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = Requirement
         fields = ('RBNO', 'UPRN', 'action','description','site_address','due_date','file_list')
-
+    
+    
+    
+    
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
         soup = BeautifulSoup(value, 'html.parser')
@@ -375,22 +381,22 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         return value
     
 
-    def validate_RBNO(self, value):
+    def validate_job_number(self, value):
         """
-        Validate the uniqueness of RBNO.
+        Validate the uniqueness of job_number.
 
         Args:
-            value (str): The RBNO value to be validated.
+            value (str): The job_number value to be validated.
 
         Returns:
-            str: The validated RBNO value.
+            str: The validated RBjob_numberNO value.
 
         Raises:
-            serializers.ValidationError: If the RBNO is not unique.
+            serializers.ValidationError: If the job_number is not unique.
         """
         if not self.instance:
-            if Requirement.objects.filter(RBNO=value).exists():
-                raise serializers.ValidationError("RBNO already exists.")
+            if Requirement.objects.filter(job_number=value).exists():
+                raise serializers.ValidationError("Job Number already exists.")
         return value
 
 
@@ -509,6 +515,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
                         print(f"Error uploading file {file.name}: {str(e)}")
         
         return instance
+   
     
     def to_representation(self, instance):
         """
@@ -1179,33 +1186,33 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
     """
     Serializer for creating and updating Requirement instances with additional fields.
 
-    This serializer includes additional fields such as 'action', 'RBNO', 'UPRN', 'description',
+    This serializer includes additional fields such as 'action', 'job_number', 'UPRN', 'description',
     'site_address', and 'file_list' to create and update Requirement instances.
 
     Fields:
         action (str): The action associated with the Requirement.
-        RBNO (str): The RBNO (Reference Building Number) associated with the Requirement.
+        job_number (str): The job_number (Reference Building Number) associated with the Requirement.
         UPRN (str): The UPRN (Unique Property Reference Number) associated with the Requirement.
         description (str): The description of the Requirement.
         site_address (SiteAddressField): A field for selecting the site address.
         file_list (List[FileField]): A list of files associated with the Requirement.
 
     Methods:
-        validate_RBNO: Validate the uniqueness of RBNO.
+        validate_job_number: Validate the uniqueness of job_number.
         validate_UPRN: Validate the uniqueness of UPRN.
         get_initial: Get the initial data for the serializer.
         create: Create a new Requirement instance with associated files.
         update: Update an existing Requirement instance with associated files.
     """
     # Add a field to accept the date from the CSV file
-    RBNO = serializers.CharField(
-        label=('RBNO'),
+    job_number = serializers.CharField(
+        label=('Job Number'),
         required=True,
         max_length=12,
         style={'base_template': 'custom_input.html'},
         error_messages={
             "required": "This field is required.",
-            "blank": "RBNO is required.",
+            "blank": "Job Number is required.",
         },
     )
     
@@ -1268,7 +1275,7 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Requirement
-        fields = ('RBNO', 'UPRN', 'action','description' ,'due_date')
+        fields = ('job_number', 'UPRN', 'action','description' ,'due_date')
 
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
@@ -1299,22 +1306,22 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
         return value
     
 
-    def validate_RBNO(self, value):
+    def validate_job_number(self, value):
         """
-        Validate the uniqueness of RBNO.
+        Validate the uniqueness of job_number.
 
         Args:
-            value (str): The RBNO value to be validated.
+            value (str): The job_number value to be validated.
 
         Returns:
-            str: The validated RBNO value.
+            str: The validated job_number value.
 
         Raises:
-            serializers.ValidationError: If the RBNO is not unique.
+            serializers.ValidationError: If the job_number is not unique.
         """
         if not self.instance:
-            if Requirement.objects.filter(RBNO=value).exists():
-                raise serializers.ValidationError("RBNO already exists.")
+            if Requirement.objects.filter(job_number=value).exists():
+                raise serializers.ValidationError("job_number already exists.")
         return value
 
 

@@ -72,13 +72,20 @@
                                 {% endif %}
                                 {% if stw_instance.RBNO %}
                                     <tr>
-                                        <td><strong class="text-dark">RBNO</strong></td>
+                                        <td><strong class="text-dark">Job Number</strong></td>
                                         <td>{{ stw_instance.RBNO }}</td>
                                     </tr>
                                 {% endif %}
                                 <tr>
                                     <td><strong class="text-dark">Site Address</strong></td>
-                                    <td>{{ stw_instance.site_address|title }}</td>
+                                    <td>
+                                        {{ stw_instance.site_address.site_name|default:''|truncatechars:20 }},
+                                        {{ stw_instance.site_address.address|default:''|truncatechars:20|title }},
+                                        {{ stw_instance.site_address.town|default:''|title }},
+                                        {{ stw_instance.site_address.county|default:''|title }},
+                                        {{ stw_instance.site_address.country|default:''|title }},
+                                        {{ stw_instance.site_address.post_code|default:'' }}
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td><strong class="text-dark">Building Name</strong></td>

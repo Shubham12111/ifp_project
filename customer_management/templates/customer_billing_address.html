@@ -2,7 +2,7 @@
 {% load static %}
 {% load custom_tags %}
 {% load rest_framework %}
-{% block title %} Customer Billing Address {{ block.super }}{% endblock %}
+{% block title %} Customer Billing Information {{ block.super }}{% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
 {% include 'customer_management/customer_actions.html' %}
@@ -14,7 +14,7 @@
           <div class="card-header mt-0">
             <div class="row justify-content-between">
               <div class="col-6">
-                <h5>Billing Address </h5>
+                <h5>Billing Information </h5>
               </div>
               <div class="col-6 text-end">
                 {% include 'components/back_button.html' %}
@@ -29,9 +29,7 @@
                         {% render_form serializer %}
                     </div>
                     <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                    
-                
-                  </form>
+              </form>
                   {% include 'components/loader.html' %}
             </div>
         </div>
