@@ -94,14 +94,14 @@ class STWRequirementSerializer(serializers.ModelSerializer):
 
     Fields:
     - action: The STW action description.
-    - RBNO: The RBNO (Reference Base Number) for the requirement.
+    - job_number: The job_number (Reference Base Number) for the requirement.
     - UPRN: The UPRN (Unique Property Reference Number) for the requirement.
     - description: The STW description.
     - site_address: The site address.
     - status: The STW status.
 
     Validators:
-    - RBNO uniqueness validator.
+    - job_number uniqueness validator.
     - UPRN uniqueness validator.
     """
     action = serializers.CharField(
@@ -114,14 +114,14 @@ class STWRequirementSerializer(serializers.ModelSerializer):
                 "blank": "Message is required.",},
     )
     
-    RBNO = serializers.CharField(
-        label=('RBNO'),
+    job_number = serializers.CharField(
+        label=('Job Number'),
         required=True,
         max_length=12,
         style={'base_template': 'custom_input.html'},
         error_messages={
             "required": "This field is required.",
-            "blank": "RBNO is required.",
+            "blank": "Job Number is required.",
         },
     )
     
@@ -213,24 +213,24 @@ class STWRequirementSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = STWRequirements
-        fields = ('RBNO','UPRN','action','description', 'site_address','building_name','postcode','file_list')
+        fields = ('job_number','UPRN','action','description', 'site_address','building_name','postcode','file_list')
     
-    def validate_RBNO(self, value):
+    def validate_job_number(self, value):
         """
-        Validate the uniqueness of RBNO.
+        Validate the uniqueness of job_number.
 
         Args:
-            value (str): The RBNO value to be validated.
+            value (str): The job_number value to be validated.
 
         Returns:
-            str: The validated RBNO value.
+            str: The validated job_number value.
 
         Raises:
-            serializers.ValidationError: If the RBNO is not unique.
+            serializers.ValidationError: If the job_number is not unique.
         """
         if not self.instance:
-            if STWRequirements.objects.filter(RBNO=value).exists():
-                raise serializers.ValidationError("RBNO already exists.")
+            if STWRequirements.objects.filter(job_number=value).exists():
+                raise serializers.ValidationError("Job Number already exists.")
         return value
 
 
@@ -407,7 +407,7 @@ class STWRequirementDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = STWRequirements
-        fields = ('RBNO','UPRN','action','description', 'site_address')
+        fields = ('job_number','UPRN','action','description', 'site_address')
     
     def to_representation(self, instance):
         """
@@ -431,7 +431,7 @@ class ConvertSTWToFRASerializer(serializers.ModelSerializer):
         validators=[action_description],
         
     )
-    RBNO = serializers.CharField(
+    job_number = serializers.CharField(
         required=True,
         max_length=12,
         
@@ -459,7 +459,7 @@ class ConvertSTWToFRASerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Requirement
-        fields = ('RBNO','UPRN','action','description', 'site_address', 'file_list')
+        fields = ('job_number','UPRN','action','description', 'site_address', 'file_list')
 
     def create(self, validated_data):
         stw_documents = validated_data.pop('file_list', [])
@@ -746,7 +746,7 @@ class STWDefectSerializer(serializers.ModelSerializer):
 
 class JobListSerializer(serializers.ModelSerializer):
     UPRN = serializers.SerializerMethodField()
-    RBNO = serializers.SerializerMethodField()
+    job_number = serializers.SerializerMethodField()
     Action = serializers.SerializerMethodField()
     Description = serializers.SerializerMethodField()
     Date = serializers.SerializerMethodField()
@@ -755,13 +755,13 @@ class JobListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Job
-        fields = ['UPRN', 'RBNO', 'Action', 'Description', 'Date', 'Surveyor_Name', 'Number_of_Defects']
+        fields = ['UPRN', 'RBjob_numberNO', 'Action', 'Description', 'Date', 'Surveyor_Name', 'Number_of_Defects']
 
     def get_UPRN(self, obj):
         return obj.quotation.requirement_id.UPRN
 
-    def get_RBNO(self, obj):
-        return obj.quotation.requirement_id.RBNO
+    def get_job_number(self, obj):
+        return obj.quotation.requirement_id.job_number
 
     def get_Action(self, obj):
         return obj.quotation.requirement_id.action
@@ -899,17 +899,17 @@ class AddJobSerializer(serializers.ModelSerializer):
 
     Fields:
     - action: The JOb action description.
-    - RBNO: The RBNO (Reference Base Number) for the Job.
+    - job_number: The job_number (Reference Base Number) for the Job.
     - UPRN: The UPRN (Unique Property Reference Number) for the Job.
     - description: The JOb description.
     - Date: The date of job created.
 
     Validators:
-    - RBNO uniqueness validator.
+    - job_number uniqueness validator.
     - UPRN uniqueness validator.
     """
     UPRN = serializers.SerializerMethodField()
-    RBNO = serializers.SerializerMethodField()
+    job_number = serializers.SerializerMethodField()
     Action = serializers.SerializerMethodField()
     Description = serializers.SerializerMethodField()
     Site_address = serializers.SerializerMethodField()
@@ -917,13 +917,13 @@ class AddJobSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Job
-        fields = ['UPRN', 'RBNO', 'Action', 'Description', 'Date','Site_address']
+        fields = ['UPRN', 'job_number', 'Action', 'Description', 'Date','Site_address']
 
     def get_UPRN(self, obj):
         return obj.stw.UPRN
 
-    def get_RBNO(self, obj):
-        return obj.stw.stw_id.RBNO
+    def get_job_number(self, obj):
+        return obj.stw.stw_id.job_number
 
     def get_Action(self, obj):
         return obj.stw.stw_id.action

@@ -842,7 +842,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 del data['file_list']
             
             serializer_data = request.data if any(file_list) else data
-            # serializer_data['RBNO'] = instance.RBNO
+            # serializer_data['job_number'] = instance.job_number
             # serializer_data['UPRN'] = instance.UPRN
 
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
@@ -1451,16 +1451,16 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                     csv_reader = df.to_dict(orient='records')
 
                 success = True  # Flag to track if the import was successful
-                existing_rbno_set = set()  # To store existing RBNO values encountered in the file
+                existing_job_number_set = set()  # To store existing Job Number values encountered in the file
                 existing_uprn_set = set()  # To store existing UPRN values encountered in the file
                 for row in csv_reader:
                     # Extract the date from the CSV row (you may need to format it properly)
                     csv_date = row.get('date', None)
-                    rbno = row.get('RBNO', '')
+                    job_number = row.get('Job Number', '')
                     uprn = row.get('UPRN', '')
-                    # Check if the RBNO already exists in the database
-                    if rbno and Requirement.objects.filter(RBNO=rbno).exists():
-                        messages.error(request, f"RBNO '{rbno}' already exists.")
+                    # Check if the Job Number already exists in the database
+                    if job_number and Requirement.objects.filter(job_number=job_number).exists():
+                        messages.error(request, f"Job Number '{job_number}' already exists.")
                         success = False
                         continue
 
@@ -1471,7 +1471,7 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         continue
                     serializer_data = {
                         'action': row.get('action', ''),
-                        'RBNO': rbno,
+                        'Job Number': job_number,
                         'UPRN': uprn,
                         'description': row.get('description', ''),
                         'site_address': row.get('site_address', ''),
@@ -1575,7 +1575,7 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
     Supports both HTML and JSON response formats.
     """
     serializer_class = BulkRequirementAddSerializer
-    default_fieldset = ['RBNO', 'UPRN', 'action','description','site_address','due_date']
+    default_fieldset = ['job_number', 'UPRN', 'action','description','site_address','due_date']
     EXCEL = ['xlsx', 'xls', 'ods']
     CSV = ['csv',]
 

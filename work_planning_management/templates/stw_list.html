@@ -93,7 +93,7 @@
                   <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th>
                   <th>STW Action</th>
                   <th>STW Description</th>
-                  <th>RBNO</th>
+                  <th>Job Number</th>
                   <th>UPRN</th>
                   <th>STW Status</th>
                   <th>Created Date</th>
@@ -126,7 +126,7 @@
                   <td>
                     <a href="{% url 'customer_stw_view' customer_id stw.pk %}" 
                       class="text-decoration-none w-100 nav-link">
-                      {{stw.RBNO}}
+                      {{stw.job_number}}
                     </a>
                   </td>
 

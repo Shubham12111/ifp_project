@@ -65,9 +65,10 @@
                     <input type="checkbox" id="selectAllCheckbox">
                   </th>
             
-                  <th>Name</th>
-                  <th>Email</th>
                   <th>Company Name</th>
+                  <th>Name</th>
+                  <th>Phone Number</th>
+                  <th>Email</th>
                   <th>Contact Type</th>
                   {% if request.user|has_update_permission:"contact" or request.user|has_add_permission:"contact" or request.user|has_delete_permission:"contact" or request.user|has_view_permission:"contact" %}
                   <th class="custom-last-column">Actions</th>
@@ -80,14 +81,16 @@
                   <td class="text-sm">
                     <input type="checkbox" name="stw_checkbox" value="{{ contact.id }}">
                   </td>
+
+                  <td class="text-sm"><a href="{% url 'contact_edit' contact.pk %}" class="text-decoration-none w-100 nav-link">{{contact.company_name}}<a></td>
                   <td class="text-sm">
                     <a href="{% url 'contact_edit' contact.pk %}" class="text-decoration-none w-100 nav-link">
                     {{contact.first_name|default:''|truncatechars:20|title}}
                     {{contact.last_name|default:''|truncatechars:20|title}}
                     </a>
                   </td>
+                  <td class="text-sm"><a href="{% url 'contact_edit' contact.pk %}" class="text-decoration-none w-100 nav-link">{{contact.phone_number}}</a></td>
                   <td class="text-sm"><a href="{% url 'contact_edit' contact.pk %}" class="text-decoration-none w-100 nav-link">{{contact.email}}</a></td>
-                  <td class="text-sm"><a href="{% url 'contact_edit' contact.pk %}" class="text-decoration-none w-100 nav-link">{{contact.company_name}}<a></td>
                   <td class="text-sm"><a href="{% url 'contact_edit' contact.pk %}" class="text-decoration-none w-100 nav-link">{{contact.contact_type|title}}<a></td>
                   {% if request.user|has_update_permission:"contact" or request.user|has_add_permission:"contact" or request.user|has_delete_permission:"contact" or request.user|has_view_permission:"contact" %}
                   <td>

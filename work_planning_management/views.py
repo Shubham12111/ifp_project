@@ -503,7 +503,7 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = STWRequirementSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['action', 'description','RBNO','UPRN']
+    search_fields = ['action', 'description','job_number','UPRN']
     template_name = 'stw_list.html'
     ordering_fields = ['created_at'] 
     queryset = STWRequirements.objects.all()
@@ -853,7 +853,7 @@ class STWRequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView
                     del data['file_list']
                 
                 serializer_data = request.data if any(file_list) else data
-                serializer_data['RBNO'] = instance.RBNO
+                serializer_data['job_number'] = instance.job_number
                 serializer_data['UPRN'] = instance.UPRN
                 serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
 
