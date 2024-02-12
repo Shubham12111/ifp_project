@@ -404,10 +404,8 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         If the requirement does not exist, render the HTML template with an empty serializer.
         """
         customer_id = kwargs.get('customer_id', None)
-        print(customer_id)
         
         customer_data = User.objects.filter(id=customer_id).first()
-        print(customer_data)
         
         if customer_data:
             # Call the handle_unauthenticated method to handle unauthenticated access
@@ -440,7 +438,6 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a requirement.
         """
         customer_id = kwargs.get('customer_id', None)
-        print(customer_id)
         
         customer_data = User.objects.filter(id=customer_id).first()
         print(customer_data)
@@ -460,7 +457,7 @@ class RequirementAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             
             message = "Your requirement has been added successfully."
             if serializer.is_valid():
-                serializer.validated_data['user_id'] = request.user  # Assign the current user instance.
+                serializer.validated_data['user_id'] = request.user
                 serializer.validated_data['customer_id'] = customer_data
                 serializer.save()
 

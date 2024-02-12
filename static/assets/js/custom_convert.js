@@ -11,6 +11,7 @@ function Customconfirm(itemId, confirmMessage, yesRedirectUrl, noStayUrl) {
         title: '<h4 class="mb-0">Confirmation</h4>',
         html: '<div class="custom-content text-sm">' + confirmMessage + '</div>', // Use a custom class for the content
         showCancelButton: true,
+        showCloseButton: true,
         confirmButtonText: 'Yes',
         cancelButtonText: 'No',
         cancelButtonColor: '#6c757d',
