@@ -293,11 +293,13 @@
                         <thead class="bg-default">
                           <!-- Table content will be added dynamically here -->
                           <tr id="header-{{ defect.id }}">
-                            <th class="col-3">SOR Code</th>
-                            <th class="col-3">SOR Name</th>
-                            <th>Category</th>
-                            <th>Price(£)</th>
-                            <th class="col-1">Action</th>
+                            <th class="col-2">SOR Code</th>
+                            <th class="col-2">SOR Name</th>
+                            <th class="col-2">Category</th>
+                            <th class="col-2">Price(£)</th>
+                            <th class="col-2">Quantity</th>
+                            <th class="col-2">Total Price (£)</th>
+                            <th class="col-2">Action</th>
                             <!-- Add more headers as needed -->
                           </tr>
                         </thead>
@@ -454,6 +456,41 @@
   }
 
 
+  function updateQuantity(defectId, rowId) {
+    console.log(`Updating quantity for defect ${defectId}, row ${rowId}`);
+  
+    // Retrieve the quantity input value
+    var quantityInput = document.getElementById('quantity-' + defectId + '-' + rowId);
+    var quantityValue = parseFloat(quantityInput.value) || 0;
+  
+    // Get the price for the current row
+    var price = parseFloat(rowPrices[defectId][rowId]) || 0;
+  
+    // Calculate the total price for the row based on the new quantity
+    var totalRowPrice = price * quantityValue;
+  
+    // Update the total price input for the row
+    var totalPriceInput = document.getElementById('total-price-' + defectId + '-' + rowId);
+    totalPriceInput.value = totalRowPrice.toFixed(2);
+  
+    // Update the row price in the array
+    rowPrices[defectId][rowId] = totalRowPrice;
+  
+    // Update the defect total for the current defect
+    var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+      return sum + (parseFloat(rowPrice) || 0);
+    }, 0);
+  
+    // Update the total for the current defect
+    updateDefectTotal(defectId, defectTotal);
+  
+    // Update the total price for all defect tables
+    updateTotalPrice();
+    
+    // If needed, you can perform additional actions or updates related to the row here
+  }
+
+
   function removeDefect(button) {
     // Find the parent div of the button
     var defectDiv = button.closest('.column-with-border');
@@ -493,6 +530,36 @@
     }
   }
 
+
+  function updateDefectTotal(defectId) {
+    // Get all the rows for the current defect
+    var rows = Object.keys(rowPrices[defectId]);
+
+    // Calculate the total for the current defect by summing up the total price of each row
+    var defectTotal = rows.reduce(function (sum, rowId) {
+        // Get the quantity for the current row
+        var quantityInput = document.getElementById('quantity-' + defectId + '-' + rowId);
+        var quantity = parseInt(quantityInput.value) || 1; // Default to 1 if the quantity is not a valid number
+
+        // Get the price for the current row
+        var price = parseFloat(rowPrices[defectId][rowId]) || 0;
+
+        // Calculate the total price for the current row
+        var rowTotal = quantity * price;
+
+        // Add the row total to the sum
+        return sum + rowTotal;
+    }, 0);
+
+    // Update the total price input for the current defect table
+    var totalInput = document.getElementById('total-price-' + defectId);
+    if (totalInput) {
+        totalInput.value = defectTotal.toFixed(2); // Format the total as needed
+    }
+
+    // If needed, you can perform additional actions or updates related to the defect total here
+    console.log(`Updating total for defect ${defectId} to ${defectTotal.toFixed(2)}`);
+}
 
   function toggleReadMore(truncateId, fullId, toggleId) {
     const truncateElement = document.getElementById(truncateId);
@@ -594,7 +661,6 @@
         // Create and append the third <td> for price
         var priceCell = document.createElement('td');
         priceCell.className = 'ps-2';
-        priceCell.textContent = sorItem.price;
         newRow.appendChild(priceCell);
 
         // Create and append the fourth <td> with the "x" icon to delete the row
@@ -611,6 +677,10 @@
         deleteCell.appendChild(deleteIcon);
         newRow.appendChild(deleteCell);
 
+        // Append the new row to the table
+        existingTable.querySelector('tbody').appendChild(newRow);
+        var defectTotal;
+
         // Create and append the hidden input for the SOR ID
         var sorIdInput = document.createElement('input');
         sorIdInput.type = 'hidden';
@@ -618,6 +688,14 @@
         sorIdInput.id = 'sor-id-' + defectId + '-' + rowId;
         sorIdInput.value = sorItem.id; // Set the value of the SOR ID input
         newRow.appendChild(sorIdInput);
+
+      // Assuming you have a quantity input for the row, adjust the code accordingly
+        var quantityInput = document.getElementById('quantity-' + defectId + '-' + rowId);
+        var quantity = quantityInput.value || 1; // Default to 1 if quantity is not provided
+    
+      // Calculate total price for the row
+        var totalPrice = quantity * sorItem.price;
+
         // Update the row price in the array
         rowPrices[defectId][rowId] = sorItem.price;
 
@@ -652,8 +730,10 @@
         sorIdInput.value = selectedSor.id;      // Update price
         sorNameInput.value = selectedSor.name
         // Update the row price in the array
-
         rowPrices[defectId][rowId] = selectedSor.price;
+
+        // Calculate and display the total price for the current row
+        updateRowTotal(defectId, rowId);
 
 
         // Calculate and display the total price for the current defect table
@@ -669,6 +749,23 @@
       }
 
     };
+
+    function updateRowTotal(defectId, rowId) {
+      var quantityInput = document.getElementById('quantity-' + defectId + '-' + rowId);
+      var totalPriceInput = document.getElementById('total-price-' + defectId + '-' + rowId);
+    
+      var quantity = quantityInput.value || 1; // Default to 1 if quantity is not provided
+      var sorPrice = rowPrices[defectId][rowId];
+    
+      // Calculate total price for the row
+      var rowTotalPrice = quantity * sorPrice;
+    
+      // Update the total price input for the row
+      totalPriceInput.value = rowTotalPrice.toFixed(2);
+    
+      // If needed, you can perform additional actions or updates related to the row here
+    }
+
 
     function populateOnSorNameChange(){
       var selectedValue = sorNameInput.value; // Get the selected value
@@ -825,8 +922,46 @@
   {% endif %}
 
 
+  // Update the updateQuantity function
+function updateQuantity(defectId, rowId) {
+  console.log(`Updating quantity for defect ${defectId}, row ${rowId}`);
 
+  // Retrieve the quantity input value
+  var quantityInput = document.getElementById('quantity-' + defectId + '-' + rowId);
+  var quantityValue = quantityInput.value;
 
+  // Get the price for the current row
+  var price = rowPrices[defectId][rowId] || 0; // Assuming rowPrices is an object containing prices
+
+  // Calculate the total price for the row based on the new quantity
+  var totalRowPrice = price * quantityValue;
+
+  // Update the total price input for the row
+  var totalPriceInput = document.getElementById('total-price-' + defectId + '-' + rowId);
+  totalPriceInput.value = totalRowPrice.toFixed(2); // Assuming you want it formatted with two decimal places
+
+  // If needed, you can perform additional actions or updates related to the row here
+}
+
+function updateTotalPrice() {
+  // Calculate the total price of all defect tables
+  var totalAllDefects = Object.keys(rowPrices).reduce(function (sum, defectId) {
+      var defectPrices = rowPrices[defectId];
+      var defectTotal = Object.values(defectPrices).reduce(function (defectSum, price) {
+          return defectSum + (parseFloat(price) || 0);
+      }, 0);
+      return sum + defectTotal;
+  }, 0);
+
+  // Update the total price input for all defect tables
+  var totalPriceInput = document.getElementById('total-price');
+  if (totalPriceInput) {
+      totalPriceInput.textContent = totalAllDefects.toFixed(2); // Format the total as needed
+  }
+  console.log("Updating total price for all defect tables");
+}
+
+  
   function addTable(button) {
     var defectId = button.getAttribute('data-defect-id');
     var tableId = "table-" + defectId;
@@ -908,7 +1043,30 @@
     newRow.appendChild(priceCell);
 
 
-    // Add the fourth <td> with the "x" icon to delete the row
+    // Create and append the fourth <td> for quantity
+      var quantityCell = document.createElement('td');
+      var quantityInput = document.createElement('input');
+      quantityInput.type = 'number';
+      quantityInput.className = 'form-control';
+      quantityInput.id = 'quantity-' + defectId + '-' + rowId;
+      quantityInput.value = 1; // Set the default quantity to 1
+      quantityInput.addEventListener('input', function () {
+        updateQuantity(defectId, rowId);
+      });
+      quantityCell.appendChild(quantityInput);
+      newRow.appendChild(quantityCell);
+
+
+    // Create and append the sixth <td> for total price    
+      var totalPriceCell = document.createElement('td');
+      var totalPriceInput = document.createElement('span');
+      totalPriceInput.className = 'ps-2';
+      totalPriceInput.id = 'total-price-' + defectId + '-' + rowId;
+      totalPriceCell.appendChild(totalPriceInput);
+      newRow.appendChild(totalPriceCell);
+
+
+    // Add the sixth <td> with the "x" icon to delete the row
     var deleteCell = document.createElement('td');
     var deleteIcon = document.createElement('span');
     deleteIcon.textContent = 'x';
@@ -1105,7 +1263,7 @@
   }
 
 
-  var totalPriceInput = document.getElementById('total-price');
+  var totalPriceInput = document.getElementById('totalPriceCell');
 
 
   // Function to remove a row from a defect table
@@ -1134,33 +1292,37 @@
   }
 
   // Function to update the total price for the current defect table
-  function updateDefectTotal(defectId, total) {
-    // Update the total price input for the current defect table
-    var totalInput = document.getElementById('total-price-' + defectId);
-    if (totalInput) {
-      totalInput.textContent = total.toFixed(2); // Format the total as needed
-    }
-  }
-
-  // Function to update the total price for all defect tables
-  function updateTotalPrice() {
-    // Calculate the total price of all defect tables
-    totalAllDefects = Object.keys(rowPrices).reduce(function (sum, defectId) {
-
-      var defectPrices = rowPrices[defectId];
-      var defectTotal = Object.values(defectPrices).reduce(function (defectSum, price) {
-        return defectSum + (parseFloat(price) || 0);
-      }, 0);
-      return sum + defectTotal;
+  function updateQuantity(defectId, rowId) {
+    console.log(`Updating quantity for defect ${defectId}, row ${rowId}`);
+  
+    // Retrieve the quantity input value
+    var quantityInput = document.getElementById('quantity-' + defectId + '-' + rowId);
+    var quantityValue = quantityInput.value;
+  
+    // Get the price for the current row
+    var price = rowPrices[defectId][rowId] || 0; // Assuming rowPrices is an object containing prices
+  
+    // Calculate the total price for the row based on the new quantity
+    var totalRowPrice = price * quantityValue;
+  
+    // Update the total price input for the row
+    var totalPriceInput = document.getElementById('total-price-' + defectId + '-' + rowId);
+    console.log(totalPriceInput)
+    totalPriceInput.innerHTML = totalRowPrice.toFixed(2); // Assuming you want it formatted with two decimal places
+  
+    // Update the defect total for the current defect
+    var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+      return sum + (parseFloat(rowPrice) || 0);
     }, 0);
-
-    // Update the total price input for all defect tables
-    var totalPriceInput = document.getElementById('total-price');
-    if (totalPriceInput) {
-      totalPriceInput.textContent = totalAllDefects.toFixed(2); // Format the total as needed
-    }
+  
+    // Update the total for the current defect
+    updateDefectTotal(defectId, defectTotal);
+  
+    // Update the total price for all defect tables
+    updateTotalPrice();
+    
+    // If needed, you can perform additional actions or updates related to the row here
   }
-
 
 
 
@@ -1206,7 +1368,7 @@
     });
   }
   // Function to send data to the server using fetch
-  function sendDataToServer(status, acknowledge) {
+  function sendDataToServer(status, acknowledge, totalPriceInput) {
     // Collect the data you want to send to the server, including defect-SOR values
     var dataToSend = {
       // Include your data here
