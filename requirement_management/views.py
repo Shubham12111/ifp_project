@@ -839,7 +839,7 @@ class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 del data['file_list']
             
             serializer_data = request.data if any(file_list) else data
-            # serializer_data['job_number'] = instance.job_number
+            # serializer_data['RBNO'] = instance.RBNO
             # serializer_data['UPRN'] = instance.UPRN
 
             serializer = self.serializer_class(instance=instance, data=serializer_data, context={'request': request})
@@ -1453,11 +1453,11 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                 for row in csv_reader:
                     # Extract the date from the CSV row (you may need to format it properly)
                     csv_date = row.get('date', None)
-                    job_number = row.get('Job Number', '')
+                    RBNO = row.get('RBNO', '')
                     uprn = row.get('UPRN', '')
                     # Check if the Job Number already exists in the database
-                    if job_number and Requirement.objects.filter(job_number=job_number).exists():
-                        messages.error(request, f"Job Number '{job_number}' already exists.")
+                    if RBNO and Requirement.objects.filter(RBNO=RBNO).exists():
+                        messages.error(request, f"Job Number '{RBNO}' already exists.")
                         success = False
                         continue
 
@@ -1468,7 +1468,7 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         continue
                     serializer_data = {
                         'action': row.get('action', ''),
-                        'Job Number': job_number,
+                        'RBNO': RBNO,
                         'UPRN': uprn,
                         'description': row.get('description', ''),
                         'site_address': row.get('site_address', ''),
