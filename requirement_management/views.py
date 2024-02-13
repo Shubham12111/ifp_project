@@ -1572,7 +1572,7 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
     Supports both HTML and JSON response formats.
     """
     serializer_class = BulkRequirementAddSerializer
-    default_fieldset = ['job_number', 'UPRN', 'action','description','site_address','due_date']
+    default_fieldset = ['RBNO', 'UPRN', 'action','description','site_address','due_date']
     EXCEL = ['xlsx', 'xls', 'ods']
     CSV = ['csv',]
 
