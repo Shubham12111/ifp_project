@@ -111,7 +111,7 @@
                                     </td> {% endcomment %}
                                     <td class="text-sm">
                                         <a href="{% url 'requirement_report_view' report.requirement_id.customer_id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{report.requirement_id.surveyor|default:'-'|title}}
+                                            {{report.requirement_id.surveyor|safe|default:'-'|title}}
                                         </a>
                                     </td>
                                     <td class="text-truncate">

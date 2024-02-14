@@ -110,7 +110,7 @@
                   </td>
                   <td class="text-sm">
                     <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.requirement_id.surveyor|default:'-' }}
+                        {{ item.requirement_id.surveyor|safe|default:'-' }}
                       </a>
                   </td>
                   <td class="text-sm">

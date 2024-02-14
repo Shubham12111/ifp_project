@@ -3647,10 +3647,21 @@ class MemberDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         }
 
         # Get the appropriate filter from the mapping based on the data access value,
-        queryset = Member.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
-        member_instance = queryset.filter(job__isnull=True, team__job__isnull=True).first()
+        member_instance = Member.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk')).first()
 
         if member_instance:
+            
+            if member_instance.job_set.exists():
+                # Handle non-HTML formats as before
+                messages.error(request, "You can't delete this member, as a job is assigned to this member.")
+                return redirect(reverse('members_list'))
+            
+
+            for team in member_instance.team_set.all():
+                if team.job_set.exists():
+                    messages.error(request, "You can't delete this member, as a job is assigned to this member.")
+                    return redirect(reverse('members_list'))
+
             # Proceed with the deletion
             member_instance.delete()
             messages.success(request, "Member has been deleted successfully! has been deleted successfully!")
@@ -3864,7 +3875,7 @@ class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
         team_id = self.kwargs.get('team_id', None)
         
         if team_id and queryset:
-            instance = queryset.filter(pk=team_id, job__isnull=True).first()
+            instance = queryset.filter(pk=team_id).first()
             return instance
         
         return None
@@ -3885,6 +3896,11 @@ class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
         
         instance = self.get_object()
         if instance:
+            if instance.job_set.exists():
+                # Handle non-HTML formats as before
+                messages.error(request, "You can't edit this team, as a job is assigned to this team.")
+                return redirect(reverse('teams_list'))
+            
             serializer = self.serializer_class(
                 instance=instance, 
                 context={'request': request}
@@ -3949,6 +3965,10 @@ class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
         instance = self.get_object()
         if instance:
+            if instance.job_set.exists():
+                # Handle non-HTML formats as before
+                messages.error(request, "You can't edit this team, as a job is assigned to this team.")
+                return redirect(reverse('teams_list'))
             # If the team instance exists, initialize the serializer with instance and provided data.
             serializer = TeamUpdateSerializer(instance=instance, data=request.data)
             message = "Team has been updated successfully"
@@ -4013,11 +4033,13 @@ class TeamDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         }
 
         # Get the appropriate filter from the mapping based on the data access value
-        queryset = Team.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
-
-        instance = queryset.filter(job__isnull=True).first()
+        instance = Team.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk')).first()
 
         if instance:
+            if instance.job_set.exists():
+                # Handle non-HTML formats as before
+                messages.error(request, "You can't delete this team, as a job is assigned to this team.")
+                return redirect(reverse('teams_list'))
             # Proceed with the deletion
             instance.delete()
             messages.success(request, "Your Team has been deleted successfully!")
