@@ -248,7 +248,7 @@
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.surveyor|default:'-'}}</a
+                      >{{requirement.surveyor|safe|default:'-'}}</a
                     >
                   </td>
                   <td class="text-sm">

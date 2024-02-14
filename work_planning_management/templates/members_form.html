@@ -10,8 +10,14 @@
         <!-- Card Basic Info -->
         <div class="card" id="basic-info">
             <div class="card-header">
-              <h5>Member Summary</h5>
-              {% comment %} Include any additional content or information here {% endcomment %}
+              <div class="row">
+                <div class="col-6">
+                  <h5>Member Summary</h5>
+                </div>
+                <div class="col-6 text-end">
+                  {% include 'components/back_button.html' %}
+                </div>
+              </div>
             </div>
             <div class="card-body pt-0">
              <form role="form"  method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
@@ -20,7 +26,7 @@
                       {% render_form serializer %}
                   </div>
                 <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                {% include 'components/back_button.html' %}
+                
               </form>
               {% include 'components/loader.html' %}
         </div>
