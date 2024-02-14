@@ -561,6 +561,8 @@
     console.log(`Updating total for defect ${defectId} to ${defectTotal.toFixed(2)}`);
 }
 
+
+
   function toggleReadMore(truncateId, fullId, toggleId) {
     const truncateElement = document.getElementById(truncateId);
     const fullElement = document.getElementById(fullId);
@@ -613,9 +615,14 @@
 
         // Check if the table already exists, and if not, create it
         var existingTable = document.getElementById(tableId);
-        var tbody = document.createElement('tbody');
-        existingTable.appendChild(tbody)
+        var tbody;
 
+        if (!existingTable) {
+          existingTable = document.createElement('table');
+          tbody = document.createElement('tbody');
+          existingTable.id = tableId;
+          existingTable.appendChild(tbody);
+        }
 
         var savedRow = savedData.defectSorValues[defectId][inner_key];
         var sorItem = savedRow['sor_items'];
@@ -623,7 +630,7 @@
         var newRow = document.createElement('tr');
         var rowId = inner_key; // Create a unique ID for each row
         newRow.id = rowId;
-        
+
         var firstCell = document.createElement('td');
         var sorCodeFormGroupDiv = document.createElement('div');
         var sorCodeInput = document.createElement('input');
@@ -638,6 +645,7 @@
         firstCell.appendChild(sorCodeInput);
         newRow.appendChild(firstCell);
 
+        // Create and append the second <td> for sor.name
         var secondCell = document.createElement('td');
         var sorNameFormGroupDiv = document.createElement('div');
         var sorNameInput = document.createElement('input');
@@ -652,7 +660,7 @@
         secondCell.appendChild(sorNameInput);
         newRow.appendChild(secondCell);
 
-        // Create and append the second <td> for category
+        // Create and append the third <td> for category
         var categoryCell = document.createElement('td');
         categoryCell.className = 'ps-2';
         categoryCell.textContent = sorItem.category_id;
@@ -663,55 +671,45 @@
         priceCell.className = 'ps-2';
         newRow.appendChild(priceCell);
 
-        // Create and append the fourth <td> with the "x" icon to delete the row
+        // Create and append the fourth <td> for quantity
+        var quantityCell = document.createElement('td');
+        var quantityInput = document.createElement('input');
+        quantityInput.type = 'number';
+        quantityInput.className = 'form-control';
+        quantityInput.id = 'quantity-' + defectId + '-' + rowId;
+        quantityInput.value = 0; // Set the default quantity to 1
+        quantityInput.addEventListener('input', function () {
+          updateQuantity(defectId, rowId);
+        });
+        quantityCell.appendChild(quantityInput);
+        newRow.appendChild(quantityCell);
+
+
+       // Create and append the sixth <td> for total price    
+        var totalPriceCell = document.createElement('td');
+        var totalPriceInput = document.createElement('span');
+        totalPriceInput.className = 'ps-2';
+        totalPriceInput.id = 'total-price-' + defectId + '-' + rowId;
+        totalPriceCell.appendChild(totalPriceInput);
+        newRow.appendChild(totalPriceCell);
+
+       // Add the sixth <td> with the "x" icon to delete the row
         var deleteCell = document.createElement('td');
         var deleteIcon = document.createElement('span');
         deleteIcon.textContent = 'x';
         deleteIcon.style.cursor = 'pointer';
-        deleteIcon.classList.add('text-danger', 'text-center');
+        deleteIcon.classList.add('text-danger', 'text-center'); // Add the classes to the delete icon
 
+        // Modify your existing deleteIcon.addEventListener as follows:
         deleteIcon.addEventListener('click', function () {
-          removeRow(defectId, rowId);
+          removeRow(defectId, rowId); // Call the removeRow function when "x" is clicked
         });
 
         deleteCell.appendChild(deleteIcon);
         newRow.appendChild(deleteCell);
 
-        // Append the new row to the table
-        existingTable.querySelector('tbody').appendChild(newRow);
-        var defectTotal;
 
-        // Create and append the hidden input for the SOR ID
-        var sorIdInput = document.createElement('input');
-        sorIdInput.type = 'hidden';
-        sorIdInput.name = 'sor-id'; // You can specify a unique name here if needed
-        sorIdInput.id = 'sor-id-' + defectId + '-' + rowId;
-        sorIdInput.value = sorItem.id; // Set the value of the SOR ID input
-        newRow.appendChild(sorIdInput);
-
-      // Assuming you have a quantity input for the row, adjust the code accordingly
-        var quantityInput = document.getElementById('quantity-' + defectId + '-' + rowId);
-        var quantity = quantityInput.value || 1; // Default to 1 if quantity is not provided
-    
-      // Calculate total price for the row
-        var totalPrice = quantity * sorItem.price;
-
-        // Update the row price in the array
-        rowPrices[defectId][rowId] = sorItem.price;
-
-        // Calculate and display the total price for the current defect table
-        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
-          return sum + (parseFloat(rowPrice) || 0);
-        }, 0);
-
-        // Update the total for the current defect
-        updateDefectTotal(defectId, defectTotal);
-
-        // Update the total price for all defect tables
-        updateTotalPrice();
-        // Append the new row to the table
-        existingTable.querySelector('tbody').appendChild(newRow);
-        
+      
 
         // Listen for changes in the dropdown and update other <td> elements
     function populateOnSorCodeChange(){
@@ -1049,7 +1047,7 @@ function updateTotalPrice() {
       quantityInput.type = 'number';
       quantityInput.className = 'form-control';
       quantityInput.id = 'quantity-' + defectId + '-' + rowId;
-      quantityInput.value = 1; // Set the default quantity to 1
+      quantityInput.value = 0; // Set the default quantity to 1
       quantityInput.addEventListener('input', function () {
         updateQuantity(defectId, rowId);
       });
@@ -1107,7 +1105,7 @@ function updateTotalPrice() {
 
         // Calculate and display the total price for the current defect table
         var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
-          return sum + (parseFloat(rowPrice) || 0);
+          return sum + (parseFloat(rowPrice) || totalPriceCell);
         }, 0);
 
         // Update the total for the current defect
@@ -1302,6 +1300,7 @@ function updateTotalPrice() {
     // Get the price for the current row
     var price = rowPrices[defectId][rowId] || 0; // Assuming rowPrices is an object containing prices
   
+  
     // Calculate the total price for the row based on the new quantity
     var totalRowPrice = price * quantityValue;
   
@@ -1356,7 +1355,7 @@ function updateTotalPrice() {
   if (saveDraftButton) {
     saveDraftButton.addEventListener('click', function () {
       showLoader();
-      sendDataToServer('draft', true); // Set the status to "draft" when "Save As Draft" is clicked
+      sendDataToServer('draft', true, totalPriceInput); // Set the status to "draft" when "Save As Draft" is clicked
     });
   }
 
@@ -1364,7 +1363,7 @@ function updateTotalPrice() {
   if (submitApproved) {
     submitApproved.addEventListener('click', function () {
       showLoader();
-      sendDataToServer('approved', true); // Set the status to "approved" when "Submit Approved" is clicked
+      sendDataToServer('approved', true, totalPriceInput); // Set the status to "approved" when "Submit Approved" is clicked
     });
   }
   // Function to send data to the server using fetch
@@ -1373,7 +1372,7 @@ function updateTotalPrice() {
     var dataToSend = {
       // Include your data here
       status: status, // Include the status based on the button clicked
-      total_amount: totalPriceInput.textContent,
+      {% comment %} total_amount: totalPriceInput.textContent, {% endcomment %}
       defectSorValues: {}, // Initialize an empty object to store defect-SOR values
       defectList: [] // Initialize an empty array to store the list of defects
     };
@@ -1382,9 +1381,13 @@ function updateTotalPrice() {
       if (rowPrices.hasOwnProperty(defectId)) {
         var defectSorData = {}; // Initialize an empty object for defect-SOR data
         var hasPrices = false; // Flag to track if prices exist for this defect
+      
 
         for (var rowId in rowPrices[defectId]) {
           if (rowPrices[defectId].hasOwnProperty(rowId)) {
+            var quantity = document.getElementById('quantity-' + defectId + '-' + rowId).value;
+            // Get the quantity for this row
+            var totalPrice = document.getElementById('total-price-' + defectId + '-' + rowId).textContent;
             // Get the price for this row
             var price = rowPrices[defectId][rowId];
             // Fetch the SOR ID from the hidden input field within the row
@@ -1392,7 +1395,7 @@ function updateTotalPrice() {
             var sorId = sorIdInput.value; // Fetch the SOR ID from the hidden input
 
             // Add the SOR ID and price to the defect-SOR data
-            defectSorData[rowId] = { 'sor-id': sorId, 'price': price };
+            defectSorData[rowId] = { 'sor-id': sorId, 'price': price, 'quantity': quantity, 'totalPrice': totalPrice };
 
             // Check if there is a price, set the flag to true
             if (price) {
