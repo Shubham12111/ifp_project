@@ -1062,6 +1062,9 @@ class JobCreateSerializer(serializers.ModelSerializer):
         if start_date and end_date and start_date > end_date:
             raise ValidationError({'end_date':'End Date/Time should be greater than the Start Date/Time.'})
         
+        if start_date == end_date:
+            raise ValidationError({'end_date':'End Date/Time should be greater than the Start Date/Time.'})
+        
         team = data.get('assigned_to_team', None)
         members = data.get('assigned_to_member', None)
 
