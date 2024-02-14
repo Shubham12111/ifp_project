@@ -43,16 +43,19 @@
                         <th>First Name</th>
                         <th>Email</th>
                         <th>Phone Number</th>
+                        <th>Job Role</th>
                         <th class="custom-last-column">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="ml-4">
                     {% for contact_person in contact_person_list %}
                     <tr class="text-sm">
-                        <td>{{ contact_person.first_name|default:''|truncatechars:20|title }}</td>
-                        <td>{{ contact_person.last_name|default:''|truncatechars:20|title  }}</td>
+                        <td>{{ contact_person.first_name|default:'-'|truncatechars:20|title }}</td>
+                        <td>{{ contact_person.last_name|default:'-'|truncatechars:20|title  }}</td>
                         <td>{{ contact_person.email }}</td>
                         <td>{{ contact_person.phone_number }}</td>
+                        <td>{{ contact_person.job_role }}</td>
+
                         <td> 
                           <div class="dropstart ms-auto pe-0">
                             <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">

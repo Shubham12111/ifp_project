@@ -157,7 +157,6 @@ def filter_requirements(data_access_value, user, customer=None, request=None):
         # Get the filtering parameters from the request's query parameters
         filters = {
             'status': request.GET.get('status'),
-            'surveyor': request.GET.get('surveyor'),
             'dateRange': request.GET.get('dateRange'),
         }
         date_format = '%d/%m/%Y'
@@ -171,12 +170,6 @@ def filter_requirements(data_access_value, user, customer=None, request=None):
                     start_date = datetime.strptime(start_date_str.strip(), date_format).date()
                     end_date = datetime.strptime(end_date_str.strip(), date_format).date()
                     queryset = queryset.filter(due_date__gte=start_date, due_date__lte=end_date)
-                elif filter_name == 'surveyor':
-                    value_list = filter_value.split()
-                    if 2 >= len(value_list) > 1:
-                        queryset = queryset.filter(surveyor__first_name=value_list[0], surveyor__last_name=value_list[1])
-                    else:
-                        queryset = queryset.filter(surveyor__first_name = filter_value)
                 else:
                     # For other filters, apply the corresponding filters on the queryset
                     filter_mapping = {
@@ -209,14 +202,13 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            """
-        Get the queryset of Requirement customers.
-
-        Returns:
-            QuerySet: A queryset of Requirement customers.
         """
-            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
-            return queryset
+        Get the queryset of stw Requirement customers.
+        Returns:
+            QuerySet: A queryset of stw Requirement customers.
+        """
+        queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+        return queryset
         
     def get_paginated_queryset(self, base_queryset):
         items_per_page = 20 
@@ -272,7 +264,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
-            fra_counts = all_fra.filter(customer_id=customer).count()
+            fra_counts = all_fra.filter(customer_id=customer, status__in=['active', 'to-surveyor']).count()
              # Check if the user has any roles before accessing the first one
             
             # fra_counts_for_qs = all_fra.filter(customer_id=customer, quantity_surveyor=self.request.user).count()
@@ -287,7 +279,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
     
         if request.accepted_renderer.format == 'html':
             context = {
-                'customers_with_counts': self.get_paginated_queryset(customers_with_counts),
+                'customers_with_counts': self.get_paginated_queryset(sorted(customers_with_counts, key=lambda x: x['fra_counts'], reverse=True)),
                 'search_fields': ['name', 'email'],
                 'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
             }  # Pass the list of customers with counts to the template
@@ -355,6 +347,7 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
                 return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
             queryset = filter_requirements(data_access_value, self.request.user, customer_data, request)
+            queryset = queryset.filter(status__in=['active', 'to-surveyor'])
             queryset = self.get_searched_queryset(queryset)
             # qs_role = UserRole.objects.filter(name='quantity_surveyor')
             # quantity_sureveyors = User.objects.filter(roles__in=qs_role)
@@ -365,7 +358,7 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
             if request.accepted_renderer.format == 'html':
                 page_number = request.GET.get('page', 1)
                 context = {
-                    'requirements': Paginator(queryset, 20).get_page(page_number),
+                    'requirements': Paginator(self.serializer_class(queryset, many=True).data, 20).get_page(page_number),
                     'customer_id':customer_id,
                     # 'quantity_sureveyors': quantity_sureveyors,
                     'customer_data':customer_data,
@@ -540,19 +533,13 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
         return output_file
     
-    def get_queryset(self):
+    def get_queryset(self, data_access_value):
         """
         Get the queryset for listing Requirement items.
 
         Returns:
             QuerySet: A queryset of Requirements items filtered based on the authenticated user's ID.
         """
-        # Get the model class using the provided module_name string
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "fire_risk_assessment", HasViewDataPermission, 'view'
-        )
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = filter_requirements(data_access_value, self.request.user, customer=self.kwargs.get('customer_id'))
         queryset =  queryset.filter(pk=self.kwargs.get('pk')).first()
@@ -571,13 +558,19 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         Returns:
             HttpResponse: The response, either HTML or JSON.
         """
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasViewDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
         customer_id = kwargs.get('customer_id')
         customer_data = User.objects.filter(id=customer_id).first()
         
         if customer_data:
             # This method handles GET requests for updating an existing Requirement object.
             if request.accepted_renderer.format == 'html':
-                instance = self.get_queryset()
+                instance = self.get_queryset(data_access_value)
                 if instance:
                     document_paths = []
                     requirement_defect = RequirementDefect.objects.filter(requirement_id=instance.id)
@@ -1725,3 +1718,273 @@ class RequirementSurveyorCalendarView(CustomAuthenticationMixin, generics.ListAP
                 message="Data retrieved",
                 data=serializer.data
             )
+
+class RequirementSurvyeCustomerListView(CustomAuthenticationMixin, generics.ListAPIView):
+    """
+    View to get the listing of all requirements.
+    Supports both HTML and JSON response formats.
+    """
+
+    serializer_class = RequirementCalendarSerializer
+    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    template_name = 'survey_customer_list.html'
+    queryset = Requirement.objects.filter(
+        status__in=['assigned-to-surveyor']
+    ).order_by('customer_id').values_list('customer_id', flat=True).distinct()
+    
+    # ordering_fields = ['created_at'] 
+
+    common_get_response = {
+        status.HTTP_200_OK: docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message="Data retrieved",
+        )
+    }
+
+    def get_queryset(self):
+        requirements = super().get_queryset()
+        
+        if not requirements:
+            return []
+        
+        queryset = User.objects.filter(
+            is_active=True,  roles__name__icontains='customer',
+            id__in=requirements
+            ).exclude(pk=self.request.user.id)
+        
+        return queryset 
+        
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for listing Requirement customers.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: The response, either HTML or JSON.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        queryset = self.get_queryset()
+        queryset = self.get_searched_queryset(queryset)
+        all_fra = Requirement.objects.filter()
+
+        
+        customers_with_counts = []  # Create a list to store customer objects with counts
+
+        for customer in queryset:
+            fra_counts = all_fra.filter(customer_id=customer, status__in=['assigned-to-surveyor']).count()
+             # Check if the user has any roles before accessing the first one
+            
+            # fra_counts_for_qs = all_fra.filter(customer_id=customer, quantity_surveyor=self.request.user).count()
+            fra_counts_for_qs = all_fra.filter(customer_id=customer).count()
+            fra_counts_for_surveyor = all_fra.filter(customer_id=customer, surveyor=self.request.user).count()
+            customers_with_counts.append({
+                'customer': customer, 
+                'fra_counts': fra_counts,
+                'fra_counts_for_qs': fra_counts_for_qs,
+                'fra_counts_for_surveyor': fra_counts_for_surveyor,
+            })
+    
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'customers_with_counts': self.get_paginated_queryset(customers_with_counts),
+                'search_fields': ['name', 'email'],
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+            }  # Pass the list of customers with counts to the template
+            return render_html_response(context, self.template_name)
+        else:
+            serializer = self.serializer_class(queryset, many=True)
+            return create_api_response(status_code=status.HTTP_200_OK,
+                                    message="Data retrieved",
+                                    data=serializer.data)
+
+def filter_survey_requirements(data_access_value, user, customer=None, request=None, fra_status=['assigned-to-surveyor']):
+    """
+    Filter Requirement objects based on data access and user roles.
+
+    This function filters Requirement objects based on the data access value and user roles.
+    It applies appropriate filters to return a queryset of Requirement objects.
+
+    Args:
+        data_access_value (str): The data access value.
+        user (User): The authenticated user.
+        customer (User, optional): The customer for which to filter Requirements. Defaults to None.
+
+    Returns:
+        QuerySet: A filtered queryset of Requirement objects.
+    """
+    # Define a mapping of data access values to corresponding filters.
+    filter_mapping = {
+        "self": Q(user_id=user),
+        "all": Q(),  # An empty Q() object returns all data.
+    }
+
+    if customer:
+        queryset = Requirement.objects.filter(customer_id=customer)
+    else: queryset = Requirement.objects.all()
+    
+    if user.roles.name == "quantity_surveyor":
+        queryset =  queryset.filter(
+            Q(quantity_surveyor=user)|Q(user_id=user) | filter_mapping.get(data_access_value, Q())
+        )
+    elif user.roles.name == "surveyor":
+        queryset = queryset.filter(
+            Q(surveyor=user)|Q(user_id=user) | filter_mapping.get(data_access_value, Q())
+        )
+    else:
+        queryset = queryset.filter(Q(status__in=fra_status) |filter_mapping.get(data_access_value, Q()))
+
+    if isinstance(request, Request):
+        # Get the filtering parameters from the request's query parameters
+        filters = {
+            'status': request.GET.get('status'),
+            'surveyor': request.GET.get('surveyor'),
+            'dateRange': request.GET.get('dateRange'),
+        }
+        date_format = '%d/%m/%Y'
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.strptime(end_date_str.strip(), date_format).date()
+                    queryset = queryset.filter(due_date__gte=start_date, due_date__lte=end_date)
+                elif filter_name == 'surveyor':
+                    value_list = filter_value.split()
+                    if 2 >= len(value_list) > 1:
+                        queryset = queryset.filter(surveyor__first_name=value_list[0], surveyor__last_name=value_list[1])
+                    else:
+                        queryset = queryset.filter(surveyor__first_name = filter_value)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                    }
+                    queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
+    return queryset 
+
+class RequirementSurvyeListView(CustomAuthenticationMixin,generics.ListAPIView):
+    """
+    View to get the listing of all requirements.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = RequirementSerializer
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['action', 'description']
+    template_name = 'survey_list.html'
+    ordering_fields = ['created_at'] 
+
+    common_get_response = {
+    status.HTTP_200_OK: 
+        docs_schema_response_new(
+            status_code=status.HTTP_200_OK,
+            serializer_class=serializer_class,
+            message = "Data retrieved",
+            )
+    }
+
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+    
+    @swagger_auto_schema(operation_id='Requirement Listing', responses={**common_get_response})
+    def get(self, request, *args, **kwargs):
+
+        """
+        Handle both AJAX (JSON) and HTML requests.
+        """
+        customer_id = kwargs.get('customer_id', None)
+        print(customer_id)
+        
+        customer_data = User.objects.filter(id=customer_id).first()
+        print(customer_data)
+        
+        if customer_data:
+            # Call the handle_unauthenticated method to handle unauthenticated access.
+            authenticated_user, data_access_value = check_authentication_and_permissions(
+                self,"fire_risk_assessment", HasListDataPermission, 'list'
+            )
+            if isinstance(authenticated_user, HttpResponseRedirect):
+                return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+            queryset = filter_survey_requirements(data_access_value, self.request.user, customer_data, request)
+            queryset = self.get_searched_queryset(queryset)
+            # qs_role = UserRole.objects.filter(name='quantity_surveyor')
+            # quantity_sureveyors = User.objects.filter(roles__in=qs_role)
+            
+            sureveyors = User.objects.filter(roles__name='surveyor')
+
+            
+            if request.accepted_renderer.format == 'html':
+                page_number = request.GET.get('page', 1)
+                context = {
+                    'requirements': Paginator(self.serializer_class(queryset, many=True).data, 20).get_page(page_number),
+                    'customer_id':customer_id,
+                    # 'quantity_sureveyors': quantity_sureveyors,
+                    'customer_data':customer_data,
+                    'sureveyors':sureveyors,
+                    'assign_to_surveyor_serializer': AssignToSurveyorSerializer(),
+                    'status_values': REQUIREMENT_CHOICES,
+                    'search_fields': self.search_fields,
+                    'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+                }
+                return render_html_response(context,self.template_name)
+            else:
+                serializer = self.serializer_class(queryset, many=True)
+                return create_api_response(status_code=status.HTTP_200_OK,
+                                                message="Data retrieved",
+                                                data=serializer.data)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  

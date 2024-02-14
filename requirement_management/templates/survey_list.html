@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load rest_framework %}
-{% block title %} FRA Actions {{ block.super }}{% endblock %} 
+{% block title %} FRA Surveys {{ block.super }}{% endblock %} 
 {% block content %} 
 {% load custom_tags %}
 <link
@@ -106,243 +106,19 @@
   }
 </style>
 {% include 'components/alert.html' %}
+{% include "survey_actions.html" %}
 <div class="container-fluid py-2">
   <div class="row">
     <div class="col-12">
       <div class="card">
         <!-- Card header -->
         <div class="card-header pt-3 pb-0">
-          <div class="row justify-content-end">
-            <div class="col-12 text-end">
-              <button
-                id="openCreateCsvModalButton"
-                data-bs-toggle="modal"
-                data-bs-target="#bulk_import_modal"
-                class="btn bg-gradient-primary btn-sm mb-2 mx-2"
-              >
-                Import FRA
-              </button>
-              {% if request.user|has_add_permission:"fire_risk_assessment" %}
-              <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
-
-              <a
-                href="{% url 'customer_requirement_add'    customer_id %}"
-                class="btn bg-gradient-primary btn-sm mb-2 mx-2"
-                >+&nbsp; New FRA Actions</a
-              >
-              {% endif %} 
-              {% if request.user.roles.name == "projects_admin_(IT)" or request.user.roles.name == "quantity_surveyor" %}
-              <button
-                id="addSurveyorButton"
-                class="btn bg-gradient-primary btn-sm mb-2 mx-2"
-                data-bs-toggle="modal"
-                data-bs-target="#addSurveyorModal"
-                disabled
-              >
-                Assign Surveyor
-              </button>
-
-              {% comment %}
-              <button
-                id="addQuantitySurveyorButton"
-                class="btn bg-gradient-primary btn-sm mb-2 mx-2"
-              >
-                Assign Quantity Surveyor
-              </button>
-              {% endcomment %} 
-              {% endif %} 
-              {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
-            </div>
-          </div>
           <div class="row justify-content-between">
             <div class="col-6">
-              <h4 class="mb-0">FRA Actions</h4>
+              <h4 class="mb-0">FRA Surveys</h4>
               {% include 'customer_info.html' %}
             </div>
-            <!-- Modal for bulk import-->
-            <div
-              class="modal fade"
-              id="bulk_import_modal"
-              tabindex="-1"
-              aria-labelledby="bulkImportModalLabel"
-              aria-hidden="true"
-            >
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="bulkImportModalLabel">
-                      Bulk Import FRA
-                    </h1>
-                    <button
-                      type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"
-                    ></button>
-                  </div>
-                  <form
-                    action="{% url 'bulk_import_customer_requirements' customer_id %}"
-                    role="form"
-                    method="POST"
-                    enctype="multipart/form-data"
-                    onsubmit="showLoader()"
-                  >
-                    {% csrf_token %}
-                    <div class="modal-body">
-                      <div class="mb-3">
-                        <input
-                          class="form-control"
-                          type="file"
-                          id="formFile"
-                          name="excel_file"
-                          accept=".xlsx, .xls, .csv, .ods"
-                        />
-                      </div>
-                      <div class="d-none" id="mapping_key_values">
-                        <div class="container">
-                          <div class="row mt-3">
-                            <div class="col text-start">
-                              <label
-                                for="job_number"
-                                class="col-form-label text-start"
-                                >Job Number:</label
-                              >
-                            </div>
-                            <div class="col">
-                              <select
-                                class="form-select"
-                                aria-label="Default select example"
-                                type="radio"
-                                name="job_number"
-                                id="mappings"
-                              >
-                                <option selected>Open this select menu</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div class="row mt-3">
-                            <div class="col text-start">
-                              <label
-                                for="UPRN"
-                                class="col-form-label text-start"
-                                >UPRN:</label
-                              >
-                            </div>
-                            <div class="col">
-                              <select
-                                class="form-select"
-                                aria-label="Default select example"
-                                type="radio"
-                                name="UPRN"
-                                id="mappings"
-                              >
-                                <option selected>Open this select menu</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div class="row mt-3">
-                            <div class="col text-start">
-                              <label
-                                for="action"
-                                class="col-form-label text-start"
-                                >Action:</label
-                              >
-                            </div>
-                            <div class="col">
-                              <select
-                                class="form-select"
-                                aria-label="Default select example"
-                                type="radio"
-                                name="action"
-                                id="mappings"
-                              >
-                                <option selected>Open this select menu</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div class="row mt-3">
-                            <div class="col text-start">
-                              <label
-                                for="description"
-                                class="col-form-label text-start"
-                                >Description:</label
-                              >
-                            </div>
-                            <div class="col">
-                              <select
-                                class="form-select"
-                                aria-label="Default select example"
-                                type="radio"
-                                name="description"
-                                id="mappings"
-                              >
-                                <option selected>Open this select menu</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div class="row mt-3">
-                            <div class="col text-start">
-                              <label
-                                for="site_address"
-                                class="col-form-label text-start"
-                                >Site Address:</label
-                              >
-                            </div>
-                            <div class="col">
-                              <select
-                                class="form-select"
-                                aria-label="Default select example"
-                                type="radio"
-                                name="site_address"
-                                id="mappings"
-                              >
-                                <option selected>Open this select menu</option>
-                              </select>
-                            </div>
-                          </div>
-                          <div class="row mt-3">
-                            <div class="col text-start">
-                              <label
-                                for="due_date"
-                                class="col-form-label text-start"
-                                >Due Date:</label
-                              >
-                            </div>
-                            <div class="col">
-                              <select
-                                class="form-select"
-                                aria-label="Default select example"
-                                type="radio"
-                                name="due_date"
-                                id="mappings"
-                              >
-                                <option selected>Open this select menu</option>
-                              </select>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button
-                        type="button"
-                        class="btn bg-gradient-secondary btn-sm"
-                        data-bs-dismiss="modal"
-                      >
-                        Close
-                      </button>
-                      <input
-                        type="submit"
-                        class="btn bg-gradient-primary btn-sm"
-                        value="Save"
-                      />
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            {% include "requirement_filters.html" %}
+            {% include "survey_filters.html" %}
           </div>
         </div>
         <div class="card-body pb-3 pt-0 mt-3">
@@ -426,12 +202,6 @@
             <table class="table table-hover text-dark" id="requirement-list">
               <thead class="thead-light">
                 <tr>
-                  <th class="custom-last-column">
-                    <i
-                      class="fa fa-cog text-secondary"
-                      aria-hidden="true"
-                    ></i>
-                  </th>
                   <!-- Add an empty th for the checkbox column -->
                   <th>FRA Action</th>
                   <th>Description</th>
@@ -439,7 +209,7 @@
                   {% comment %}
                   <th>Quantity Surveyor</th>
                   {% endcomment %}
-                  {% comment %} <th>Surveyor</th> {% endcomment %}
+                  <th>Surveyor</th>
                   <th>Status</th>
                   <th>Due Date</th>
                   <th class="custom-last-column">Actions</th>
@@ -448,13 +218,6 @@
               <tbody class="ml-4">
                 {% for requirement in requirements %}
                 <tr>
-                  <td class="text-sm">
-                    <input
-                      type="checkbox"
-                      name="requirement_checkbox"
-                      value="{{ requirement.id }}"
-                    />
-                  </td>
                   <td class="text-sm">
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.id %}"
@@ -473,7 +236,7 @@
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.site_address|truncatechars:20|title|default:'-'}}</a
+                      >{{requirement.site_address|default:'-'|truncatechars:20|title}}</a
                     >
                   </td>
                   {% comment %}
@@ -481,13 +244,13 @@
                     {{requirement.quantity_surveyor|default:'-'}}
                   </td>
                   {% endcomment %}
-                  {% comment %} <td class="text-sm">
+                  <td class="text-sm">
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
                       >{{requirement.surveyor|default:'-'}}</a
                     >
-                  </td> {% endcomment %}
+                  </td>
                   <td class="text-sm">
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.id %}"

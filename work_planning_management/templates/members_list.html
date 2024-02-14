@@ -21,9 +21,6 @@
             <div>
               <a class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-3 mx-2" href="{% url 'team_add' %}">+&nbsp;Create Team</a>
             </div>
-
-
-
           </div>
           {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
         </div>
@@ -74,9 +71,8 @@
                                           </a>
                                       </li>
                                   {% endif %}
-                                  {% if request.user|has_delete_permission:"survey" %}
-                                      <li>
-
+                                  {% if request.user|has_delete_permission:"survey" and not member_obj.job_set.all %}
+                                    <li>
                                         <a href="#" type="button" class="dropdown-item border-radius-md" 
                                         onclick="CustomconfirmDelete({{member_obj.id}}, 'Are you sure you want to delete this Member?','The Member has been deleted successfully.','{% url 'member_delete' member_obj.id %}')">
                                         Delete</a>

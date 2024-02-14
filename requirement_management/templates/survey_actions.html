@@ -1,0 +1,16 @@
+<div class="container-fluid py-4">
+    <div class="row align-items-center">
+        <div class="col-lg-12 col-sm-8">
+            <div class="nav-wrapper position-relative end-0">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link {% if  'survey/customers/' in request.path %}active {% endif %}" href="{% url 'survey_customer_list' %}">List View</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if  'survey/calendar/view/' in request.path %}active {% endif %}" href="{% url 'calendar_list' %}">Calendar View</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

@@ -79,21 +79,21 @@ table > tbody > tr > td > a > p{
                         <tr>
                             <th>Site Address</th>
                             <td>
-                                {{ requirement_instance.site_address.site_name|default:''|truncatechars:20 }},
-                                {{ requirement_instance.site_address.address|default:''|truncatechars:20|title }},
-                                {{ requirement_instance.site_address.town|default:''|title }},
-                                {{ requirement_instance.site_address.county|default:''|title }},
-                                {{ requirement_instance.site_address.country|default:''|title }},
-                                {{ requirement_instance.site_address.post_code|default:'' }}
+                                {{ requirement_instance.site_address.site_name|default:'-'|truncatechars:20 }},
+                                {{ requirement_instance.site_address.address|default:'-'|truncatechars:20|title }},
+                                {{ requirement_instance.site_address.town|default:'-'|title }},
+                                {{ requirement_instance.site_address.county|default:'-'|title }},
+                                {{ requirement_instance.site_address.country|default:'-'|title }},
+                                {{ requirement_instance.site_address.post_code|default:'-' }}
                             </td>
                         </tr>
                         <tr>
                             <th>Job Number</th>
-                            <td>{{ requirement_instance.RBNO|default:''|title }}</td>
+                            <td>{{ requirement_instance.RBNO|default:'-'|title }}</td>
                         </tr>
                         <tr>
                             <th>UPRN</th>
-                            <td>{{ requirement_instance.UPRN|default:''|title }}</td>
+                            <td>{{ requirement_instance.UPRN|default:'-'|title }}</td>
                         </tr>
                     </tbody>
                     <tbody> <!-- Use tbody for table body -->

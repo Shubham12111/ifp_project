@@ -79,12 +79,12 @@
                                 <tr>
                                     <td><strong class="text-dark">Site Address</strong></td>
                                     <td>
-                                        {{ stw_instance.site_address.site_name|default:''|truncatechars:20 }},
-                                        {{ stw_instance.site_address.address|default:''|truncatechars:20|title }},
-                                        {{ stw_instance.site_address.town|default:''|title }},
-                                        {{ stw_instance.site_address.county|default:''|title }},
-                                        {{ stw_instance.site_address.country|default:''|title }},
-                                        {{ stw_instance.site_address.post_code|default:'' }}
+                                        {{ stw_instance.site_address.site_name|default:'-'|truncatechars:20 }},
+                                        {{ stw_instance.site_address.address|default:'-'|truncatechars:20|title }},
+                                        {{ stw_instance.site_address.town|default:'-'|title }},
+                                        {{ stw_instance.site_address.county|default:'-'|title }},
+                                        {{ stw_instance.site_address.country|default:'-'|title }},
+                                        {{ stw_instance.site_address.post_code|default:'-' }}
                                     </td>
                                 </tr>
                                 <tr>

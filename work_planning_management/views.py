@@ -15,7 +15,7 @@ import json
 from drf_yasg.utils import swagger_auto_schema
 
 from requirement_management.models import Requirement, Quotation,RequirementDefect
-from .serializers import QuotationSerializer, ConvertSTWToFRASerializer, STWDefectSerializer, ConvertSTWDefectsToFRADefectsSerializer, STWDefectsDetailedSerializer, STWRequirementDetailsSerializer
+from .serializers import QuotationSerializer, ConvertSTWToFRASerializer, STWDefectSerializer, ConvertSTWDefectsToFRADefectsSerializer, STWDefectsDetailedSerializer, STWRequirementDetailsSerializer, TeamUpdateSerializer, STWRequirementsListSerializer, STWRequirementDefectSerializer
 from requirement_management.serializers  import RequirementAddSerializer,RequirementDefectAddSerializer,RequirementAssetSerializer
 
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
@@ -26,7 +26,7 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 from .models import *
 from .serializers import STWRequirementSerializer, CustomerSerializer, STWDefectSerializer, JobListSerializer,AddJobSerializer,MemberSerializer,TeamSerializer,JobAssignmentSerializer,EventSerializer,STWJobListSerializer, JobCreateSerializer, MemberCalendarSerializer, AttachSitePackSerializer, AddAndAttachSitePackSerializer, CreateRLOSeirlaizer, UpdateRLOSeirlaizer
 
-from requirement_management.serializers import SORSerializer,RequirementDefectSerializer,RequirementDefectAddSerializer
+from requirement_management.serializers import SORSerializer,RequirementDefectSerializer,RequirementDefectAddSerializer, RequirementQuotationListSerializer
 from requirement_management.models import SORItem
 from django.http.response import JsonResponse
 from django.db import IntegrityError
@@ -93,14 +93,25 @@ class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.List
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            """
+        """
         Get the queryset of stw Requirement customers.
 
         Returns:
             QuerySet: A queryset of stw Requirement customers.
         """
-            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
-            return queryset
+        quote = Quotation.objects.filter(
+            status__in=['approved'],
+            job__isnull=True
+        ).order_by('customer_id').values_list('customer_id', flat=True).distinct()
+        
+        if not quote:
+            return []
+        
+        queryset = User.objects.filter(
+            is_active=True,  roles__name__icontains='customer',
+            id__in=quote
+            ).exclude(pk=self.request.user.id)
+        return queryset
         
     def get_paginated_queryset(self, base_queryset):
         items_per_page = 20
@@ -157,7 +168,7 @@ class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.List
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
-            quote_counts = all_quotes.filter(customer_id=customer).count()
+            quote_counts = all_quotes.filter(customer_id=customer, job__isnull=True).count()
             customers_with_counts.append({'customer': customer, 'quote_counts': quote_counts})
 
 
@@ -176,7 +187,7 @@ class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.List
     
 class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    serializer_class = QuotationSerializer
+    serializer_class = RequirementQuotationListSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['requirement_id__action', 'requirement_id__description']
     template_name = 'approved_quotation_list.html'
@@ -212,14 +223,11 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
         return current_page
     
     def get_queryset(self):
-        exclude_job_quote = self.request.query_params.get('exclude', False)
 
         customer_id = self.kwargs.get('customer_id') 
         queryset = Quotation.objects.filter(status="approved")
         if customer_id:
-            queryset = queryset.filter(customer_id=customer_id)
-            if exclude_job_quote:
-                queryset = queryset.exclude(id__in=[quote.id for quote in queryset if quote.job_set.first()])
+            queryset = queryset.filter(customer_id=customer_id, job__isnull=True)
         
         if queryset:
             filters = {
@@ -264,7 +272,7 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
         
         if request.accepted_renderer.format == 'html':
             context = {
-                'approved_quotation': self.get_paginated_queryset(queryset),
+                'approved_quotation': self.get_paginated_queryset(self.serializer_class(queryset, many=True).data),
                 'customer_id': customer_id,
                 'customer_data': customer_data,
                 'exclude': self.request.query_params.get('exclude', False),
@@ -421,14 +429,14 @@ class STWCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            """
+        """
         Get the queryset of stw Requirement customers.
 
         Returns:
             QuerySet: A queryset of stw Requirement customers.
         """
-            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
-            return queryset
+        queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+        return queryset
         
     def get_paginated_queryset(self, base_queryset):
         items_per_page = 20
@@ -483,11 +491,11 @@ class STWCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
-            stw_counts = all_stw.filter(customer_id=customer).count()
+            stw_counts = all_stw.filter(customer_id=customer, job__isnull=True).count()
             customers_with_counts.append({'customer': customer, 'stw_counts': stw_counts})
 
         if request.accepted_renderer.format == 'html':
-            context = {'customers_with_counts': self.get_paginated_queryset(customers_with_counts),
+            context = {'customers_with_counts': self.get_paginated_queryset(sorted(customers_with_counts, key=lambda x: x['stw_counts'], reverse=True)),
                 'search_fields': ['name', 'email','company name'],
                 'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
                 }  # Pass the list of customers with counts to the template
@@ -503,7 +511,7 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
     View to get the listing of all stw requirements.
     Supports both HTML and JSON response formats.
     """
-    serializer_class = STWRequirementSerializer
+    serializer_class = STWRequirementsListSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['action', 'description','RBNO','UPRN']
@@ -583,7 +591,8 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
         if customer_data:
             queryset = super().get_queryset()
             queryset = queryset.filter(
-                customer_id=customer_data
+                customer_id=customer_data,
+                job__isnull=True
             ).all()
 
             # Order the queryset based on the 'ordering_fields'
@@ -619,7 +628,7 @@ class STWRequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
 
             if request.accepted_renderer.format == 'html':
                 context = {
-                    'stw_requirements': self.get_paginated_queryset(queryset), 
+                    'stw_requirements': self.get_paginated_queryset(self.serializer_class(queryset, many=True).data), 
                     'customer_id':customer_id,
                     'customer_data':customer_data,
                     'search_fields': self.search_fields,
@@ -1148,7 +1157,7 @@ class STWDetailView(CustomAuthenticationMixin,generics.RetrieveAPIView):
                 context = {
                     'serializer': serializer, 
                     'stw_instance': instance, 
-                    'stw_defect': self.get_paginated_queryset(stw_defect),
+                    'stw_defect': self.get_paginated_queryset(STWRequirementDefectSerializer(stw_defect, many=True).data),
                     'document_paths': document_paths,
                     'customer_id': kwargs.get('customer_id'),
                     'customer_data':customer_data
@@ -1893,7 +1902,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
     search_fields = ['assigned_to_team__members__name', 'assigned_to_member__name']
     template_name = 'job_list.html'
     ordering_fields = ['created_at']
-    queryset = Job.objects.all()
+    queryset = Job.objects.filter(status__in=['pending', 'in-progress']).all()
 
     common_get_response = {
         status.HTTP_200_OK: docs_schema_response_new(
@@ -3243,13 +3252,23 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            """
+        """
         Get the queryset of stw Requirement customers.
         Returns:
             QuerySet: A queryset of stw Requirement customers.
         """
-            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
-            return queryset
+        job = Job.objects.filter(
+            status__in=['pending', 'in-progress'],
+        ).order_by('customer_id').values_list('customer_id', flat=True).distinct()
+        
+        if not job:
+            return []
+        
+        queryset = User.objects.filter(
+            is_active=True,  roles__name__icontains='customer',
+            id__in=job
+            ).exclude(pk=self.request.user.id)
+        return queryset
 
     def get_paginated_queryset(self, base_queryset):
         items_per_page = 20
@@ -3294,13 +3313,13 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         queryset = self.get_queryset()
         queryset = self.get_searched_queryset(queryset)
-        all_quotes = Quotation.objects.filter(status="approved")
+        all_jobs = Job.objects.filter(status__in=['pending', 'in-progress'])
         
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
-            quote_counts = all_quotes.filter(customer_id=customer).count()
-            customers_with_counts.append({'customer': customer, 'quote_counts': quote_counts})
+            job_counts = all_jobs.filter(customer_id=customer).count()
+            customers_with_counts.append({'customer': customer, 'job_counts': job_counts})
 
         if request.accepted_renderer.format == 'html':
             # context = {'customers_with_counts': customers_with_counts,'queryset': self.get_paginated_queryset(queryset)}
@@ -3629,9 +3648,7 @@ class MemberDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
 
         # Get the appropriate filter from the mapping based on the data access value,
         queryset = Member.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
-        
-        member_instance = queryset.first()
-        print(member_instance)
+        member_instance = queryset.filter(job__isnull=True, team__job__isnull=True).first()
 
         if member_instance:
             # Proceed with the deletion
@@ -3694,6 +3711,7 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
     serializer_class = TeamSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'team_form.html'
+    queryset = Member.objects.all()
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
@@ -3704,53 +3722,45 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user
 
-        serializer = self.serializer_class(context={'request': request})
-        members = Member.objects.all()
+        serializer = self.serializer_class(
+            context={'request': request}
+        )
+        members = self.get_queryset()
 
         if request.accepted_renderer.format == 'html':
-
-            context = {'serializer': serializer,'members': Member.objects.all() }
-
+            context = {'serializer': serializer,'members': members}
             return render(request, self.template_name, context)
         else:
             return create_api_response(status_code=HTTP_201_CREATED, message="GET Method Not Allowed")
 
     def post(self, request, *args, **kwargs):
         data = request.data
-        serializer = self.serializer_class(data=data, context={'request': request})
+        serializer = TeamUpdateSerializer(data=data, context={'request': request})
         message = "Team added successfully!"
 
         if serializer.is_valid():
-            selected_member_ids = request.POST.getlist("selected_members")
-
-            if 2 <= len(selected_member_ids) <= 6:
-                # Only create the team if it has between 2 and 6 members
-                team = serializer.save()
-
-                # Fetch the selected members and associate them with the team
-                associated_members = Member.objects.filter(id__in=selected_member_ids)
-                team.members.set(associated_members)
-
-                if request.accepted_renderer.format == 'html':
-                    messages.success(request, message)
-                    return redirect(reverse('teams_list'))
-                else:
-                    return create_api_response(status_code=HTTP_201_CREATED, message=message, data=serializer.data)
-            else:
-                error_message = "A team must have between 2 and 6 members."
-                if request.accepted_renderer.format == 'html':
-                    messages.error(request, error_message)
-                    context = {'serializer': serializer, 'members': Member.objects.all()}
-                    return render(request, self.template_name, context)
-                else:
-                    return create_api_response(status_code=HTTP_400_BAD_REQUEST, message=error_message)
-        else:
+            # If the serializer data is valid, save the updated team instance.
+            serializer.save()
             if request.accepted_renderer.format == 'html':
-                context = {'serializer': serializer, 'members': Member.objects.all()}
+                messages.success(request, message)
+                return redirect(reverse('teams_list'))
+            else:
+                # Return JSON response with success message and serialized data.
+                return create_api_response(status_code=status.HTTP_201_CREATED, message=message, data=serializer.data)
+        else:
+            # Team doesn't have the required number of members
+            error_message = "A team must have between 2 and 6 members."
+            members = self.get_members_queryset()
+            if request.accepted_renderer.format == 'html':
+                messages.error(request, error_message)
+                context = {
+                    'serializer': self.serializer_class(context={'request': request}),
+                    'members': members,  # Pass the members data to the template
+                }
                 return render(request, self.template_name, context)
             else:
-                return Response(serializer.errors, status=HTTP_400_BAD_REQUEST)
-
+                # Return JSON response with error message
+                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST, message=error_message)
                 
 class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
     """
@@ -3841,41 +3851,46 @@ class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
     serializer_class = TeamSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'team_form.html'
+    queryset = Team.objects.all()
 
-    def get_queryset(self):
+    def get_object(self):
         """
         Get the queryset for listing Conatct items.
         Returns:
             QuerySet: A queryset of Conatct items filtered based on the authenticated user's ID.
         """
+        queryset = super().get_queryset()
+        # Filter the queryset based on the provided 'team_id'
+        team_id = self.kwargs.get('team_id', None)
+        
+        if team_id and queryset:
+            instance = queryset.filter(pk=team_id, job__isnull=True).first()
+            return instance
+        
+        return None
+    
+    def get_members_queryset(self):
+        # Fetch member data associated with the team
+        members = Member.objects.all()
+        return members
 
+
+    def get(self, request, *args, **kwargs):
         # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "survey", HasUpdateDataPermission, 'change'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(user_id=self.request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-
-        queryset = Team.objects.filter(filter_mapping.get(data_access_value, Q()))
-
-        # Filter the queryset based on the provided 'team_id'
-        team_id = self.kwargs.get('team_id')
-        instance = queryset.filter(pk=team_id).first()
-        return instance
-
-    def get(self, request, *args, **kwargs):
-        instance = self.get_queryset()
+        
+        instance = self.get_object()
         if instance:
-            serializer = self.serializer_class(instance=instance, context={'request': request})
+            serializer = self.serializer_class(
+                instance=instance, 
+                context={'request': request}
+            )
 
-            # Fetch member data associated with the team
-            members = Member.objects.filter(team=instance)
+            members = self.get_members_queryset()
 
             if request.accepted_renderer.format == 'html':
                 context = {
@@ -3884,10 +3899,11 @@ class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
                     'members': members,  # Pass the members data to the template
                 }
                 return render(request, self.template_name, context)
-            else:
-                # Handle non-HTML formats as before
-                messages.error(request, "You are not authorized to perform this action")
-                return redirect(reverse('teams_list'))
+            
+        else:
+            # Handle non-HTML formats as before
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('teams_list'))
 
     common_put_response = {
         status.HTTP_200_OK: 
@@ -3926,39 +3942,43 @@ class TeamEditView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If successful, the team is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
-        data = request.data
-        instance = self.get_queryset()
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        instance = self.get_object()
         if instance:
             # If the team instance exists, initialize the serializer with instance and provided data.
-            serializer = self.serializer_class(instance=instance, data=data, context={'request': request})
-
-            message = "Team has been added successfully"
+            serializer = TeamUpdateSerializer(instance=instance, data=request.data)
+            message = "Team has been updated successfully"
             if serializer.is_valid():
                 # If the serializer data is valid, save the updated team instance.
-                team = serializer.save()
-                members_data = request.data.getlist('members', [])
-                if 2 <= len(members_data) <= 6:
-                    # Ensure there are between 2 and 6 members
-                    for member_id in members_data:
-                        member = Member.objects.get(id=member_id)
-                        member.team = team
-                        member.save()
-                    if request.accepted_renderer.format == 'html':
-                        messages.success(request, message)
-                        return redirect(reverse('teams_list'))
-                    else:
-                        # Return JSON response with success message and serialized data.
-                        return create_api_response(status_code=status.HTTP_201_CREATED, message=message, data=serializer.data)
+                serializer.save()
+                if request.accepted_renderer.format == 'html':
+                    messages.success(request, message)
+                    return redirect(reverse('teams_list'))
                 else:
-                    # Team doesn't have the required number of members
-                    error_message = "A team must have between 2 and 6 members."
-                    if request.accepted_renderer.format == 'html':
-                        messages.error(request, error_message)
-                        context = {'serializer':serializer}
-                        return render(request, self.template_name, context)
-                    else:
-                        # Return JSON response with error message
-                        return create_api_response(status_code=status.HTTP_400_BAD_REQUEST, message=error_message)
+                    # Return JSON response with success message and serialized data.
+                    return create_api_response(status_code=status.HTTP_201_CREATED, message=message, data=serializer.data)
+            else:
+                # Team doesn't have the required number of members
+                error_message = "A team must have between 2 and 6 members."
+                members = self.get_members_queryset()
+                if request.accepted_renderer.format == 'html':
+                    messages.error(request, error_message)
+                    context = {
+                        'serializer': self.serializer_class(
+                                            instance=instance, 
+                                            context={'request': request}
+                                        ),
+                        'team_instance': instance,
+                        'members': members,  # Pass the members data to the template
+                    }
+                    return render(request, self.template_name, context)
+                else:
+                    # Return JSON response with error message
+                    return create_api_response(status_code=status.HTTP_400_BAD_REQUEST, message=error_message)
         else:
             error_message = "You are not authorized to perform this action"
             if request.accepted_renderer.format == 'html':
@@ -3995,7 +4015,7 @@ class TeamDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         # Get the appropriate filter from the mapping based on the data access value
         queryset = Team.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
 
-        instance = queryset.first()
+        instance = queryset.filter(job__isnull=True).first()
 
         if instance:
             # Proceed with the deletion

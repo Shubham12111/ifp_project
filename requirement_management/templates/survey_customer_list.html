@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} FRA Actions {{ block.super }}{% endblock %}
+{% block title %} FRA Actions Surveys {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
 {% include 'components/alert.html' %}
+{% include "survey_actions.html" %}
 <div class="container-fluid py-2">
   <div class="row">
     <div class="col-12">
@@ -12,7 +13,7 @@
         <div class="card-header pt-3 pb-0">
           <div class="row justify-content-between">
             <div class="col-6">
-              <h4 class="mb-0">FRA Customer List</h4>
+              <h4 class="mb-0">Survey Customer List</h4>
             </div>
           </div>
           <div class="row mt-3">
@@ -43,29 +44,29 @@
                 {% for query_obj in customers_with_counts %}
                 <tr class="text-sm">
                   <td>
-                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
                       {{ query_obj.customer.first_name|truncatechars:20|title }} {{query_obj.customer.last_name|truncatechars:20|lower }}
                     </a>
                   </td>
 
                   <td>
-                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
                       {{query_obj.customer.company_name|truncatechars:20|default:'-'|title}}
                     </a>
                   </td>
                   <td>
-                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
                       {{query_obj.customer.email}}
                     </a>
                   </td>
                   <td>
-                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
                       {{query_obj.customer.phone_number|default:'-'}}
                     </a>
                   </td>
                   {% if request.user.roles.name == "quantity_surveyor" %}
                   <td>
-                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
                       {{ query_obj.fra_counts_for_qs }}
                     </a>
                   </td>
@@ -73,7 +74,7 @@
 
                   {% if request.user.roles.name == "surveyor" %}
                   <td>
-                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
                       {{ query_obj.fra_counts_for_surveyor }}
                     </a>
                   </td>
@@ -81,7 +82,7 @@
 
                   {% if request.user.roles.name == "projects_admin_(IT)" %}
                   <td>
-                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
                       {{ query_obj.fra_counts }}
                     </a>
                   </td>

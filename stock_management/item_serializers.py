@@ -6,6 +6,7 @@ from rest_framework import serializers
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 from django.conf import settings
+from django.utils.html import strip_tags
 
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
@@ -252,6 +253,16 @@ class ItemSerializer(serializers.ModelSerializer):
         
         representation['document_paths'] = document_paths
         return representation
+
+class ItemListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['description'] = strip_tags(data['description'])
+        return data
     
 class ItemUploadSerializer(serializers.ModelSerializer):
     upload_item = serializers.CharField(

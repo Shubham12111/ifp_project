@@ -6,8 +6,46 @@
 {% load rest_framework %}
 {% include 'components/alert.html' %}
 {% include 'customer_management/customer_actions.html' %}
+<style>
+/* Style for the accordion */
+  .defect-title {
+      cursor: pointer;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 0;
+  }
+
+.defect-column-desp {
+  padding: 10px;
+  margin-top: 1px;
+}
+table > tbody > tr > td > a > p{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > a > ul{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > a > b{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > a > i{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > p{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > ul{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > b{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > i{
+  margin-bottom: 0 !important;
+}
+</style>
 <div class="container-fluid py-4">
-  <div class="row">
+  
     <div class="col-12">
       <div class="card">
         <div class="card-header pb-0">
@@ -54,15 +92,19 @@
         </div>
       </div>
             
-    
-
+    <div class="card mt-4">
+      <div class="card-header pb-0">
+        <div class="d-lg-flex">
+          <div><h5 class="mb-0">SOR List</h5></div>
+        </div>
+      </div>
 
       {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
         
-      <div class="card mt-4">
-        <div class="card-body px-0 pb-0">
+      <div class="card-body">
+        
           <div class="table-responsive">
-            <table class="table table-flush text-dark" id="item-list">
+            <table class="table table-hover text-dark" id="item-list">
               <thead class="thead-light">
                 <tr>
                   <th>SOR Code</th>
@@ -76,11 +118,13 @@
               <tbody class="ml-4">
                 {% for item in list_sor %}
                 <tr class="text-sm">
-                  <td style="text-transform: uppercase;">{{item.reference_number|default:''|truncatechars:20|title}}</td>
-                  <td>{{item.name|title|default:''|truncatechars:20|title}}</td>
-                  <td>{{item.description|safe|truncatechars:10}}</td>
-                  <td>{{item.units|safe|truncatechars:50}}</td>
-                  <td>{{item.price}}</td>
+                  
+                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.reference_number}}</a></td>
+                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.name}}</a></td>
+                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.description|safe|truncatechars:50}}</a></td>
+                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.units|safe|truncatechars:50}}</a></td>
+                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.price}}</a></td>
+                 
 
                   <td>
                     <div class="dropstart ms-auto pe-0">
@@ -116,10 +160,44 @@
               </tbody>
             </table>
           </div>
-        </div>
+          {% if items.paginator.num_pages > 1 %}
+              <div class="row justify-content-start justify-content-lg-between pagination-row">
+                <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+                  <div class="pagination-info mt-auto mb-auto">Showing {{items.number}} of
+                    {{items.paginator.num_pages}} pages</div>
+                </div>
+                <div class="col-12 col-lg-6 align-self-center">
+                  <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                    <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                      {% if items.has_previous %}
+                      <li class="page-item"><a class="page-link" href="?page={{ item.previous_page_number }}"><i
+                            class="fas fa-angle-left"></i></a></li>
+                      {% else %}
+                      <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
+                      </li>
+                      {% endif %}
+                      {% for i in items.paginator.page_range %}
+                      {% if items.number == i %}
+                      <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                      {% else%}
+                      <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                      {% endif %}
+                      {% endfor %}
+                      {% if items.has_next %}
+                      <li class="page-item"><a class="page-link" href="?page={{ item.next_page_number }}"><i
+                            class="fas fa-angle-right"></i></a></li>
+                      {% else %}
+                      <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
+                      </li>
+                      {% endif %}
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+              {% endif %}
       </div>
     </div>
-  </div>
+
 </div>
 
 <!-- Modal for importing csv -->
@@ -158,7 +236,7 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script>
+{% comment %} <script>
   if (document.getElementById('item-list')) {
     const dataTableSearch = new simpleDatatables.DataTable("#item-list", {
       searchable: true,
@@ -215,5 +293,5 @@ if (bulkFileInput) {
 }
 
 
-</script>
+</script> {% endcomment %}
 {% endblock %}

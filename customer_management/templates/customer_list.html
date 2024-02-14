@@ -57,9 +57,9 @@
                   <td class="text-sm">
                     <input type="checkbox" name="stw_checkbox" value="{{ customer.id }}">
                   </td>
-                  <td><a href="{% url 'customer_edit' customer.id %}" class="text-decoration-none w-100 nav-link">{{customer.company_name|default:''|truncatechars:20|title}}</a></td>
-                  <td><a href="{% url 'customer_edit' customer.id %}" class="text-decoration-none w-100 nav-link">{{customer.first_name|default:''|truncatechars:20|title}}
-                    {{customer.last_name|default:''|truncatechars:20|title}}</a></td>
+                  <td><a href="{% url 'customer_edit' customer.id %}" class="text-decoration-none w-100 nav-link">{{customer.company_name|default:'-'|truncatechars:20|title}}</a></td>
+                  <td><a href="{% url 'customer_edit' customer.id %}" class="text-decoration-none w-100 nav-link">{{customer.first_name|default:'-'|truncatechars:20|title}}
+                    {{customer.last_name|default:'-'|truncatechars:20|title}}</a></td>
                   <td><a href="{% url 'customer_edit' customer.id %}" class="text-decoration-none w-100 nav-link">{% if customer.phone_number %}{{customer.phone_number}}{% endif %}</a></td>
                   <td><a href="{% url 'customer_edit' customer.id %}" class="text-decoration-none w-100 nav-link">{{customer.email}}</a></td>
 

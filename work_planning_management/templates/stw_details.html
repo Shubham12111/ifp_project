@@ -94,28 +94,28 @@ table > tbody > tr > td > i{
                       <td>
                         <a href="{% url 'customer_stw_defect_detail' customer_id stw_instance.id defect.id  %}" 
                           class="text-decoration-none w-100 nav-link">
-                          {{defect.get_defect_type_display|safe|truncatechars_html:20|title|default:''}}
+                          {{defect.defect_type|truncatechars:20|title|default:'-'}}
                         </a>
                       </td>
 
                       <td>
                         <a href="{% url 'customer_stw_defect_detail' customer_id stw_instance.id defect.id  %}" 
                           class="text-decoration-none w-100 nav-link">
-                          {{ defect.action|safe|truncatechars_html:20|title|default:''}}
+                          {{ defect.action|truncatechars:20|title|default:'-'}}
                         </a>
                       </td>
 
                       <td>
                         <a href="{% url 'customer_stw_defect_detail' customer_id stw_instance.id defect.id  %}" 
                           class="text-decoration-none w-100 nav-link">
-                          {{ defect.description|safe|truncatechars_html:20|title|default:''}}
+                          {{ defect.description|truncatechars:20|title|default:'-'}}
                         </a>
                       </td>
 
                       <td>
                         <a href="{% url 'customer_stw_defect_detail' customer_id stw_instance.id defect.id  %}" 
                           class="text-decoration-none w-100 nav-link">
-                          {{ defect.rectification_description|safe|truncatechars_html:20|title|default:''}}
+                          {{ defect.rectification_description|truncatechars:20|title|default:'-'}}
                         </a>
                       </td>
 

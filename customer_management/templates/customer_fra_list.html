@@ -1,14 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %} Approved Quotation List {{ block.super }}{% endblock %}
+{% load rest_framework %}
+{% block title %} FRA Actions {{ block.super }}{% endblock %}
 {% block content %}
 {% load custom_tags %}
-{% include 'components/alert.html' %}
-<link
-  id="pagestyle"
-  href="{% static 'assets/css/daterangepicker.css' %}"
-  rel="stylesheet"
-/>
+
+<link id="pagestyle" href="{% static 'assets/css/daterangepicker.css' %}" rel="stylesheet" />
 <style>
   div.choices__list.choices__list--dropdown.is-active {
     z-index: 100 !important;
@@ -26,133 +23,180 @@
     border: none !important;
     color: inherit !important;
   }
-  table > tbody > tr > td > a > p{
+
+  a.fc-daygrid-event {
+    cursor: pointer !important;
+  }
+
+  .fc-h-event .fc-event-main-frame {
+    display: block !important;
+  }
+
+  .fc-daygrid-block-event .fc-event-time,
+  .fc-daygrid-block-event .fc-event-title {
+    font-weight: 600 !important;
+    padding: 0rem 0.3rem !important;
+  }
+
+  .fc-daygrid-event-dot {
+    display: none !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(310deg,
+        #ea0606 0%,
+        #ff667c 100%) !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past.bg-gradient-danger {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(310deg,
+        #ea0606 0%,
+        #ff667c 100%) !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-today {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(310deg,
+        #ea0606 0%,
+        #ff667c 100%) !important;
+  }
+
+  div.fc-event-title {
+    padding: 0rem 0.3rem !important;
+  }
+
+  div.fc-toolbar-chunk {
+    display: flex !important;
+  }
+
+  table>tbody>tr>td>a>p {
     margin-bottom: 0 !important;
   }
-  table > tbody > tr > td > a > ul{
+
+  table>tbody>tr>td>a>ul {
     margin-bottom: 0 !important;
   }
-  table > tbody > tr > td > a > b{
+
+  table>tbody>tr>td>a>b {
     margin-bottom: 0 !important;
   }
-  table > tbody > tr > td > a > i{
+
+  table>tbody>tr>td>a>i {
     margin-bottom: 0 !important;
   }
-  table > tbody > tr > td > p{
+
+  table>tbody>tr>td>p {
     margin-bottom: 0 !important;
   }
-  table > tbody > tr > td > ul{
+
+  table>tbody>tr>td>ul {
     margin-bottom: 0 !important;
   }
-  table > tbody > tr > td > b{
+
+  table>tbody>tr>td>b {
     margin-bottom: 0 !important;
   }
-  table > tbody > tr > td > i{
+
+  table>tbody>tr>td>i {
     margin-bottom: 0 !important;
   }
 </style>
-{% include 'work_planning/customer_work_action.html'%}
-<div class="container-fluid py-2">
+{% include 'components/alert.html' %}
+{% include 'customer_management/customer_actions.html' %}
+<div class="container-fluid py-4">
   <div class="row">
     <div class="col-12">
       <div class="card">
-        <div class="card-header pb-0">
+        <!-- Card header -->
+        <div class="card-header pt-3 pb-0">
           <div class="row justify-content-between">
             <div class="col-6">
-              <h4 class="mb-0">Approved Quotation List</h4>
-              {% include 'customer_info.html' %}
+              <h4 class="mb-0">FRA Actions</h4>
             </div>
             <div class="col-6 text-end">
               {% include 'components/back_button.html' %}
-              <button id="addJob" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>+&nbsp;Add Job</button>
             </div>
           </div>
           <div class="row">
-            <div class="col-12">
-              {% include "work_planning_filters.html" %}
-            </div>
+            {% include "customer_fra_job_quote_list.html" %}
           </div>
         </div>
-        <div class="card-body pt-0">
+        <div class="card-body pb-3 pt-0 mt-3">
           <div class="table-responsive">
-            <table class="table table-hover text-dark">
+            <table class="table table-hover text-dark" id="requirement-list">
               <thead class="thead-light">
                 <tr>
-                  <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th>
-                  <th>Action</th>
+                  <th>FRA Action</th>
                   <th>Description</th>
-                  <th>Date</th>
-                  <th>Surveyor name</th>
-                  <th>No of Defects</th>
+                  <th>Site Address</th>
+                  <th>Surveyor</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+
                 </tr>
               </thead>
               <tbody class="ml-4">
-                {% for item in approved_quotation %}
-                <tr class="text-sm">
+                {% for requirement in requirements %}
+                <tr>
                   <td class="text-sm">
-                    <input type="checkbox" class="checkbox-item" name="requirement_checkbox" value="{{ item.id }}" 
-                    {% if item.job_set.all %}disabled{% endif %}>
+                    <a href="{% url 'customer_requirement_view' customer_id requirement.id %}"
+                      class="text-decoration-none w-100 nav-link">{{requirement.action|truncatechars:20|title|default:'-'}}</a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.requirement_id.action|truncatechars:20}}
-                      </a>
+                    <a href="{% url 'customer_requirement_view' customer_id requirement.id %}"
+                      class="text-decoration-none w-100 nav-link">{{requirement.description|truncatechars:20|title|default:'-'}}</a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.requirement_id.description|truncatechars:20 }}
-                      </a>
+                    <a href="{% url 'customer_requirement_view' customer_id requirement.id %}"
+                      class="text-decoration-none w-100 nav-link">{{requirement.site_address|default:'-'|truncatechars:20|title}}</a>
+                  </td>
+
+                  <td class="text-sm">
+                    <a href="{% url 'customer_requirement_view' customer_id requirement.id %}"
+                      class="text-decoration-none w-100 nav-link">{{requirement.surveyor|default:'-'}}</a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.created_at}}
-                      </a>
+                    <a href="{% url 'customer_requirement_view' customer_id requirement.id %}"
+                      class="text-decoration-none w-100 nav-link">{{requirement.status|default:'-'|title}}</a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.requirement_id.surveyor|default:'-' }}
-                      </a>
+                    <a href="{% url 'customer_requirement_view' customer_id requirement.id %}"
+                      class="text-decoration-none w-100 nav-link">{{requirement.due_date}}</a>
                   </td>
-                  <td class="text-sm">
-                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.defect_counts }}
-                      </a>
-                  </td>
+
                 </tr>
                 {% endfor %}
+              </tbody>
             </table>
           </div>
-          {% if approved_quotation.paginator.num_pages > 1 %}
-          <div
-            class="row justify-content-start justify-content-lg-between pagination-row"
-          >
+
+          {% if requirements.paginator.num_pages > 1 %}
+          <div class="row justify-content-start justify-content-lg-between pagination-row">
             <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
               <div class="pagination-info mt-auto mb-auto">
-                Showing {{approved_quotation.number}} of
-                {{approved_quotation.paginator.num_pages}} pages
+                Showing {{requirements.number}} of
+                {{requirements.paginator.num_pages}} pages
               </div>
             </div>
             <div class="col-12 col-lg-6 align-self-center">
               <nav aria-label="Page navigation" class="mt-auto mb-auto">
-                <ul
-                  class="pagination justify-content-start justify-content-lg-end mb-0 ps-0"
-                >
-                  {% if approved_quotation.has_previous %}
+                <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                  {% if requirements.has_previous %}
                   <li class="page-item">
-                    <a
-                      class="page-link"
-                      href="?page={{ approved_quotation.previous_page_number }}"
-                      ><i class="fas fa-angle-left"></i
-                    ></a>
+                    <a class="page-link" href="?page={{ requirements.previous_page_number }}"><i
+                        class="fas fa-angle-left"></i></a>
                   </li>
                   {% else %}
                   <li class="page-item disabled">
-                    <a class="page-link" href="#"
-                      ><i class="fas fa-angle-left"></i
-                    ></a>
+                    <a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
                   </li>
-                  {% endif %} {% for i in approved_quotation.paginator.page_range %}
-                  {% if approved_quotation.number == i %}
+                  {% endif %} {% for i in requirements.paginator.page_range %}
+                  {% if requirements.number == i %}
                   <li class="page-item active">
                     <a class="page-link" href="#">{{ i }}</a>
                   </li>
@@ -160,19 +204,14 @@
                   <li class="page-item">
                     <a class="page-link" href="?page={{ i }}">{{ i }}</a>
                   </li>
-                  {% endif %} {% endfor %} {% if approved_quotation.has_next %}
+                  {% endif %} {% endfor %} {% if requirements.has_next %}
                   <li class="page-item">
-                    <a
-                      class="page-link"
-                      href="?page={{ approved_quotation.next_page_number }}"
-                      ><i class="fas fa-angle-right"></i
-                    ></a>
+                    <a class="page-link" href="?page={{ requirements.next_page_number }}"><i
+                        class="fas fa-angle-right"></i></a>
                   </li>
                   {% else %}
                   <li class="page-item disabled">
-                    <a class="page-link" href="#"
-                      ><i class="fas fa-angle-right"></i
-                    ></a>
+                    <a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
                   </li>
                   {% endif %}
                 </ul>
@@ -187,101 +226,17 @@
 </div>
 
 
-
+{% include 'components/loader.html' %}
 {% endblock %}
-{% block extra_js %}
+{%block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/jquery.min.js' %}"></script>
 <script src="{% static 'assets/js/moment.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
 <script src="{% static 'assets/js/daterangepicker.js' %}"></script>
-<script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script src="{% static 'assets/js/custom_convert.js' %}"></script>
-<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const excludeQuoteInJobSwitch = document.getElementById('excludeQuoteInJobSwitch');
-    if (excludeQuoteInJobSwitch){
-      excludeQuoteInJobSwitch.addEventListener( 'change', function(){
-        if (this.checked){
-
-          // Get the current page URL
-          var currentUrl = window.location.href;
-
-          // Check if the URL already contains a query string
-          if (currentUrl.indexOf('?') === -1) {
-              // If no query string exists, append '?exclude=True' to the URL
-              currentUrl += '?exclude=True';
-          } else {
-              // If a query string exists, check if it already contains 'exclude=True'
-              if (currentUrl.indexOf('exclude=True') === -1) {
-                  // If 'exclude=True' is not present, append it to the existing query string
-                  currentUrl += '&exclude=True';
-              }
-          }
-
-          // Redirect the user to the modified URL
-          window.location.href = currentUrl;
-
-        }else{
-          // Get the current page URL
-          var currentUrl = window.location.href;
-
-          // Check if the URL contains 'exclude=True'
-          if (currentUrl.indexOf('exclude=True') !== -1) {
-              // Remove 'exclude=True' from the URL
-              currentUrl = currentUrl.replace('&exclude=True', '');
-              currentUrl = currentUrl.replace('?exclude=True', '');
-              
-              // Redirect the user to the modified URL without 'exclude=True'
-              window.location.href = currentUrl;
-          }
-
-        }
-        
-
-        
-      } );
-    }
-
-    const addJobButton = document.getElementById("addJob");
-    const checkboxItems = document.querySelectorAll(".checkbox-item");
-    const quoteIds = []
-
-    // Function to update the button state based on checkbox selection
-    function updateButtonState() {
-      const isChecked = quoteIds.length > 0;
-      // Enable or disable the "Create Job" button based on checkbox selection
-      addJobButton.disabled = !isChecked;
-    }
-
-    // Add event listeners to each checkbox
-    checkboxItems.forEach(checkbox => {
-      checkbox.addEventListener("change", function () {
-        if (this.checked && !quoteIds.includes(this.value)) {
-          quoteIds.push(this.value);
-        } else if (!this.checked && quoteIds.includes(this.value)) {
-          quoteIds.pop(this.value);
-        }
-        updateButtonState();
-      });
-    });
-
-
-    // Add event listener to the "Create Job" button
-    addJobButton.addEventListener("click", function () {
-      if (quoteIds != []) {
-        addJobUrl = `{% url "job_assign_stw" customer_data.id %}?quotation=${encodeURIComponent(
-          quoteIds.join(",")
-        )}`;
-        window.location.href = addJobUrl
-      }
-    });
-
-    // Initial button state update
-    updateButtonState();
-  });
-</script>
 <script>
     // Initialize the Date Range Picker
     document.addEventListener('DOMContentLoaded', function () {
@@ -436,7 +391,7 @@
     function clearAllFilters() {
         const currentUrl = new URL(window.location.href);
         const queryParams = new URLSearchParams(currentUrl.search);
-        const filterNames = ['surveyor', 'dateRange', 'q']; // Add dateRange to the filterNames array
+        const filterNames = ['status', 'surveyor', 'dateRange', 'q']; // Add dateRange to the filterNames array
   
         filterNames.forEach(filterName => {
           queryParams.delete(filterName);
@@ -448,7 +403,7 @@
 
     // Check URL parameters on page load and update search and filter selections
     window.addEventListener('DOMContentLoaded', function () {
-        const filterNames = ['surveyor', 'dateRange', 'q'];
+        const filterNames = ['status', 'surveyor', 'dateRange', 'q'];
         filterNames.forEach(filterName => {
           const filterValue = new URLSearchParams(window.location.search).get(filterName);
   

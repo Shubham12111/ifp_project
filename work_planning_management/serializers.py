@@ -1458,3 +1458,107 @@ class MemberCalendarSerializer(serializers.ModelSerializer):
             return {'jobs': ret}
         except Exception as e:
             return {}
+
+class TeamUpdateSerializer(serializers.ModelSerializer):
+    team_name = serializers.CharField(
+        label='Team Name',
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "text",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'custom_input.html',   
+
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Team Name is required.",
+        }
+    )
+
+    selected_members = serializers.PrimaryKeyRelatedField(
+        queryset=Member.objects.all(),
+        many=True,
+    )
+    
+    class Meta:
+        model = Team
+        fields = ["team_name", "selected_members"]  # You can specify the fields you want explicitly if needed
+    
+    def validate_selected_members(self, values):
+        if not values:
+            raise serializers.ValidationError('Pleae select members to add to this team.')
+
+        if 6 < len(values) < 2:
+            raise serializers.ValidationError('A team must have between 2 and 6 members.')
+        return values
+    
+    def create(self, validated_data):
+        members = validated_data.pop('selected_members', [])
+        instance = super().create(validated_data)
+        instance.members.set(members)
+        return instance
+
+    def update(self, instance, validated_data):
+        members = validated_data.pop('selected_members', [])
+        instance = super().update(instance, validated_data)
+        instance.members.set(members)
+        return instance
+
+class STWRequirementsListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = STWRequirements
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        """
+        Convert the model instance to JSON representation.
+
+        Args:
+            instance (Requirement): The Requirement model instance.
+
+        Returns:
+            dict: JSON representation of the model instance.
+        """
+        data = super().to_representation(instance)
+        data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
+        data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['site_address'] = instance.site_address.site_name if instance.site_address else ''
+        data['status'] = instance.get_status_display() if instance.status else ''
+        data['created_at'] = f"{instance.created_at.strftime('%d/%m/%Y')}" if instance.created_at else ''
+        data['updated_at'] = f"{instance.updated_at.strftime('%d/%m/%Y')}" if instance.updated_at else ''
+        return data
+
+class STWRequirementDefectSerializer(serializers.ModelSerializer):
+    """
+    Serializer for RequirementDefect model.
+
+    This serializer is used to convert RequirementDefect model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+    
+    class Meta:
+        model = STWDefect
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        """
+        Convert the model instance to JSON representation.
+
+        Args:
+            instance (RequirementDefect): The RequirementDefect model instance.
+
+        Returns:
+            dict: JSON representation of the model instance.
+        """
+        data = super().to_representation(instance)
+        data['defect_type'] = instance.get_defect_type_display() if instance.defect_type else ''
+        data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
+        data['rectification_description'] = strip_tags(data['rectification_description']) # to strip html tags attached to response by ckeditor RichText field.
+        return data
