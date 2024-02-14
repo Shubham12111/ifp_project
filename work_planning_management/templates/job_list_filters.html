@@ -10,10 +10,12 @@
             data-popper-placement="bottom-end">
 
             {% for status in status_values %}
+            {% if status.0 != 'completed' %}
             <li>
                 <a class="dropdown-item border-radius-md text-start " href="#"
                     onclick="applyFilter('status', '{{ status.0 }}')">{{ status.1 }}</a>
             </li>
+            {% endif %}
             {% endfor %}
             <li>
                 <hr class="horizontal dark my-2">

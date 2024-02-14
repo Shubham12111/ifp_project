@@ -66,13 +66,13 @@
                 <tbody class="ml-4">
                   {% for todo_data in todo_list %}
                   <tr class="text-sm">
-                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.user_id.first_name}} {{todo_data.user_id.last_name}}</a></td>
-                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.assigned_to}}</a></td>
-                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.module.name|title }}</a></td>
-                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.description|safe|default:''|truncatewords:1 }}</a></td>
+                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.user_id}}</a></td>
+                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.assigned_to|safe}}</a></td>
+                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.module }}</a></td>
+                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.description|default:'-'|truncatewords:1 }}</a></td>
                     <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.priority|title }}</a></td>
                     <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.status|title }}</a></td>
-                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.start_date|date:"d/m/Y " }} - {{ todo_data.end_date|date:" d/m/Y" }}</a></td>
+                    <td><a href="{% url 'todo_view' todo_data.id %}" class="text-decoration-none w-100 nav-link">{{ todo_data.start_date}} - {{ todo_data.end_date }}</a></td>
 
                     {% if request.user|has_update_permission:"task" or request.user|has_add_permission:"task" or request.user|has_delete_permission:"task" or request.user|has_view_permission:"task" %}
                     <td>

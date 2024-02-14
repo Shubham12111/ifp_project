@@ -28,7 +28,7 @@
                   <th>Company Name</th>
                   <th>Customer Email</th>
                   <th>Phone Number</th>
-                  <th class="custom-last-column">Quotation Counts</th>
+                  <th class="custom-last-column">Job Counts</th>
                 </tr>
               </thead>
               <tbody class="ml-4"> 
@@ -42,7 +42,7 @@
                          
                       <td>
                         <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
-                          {{query_obj.customer.company_name|default:''|title}}
+                          {{query_obj.customer.company_name|default:'-'|title}}
                         </a>
                       </td>
                       <td>
@@ -52,12 +52,12 @@
                       </td>
                       <td >
                         <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
-                          {{query_obj.customer.phone_number|default:''}}
+                          {{query_obj.customer.phone_number|default:'-'}}
                         </a>
                       </td>
                       <td >
                         <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
-                          {{query_obj.quote_counts}}
+                          {{query_obj.job_counts}}
                         </a>
                       </td>
                     </tr>

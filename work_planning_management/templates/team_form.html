@@ -9,49 +9,84 @@
       <div class="col-lg-12">
         <div class="card" id="team-info">
           <div class="card-header">
-            <h5>Team Summary</h5>
+            <div class="row">
+              <div class="col-6">
+                <h5>Team Summary</h5>
+              </div>
+              <div class="col-6 text-end">
+                {% include 'components/back_button.html' %}
+              </div>
+            </div>
           </div>
           <div class="card-body pt-0">
             <form role="form" method="POST" enctype="multipart/form-data" id="teamForm">
               {% csrf_token %}
               {% render_form serializer %}
-              <div class="card-body px-0 pb-0">
-                <div class="table-responsive">
-                  <table class="table table-flush text-dark" id="members-list">
-                    <thead class="thead-light">
-                      <tr>
-                        <th></th>
-                        <th>Name</th>
-                        <th>Address</th>
-                        <th>Trade Type</th>
-                        <th>Mobile Number</th>
-                        <th>Email</th>
-                        <th>Job Title</th>
-                      </tr>
-                    </thead>
-                    <tbody class="ml-4">
-                      {% for member_obj in members %}
-                      <tr class="text-sm">
-                          <td>
-                            <input type="checkbox" class="small-checkbox" name="selected_members" value="{{ member_obj.id }}">
-                          </td>
-                          <td>{{ member_obj.name|title }}</td>
-                          <td>{{ member_obj.address }}</td>
-                          <td>{{ member_obj.trade_type }}</td>
-                          <td>{{ member_obj.mobile_number }}</td>
-                          <td>{{ member_obj.email }}</td>
-                          <td>{{ member_obj.job_title }}</td>
-                      </tr>
-                  {% endfor %}
-                    </tbody>
-                  </table>
-                </form>
-                <div class="error-message">
-                  <p class="text-secondary text-sm">Hint: You must select a minimum of 2 and a maximum of 6 members to save a team (press CTRL to select multiple users).</p>
+              <div class="container-fluid p-0">
+                <div class="card shadow-none" id="team-info">
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table class="table table-hover text-dark" id="members-list">
+                        <thead class="thead-light">
+                          <tr>
+                            <th></th>
+                            <th>Name</th>
+                            <th>Address</th>
+                            <th>Trade Type</th>
+                            <th>Mobile Number</th>
+                            <th>Email</th>
+                            <th>Job Title</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for member_obj in team_instance.members.all %}
+                          <tr class="text-sm">
+                              <td>
+                                <input type="checkbox" class="small-checkbox" name="selected_members" value="{{ member_obj.id }}" checked>
+                              </td>
+                              <td>{{ member_obj.name|title }}</td>
+                              <td>{{ member_obj.address }}</td>
+                              <td>{{ member_obj.trade_type }}</td>
+                              <td>{{ member_obj.mobile_number }}</td>
+                              <td>{{ member_obj.email }}</td>
+                              <td>{{ member_obj.job_title }}</td>
+                          </tr>
+                          {% endfor %}
+                          {% for member_obj in members %}
+                          {% if team_instance %}
+                            {% if member_obj not in team_instance.members.all %}
+                            <tr class="text-sm">
+                                <td>
+                                  <input type="checkbox" class="small-checkbox" name="selected_members" value="{{ member_obj.id }}" {% if member_obj in team_instance.members.all %}checked{% endif %}>
+                                </td>
+                                <td>{{ member_obj.name|title }}</td>
+                                <td>{{ member_obj.address }}</td>
+                                <td>{{ member_obj.trade_type }}</td>
+                                <td>{{ member_obj.mobile_number }}</td>
+                                <td>{{ member_obj.email }}</td>
+                                <td>{{ member_obj.job_title }}</td>
+                            </tr>
+                            {% endif %}
+                          {% else %}
+                          <tr class="text-sm">
+                            <td>
+                              <input type="checkbox" class="small-checkbox" name="selected_members" value="{{ member_obj.id }}" {% if member_obj in team_instance.members.all %}checked{% endif %}>
+                            </td>
+                            <td>{{ member_obj.name|title }}</td>
+                            <td>{{ member_obj.address }}</td>
+                            <td>{{ member_obj.trade_type }}</td>
+                            <td>{{ member_obj.mobile_number }}</td>
+                            <td>{{ member_obj.email }}</td>
+                            <td>{{ member_obj.job_title }}</td>
+                          </tr>
+                          {% endif %}
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
-                <button type="submit" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                {% include 'components/back_button.html' %}
-              </div>
+              <button type="submit" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
             </form>
           </div>
         </div>
@@ -60,27 +95,36 @@
   </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script>
-if (document.getElementById('members-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#members-list", {
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize DataTable only after the DOM is fully loaded
+  const dataTableSearch = new simpleDatatables.DataTable("#members-list", {
       searchable: true,
       fixedHeight: false,
-      perPage: 25,
+      perPage: 10,
       perPageSelect: false,
-    });
-    const dataTableTop = document.querySelector('.dataTable-top');
-    if (dataTableTop) {
-      dataTableTop.parentNode.removeChild(dataTableTop);
-    }
-    const searchInput = document.getElementById('searchInput');
+  });
+
+  // Get the search input element
+  const searchInput = document.querySelector('.dataTable-input');
+  if (searchInput){
+    // Add event listener to the search input for filtering the DataTable
     searchInput.addEventListener('input', function() {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
+      const searchText = searchInput.value.toLowerCase();
+      dataTableSearch.search(searchText).draw();
     });
-}
+  }
+
+  const dataTableInfo = document.querySelector('.dataTable-info');
+  if (dataTableInfo) {
+    dataTableInfo.parentNode.removeChild(dataTableInfo);
+  }
+});
+
 </script>
 {% endblock %}
 

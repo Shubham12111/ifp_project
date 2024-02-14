@@ -1,30 +1,27 @@
 {% load static %}
 
 <div class="row px-3 mt-3 justify-content-start">
+    <!-- Surveyor list filter-->
     <div class="dropdown d-inline me-2 col-auto px-0 mb-2">
         <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 "
-            data-bs-toggle="dropdown" id="statusDropdown">
-            <span class="flex-grow-1 text-start custom-search">Status</span>
+            data-bs-toggle="dropdown" id="surveyorDropdown">
+            Surveyor
         </a>
-        <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3 " aria-labelledby="statusDropdown"
+        <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="surveyorDropdown"
             data-popper-placement="bottom-end">
-
-            {% for status in status_values %}
-            {% if status.0 != 'assigned-to-surveyor' %}
             <li>
-                <a class="dropdown-item border-radius-md text-start " href="#"
-                    onclick="applyFilter('status', '{{ status.0 }}')">{{ status.1 }}</a>
+                <input type="text" id="searchSurveyor" class="form-control" placeholder="Search">
             </li>
-            {% endif %}
-            {% endfor %}
+            <li>
+                <hr class="dropdown-divider">
+            </li>
+            <li id="searchResults"></li>
             <li>
                 <hr class="horizontal dark my-2">
             </li>
-            <li>
-                <a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('status')">Remove
-                    Filter</a>
+            <li><a class="dropdown-item border-radius-md text-danger" href="#"
+                    onclick="clearFilter('surveyor')">Remove Filter</a>
             </li>
-
         </ul>
     </div>
 

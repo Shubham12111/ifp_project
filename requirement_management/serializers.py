@@ -173,8 +173,7 @@ class RequirementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requirement
-        # fields = ('user_id', 'customer_id', 'description', 'quantity_surveyor', 'status')
-        fields = ('user_id', 'customer_id', 'description', 'status')
+        fields = '__all__'
 
     def to_representation(self, instance):
         """
@@ -187,7 +186,12 @@ class RequirementSerializer(serializers.ModelSerializer):
             dict: JSON representation of the model instance.
         """
         data = super().to_representation(instance)
+        data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['site_address'] = instance.site_address.site_name if instance.site_address else ''
+        data['surveyor'] = f"{instance.surveyor.first_name} {instance.surveyor.last_name} - <i>{instance.surveyor.roles}</i>" if instance.surveyor else ''
+        data['status'] = instance.get_status_display() if instance.status else ''
+        data['due_date'] = f"{instance.due_date.strftime('%d/%m/%Y')}" if instance.due_date else ''
         return data
 
 class SiteAddressField(serializers.PrimaryKeyRelatedField):
@@ -1434,7 +1438,7 @@ class RequirementReportListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Report
-        fields = ('id', 'user_id', 'pdf_path', 'comments', 'status', 'created_at')
+        fields = '__all__'
 
     def to_representation(self, instance):
         """
@@ -1447,6 +1451,8 @@ class RequirementReportListSerializer(serializers.ModelSerializer):
             dict: JSON representation of the model instance.
         """
         data = super().to_representation(instance)
+        data['requirement_id'] = RequirementSerializer(instance.requirement_id).data if instance.requirement_id else {}
+        data['defect_id'] = RequirementDefectListSerializer(instance.defect_id.all(), many=True).data if instance.defect_id.all() else {}
         data['user_id'] = instance.user_id
         data['comments'] = strip_tags(data['comments']) # to strip html tags attached to response by ckeditor RichText field.
         data['status'] = instance.get_status_display() if instance.status else ''
@@ -1456,5 +1462,41 @@ class RequirementReportListSerializer(serializers.ModelSerializer):
             pdf_url = None
         
         data['pdf_path'] = pdf_url
+        data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
+        data['defect_count'] = instance.defect_id.count()
+        return data
+
+class RequirementQuotationListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for RequirementQuotation model.
+
+    This serializer is used to convert RequirementQuotation model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+    
+    class Meta:
+        model = Quotation
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        """
+        Convert the model instance to JSON representation.
+
+        Args:
+            instance (RequirementQuotation): The RequirementQuotation model instance.
+
+        Returns:
+            dict: JSON representation of the model instance.
+        """
+        data = super().to_representation(instance)
+        data['requirement_id'] = RequirementSerializer(instance.requirement_id).data if instance.requirement_id else {}
+        data['defect_id'] = RequirementDefectListSerializer(instance.defect_id.all(), many=True).data if instance.defect_id.all() else {}
+        data['report_id'] = RequirementReportListSerializer(instance.report_id).data if instance.report_id else {}
+        data['user_id'] = instance.user_id
+        data['status'] = instance.get_status_display() if instance.status else ''
+        data['defect_counts'] = instance.defect_id.count()
+        data['submitted_at'] = instance.submitted_at.strftime("%d/%m/%Y") if instance.submitted_at else ''
         data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
         return data

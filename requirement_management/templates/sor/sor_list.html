@@ -44,8 +44,8 @@
               <tbody class="ml-4">
                 {% for item in list_sor %}
                 <tr class="text-sm">
-                  <td style="text-transform: uppercase;">{{item.reference_number|default:''|truncatechars:20|title}}</td>
-                  <td>{{item.name|title|default:''|truncatechars:20|title}}</td>
+                  <td style="text-transform: uppercase;">{{item.reference_number|default:'-'|truncatechars:20|title}}</td>
+                  <td>{{item.name|title|default:'-'|truncatechars:20|title}}</td>
                   <td>{{item.description|safe|truncatechars:50}}</td>
                   <td>{{item.units|safe|truncatechars:50}}</td>
                   <td>{{item.price}}</td>

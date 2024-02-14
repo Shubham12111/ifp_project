@@ -235,27 +235,27 @@ table > tbody > tr > td > i{
                 <tr class="text-sm">
                   <td>
                     <a href="{% url 'item_view' vendor_id item.id  %}"
-                      class="text-decoration-none w-100 nav-link">{{item.item_name|title|default:''|truncatechars:20|title}}
+                      class="text-decoration-none w-100 nav-link">{{item.item_name|title|default:'-'|truncatechars:20|title}}
                     </a>
                   </td>
                   <td>
                     <a href="{% url 'item_view' vendor_id item.id  %}"
-                      class="text-decoration-none w-100 nav-link">{{item.description|safe|default:''|truncatechars:20|title}}
+                      class="text-decoration-none w-100 nav-link">{{item.description|default:'-'|truncatechars:20|title}}
                     </a>
                   </td>
                   <td>
                     <a href="{% url 'item_view' vendor_id item.id  %}"
-                      class="text-decoration-none w-100 nav-link">{{item.reference_number|title|default:''|truncatechars:20|title}}
+                      class="text-decoration-none w-100 nav-link">{{item.reference_number|title|default:'-'|truncatechars:20|title}}
                     </a>
                   </td>
                   <td>
                     <a href="{% url 'item_view' vendor_id item.id  %}"
-                      class="text-decoration-none w-100 nav-link">{{item.price|title|default:''|truncatechars:20|title}}
+                      class="text-decoration-none w-100 nav-link">{{item.price|title|default:'-'|truncatechars:20|title}}
                     </a>
                   </td>
                   <td>
                     <a href="{% url 'item_view' vendor_id item.id  %}"
-                      class="text-decoration-none w-100 nav-link">{{item.calculate_total_received_inventory|default:''|truncatechars:20|title}}
+                      class="text-decoration-none w-100 nav-link">{{item.calculate_total_received_inventory|default:'-'|truncatechars:20|title}}
                     </a>
                   </td>
           

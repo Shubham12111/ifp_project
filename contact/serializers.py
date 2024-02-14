@@ -240,7 +240,7 @@ class ContactSerializer(serializers.ModelSerializer):
             "input_type": "text",
             "autofocus": False,
             "autocomplete": "off",
-            'base_template': 'custom_select.html'
+            'base_template': 'custom_select_without_search.html'
         },
           error_messages={
             "required": "This field is required.",

@@ -53,12 +53,12 @@
                     {% for site_address in site_address_list %}
                     <tr class="text-sm">
                         <td>{{ site_address.id}}</td>
-                        <td>{{ site_address.site_name|default:''|truncatechars:20 }}</td>
-                        <td >{{ site_address.address|default:''|truncatechars:20|title }}</td>
+                        <td>{{ site_address.site_name|default:'-'|truncatechars:20 }}</td>
+                        <td >{{ site_address.address|default:'-'|truncatechars:20|title }}</td>
                         <td>{% if site_address.town %}{{ site_address.town|title }}{% endif %}</td>
                         <td>{% if site_address.county %}{{ site_address.county|title}}{% endif %}</td>
-                        <td>{{ site_address.country|default:''|title }}</td>
-                        <td>{{ site_address.post_code|default:'' }}</td>
+                        <td>{{ site_address.country|default:'-'|title }}</td>
+                        <td>{{ site_address.post_code|default:'-' }}</td>
                         <td> 
                           <div class="dropstart ms-auto pe-0">
                             <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">

@@ -83,7 +83,6 @@
                   <th>Description</th>
                   <th>Date</th>
                   <th>Surveyor name</th>
-                  <th>Associated Job</th>
                   <th>No of Defects</th>
                 </tr>
               </thead>
@@ -95,33 +94,28 @@
                     {% if item.job_set.all %}disabled{% endif %}>
                   </td>
                   <td class="text-sm">
-                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.requirement_id.action|safe|truncatechars_html:20}}
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.requirement_id.action|truncatechars:20}}
                       </a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.requirement_id.description | safe|truncatechars_html:20 }}
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.requirement_id.description|truncatechars:20 }}
                       </a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.created_at |date:"d/m/Y "}}
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.created_at}}
                       </a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.requirement_id.surveyor|default:'' }}
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.requirement_id.surveyor|default:'-' }}
                       </a>
                   </td>
                   <td class="text-sm">
-                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {% if item.job_set.first %}{{ item.job_set.first }}{% else %}-{% endif %}
-                      </a>
-                  </td>
-                  <td class="text-sm">
-                    <a href="{% if item.job_set.first %}{% url 'job_detail' item.job_set.first.customer_id.id item.job_set.first.id %}{% else %}{% url 'customer_quotation_view' item.requirement_id.customer_id.id item.id %}{% endif %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
-                        {{ item.defect_id.count }}
+                    <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
+                        {{ item.defect_counts }}
                       </a>
                   </td>
                 </tr>

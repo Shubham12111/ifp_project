@@ -140,7 +140,7 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
                 else:
                     serializer = self.serializer_class()
                 
-                context = {'item_list':self.get_paginated_queryset(self.get_item_queryset()),
+                context = {'item_list':self.get_paginated_queryset(ItemListSerializer(self.get_item_queryset(), many=True).data),
                 'vendor_instance':vendor_instance,
                 'vendor_id':vendor_id,
                 'serializer':serializer}

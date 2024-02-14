@@ -62,8 +62,8 @@
                 {% for order in orders %}
                 <tr class="text-sm">
                   <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.po_number}}</a></td>
-                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.vendor_id.first_name|default:''|truncatechars:20|title}}
-                    {{order.vendor_id.last_name|default:''|truncatechars:20|title}}</a></td>
+                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.vendor_id.first_name|default:'-'|truncatechars:20|title}}
+                    {{order.vendor_id.last_name|default:'-'|truncatechars:20|title}}</a></td>
                   <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{% if order.inventory_location_id %}{{order.inventory_location_id.name}} - <i>Inventory Location</i>{% else %}{{order.site_address}} - <i>Site Address</i>{% endif %}</a></td>
                   <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.total_amount}}</a></td>
                   <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.created_at|date:"d/m/Y "}}</a></td>

@@ -43,7 +43,9 @@ urlpatterns = [
     path('sor/delete/<int:sor_id>/', CSSORDeleteView.as_view(), name='cs_delete_sor'),
     path('sor/delete/document/<int:customer_id>/<int:sor_id>/<int:document_id>', CSSORRemoveImageView.as_view(), name='cs_delete_sor_document'),
 
-    path('customer/<int:customer_id>/fra-list/', customer_fra_list, name='customer_fra_list'),
+    path('fra/<int:customer_id>', CMRequirementListView.as_view(), name='cs_customer_fra_list'),
+    path('job/<int:customer_id>', CMJobsListView.as_view(), name='cs_customer_job_list'),
+    path('quotation/<int:customer_id>', CMQuotationListView.as_view(), name='cs_customer_quote_list'),
 
 ]
 

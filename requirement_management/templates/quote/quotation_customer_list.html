@@ -42,7 +42,7 @@
                          
                       <td>
                         <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="text-decoration-none w-100 nav-link">
-                          {{query_obj.company_name|default:''|title}}
+                          {{query_obj.company_name|default:'-'|title}}
                         </a>
                       </td>
                       <td>
@@ -52,7 +52,7 @@
                       </td>
                       <td >
                         <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="text-decoration-none w-100 nav-link">
-                          {{query_obj.phone_number|default:''}}
+                          {{query_obj.phone_number|default:'-'}}
                         </a>
                       </td>
                      </tr>

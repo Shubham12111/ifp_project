@@ -41,7 +41,7 @@
               <tbody>
                 {% for category in categories %}
                 <tr class="text-sm">
-                  <td>{{category.name|default:''|truncatechars:20|title}}</td>
+                  <td>{{category.name|default:'-'|truncatechars:20|title}}</td>
                   <td>{{category.description|safe|truncatechars:120}}</td>
                   <td>{{ category.get_status_display|title }} </td>
 

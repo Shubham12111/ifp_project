@@ -43,7 +43,7 @@
                   <td>
                     <a href="{% url 'approved_quotation_list' query_obj.customer.id %}"
                       class="text-decoration-none w-100 nav-link">
-                      {{query_obj.customer.company_name|default:''|title}}
+                      {{query_obj.customer.company_name|default:'-'|title}}
                     </a>
                   </td>
 
@@ -57,7 +57,7 @@
                   <td>
                     <a href="{% url 'approved_quotation_list' query_obj.customer.id %}"
                       class="text-decoration-none w-100 nav-link">
-                      {{query_obj.customer.phone_number|default:''}}
+                      {{query_obj.customer.phone_number|default:'-'}}
                     </a>
                   </td>
                   <td class="text-sm">
