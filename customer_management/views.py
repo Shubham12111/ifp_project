@@ -28,6 +28,11 @@ from django.http import HttpResponse
 import csv
 from .models import User, BillingAddress
 
+
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+
+
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
     password = ''.join(random.choice(characters) for _ in range(length))
@@ -731,7 +736,23 @@ class BillingAddressInfoView(CustomAuthenticationMixin, APIView):
         serialize = self.serializer_class(data=data)
         serialize.is_valid(raise_exception=True)
         return Response({"data": serialize.data})
+    
+@login_required
+def customer_fra_list(request, customer_id):
+    """
+    View to get the listing of all FRA's of a particular customer.
+    Supports both HTML and JSON response formats.
+    """
+    # Get the customer object or return a 404 response if not found
+    customer = get_object_or_404(User, id=customer_id)
 
+    # Get the FRA requirements for the customer
+    fra_requirements = Requirement.objects.filter(customer_id=customer_id)
+
+    # You can add additional filtering or ordering logic if needed
+
+    # Render the template with the customer and FRA requirements
+    return render(request, 'customer_fra_list.html', {'customer': customer, 'requirements': fra_requirements})
 
 class ExportCSVView(View):
     def get(self, request, *args, **kwargs):

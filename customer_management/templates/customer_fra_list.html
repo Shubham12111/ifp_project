@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load rest_framework %}
+{% block title %} FRA Actions {{ block.super }}{% endblock %} 
+{% block content %} 
+{% load custom_tags %}
+
+<link
+  id="pagestyle"
+  href="{% static 'assets/css/daterangepicker.css' %}"
+  rel="stylesheet"
+/>
+<style>
+  div.choices__list.choices__list--dropdown.is-active {
+    z-index: 100 !important;
+  }
+</style>
+<style>
+  ul li input[type="text"] {
+    display: inline-block;
+  }
+</style>
+
+<style>
+  .daterangepicker .ranges ul li.active {
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+  }
+
+  a.fc-daygrid-event {
+    cursor: pointer !important;
+  }
+
+  .fc-h-event .fc-event-main-frame {
+    display: block !important;
+  }
+  .fc-daygrid-block-event .fc-event-time,
+  .fc-daygrid-block-event .fc-event-title {
+    font-weight: 600 !important;
+    padding: 0rem 0.3rem !important;
+  }
+
+  .fc-daygrid-event-dot {
+    display: none !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-past.bg-gradient-danger {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
+
+  a.fc-daygrid-event.fc-daygrid-dot-event.fc-event.fc-event-start.fc-event-end.fc-event-today {
+    display: block !important;
+    color: white !important;
+    background-image: linear-gradient(
+      310deg,
+      #ea0606 0%,
+      #ff667c 100%
+    ) !important;
+  }
+
+  div.fc-event-title {
+    padding: 0rem 0.3rem !important;
+  }
+  div.fc-toolbar-chunk {
+    display: flex !important;
+  }
+  table > tbody > tr > td > a > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > i{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > i{
+    margin-bottom: 0 !important;
+  }
+</style>
+{% include 'components/alert.html' %}
+{% include 'customer_management/customer_actions.html' %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pt-3 pb-0">
+        
+          <div class="row justify-content-between">
+            <div class="col-6">
+              
+              <h4 class="mb-0">FRA Requirements for {{ customer.first_name }} {{ customer.last_name }}</h4>
+            
+        </div>
+        <div class="card-body pb-3 pt-0 mt-3">
+          <div class="table-responsive">
+            
+            <table class="table table-hover text-dark" id="requirement-list">
+              <thead class="thead-light">
+                <tr>
+                  <th class="custom-last-column">
+                    {% comment %} <i
+                      class="fa fa-cog text-secondary"
+                      aria-hidden="true"
+                    ></i> {% endcomment %}
+                  </th>
+               
+                  <th>FRA Action</th>
+                  <th>Description</th>
+                  <th>Site Address</th>
+                 
+                  <th>Surveyor</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                  
+                </tr>
+              </thead>
+              <tbody class="ml-4">
+                {% for requirement in requirements %}
+                <tr>
+                  <td class="text-sm">
+                    {% comment %} <input
+                      type="checkbox"
+                      name="requirement_checkbox"
+                      value="{{ requirement.id }}"
+                    /> {% endcomment %}
+                  </td>
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}" 
+                       class="text-decoration-none w-100 nav-link"
+                      >{{requirement.action|safe|truncatechars_html:20|title|default:''}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link" 
+                      >{{requirement.description|safe|truncatechars_html:20|title|default:''}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link" 
+                      >{{requirement.site_address|default:''|truncatechars:20|title}}</a
+                    >
+                  </td>
+                 
+                  <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link" 
+                      >{{requirement.surveyor|default:''}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <a
+                       href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link" 
+                      >{{requirement.get_status_display|default:''|title}}</a
+                    >
+                  </td>
+                  <td class="text-sm">
+                    <a
+                       href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      class="text-decoration-none w-100 nav-link"
+                      >{{requirement.due_date|date:"d/m/Y"}}</a
+                    >
+                  </td>
+                 
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if requirements.paginator.num_pages > 1 %}
+          <div
+            class="row justify-content-start justify-content-lg-between pagination-row"
+          >
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">
+                Showing {{requirements.number}} of
+                {{requirements.paginator.num_pages}} pages
+              </div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul
+                  class="pagination justify-content-start justify-content-lg-end mb-0 ps-0"
+                >
+                  {% if requirements.has_previous %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ requirements.previous_page_number }}"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% endif %} {% for i in requirements.paginator.page_range %}
+                  {% if requirements.number == i %}
+                  <li class="page-item active">
+                    <a class="page-link" href="#">{{ i }}</a>
+                  </li>
+                  {% else%}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                  </li>
+                  {% endif %} {% endfor %} {% if requirements.has_next %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ requirements.next_page_number }}"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    
+          
+  </div>
+</div>
+
+ 
+{% include 'components/loader.html' %} 
+{% endblock %} 
+{%block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+
+{% endblock %}
