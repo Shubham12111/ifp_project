@@ -622,10 +622,26 @@ class ContactPersonSerializer(serializers.ModelSerializer):
         },
         validators=[validate_phone_number]
     )
+
+    job_role = serializers.CharField(
+        label=_('Job Role'),
+        required=True,
+        allow_null=True,
+        allow_blank=True,
+        style={
+            'base_template': 'custom_input.html'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Job Role field is required.",
+        
+        },
+        validators=[validate_job_role]
+    )
     
     class Meta:
         model = ContactPerson
-        fields = ['first_name', 'last_name', 'email', 'phone_number']
+        fields = ['first_name', 'last_name', 'email', 'phone_number','job_role']
         
 class PostCodeInfoSerializer(serializers.Serializer):
     post_code = serializers.CharField(max_length=255)

@@ -7,11 +7,50 @@
 {% load inventory_tags %}
 {% include 'stock_management/stock_actions.html' %}
 {% include 'components/alert.html' %}
-<div class="container-fluid my-3 py-3">
+<style>
+  
+/* Style for the accordion */
+  .defect-title {
+      cursor: pointer;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 0;
+  }
+
+.defect-column-desp {
+  padding: 10px;
+  margin-top: 1px;
+}
+table > tbody > tr > td > a > p{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > a > ul{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > a > b{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > a > i{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > p{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > ul{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > b{
+  margin-bottom: 0 !important;
+}
+table > tbody > tr > td > i{
+  margin-bottom: 0 !important;
+}
+</style>
+<div class="container-fluid py-4">
   <div class="row">
     <div class="col-lg-12">
              <!--single form panel-->
-            <div class="card  p-3  bg-white js-active">
+            <div class="card  p-3  bg-white js-active"> 
 
             <div class="row justify-content-between">
                 <div class="col-6">
@@ -23,6 +62,7 @@
                   <button type="button" class="btn btn-md bg-gradient-primary btn-sm mb-0" data-bs-toggle="modal" data-bs-target="#bulk_import_modal">
                       Bulk Import Items
                   </button>
+                  
 
                   
                   <!-- Modal -->
@@ -165,12 +205,17 @@
               {% include 'components/loader.html' %}
      
 
-              <div class="card mt-4" id="basic-info">
-        {% include 'components/table_search.html' %}
+    <div class="card mt-4">
+      <div class="card-header pb-0">
+        <div class="d-lg-flex">
+          <div><h5 class="mb-0">Item List</h5></div>
+        </div>
+      </div>
+        {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
        
-        <div class="card-body px-0 pb-0">
+        <div class="card-body ">
           <div class="table-responsive">
-            <table class="table table-flush text-dark" id="item-list">
+            <table class="table table-hover text-dark" id="item-list">
               <thead class="thead-light">
                 <tr>
                   <th>Item Name</th>
@@ -188,11 +233,32 @@
               <tbody class="ml-4">
                 {% for item in item_list %}
                 <tr class="text-sm">
-                  <td>{{item.item_name|title|default:''|truncatechars:20|title}}</td>
-                  <td>{{item.description|safe|truncatechars:50}}</td>
-                  <td>{{item.price}}</td>
-                  <td>{{item.reference_number}}</td>
-                  <td> {{item|calculate_total_received_inventory}} </td>
+                  <td>
+                    <a href="{% url 'item_view' vendor_id item.id  %}"
+                      class="text-decoration-none w-100 nav-link">{{item.item_name|title|default:''|truncatechars:20|title}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'item_view' vendor_id item.id  %}"
+                      class="text-decoration-none w-100 nav-link">{{item.description|safe|default:''|truncatechars:20|title}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'item_view' vendor_id item.id  %}"
+                      class="text-decoration-none w-100 nav-link">{{item.reference_number|title|default:''|truncatechars:20|title}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'item_view' vendor_id item.id  %}"
+                      class="text-decoration-none w-100 nav-link">{{item.price|title|default:''|truncatechars:20|title}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'item_view' vendor_id item.id  %}"
+                      class="text-decoration-none w-100 nav-link">{{item.calculate_total_received_inventory|default:''|truncatechars:20|title}}
+                    </a>
+                  </td>
+          
 
                   {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %}
                   <td>
@@ -245,11 +311,69 @@
               </tbody>
             </table>
           </div>
+          {% if item_list.paginator.num_pages > 1 %}
+          <div
+            class="row justify-content-start justify-content-lg-between pagination-row"
+          >
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">
+                Showing {{item_list.number}} of
+                {{item_list.paginator.num_pages}} pages
+              </div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul
+                  class="pagination justify-content-start justify-content-lg-end mb-0 ps-0"
+                >
+                  {% if item_list.has_previous %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ item_list.previous_page_number }}"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% endif %} {% for i in item_list.paginator.page_range %}
+                  {% if item_list.number == i %}
+                  <li class="page-item active">
+                    <a class="page-link" href="#">{{ i }}</a>
+                  </li>
+                  {% else%}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                  </li>
+                  {% endif %} {% endfor %} {% if item_list.has_next %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ items.next_page_number }}"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
-    </div>
   </div>
+</div>
   
 
 {% endblock %}
@@ -262,96 +386,8 @@
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<script>
-  if (document.getElementById('item-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#item-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 25,
-      perPageSelect: false,
-    });
 
-    const dataTableTop = document.querySelector('.dataTable-top');
-    if (dataTableTop) {
-      dataTableTop.parentNode.removeChild(dataTableTop);
-    }
-    const searchInput = document.getElementById('searchInput');
-      searchInput.addEventListener('input', function() {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
-      });
-  }
 
-  document.addEventListener('DOMContentLoaded', function() {
-      const unitsSelect = document.querySelector('[name="units"]');
-      const quantityPerBoxDiv = document.querySelector('.form-group.col-6.quantity_per_box');
-      const quantityPerBoxInput = quantityPerBoxDiv.querySelector('input[name="quantity_per_box"]');
-      const quantityPerBoxLabel = quantityPerBoxDiv.querySelector('label');
-      
-      // Function to update the display and required attributes
-      function updateQuantityPerBoxDisplay() {
-          if (unitsSelect.value === 'box') {
-              quantityPerBoxDiv.style.display = 'block';
-              quantityPerBoxInput.required = true;
-          } else {
-              quantityPerBoxDiv.style.display = 'none';
-              quantityPerBoxInput.required = false;
-          }
-      }
 
-      // Initial update
-      updateQuantityPerBoxDisplay();
-
-      // Add the red asterisk to the label
-      quantityPerBoxLabel.innerHTML += '<span class="text-danger">*</span>';
-
-      // Show/hide the div based on selection
-      unitsSelect.addEventListener('change', updateQuantityPerBoxDisplay);
-  });
-</script>
-
-<script>
-    $(document).ready(function () {
-        // Event listener for file input change
-        $('input[name="excel_file"]').change(function () {
-            // Read the selected file
-            var fileInput = this;
-            var file = fileInput.files[0];
-            // Check if a file is selected
-            if (file) {
-                // Read the file content
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    var data = e.target.result;
-                    // You can use this 'data' variable to perform further processing or send it to the server
-                    console.log(data);
-                    // Now proceed with extracting column names
-                    var workbook = XLSX.read(data, { type: 'binary' });
-                    var sheetName = workbook.SheetNames[0];
-                    var sheet = workbook.Sheets[sheetName];
-                    var headers = XLSX.utils.sheet_to_json(sheet, { header: 1 })[0];
-                    // Display the list of headers and create dropdowns for mapping
-                    displayHeaders(headers);
-                };
-                reader.readAsBinaryString(file);
-            }
-        });
-
-        // Function to display the list of headers and create dropdowns for mapping
-        function displayHeaders(headers) {
-            var dropdownContainer = $('#mapping_key_values');
-            if (headers && headers.length > 0) {
-                $('select[id="mappings"]').empty()
-                $('select[id="mappings"]').append(`<option selected>Open this select menu</option>`);
-                headers.forEach(function (header) {
-                    $('select[id="mappings"]').append(`<option value="${header}">${header}</option>`);
-                    // Add other mappings as needed
-                });
-
-                dropdownContainer.removeClass('d-none');
-            }
-        }
-    });
-</script>
 
 {% endblock %}

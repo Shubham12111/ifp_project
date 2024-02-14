@@ -83,6 +83,20 @@ def validate_phone_number(value):
         raise serializers.ValidationError("Phone number should have 11 digits starting with +0 or 12 digits starting with +44.")
 
     return value
+
+def validate_job_role(value):
+    """
+    Validate the Job Role field to allow only letters and spaces.
+
+    Args:
+        value (str): The Job Role to be validated.
+
+    Raises:
+        serializers.ValidationError: If the Job Role contains invalid characters.
+    """
+    # Check if the first name contains only characters
+    if not re.match("^[a-zA-Z ]*$", value):
+        raise serializers.ValidationError("Job Role can only contain letters and spaces.")
     
 
 
@@ -224,7 +238,7 @@ def validate_file_size(value):
     max_size = 5 * 1024 * 1024
 
     if value.size > max_size:
-        raise ValidationError(_('File size must be up to 5 MB.'))
+        raise ValidationError(('File size must be up to 5 MB.'))
 
 # Validator for checking the supported file extensions
 file_extension_validator = FileExtensionValidator(

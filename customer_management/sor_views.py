@@ -16,6 +16,7 @@ from infinity_fire_solutions.utils import docs_schema_response_new
 import pandas as pd
 from common_app.models import UpdateWindowConfiguration
 from django.db import transaction
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from requirement_management.serializers import RequirementCustomerSerializer
 
@@ -97,6 +98,46 @@ class CSSORListView(CustomAuthenticationMixin, generics.ListAPIView):
             message="Data retrieved",
         )
     }
+    def get_queryset(self):
+            """
+        Get the queryset of Requirement customers.
+
+        Returns:
+            QuerySet: A queryset of Requirement customers.
+        """
+            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+            return queryset
+
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 1
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+    
     @swagger_auto_schema(operation_id='SOR Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         """
@@ -130,7 +171,7 @@ class CSSORListView(CustomAuthenticationMixin, generics.ListAPIView):
             sor_queryset = SORItem.objects.filter(data_access_filter, customer_id=customer_data).order_by('-created_at')
             if request.accepted_renderer.format == 'html':
                 serializer = self.serializer_class()
-                context = {'list_sor': sor_queryset, 'customer_id':customer_id,'customer_instance': customer_data,'update_window': update_window,'serializer': serializer}
+                context = {'list_sor': self.get_paginated_queryset(sor_queryset),'customer_id':customer_id,'customer_instance': customer_data,'update_window': update_window,'serializer': serializer}
                 return render_html_response(context, self.template_name)
             else:
                 serializer = self.serializer_class(sor_queryset, many=True)
