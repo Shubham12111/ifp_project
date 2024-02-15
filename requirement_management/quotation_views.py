@@ -219,10 +219,6 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         Get the filtered queryset for requirements based on the authenticated user.
         """
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
-        )
-        
         queryset = Report.objects.filter(id=self.kwargs.get('report_id')).first()
         
         return queryset
@@ -270,6 +266,12 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
 
 
     def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         customer_id = kwargs.get('customer_id')
         customer_data = get_customer_data(customer_id)
         report_instance = {}
@@ -360,7 +362,9 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                         if sor_id:
                             sor_items_dict[key][sub_key] = {
                                 'sor-id': sor_id,
-                                'price': defect_sor_values[key][sub_key].get('price'),
+                                'price': float(defect_sor_values[key][sub_key].get('price')),
+                                'total_price': float(defect_sor_values[key][sub_key].get('price')) * int(defect_sor_values[key][sub_key].get('quantity', 1)),
+                                'quantity': int(defect_sor_values[key][sub_key].get('quantity', 1)),
                                 'sor_items': sor_items_data.get(int(sor_id), [])  # Reference 'sor_items_data' using the 'sor-id'
                             }
             # Create a dictionary to store the final JSON data

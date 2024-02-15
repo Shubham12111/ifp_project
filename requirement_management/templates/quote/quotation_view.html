@@ -102,6 +102,8 @@
                       <th scope="col" class="text-start pe-2">SOR Description</th>
                       <th scope="col" class="text-start pe-2">Category</th>
                       <th scope="col" class="text-start pe-2">Price(£)</th>
+                      <th scope="col" class="text-start pe-2">Quantity</th>
+                      <th scope="col" class="text-start pe-2">Total Price(£)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -114,6 +116,8 @@
                       <td class="pe-2 text-start">{{ item.sor_items.description|safe }}</td>
                       <td class="pe-2 text-start">{{ item.sor_items.category_id }}</td>
                       <td class="pe-2 text-start">{{ item.sor_items.price }}</td>
+                      <td class="pe-2 text-start">{{ item.quantity }}</td>
+                      <td class="pe-2 text-start">{{ item.total_price }}</td>
                     </tr>
                     {% endfor %}
                     {% endfor %}
