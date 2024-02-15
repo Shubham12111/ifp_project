@@ -15,7 +15,6 @@ from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 import pandas as pd
 from common_app.models import UpdateWindowConfiguration
-from django.db import transaction
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from requirement_management.serializers import RequirementCustomerSerializer
@@ -109,7 +108,7 @@ class CSSORListView(CustomAuthenticationMixin, generics.ListAPIView):
             return queryset
 
     def get_paginated_queryset(self, base_queryset):
-        items_per_page = 1
+        items_per_page = 10
         paginator = Paginator(base_queryset, items_per_page)
         page_number = self.request.GET.get('page')
         
@@ -680,116 +679,6 @@ class CSSORDetailView(generics.RetrieveAPIView):
             return redirect(reverse('sor_list'))  # Redirect to a SOR list view or other appropriate page
 
 
-
-
-
-class CSSORCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
-    renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'sor_list.html'
-    serializer_class = SORSerializer
-    EXCEL = ['xlsx', 'xls', 'ods']
-    CSV = ['csv']
-
-    default_fieldset = ['SOR code', 'Trade', 'Full Description', 'Unit of Measure', 'Price','Category id']
-
-    def get_file_ext(self, file_name: str) -> str:
-        ext = file_name.split('.')[-1].lower()
-        return ext
-
-    def get_excel_engine(self, file_ext: str) -> str or None:
-        engines = {'xlsx': 'openpyxl', 'xls': 'xlrd', 'ods': 'odf'}
-        return engines[file_ext]
-
-    def read_file_to_df(self, file) -> pd.DataFrame:
-        try:
-            ext = self.get_file_ext(file.name)
-
-            # Convert the in-memory file to a BytesIO object
-            content = BytesIO(file.read())
-
-            if ext in self.EXCEL:
-                engine = self.get_excel_engine(ext)
-                data_frame = pd.read_excel(content, engine=engine)
-                return data_frame
-
-            if ext in self.CSV:
-                data_frame = pd.read_csv(content)
-                return data_frame
-
-            raise ValueError('The file type is not supported.')
-
-        except Exception as e:
-           
-            return None
-    
-    @transaction.atomic
-    def post(self, request, *args, **kwargs):
-        customer_id = kwargs.get('customer_id', None)
-     
-        # Check if the 'csv_file' key is present in the request.FILES dictionary
-        csv_file = request.FILES.get('csv_file', None)
-        if csv_file is None:
-            return JsonResponse({'error': 'No file provided for upload.'}, status=400)
-
-        try:
-            # Read the CSV file into a DataFrame
-            df = self.read_file_to_df(csv_file)
-           
-            if df is None:
-                messages.error(request,'File format not supported.')
-                return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-
-
-            customer_data = get_customer_data(customer_id)
-            if customer_data:
-                # Map specific columns to serializer fields
-                mapped_data = {
-                    'reference_number': df['SOR code'],
-                    'name': df['Trade'],
-                    'description': df['Full Description'],
-                    'units': df['Unit of Measure'],
-                    'price': df['Price'],
-                    'category_id':df['Category id'],
-                }
-
-                # Create a DataFrame from the mapped data
-                mapped_df = pd.DataFrame(mapped_data)
-
-                # Validate the mapped DataFrame against the serializer
-                serializer = self.serializer_class(
-                    data=mapped_df.to_dict(orient='records'),
-                    many=True,
-                    context={'request': request, 'customer_id': kwargs['customer_id']}
-                )
-                
-                if serializer.is_valid():
-                    # Save the data if validation passes
-                    remove_data=SORItem.objects.filter(customer_id=customer_id)
-                    remove_data.delete()
-                    serializer.save(customer_id=customer_data)
-                    messages.success(request, 'Bulk Sor uploaded successfully.')
-                    if request.accepted_renderer.format == 'html':
-                        return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-                    else:
-                        return create_api_response(
-                            status_code=status.HTTP_200_OK,
-                            message="Data retrieved",
-                            data=serializer.data
-                        )
-                else:
-                    if request.accepted_renderer.format == 'html':
-                        messages.error(request, 'The file contains irrelavent data, please check data and try again')
-                        return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-                    else:
-                        return JsonResponse({'error': 'Error validating data. Please check the file format and try again.',
-                                            'validation_errors': serializer.errors}, status=400)
-        except Exception as e:
-            messages.error(request, 'The file contains irrelavent data, please check data and try again')
-            return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
-           
-        
-    
-
 class CSSORRemoveImageView(generics.DestroyAPIView):
     """
     View to remove a document associated with a sor.
@@ -816,3 +705,148 @@ class CSSORRemoveImageView(generics.DestroyAPIView):
                 {"message": "Sor Document not found OR you don't have permission to delete."},
                 status=status.HTTP_404_NOT_FOUND
             )
+        
+
+
+class SorBulkUploadView(CustomAuthenticationMixin, generics.CreateAPIView):
+    """
+    View to handle bulk upload for sorBulkUpload.
+    Supports both HTML and JSON response formats.
+    """
+    serializer_class = BulkSorAddSerializer  # Replace with the actual serializer for sorBulkUpload
+    default_fieldset = ['name', 'reference_number', 'category_id', 'price', 'description', 'units']
+    EXCEL = ['xlsx', 'xls', 'ods']
+    CSV = ['csv',]
+
+    # File operation Functions ----------------------------------------------
+
+    def get_file_ext(self, file_name: str) -> str:
+        """
+        Get the file extension for a given file name.
+
+        Args:
+            file_name (str): The name of the file.
+
+        Returns:
+            str: The file extension in lowercase.
+        """
+        ext = file_name.split('.')[-1].lower()
+        return ext
+
+    def get_excel_engine(self, file_ext: str) -> str or None:
+        """
+        Get the engine to use for reading an Excel file based on its extension.
+
+        Args:
+            file_ext (str): The file extension in lowercase.
+
+        Returns:
+            str or None: The engine to use, or None if the file is not an Excel file.
+        """
+        engines = {'xlsx': 'openpyxl', 'xls': 'xlrd', 'ods': 'odf'}
+        return engines[file_ext]
+
+    def read_file_to_df(self, file) -> pd.DataFrame:
+        """
+        Read a file from an in-memory upload and convert it into a DataFrame.
+
+        Parameters:
+        - file (InMemoryUploadedFile): The in-memory uploaded file.
+
+        Returns:
+        - pd.DataFrame or None: The DataFrame containing the data from the file, or None if an error occurs.
+        """
+        ext = self.get_file_ext(file.name)
+
+        # Convert the in-memory file to a BytesIO object
+        content = BytesIO(file.read())
+
+        if ext in self.EXCEL:
+            engine = self.get_excel_engine(ext)
+            data_frame = pd.read_excel(content, engine=engine)
+            return data_frame
+        
+        if ext in self.CSV:
+            data_frame = pd.read_csv(content)
+            return data_frame
+
+        raise ValueError('The file type is not supported.')
+
+    def post(self, request, *args, **kwargs):
+        
+        customer_id = kwargs.get('customer_id', None)
+        customer_data = User.objects.filter(id=customer_id).first()
+
+        if not customer_data:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_list',))
+        
+        data = request.data.copy()
+        # Create a mapping dictionary from the request data
+        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
+
+        # Check if any keys have the same value
+        values_set = set()
+        duplicate_values = set()
+        for key, value in mapping_dict.items():
+            if value in values_set:
+                duplicate_values.add(value)
+            values_set.add(value)
+
+        if duplicate_values:
+            # Handle the case where some keys have the same value
+            # You can raise an error or take appropriate action
+            messages.error(request, 'Please select correct headers to upload bulk item file')
+            return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        
+        df = self.read_file_to_df(request.FILES.get('excel_file'))
+
+        items_data_list = []
+        for index, row in df.iterrows():
+            items_data = {}
+            for key, value in mapping_dict.items():
+                items_data[key] = row[value]
+
+            items_data['customer_id'] = customer_data.id
+            items_data_list.append(items_data)
+
+        serializer = self.serializer_class(data=items_data_list, many=True)
+        if serializer.is_valid():
+            serializer.save(user_id=request.user)
+            messages.success(request, 'Bulk SOR uploaded successfully.')
+            return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs['customer_id']}))
+        else:
+            update_instances = []
+            errors = []
+            items_data_list_copy = items_data_list.copy()
+            if serializer.errors:
+                indexes_with_unique_errors = list(map(lambda x: x[0], filter(lambda x: 'non_field_errors' in x[1], enumerate(serializer.errors))))
+                update_instances_ids = list(map(lambda i: items_data_list_copy[i]['reference_number'], indexes_with_unique_errors))
+                items_data_list_copy = items_data_list.copy()
+                update_instances = list(map(lambda i: items_data_list_copy[i], indexes_with_unique_errors))
+            
+                if update_instances_ids:
+                    instances = SORItem.objects.filter(reference_number__in=update_instances_ids, customer_id=customer_data).all()
+
+                if instances and update_instances_ids:
+                    for instance in update_instances:
+                        sor_instance = instances.filter(reference_number=instance.get('reference_number')).first()
+                        if sor_instance:
+                            serializer = self.serializer_class(data=instance, instance=sor_instance)
+                            if serializer.is_valid():
+                                serializer.update(
+                                    sor_instance,
+                                    serializer.validated_data
+                                )
+                    serializer = self.serializer_class(data=[data for idx, data in enumerate(items_data_list) if idx not in indexes_with_unique_errors], many=True)
+                    if serializer.is_valid():
+                        serializer.save(user_id=request.user)
+                        messages.success(request, 'Bulk SOR uploaded successfully.')
+                        return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs['customer_id']}))
+                    else:
+                        messages.error(request, 'Some SOR Updated Successfully, But others was having irrelevant data.')
+                        return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs['customer_id']}))
+            
+            messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
+        
+        return redirect(reverse('cs_customer_sor_list', kwargs={'customer_id': kwargs['customer_id']}))
