@@ -176,6 +176,8 @@
                                   <th scope="col-auto" class="text-start">SOR Name </th>
                                   <th scope="col-auto" class="text-start">Category</th>
                                   <th scope="col-auto" class="text-start">Price(£)</th>
+                                  <th scope="col-auto" class="text-start pe-2">Quantity</th>
+                                  <th scope="col-auto" class="text-start pe-2">Total Price(£)</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -185,6 +187,8 @@
                                     <td scope="col-auto" class="text-start">{{ sorDict.sor_items.name }}</td>
                                     <td scope="col-auto" class="text-start">{{ sorDict.sor_items.category_id }}</td>
                                     <td scope="col-auto" class="text-start">{{ sorDict.sor_items.price }}</td>
+                                    <td scope="col-auto" class="text-start">{{ sorDict.quantity }}</td>
+                                    <td scope="col-auto" class="text-start">{{ sorDict.total_price }}</td>
                                   </tr>
                                 {% endfor %}
                               </tbody>
