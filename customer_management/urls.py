@@ -36,7 +36,7 @@ urlpatterns = [
     
     path('sor/<int:customer_id>/', CSSORListView.as_view(), name='cs_customer_sor_list'),
     path('sor/add/<int:customer_id>/', CSSORAddView.as_view(), name='cs_add_sor_customer'),
-    path('sor/import_csv_sor/<int:customer_id>/', CSSORCSVView.as_view(), name='cs_import_csv_sor'),
+    path('sor/import_csv_sor/<int:customer_id>/', SorBulkUploadView.as_view(), name='cs_import_csv_sor'),
     
     path('sor/<int:customer_id>/edit/<int:sor_id>/', CSSORUpdateView.as_view(), name='cs_edit_sor_customer'),
     path('view_sor_customer/<int:sor_id>/', CSSORDetailView.as_view(), name='cs_view_sor_customer'),

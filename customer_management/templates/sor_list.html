@@ -56,7 +56,7 @@ table > tbody > tr > td > i{
             </div>
             <div class="col-auto ms-auto">
               {% include 'components/back_button.html' %}
-              <button class="btn bg-gradient-dark btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#sorModal">BULK UPLOAD SOR</button>
+              <button class="btn bg-gradient-dark btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#bulk_import_modal">BULK UPLOAD SOR</button>
             </div>
           </div>
          
@@ -160,30 +160,30 @@ table > tbody > tr > td > i{
               </tbody>
             </table>
           </div>
-          {% if items.paginator.num_pages > 1 %}
+          {% if list_sor.paginator.num_pages > 1 %}
               <div class="row justify-content-start justify-content-lg-between pagination-row">
                 <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
-                  <div class="pagination-info mt-auto mb-auto">Showing {{items.number}} of
-                    {{items.paginator.num_pages}} pages</div>
+                  <div class="pagination-info mt-auto mb-auto">Showing {{list_sor.number}} of
+                    {{list_sor.paginator.num_pages}} pages</div>
                 </div>
                 <div class="col-12 col-lg-6 align-self-center">
                   <nav aria-label="Page navigation" class="mt-auto mb-auto">
                     <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
-                      {% if items.has_previous %}
+                      {% if list_sor.has_previous %}
                       <li class="page-item"><a class="page-link" href="?page={{ item.previous_page_number }}"><i
                             class="fas fa-angle-left"></i></a></li>
                       {% else %}
                       <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
                       </li>
                       {% endif %}
-                      {% for i in items.paginator.page_range %}
-                      {% if items.number == i %}
+                      {% for i in list_sor.paginator.page_range %}
+                      {% if list_sor.number == i %}
                       <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
                       {% else%}
                       <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
                       {% endif %}
                       {% endfor %}
-                      {% if items.has_next %}
+                      {% if list_sor.has_next %}
                       <li class="page-item"><a class="page-link" href="?page={{ item.next_page_number }}"><i
                             class="fas fa-angle-right"></i></a></li>
                       {% else %}
@@ -199,34 +199,187 @@ table > tbody > tr > td > i{
     </div>
 
 </div>
-
-<!-- Modal for importing csv -->
-<div class="modal fade" id="sorModal" tabindex="-1" aria-labelledby="sorModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
+<div
+  class="modal fade"
+  id="bulk_import_modal"
+  tabindex="-1"
+  aria-labelledby="bulkImportModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="sorModalLabel">Import CSV</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h1 class="modal-title fs-5" id="bulkImportModalLabel">
+          Bulk Import SOR
+        </h1>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
-      <div class="modal-body">
-        <!-- Your form content goes here -->
-        <form id="csvForm" method="POST" action="{% url 'cs_import_csv_sor' customer_id %}" enctype="multipart/form-data">
-          {% csrf_token %}
-          <div class="form-group">
-            <label for="fileInput">Select File:</label>
-            <input type="file" name="csv_file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
-            <p class="text-sm mt-2">Supported file formats: xls, xlsx, csv</p>
-            <div class="modal-footer mt-4 mb-0">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn bg-gradient-primary" id="saveButton">Save</button>
+      <form
+        action="{% url 'cs_import_csv_sor' customer_id %}"
+        role="form"
+        method="POST"
+        enctype="multipart/form-data"
+        onsubmit="showLoader()"
+      >
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <input
+              class="form-control"
+              type="file"
+              id="formFile"
+              name="excel_file"
+              accept=".xlsx, .xls, .csv, .ods"
+            />
+          </div>
+          <div class="d-none" id="mapping_key_values">
+            <div class="container">
+              <div class="row mt-3">
+                <div class="col text-start">
+                  <label
+                    for="name"
+                    class="col-form-label text-start"
+                    >Name:</label
+                  >
+                </div>
+                <div class="col">
+                  <select
+                    class="form-select"
+                    aria-label="Default select example"
+                    type="radio"
+                    name="name"
+                    id="mappings"
+                  >
+                    <option selected>Open this select menu</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col text-start">
+                  <label
+                    for="reference_number"
+                    class="col-form-label text-start"
+                    >SOR CODE:</label
+                  >
+                </div>
+                <div class="col">
+                  <select
+                    class="form-select"
+                    aria-label="Default select example"
+                    type="radio"
+                    name="reference_number"
+                    id="mappings"
+                  >
+                    <option selected>Open this select menu</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col text-start">
+                  <label
+                    for="Description"
+                    class="col-form-label text-start"
+                    >Description:</label
+                  >
+                </div>
+                <div class="col">
+                  <select
+                    class="form-select"
+                    aria-label="Default select example"
+                    type="radio"
+                    name="description"
+                    id="mappings"
+                  >
+                    <option selected>Open this select menu</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col text-start">
+                  <label
+                    for="category_id"
+                    class="col-form-label text-start"
+                    >Category:</label
+                  >
+                </div>
+                <div class="col">
+                  <select
+                    class="form-select"
+                    aria-label="Default select example"
+                    type="radio"
+                    name="category_id"
+                    id="mappings"
+                  >
+                    <option selected>Open this select menu</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col text-start">
+                  <label
+                    for="price"
+                    class="col-form-label text-start"
+                    > Price:</label
+                  >
+                </div>
+                <div class="col">
+                  <select
+                    class="form-select"
+                    aria-label="Default select example"
+                    type="radio"
+                    name="price"
+                    id="mappings"
+                  >
+                    <option selected>Open this select menu</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row mt-3">
+                <div class="col text-start">
+                  <label
+                    for="units"
+                    class="col-form-label text-start"
+                    >Units:</label
+                  >
+                </div>
+                <div class="col">
+                  <select
+                    class="form-select"
+                    aria-label="Default select example"
+                    type="radio"
+                    name="units"
+                    id="mappings"
+                  >
+                    <option selected>Open this select menu</option>
+                  </select>
+                </div>
+              </div>
             </div>
-        </form>
-      </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn bg-gradient-secondary btn-sm"
+            data-bs-dismiss="modal"
+          >
+            Close
+          </button>
+          <input
+            type="submit"
+            class="btn bg-gradient-primary btn-sm"
+            value="Save"
+          />
+        </div>
+      </form>
     </div>
   </div>
 </div>
-
-
 
 {% endblock %}
 
@@ -236,21 +389,9 @@ table > tbody > tr > td > i{
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-{% comment %} <script>
-  if (document.getElementById('item-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#item-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 10,
-    });
-
-    const searchInput = document.getElementById('searchInput');
-      searchInput.addEventListener('input', function() {
-        const searchText = searchInput.value.toLowerCase();
-        dataTableSearch.search(searchText).draw();
-      });
-  }
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+ <script>
 
   const saveButton = document.getElementById("saveButton");
     saveButton.addEventListener("click", function () {
@@ -273,25 +414,127 @@ table > tbody > tr > td > i{
       fileInput.value = ""; // Clear the selected file
     });
   }
+  if (bulkUploadSubmitButton) {
+    bulkUploadSubmitButton.addEventListener("click", function () {
+      console.log("Bulk Upload Button Clicked!");
+  
+      if (bulkUploadForm) {
+        console.log("Form submitted!");
+        bulkUploadForm.submit(); // Submit the form
+      }
+    });
+  }
+  
+  // Optionally, you can add an event listener to trigger file input click
+  if (bulkFileInput) {
+    bulkFileInput.addEventListener('click', function () {
+      console.log("File Input Clicked!");
+      // Handle file input click event if needed
+    });
+  }
 
-// Add the Bulk Upload button click event
-const bulkUploadSubmitButton = document.getElementById("bulkUploadSubmitButton");
-const bulkFileInput = document.getElementById("fileInput");
 
-if (bulkUploadSubmitButton) {
-  bulkUploadSubmitButton.addEventListener("click", function () {
+  document.addEventListener("DOMContentLoaded", function() {
+    const bulkUploadButton = document.getElementById("bulkUploadButton");
     const bulkUploadForm = document.getElementById("bulkUploadForm");
-    bulkUploadForm.submit(); // Submit the form
+    const bulkUploadSubmitButton = document.getElementById("bulkUploadSubmitButton");
+    const fileInput = document.getElementById("fileInput");
+  
+    bulkUploadButton.addEventListener("click", function () {
+      // Clear the file input when the modal is shown
+      fileInput.value = "";
+    });
+  
+    bulkUploadSubmitButton.addEventListener("click", function () {
+      console.log("Bulk Upload Button Clicked!");
+  
+      if (bulkUploadForm) {
+        console.log("Form submitted!");
+        bulkUploadForm.submit(); // Submit the form
+      }
+    });
   });
-}
 
-// Optionally, you can add an event listener to trigger file input click
-if (bulkFileInput) {
-  bulkFileInput.addEventListener('click', function () {
-    // Handle file input click event if needed
+
+  function handleFileSelection(input) {
+    // Check if a file is selected
+    if (input.files && input.files[0]) {
+      // Show the mapping modal
+      const mappingModal = new bootstrap.Modal(document.getElementById("mappingModal"));
+      mappingModal.show();
+    }
+  }
+
+
+  if (document.getElementById('item-list')) {
+    // ... (Initialize DataTable and search functionality) ...
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    const mappingModal = new bootstrap.Modal(document.getElementById("bulk_import_modal"));
+    const fileInput = document.getElementById("formFile");
+
+    fileInput.addEventListener('change', function () {
+      handleFileSelection(this);
+    });
+
+    function handleFileSelection(input) {
+      // Check if a file is selected
+      if (input.files && input.files[0]) {
+        // Show the mapping modal
+        mappingModal.show();
+      }
+    }
   });
-}
 
+</script> 
 
-</script> {% endcomment %}
+<script>
+  $(document).ready(function () {
+    // Event listener for file input change
+    $('input[name="excel_file"]').change(function () {
+      // Read the selected file
+      var fileInput = this;
+      var file = fileInput.files[0];
+      // Check if a file is selected
+      if (file) {
+        // Read the file content
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          var data = e.target.result;
+          // You can use this 'data' variable to perform further processing or send it to the server
+          console.log(data);
+          // Now proceed with extracting column names
+          var workbook = XLSX.read(data, { type: "binary" });
+          var sheetName = workbook.SheetNames[0];
+          var sheet = workbook.Sheets[sheetName];
+          var headers = XLSX.utils.sheet_to_json(sheet, { header: 1 })[0];
+          // Display the list of headers and create dropdowns for mapping
+          displayHeaders(headers);
+        };
+        reader.readAsBinaryString(file);
+      }
+    });
+
+    // Function to display the list of headers and create dropdowns for mapping
+    function displayHeaders(headers) {
+      var dropdownContainer = $("#mapping_key_values");
+      if (headers && headers.length > 0) {
+        $('select[id="mappings"]').empty();
+        $('select[id="mappings"]').append(
+          `<option selected>Open this select menu</option>`
+        );
+        headers.forEach(function (header) {
+          $('select[id="mappings"]').append(
+            `<option value="${header}">${header}</option>`
+          );
+          // Add other mappings as needed
+        });
+
+        dropdownContainer.removeClass("d-none");
+      }
+    }
+  });
+</script>
+
 {% endblock %}
