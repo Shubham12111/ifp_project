@@ -6,51 +6,101 @@
 {% include 'components/alert.html' %}
 {% include 'work_planning/work_action.html'%}
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-2">
   <div class="row">
     <div class="col-12">
       <div class="card">
         <!-- Card header -->
-        <div class="card-header pb-0">
-          <div class="d-lg-flex">
-            <div>
-              <h4 class="mb-0">Job Customer List</h4>
-            </div>
+        <div class="card-header pt-3 pb-0 mb-3">
+          <div class="row mb-0">
+            <h4 class="mb-0">Job Customer List</h4>
           </div>
-          {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
+          <div class="row mt-3">
+            {% include 'components/custom_table_search.html' %}
+          </div>
         </div>
-        <div class="card-body px-0 pb-0">
+        <div class="card-body pt-0">
           <div class="table-responsive">
-            <table class="table table-flush text-dark" id="stw-customer-list">
+            <table class="table table-hover text-dark" id="stw-customer-list">
               <thead class="thead-light">
                 <tr>
                   <th>Customer Name</th>
                   <th>Company Name</th>
                   <th>Customer Email</th>
                   <th>Phone Number</th>
-                  <th class="custom-last-column">Quotation Counts</th>
+                  <th class="custom-last-column">Job Counts</th>
                 </tr>
               </thead>
               <tbody class="ml-4"> 
                 {% for query_obj  in customers_with_counts %}
                     <tr class="text-sm">
                       <td>
-                        <a class="font-weight-bolder" href="{% url 'jobs_list' query_obj.customer.id  %}"  data-bs-toggle="tooltip" data-bs-original-title="Click For View Quotation">
+                        <a class="font-weight-bolder text-decoration-none w-100 nav-link" href="{% url 'jobs_list' query_obj.customer.id  %}">
                           {{ query_obj.customer.first_name|truncatechars:20|title }} {{ query_obj.customer.last_name|truncatechars:20|lower }}
                         </a>
                       </td>
                          
-                      <td>{{query_obj.customer.company_name|default:''|title}}</td>
-                      <td>{{query_obj.customer.email}}</td>
-                      <td >{{query_obj.customer.phone_number|default:''}}</td>
-                      <td >{{query_obj.quote_counts}}</td>
-                     
-                      
+                      <td>
+                        <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
+                          {{query_obj.customer.company_name|default:'-'|title}}
+                        </a>
+                      </td>
+                      <td>
+                        <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
+                          {{query_obj.customer.email}}
+                        </a>
+                      </td>
+                      <td >
+                        <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
+                          {{query_obj.customer.phone_number|default:'-'}}
+                        </a>
+                      </td>
+                      <td >
+                        <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
+                          {{query_obj.job_counts}}
+                        </a>
+                      </td>
                     </tr>
                 {% endfor %}
               </tbody>
             </table>
           </div>
+
+          {% if customers_with_counts.paginator.num_pages > 1 %}
+          <div class="row justify-content-start justify-content-lg-between pagination-row">
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">Showing {{customers_with_counts.number}} of
+                {{customers_with_counts.paginator.num_pages}} pages</div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                  {% if customers_with_counts.has_previous %}
+                  <li class="page-item"><a class="page-link" href="?page={{ customers_with_counts.previous_page_number }}"><i
+                        class="fas fa-angle-left"></i></a></li>
+                  {% else %}
+                  <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
+                  </li>
+                  {% endif %}
+                  {% for i in customers_with_counts.paginator.page_range %}
+                  {% if customers_with_counts.number == i %}
+                  <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                  {% else%}
+                  <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                  {% endif %}
+                  {% endfor %}
+                  {% if customers_with_counts.has_next %}
+                  <li class="page-item"><a class="page-link" href="?page={{ customers_with_counts.next_page_number }}"><i
+                        class="fas fa-angle-right"></i></a></li>
+                  {% else %}
+                  <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -62,18 +112,4 @@
 <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-<script>
-if (document.getElementById('stw-customer-list')) {
-    const dataTableSearch = new simpleDatatables.DataTable("#stw-customer-list", {
-      searchable: true,
-      fixedHeight: false,
-      perPage: 10
-    });
-
- 
-  }
-
-
-
-</script>
 {% endblock %}

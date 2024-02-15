@@ -41,23 +41,17 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
         get: Handle GET requests for listing requirement reports and rendering HTML responses.
     """
 
-    serializer_class = RequirementCustomerSerializer
+    serializer_class = RequirementReportListSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['customer_id__first_name', 'customer_id__last_name']
     template_name = 'report.html'
     ordering_fields = ['created_at'] 
 
-    def get_queryset(self):
+    def get_queryset(self, data_access_value):
         """
         Get the filtered queryset for requirements based on the authenticated user.
         """
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
-        )
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-        
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
         queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
         
@@ -66,11 +60,16 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
         customer_data = User.objects.filter(id=kwargs.get('customer_id')).first()
         if customer_data:
             # This method handles GET requests for updating an existing Requirement object.
             if request.accepted_renderer.format == 'html':
-                instance = self.get_queryset()
+                instance = self.get_queryset(data_access_value)
 
                 if isinstance(instance, HttpResponseRedirect):
                     return instance  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -80,7 +79,7 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
                     document_paths = requirement_image(instance)
                     
                     report_list = Report.objects.filter(requirement_id=instance)
-                    report_list = RequirementReportListSerializer(report_list, many=True).data
+                    report_list = self.serializer_class(report_list, many=True).data
                     page_number = request.GET.get('page', 1)
                     context = {
                         'requirement_instance': instance,  

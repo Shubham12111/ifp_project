@@ -73,6 +73,13 @@
     border: 1px solid #ccc;
   }
 
+  .accordion-button:focus {
+    z-index: 3;
+    border-color: #ccc;
+    outline: 0;
+    box-shadow: var(--bs-accordion-btn-focus-box-shadow);
+  }
+
   /* Custom styles for the accordion body */
   .accordion-body {
     padding: 20px;
@@ -118,13 +125,12 @@
   }
 
 
-  div#accordionDefect > div > h5 > button > div#defectHeading > p {
+  div#defectHeading > span > p {
     margin-left: 0.25rem !important;
     margin-bottom: 0 !important;
   }
 
-  div#accordionDefect > div > div > div > div#defectIntroduction > div.col-12.text-sm.d-flex.align-items-center > p {
-    margin-left: 0.25rem !important;
+  div.defect-safed-text.mt-1.mb-2 > p {
     margin-bottom: 0 !important;
   }
 </style>
@@ -222,11 +228,11 @@
                 </div>
                 <div class="row">
                   <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
-                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.UPRN|default:''|title }}</div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.UPRN|default:'-'|title }}</div>
                 </div>
                 <div class="row">
-                  <div class="col-5 text-sm text-start"><strong>RBNO:</strong></div>
-                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.RBNO|default:''|title }}</div>
+                  <div class="col-5 text-sm text-start"><strong>Job Number:</strong></div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.RBNO|default:'-'|title }}</div>
                 </div>
               </div>
           </div>
@@ -247,11 +253,11 @@
 
             <div class="accordion-item column-with-border mb-3 " data-defect-id="{{ defect.id }}">
               <h5 class="accordion-header text-sm" id="headingOne">
-                <button class="accordion-button " type="button" data-bs-toggle="collapse"
+                <button class="accordion-button py-2" type="button" data-bs-toggle="collapse"
                   data-bs-target="#collapse{{ forloop.counter }}"
                   aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
                   <div class="col-7 d-flex align-items-center" id="defectHeading">
-                    <p><strong>{{ forloop.counter }} - </strong></p>{{ defect.action|safe|truncatechars_html:150 }}
+                    <strong>{{ forloop.counter }} -</strong>&nbsp;<span>{{ defect.action|safe|truncatechars_html:50 }}</span>
                   </div>
                   <div class="col-5 text-end">
                     <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
@@ -263,28 +269,44 @@
               </h5>
               <div id="collapse{{ forloop.counter }}"
                 class="accordion-collapse  collapse {% if forloop.first %}show {% endif %} "
-                aria-labelledby="heading{{ forloop.counter }}">
+                aria-labelledby="heading{{ forloop.counter }}" id="accordionBody">
                 <div class="accordion-body text-sm">
                   <div class="row mb-4" id="defectIntroduction">
-                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Action: </strong>{{ defect.action|safe }}</div>
-                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Description: </strong>{{ defect.description|safe }}</div>
-                    <div class="col-12 text-sm d-flex align-items-center"><strong class="pe-1">Rectification Description: </strong>{{ defect.rectification_description|safe }}</div>
+                    <div class="col-12 text-sm">
+                      <strong>Action: </strong><br>
+                      <div class="defect-safed-text mt-1 mb-2">{{ defect.action|safe }}</div>
+                    </div>
+                    <div class="col-12 text-sm">
+                      <strong>Description: </strong><br>
+                      <div class="defect-safed-text mt-1 mb-2">{{ defect.description|safe }}</div>
+                    </div>
+                    <div class="col-12 text-sm">
+                      <strong>Rectification Description: </strong><br>
+                      <div class="defect-safed-text mt-1">{{ defect.rectification_description|safe }}</div>
+                    </div>
                   </div>
                   <div class="col-lg-12 col-sm-12">
                     {% csrf_token %}
-
-                    <!-- Empty table element with a unique ID -->
-                    <table id="table-{{ defect.id }}" class="custom-table text-sm" style="width:100%">
-                      <!-- Table content will be added dynamically here -->
-                      <tr id="header-{{ defect.id }}">
-                        <th class="col-3">SOR Code</th>
-                        <th class="col-3">SOR Name</th>
-                        <th>Category</th>
-                        <th>Price(£)</th>
-                        <th class="col-1">Action</th>
-                        <!-- Add more headers as needed -->
-                      </tr>
-                    </table>
+                    <div class="table-responsive">
+                      <!-- Empty table element with a unique ID -->
+                      <table id="table-{{ defect.id }}" class="table text-dark text-sm" style="width:100%">
+                        <thead class="bg-default">
+                          <!-- Table content will be added dynamically here -->
+                          <tr id="header-{{ defect.id }}">
+                            <th class="col-3">SOR Code</th>
+                            <th class="col-3">SOR Name</th>
+                            <th>Category</th>
+                            <th>Price(£)</th>
+                            <th>Quantity</th>
+                            <th>Total Price(£)</th>
+                            <th class="col-1">Action</th>
+                            <!-- Add more headers as needed -->
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                   <div class="col-lg-12 col-sm-12 mb-0">
                     <button class="btn btn-outline-dotted text-lower btn-sm mt-4" data-defect-id="{{ defect.id }}"
@@ -372,7 +394,7 @@
         </button>
       </div>
       <div class="modal-body">
-        There are no values to send.
+        Please add/select SOR
       </div>
 
 
@@ -526,6 +548,8 @@
 
         // Check if the table already exists, and if not, create it
         var existingTable = document.getElementById(tableId);
+        var tbody = document.createElement('tbody');
+        existingTable.appendChild(tbody)
 
 
         var savedRow = savedData.defectSorValues[defectId][inner_key];
@@ -565,13 +589,43 @@
 
         // Create and append the second <td> for category
         var categoryCell = document.createElement('td');
+        categoryCell.className = 'ps-2';
         categoryCell.textContent = sorItem.category_id;
         newRow.appendChild(categoryCell);
 
         // Create and append the third <td> for price
         var priceCell = document.createElement('td');
+        priceCell.className = 'ps-2';
         priceCell.textContent = sorItem.price;
         newRow.appendChild(priceCell);
+
+        var quantityCell = document.createElement('td');
+        var sorQuantityFormGroupDiv = document.createElement('div');
+        var sorQuantityInput = document.createElement('input');
+
+        sorQuantityFormGroupDiv.className = 'form-group';
+        sorQuantityInput.className = 'form-control';
+        sorQuantityInput.type = 'number';
+        sorQuantityInput.min = 1;
+        sorQuantityInput.placeholder = 'Sor Quantity';
+        if(savedRow.quantity){
+          sorQuantityInput.value = savedRow.quantity;
+        }else{
+          sorQuantityInput.value = 1;
+        }
+        sorQuantityInput.id = 'sor-quantity-' + defectId + '-' + rowId;
+
+        quantityCell.appendChild(sorQuantityInput);
+        newRow.appendChild(quantityCell);
+
+        var totalPriceCell = document.createElement('td');
+        totalPriceCell.className = 'ps-2';
+        if(savedRow.total_price){
+          totalPriceCell.textContent = savedRow.total_price;
+        }else{
+          totalPriceCell.textContent = sorItem.price;
+        }
+        newRow.appendChild(totalPriceCell);
 
         // Create and append the fourth <td> with the "x" icon to delete the row
         var deleteCell = document.createElement('td');
@@ -594,8 +648,13 @@
         sorIdInput.id = 'sor-id-' + defectId + '-' + rowId;
         sorIdInput.value = sorItem.id; // Set the value of the SOR ID input
         newRow.appendChild(sorIdInput);
+
         // Update the row price in the array
-        rowPrices[defectId][rowId] = sorItem.price;
+        if(savedRow.total_price){
+          rowPrices[defectId][rowId] = savedRow.total_price;
+        }else{
+          rowPrices[defectId][rowId] = sorItem.price;
+        }
 
         // Calculate and display the total price for the current defect table
         var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
@@ -608,7 +667,7 @@
         // Update the total price for all defect tables
         updateTotalPrice();
         // Append the new row to the table
-        existingTable.appendChild(newRow);
+        existingTable.querySelector('tbody').appendChild(newRow);
         
 
         // Listen for changes in the dropdown and update other <td> elements
@@ -625,6 +684,8 @@
         // Update category and price <td> elements with data from the selected SOR object
         categoryCell.textContent = selectedSor.category_id__name; // Update category
         priceCell.textContent = selectedSor.price;      // Update price
+        sorQuantityInput.value = 1;
+        totalPriceCell.textContent = selectedSor.price * 1;
         sorIdInput.value = selectedSor.id;      // Update price
         sorNameInput.value = selectedSor.name
         // Update the row price in the array
@@ -659,6 +720,8 @@
         // Update category and price <td> elements with data from the selected SOR object
         categoryCell.textContent = selectedSor.category_id__name; // Update category
         priceCell.textContent = selectedSor.price;      // Update price
+        sorQuantityInput.value = 1;
+        totalPriceCell.textContent = selectedSor.price * 1;
         sorIdInput.value = selectedSor.id;      // Update price
         sorCodeInput.value = selectedSor.reference_number
         // Update the row price in the array
@@ -787,6 +850,27 @@
       }
     });
 
+    $(`#sor-quantity-${defectId}-${rowId}`).on('change', function (event) {
+      
+      if (this.value == 0){
+        this.value = 1;
+      }
+
+      totalPriceCell.textContent = priceCell.textContent * this.value
+      rowPrices[defectId][rowId] = totalPriceCell.textContent;
+
+      // Calculate and display the total price for the current defect table
+      var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+        return sum + (parseFloat(rowPrice) || 0);
+      }, 0);
+
+      // Update the total for the current defect
+      updateDefectTotal(defectId, defectTotal);
+
+      // Update the total price for all defect tables
+      updateTotalPrice();
+    });
+
 
       });
     }
@@ -813,6 +897,7 @@
     var existingTable = document.getElementById(tableId);
     if (!existingTable) {
       var table = document.createElement('table');
+      var tbody = document.createElement('tbody');
       table.id = tableId;
       table.className = 'custom-table mb-4 text-sm';
       table.style.width = '100%';
@@ -823,13 +908,13 @@
       tableHeader.style.display = 'none';
       tableHeader.innerHTML = '<th>SOR Column 1</th><th>SOR Column 2</th>'; // Add more headers as needed
       table.appendChild(tableHeader);
+      table.appendChild(tbody)
 
       document.querySelector('.col-lg-12.col-sm-12').appendChild(table);
     }
 
     // Show the headers
     var headerRow = document.getElementById(headerId);
-    headerRow.style.display = 'table-row';
 
     // Create a new row for the table
     var newRow = document.createElement('tr');
@@ -874,12 +959,32 @@
     newRow.appendChild(sorIdInput);
     // Add the second <td> for category
     var categoryCell = document.createElement('td');
+    categoryCell.className = 'ps-2';
     newRow.appendChild(categoryCell);
 
     // Add the third <td> for price
     var priceCell = document.createElement('td');
+    priceCell.className = 'ps-2';
     newRow.appendChild(priceCell);
 
+    var quantityCell = document.createElement('td');
+    var sorQuantityFormGroupDiv = document.createElement('div');
+    var sorQuantityInput = document.createElement('input');
+
+    sorQuantityFormGroupDiv.className = 'form-group';
+    sorQuantityInput.className = 'form-control';
+    sorQuantityInput.type = 'number';
+    sorQuantityInput.min = 1;
+    sorQuantityInput.placeholder = 'Sor Quantity';
+    sorQuantityInput.id = 'sor-quantity-' + defectId + '-' + rowId;
+    sorQuantityInput.disabled = true;
+
+    quantityCell.appendChild(sorQuantityInput);
+    newRow.appendChild(quantityCell);
+    
+    var totalPriceCell = document.createElement('td');
+    totalPriceCell.className = 'ps-2';
+    newRow.appendChild(totalPriceCell);
 
     // Add the fourth <td> with the "x" icon to delete the row
     var deleteCell = document.createElement('td');
@@ -897,7 +1002,7 @@
     newRow.appendChild(deleteCell);
 
     // Append the new row to the table
-    existingTable.appendChild(newRow);
+    existingTable.querySelector('tbody').appendChild(newRow);
 
     // Listen for changes in the dropdown and update other <td> elements
     function populateOnSorCodeChange(){
@@ -913,6 +1018,9 @@
         // Update category and price <td> elements with data from the selected SOR object
         categoryCell.textContent = selectedSor.category_id__name; // Update category
         priceCell.textContent = selectedSor.price;      // Update price
+        sorQuantityInput.disabled = false;
+        sorQuantityInput.value = 1;
+        totalPriceCell.textContent = selectedSor.price * 1;
         sorIdInput.value = selectedSor.id;      // Update price
         sorNameInput.value = selectedSor.name
         // Update the row price in the array
@@ -947,6 +1055,9 @@
         // Update category and price <td> elements with data from the selected SOR object
         categoryCell.textContent = selectedSor.category_id__name; // Update category
         priceCell.textContent = selectedSor.price;      // Update price
+        sorQuantityInput.disabled = false;
+        sorQuantityInput.value = 1;
+        totalPriceCell.textContent = selectedSor.price * 1;
         sorIdInput.value = selectedSor.id;      // Update price
         sorCodeInput.value = selectedSor.reference_number
         // Update the row price in the array
@@ -1075,6 +1186,26 @@
       }
     });
 
+    $(`#sor-quantity-${defectId}-${rowId}`).on('change', function (event) {
+      
+      if (this.value == 0){
+        this.value = 1;
+      }
+
+      totalPriceCell.textContent = priceCell.textContent * this.value
+      rowPrices[defectId][rowId] = totalPriceCell.textContent;
+
+      // Calculate and display the total price for the current defect table
+      var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+        return sum + (parseFloat(rowPrice) || 0);
+      }, 0);
+
+      // Update the total for the current defect
+      updateDefectTotal(defectId, defectTotal);
+
+      // Update the total price for all defect tables
+      updateTotalPrice();
+    });
   }
 
 
@@ -1198,12 +1329,16 @@
           if (rowPrices[defectId].hasOwnProperty(rowId)) {
             // Get the price for this row
             var price = rowPrices[defectId][rowId];
+            
             // Fetch the SOR ID from the hidden input field within the row
             var sorIdInput = document.querySelector('#' + 'sor-id-' + defectId + '-' + rowId);
             var sorId = sorIdInput.value; // Fetch the SOR ID from the hidden input
 
+            var sorQuantityInput = document.querySelector('#' + 'sor-quantity-' + defectId + '-' + rowId);
+            var sorQuantity = sorQuantityInput.value; // Fetch the SOR ID from the hidden input
+
             // Add the SOR ID and price to the defect-SOR data
-            defectSorData[rowId] = { 'sor-id': sorId, 'price': price };
+            defectSorData[rowId] = { 'sor-id': sorId, 'total_price': price, 'quantity':  sorQuantity, 'price': price/sorQuantity,};
 
             // Check if there is a price, set the flag to true
             if (price) {

@@ -50,8 +50,8 @@
                 <tbody class="ml-4">
                     {% for contact_person in contact_person_list %}
                     <tr class="text-sm">
-                        <td>{{ contact_person.first_name|default:''|truncatechars:20|title  }}</td>
-                        <td>{{ contact_person.last_name|default:''|truncatechars:20|title  }}</td>
+                        <td>{{ contact_person.first_name|default:'-'|truncatechars:20|title  }}</td>
+                        <td>{{ contact_person.last_name|default:'-'|truncatechars:20|title  }}</td>
                         <td>{{ contact_person.email }}</td>
                         <td>{{ contact_person.phone_number }}</td>
                         <td> 

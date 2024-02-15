@@ -55,8 +55,8 @@
                   <td class="text-sm">
                     <input type="checkbox" name="stw_checkbox" value="{{ vendor.id }}">
                   </td>
-                  <td><a href="{% url 'vendor_edit' vendor.id %}" class="text-decoration-none w-100 nav-link">{{vendor.first_name|default:''|truncatechars:20|title}}
-                    {{vendor.last_name|default:''|truncatechars:20|title}}</a></td>
+                  <td><a href="{% url 'vendor_edit' vendor.id %}" class="text-decoration-none w-100 nav-link">{{vendor.first_name|default:'-'|truncatechars:20|title}}
+                    {{vendor.last_name|default:'-'|truncatechars:20|title}}</a></td>
                   <td><a href="{% url 'vendor_edit' vendor.id %}" class="text-decoration-none w-100 nav-link">{{vendor.email}}</a></td>
                   <td><a href="{% url 'vendor_edit' vendor.id %}" class="text-decoration-none w-100 nav-link">{{vendor.phone_number}}</a></td>
 

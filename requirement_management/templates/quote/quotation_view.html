@@ -78,38 +78,46 @@
               </div>
               <div class="row mb-2">
                 <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
-                <div class="col-7 text-sm">{{ requirement_instance.UPRN|default:''|title }}</div>
+                <div class="col-7 text-sm">{{ requirement_instance.UPRN|default:'-'|title }}</div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 text-sm text-start"><strong>Job Number:</strong></div>
+                <div class="col-7 text-sm">{{ requirement_instance.RBNO|default:'-'|title }}</div>
               </div>
               <div class="row">
-                <div class="col-5 text-sm text-start"><strong>RBNO:</strong></div>
-                <div class="col-7 text-sm">{{ requirement_instance.RBNO|default:''|title }}</div>
+                <div class="col-5 text-sm text-start"><strong>Reference Number:</strong></div>
+                <div class="col-7 text-sm">IFP-{{ queryset.id }}</div>
               </div>
             </div>
           </div>
-          <div class="row">
+          <div class="row mt-2">
             <div class="col-12">
               <div class="table-responsive">
-                <table class="custom-table text-right text-sm" style="width: 100%;">
+                <table class="table text-dark">
                   <thead class="bg-default">
                     <tr class="text-sm">
-                      <th scope="col" class="pe-2 text-start text-center ps-2">SOR Code </th>
-                      <th scope="col" class="pe-2 text-start text-center ps-2">Defect Action </th>
-                      <th scope="col" class="pe-2 text-start text-center ps-2">Defect Rectification </th>
-                      <th scope="col" class="text-center pe-2">SOR Description</th>
-                      <th scope="col" class="text-center pe-2">Category</th>
-                      <th scope="col" class="text-center pe-2">Price(£)</th>
+                      <th scope="col" class="pe-2 text-start">SOR Code </th>
+                      <th scope="col" class="pe-2 text-start">Defect Action </th>
+                      <th scope="col" class="pe-2 text-start">Defect Rectification </th>
+                      <th scope="col" class="text-start pe-2">SOR Description</th>
+                      <th scope="col" class="text-start pe-2">Category</th>
+                      <th scope="col" class="text-start pe-2">Price(£)</th>
+                      <th scope="col" class="text-start pe-2">Quantity</th>
+                      <th scope="col" class="text-start pe-2">Total Price(£)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for defect_key, value in queryset.quotation_json.defectSorValues.items %}
                     {% for inner_key, item in value.items %}
                     <tr class="text-sm">
-                      <td>{{ item.sor_items.reference_number }}</td>
-                      <td>{{defect_key|get_defect_action|safe}}</td>
-                      <td>{{defect_key|get_defect_rectification|safe}}</td>
-                      <td>{{ item.sor_items.description|safe }}</td>
-                      <td>{{ item.sor_items.category_id }}</td>
-                      <td>{{ item.sor_items.price }}</td>
+                      <td class="pe-2 text-start">{{ item.sor_items.reference_number }}</td>
+                      <td class="pe-2 text-start">{{defect_key|get_defect_action|safe}}</td>
+                      <td class="pe-2 text-start">{{defect_key|get_defect_rectification|safe}}</td>
+                      <td class="pe-2 text-start">{{ item.sor_items.description|safe }}</td>
+                      <td class="pe-2 text-start">{{ item.sor_items.category_id }}</td>
+                      <td class="pe-2 text-start">{{ item.sor_items.price }}</td>
+                      <td class="pe-2 text-start">{{ item.quantity }}</td>
+                      <td class="pe-2 text-start">{{ item.total_price }}</td>
                     </tr>
                     {% endfor %}
                     {% endfor %}

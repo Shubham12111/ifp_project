@@ -6,39 +6,94 @@
 {% load custom_tags %}
 {% include 'components/alert.html' %}
 
-<div class="container-fluid py-4">
+<link
+  id="pagestyle"
+  href="{% static 'assets/css/daterangepicker.css' %}"
+  rel="stylesheet"
+/>
+<style>
+  div.choices__list.choices__list--dropdown.is-active {
+    z-index: 100 !important;
+  }
+</style>
+<style>
+  ul li input[type="text"] {
+    display: inline-block;
+  }
+</style>
+
+<style>
+  .daterangepicker .ranges ul li.active {
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+  }
+  table > tbody > tr > td > a > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > a > i{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > p{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > ul{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > b{
+    margin-bottom: 0 !important;
+  }
+  table > tbody > tr > td > i{
+    margin-bottom: 0 !important;
+  }
+</style>
+{% include 'work_planning/customer_work_action.html'%}
+<div class="container-fluid py-2">
   <div class="row">
     <div class="col-12">
       <div class="card">
         <!-- Card header -->
         <div class="card-header pb-0">
-          <div class="d-lg-flex">
-            <div>
+          <div class="row justify-content-between">
+            <div class="col-6">
               <h5 class="mb-0">STW List</h5>
+              {% include 'customer_info.html' %}
             </div>
-            <div class="ms-auto my-auto mt-lg-0 mt-4">
+            <div class="col-6 text-end">
               {% include 'components/back_button.html' %}
               {% if request.user|has_add_permission:"survey" %}
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'work planning' module -->
+                
                 <a href="{% url 'customer_stw_add' customer_id %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New STW</a>
               {% else %}
                 <!-- The user doesn't have the permission, so don't show the "Add" button -->
               {% endif %}
-              <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-2 mx-2" disabled>+&nbsp;Add Job</button>
+              <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>+&nbsp;Add Job</button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-12">
+              {% include "customer_stw_filters.html" %}
             </div>
           </div>
           
-          {% include 'components/table_search.html' %}
+          {% comment %} {% include 'components/table_search.html' %} {% endcomment %}
         </div>
-        <div class="card-body px-0 pb-0">
+        <div class="card-body pt-0">
          <div class="table-responsive">
-            <table class="table table-flush text-dark" id="stw-list">
+            <table class="table table-hover text-dark" id="stw-list">
               <thead class="thead-light">
                 <tr>
-                <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th><!-- Add an empty th for the checkbox column -->
+                  <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th>
                   <th>STW Action</th>
                   <th>STW Description</th>
-                  <th>RBNO</th>
+                  <th>Job Number</th>
                   <th>UPRN</th>
                   <th>STW Status</th>
                   <th>Created Date</th>
@@ -50,15 +105,53 @@
               <tbody class="ml-4"> 
                 {% for stw in stw_requirements %}
                 <tr class="text-sm">
-                    <td class="text-sm">
-                        <input type="checkbox" name="stw_checkbox" value="{{ stw.id }}">
-                      </td>
-                  <td class="text-sm">{{stw.action|default:''|truncatechars:30|title}}</td>
-                  <td class="text-sm">{{stw.description|default:''|truncatechars:30|title}}</td>
-                  <td class="text-sm">{{stw.RBNO}}</td>
-                  <td class="text-sm">{{stw.UPRN}}</td>
-                  <td class="text-sm">{{stw.status}}</td>
-                  <td class="text-sm">{{stw.created_at|date:"d/m/Y"}}</td>
+                  <td class="text-sm">
+                      <input type="checkbox" class="checkbox-item" name="stw_checkbox" value="{{ stw.id }}"
+                      {% if stw.job_set.all %}disabled{% endif %}>
+                  </td>
+                  <td>
+                    <a href="{% url 'customer_stw_view' customer_id stw.id %}" 
+                      class="text-decoration-none w-100 nav-link">
+                      {{stw.action|truncatechars:20|title|default:'-'}}
+                    </a>
+                  </td>
+
+                  <td>
+                    <a href="{% url 'customer_stw_view' customer_id stw.id %}" 
+                      class="text-decoration-none w-100 nav-link">
+                      {{stw.description|truncatechars:20|title|default:'-'}}
+                    </a>
+                  </td>
+
+                  <td>
+                    <a href="{% url 'customer_stw_view' customer_id stw.id %}" 
+                      class="text-decoration-none w-100 nav-link">
+                      {{stw.RBNO}}
+                    </a>
+                  </td>
+
+                  <td>
+                    <a href="{% url 'customer_stw_view' customer_id stw.id %}" 
+                      class="text-decoration-none w-100 nav-link">
+                      {{stw.UPRN}}
+                    </a>
+                  </td>
+
+                  <td>
+                    <a href="{% url 'customer_stw_view' customer_id stw.id %}" 
+                      class="text-decoration-none w-100 nav-link">
+                      {{stw.status|title}}
+                    </a>
+                  </td>
+
+                  <td>
+                    <a href="{% url 'customer_stw_view' customer_id stw.id %}" 
+                      class="text-decoration-none w-100 nav-link">
+                      {{stw.created_at}}
+                    </a>
+                  </td>
+
+
 
                   {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                   <td>
@@ -67,31 +160,30 @@
                         <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
                         </a>
                         <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-
-                            {% if request.user|has_view_permission:"survey" %} 
-                                <li>
-                                  <a href="{% url 'customer_stw_view' customer_id stw.pk %}" class="dropdown-item border-radius-md">
-                                    View
-                                  </a>
-                                </li>
-                              {% endif %}
-
-                          {% if request.user|has_update_permission:"survey" %}
-                        <li>
-                          <a href="{% url 'customer_stw_edit' customer_id stw.pk %}" class="dropdown-item border-radius-md">
-                            Edit
-                          </a>
-                        </li>
+                          
+                          {% if request.user|has_update_permission:"survey" and not stw.job_set.all %} 
+                          <li>
+                              <a href="{% url 'convert_to_fra' customer_id stw.id %}" class="dropdown-item border-radius-md">
+                              Convert To Fra
+                            </a>
+                          </li>
                           {% endif %}
 
-                        {% if request.user|has_delete_permission:"survey" %}
-                        <li>
-                          <a href="#" type="button" class="dropdown-item border-radius-md" 
-                            onclick="CustomconfirmDelete({{stw.id}}, 'Are you sure you want to delete this STW Requirement?','The STW Requirement has been deleted successfully.','{% url 'customer_stw_delete' customer_id stw.id %}')">
-                            Delete</a>
-                        </li>
-                          
-                        {% endif %}
+                          {% if request.user|has_update_permission:"survey" %}
+                          <li>
+                            <a href="{% url 'customer_stw_edit' customer_id stw.id %}" class="dropdown-item border-radius-md">
+                              Edit
+                            </a>
+                          </li>
+                          {% endif   %}
+
+                          {% comment %} {% if request.user|has_delete_permission:"survey" %}
+                          <li>
+                            <a href="#" type="button" class="dropdown-item border-radius-md" 
+                              onclick="CustomconfirmDelete({{stw.id}}, 'Are you sure you want to delete this STW Requirement?','The STW Requirement has been deleted successfully.','{% url 'customer_stw_delete' customer_id stw.id %}')">
+                              Delete</a>
+                          </li>
+                          {% endif %} {% endcomment %}
                       </ul>
                     </div>
                    </td>
@@ -102,88 +194,301 @@
               </tbody>
             </table>
           </div>
+          {% if approved_quotation.paginator.num_pages > 1 %}
+          <div
+            class="row justify-content-start justify-content-lg-between pagination-row"
+          >
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">
+                Showing {{approved_quotation.number}} of
+                {{approved_quotation.paginator.num_pages}} pages
+              </div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul
+                  class="pagination justify-content-start justify-content-lg-end mb-0 ps-0"
+                >
+                  {% if approved_quotation.has_previous %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ approved_quotation.previous_page_number }}"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-left"></i
+                    ></a>
+                  </li>
+                  {% endif %} {% for i in approved_quotation.paginator.page_range %}
+                  {% if approved_quotation.number == i %}
+                  <li class="page-item active">
+                    <a class="page-link" href="#">{{ i }}</a>
+                  </li>
+                  {% else%}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                  </li>
+                  {% endif %} {% endfor %} {% if approved_quotation.has_next %}
+                  <li class="page-item">
+                    <a
+                      class="page-link"
+                      href="?page={{ approved_quotation.next_page_number }}"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% else %}
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#"
+                      ><i class="fas fa-angle-right"></i
+                    ></a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
+  
 </div>
-{% endblock %} 
+{% endblock %}
 {% block extra_js %}
 <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
 <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
-<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
-<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/js/daterangepicker.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/custom_convert.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+
 <script>
-  if (document.getElementById('stw-list')) {
-  const dataTableSearch = new simpleDatatables.DataTable("#stw-list", {
-    searchable: true,
-    fixedHeight: false,
-    perPage: 25,
-    perPageSelect: false,
-  });
+  document.addEventListener("DOMContentLoaded", function () {
+    const addJobButton = document.getElementById("createJobButton");
+    const checkboxItems = document.querySelectorAll(".checkbox-item");
+    const quoteIds = []
 
-  const dataTableTop = document.querySelector('.dataTable-top');
-  if (dataTableTop) {
-    dataTableTop.parentNode.removeChild(dataTableTop);
-  }
-  const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', function() {
-      const searchText = searchInput.value.toLowerCase();
-      dataTableSearch.search(searchText).draw();
+    // Function to update the button state based on checkbox selection
+    function updateButtonState() {
+      const isChecked = quoteIds.length > 0;
+      // Enable or disable the "Create Job" button based on checkbox selection
+      addJobButton.disabled = !isChecked;
+    }
+
+    // Add event listeners to each checkbox
+    checkboxItems.forEach(checkbox => {
+      checkbox.addEventListener("change", function () {
+        if (this.checked && !quoteIds.includes(this.value)) {
+          quoteIds.push(this.value);
+        } else if (!this.checked && quoteIds.includes(this.value)) {
+          quoteIds.pop(this.value);
+        }
+        updateButtonState();
+      });
     });
-}
 
 
+    // Add event listener to the "Create Job" button
+    addJobButton.addEventListener("click", function () {
+      if (quoteIds != []) {
+        addJobUrl = `{% url "job_assign_stw" customer_data.id %}?stw=${encodeURIComponent(
+          quoteIds.join(",")
+        )}`;
+        window.location.href = addJobUrl
+      }
+    });
 
- document.addEventListener("DOMContentLoaded", function () {
-    const createJobButton = document.getElementById("createJobButton");
-    const stwCheckboxes = document.querySelectorAll('input[name="stw_checkbox"]');
+    // Initial button state update
+    updateButtonState();
+  });
+</script>
+
+<script>
+    // Initialize the Date Range Picker
+    document.addEventListener('DOMContentLoaded', function () {
+      let initialStartDate, initialEndDate; // Variables to store the initial dates
+
+      function cb(start, end) {
+        const formattedStartDate = start.format('DD/MM/YYYY');
+        const formattedEndDate = end.format('DD/MM/YYYY');
+        const formattedDateRange = formattedStartDate + ' - ' + formattedEndDate;
+
+        $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
+
+        applyFilter('dateRange', formattedDateRange);
+      }
+
+      // Initialize the Date Range Picker without setting an initial date range
+      const datePicker = $('#reportrange').daterangepicker({
+        autoUpdateInput: false,
+        autoApply: true,
+        showCustomRangeLabel: true, // Hide the "Custom Range" label
+        format: 'DD/MM/YYYY', // Change the format here
+        ranges: {
+          'Today': [moment(), moment()],
+          'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()]
+        },
+      });
+
+      if (datePicker.data('daterangepicker').showCustomRangeLabel) {
+        datePicker.data('daterangepicker').container.find('.ranges ul').append(
+          $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
+        );
+      }
+
+      datePicker.on('apply.daterangepicker', function (ev, picker) {
+        cb(picker.startDate, picker.endDate);
+      });
+
+      datePicker.on('show.daterangepicker', function (ev, picker) {
+        initialStartDate = picker.startDate.clone(); // Store initial start date
+        initialEndDate = picker.endDate.clone();     // Store initial end date
+      });
+
+      function dateclearFilter(filterType) {
+        if (filterType === 'dateRange') {
+          $('#reportrange').data('daterangepicker').setStartDate(moment());
+          $('#reportrange').data('daterangepicker').setEndDate(moment());
+          $('#reportrange span').html('');
+          clearFilter('dateRange'); // Apply empty filter value
+        }
+      }
+    });
+</script>
+
+<script>
     
-    // Function to check if at least one checkbox is selected
-    function updateCreateJobButton() {
-      const atLeastOneSelected = Array.from(stwCheckboxes).some(checkbox => checkbox.checked);
-      createJobButton.disabled = !atLeastOneSelected;
+    const applySearchButton = document.getElementById('applySearch');
+    const searchResults = document.getElementById('searchResults');
+    
+
+    let currentSearchResults = []; // Store the current search results
+    let isDropdownOpen = false; // Variable to track dropdown open state
+
+    // Function to update search results
+    function updateSearchResults(results) {
+      currentSearchResults = results; // Store the results
+      searchResults.innerHTML = '';
+
+      if (results.length > 0) {
+        results.forEach(result => {
+          const li = document.createElement('li');
+          const link = document.createElement('a');
+          link.classList.add('dropdown-item', 'border-radius-md');
+          link.href = '#';
+          link.textContent = result;
+          // Add the click event to apply the filter
+          link.onclick = function () {
+            applyFilter('surveyor', result);
+          };
+          li.appendChild(link);
+          searchResults.appendChild(li);
+        });
+      } else {
+        const li = document.createElement('li');
+        li.classList.add('dropdown-item', 'text-muted');
+        li.textContent = 'No results found.';
+        searchResults.appendChild(li);
+      }
+    }
+
+    // Function to handle Apply Filter button click
+    function handleApplyFilter() {
+      const searchTerm = searchInput.value;
+
+      // Make a request to your backend API with the searchTerm
+      // Example using fetch:
+      fetch(`/fra/surveyor/search?term=${searchTerm}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Update the search results
+          updateSearchResults(data.data.results);
+
+        })
+        .catch(error => console.error(error, "error"));
+    }
+
+    
+</script>
+
+<script>
+    // JavaScript code to apply the filter on each field
+    function applyFilter(filterName, filterValue) {
+
+        // Handle date range filter
+        if (filterName === 'dateRange') {
+          filterValue = filterValue; // Use a custom delimiter to separate start and end dates
+  
+  
+        }
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set(filterName, filterValue);
+        window.location.href = currentUrl.toString();
+  
+  
+    }
+
+    // JavaScript code to clear single filter on onclick event
+    function clearFilter(filterName) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete(filterName);
+        window.location.href = currentUrl.toString();
+      }
+    // JavaScript code to clear all the filters
+    function clearAllFilters() {
+        const currentUrl = new URL(window.location.href);
+        const queryParams = new URLSearchParams(currentUrl.search);
+        const filterNames = [ 'dateRange', 'q']; // Add dateRange to the filterNames array
+  
+        filterNames.forEach(filterName => {
+          queryParams.delete(filterName);
+        });
+        window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+        window.location.reload(); // Reload the page after clearing all filters
     }
 
 
-     // Function to handle checkbox change and allow only a single checkbox to be selected
-  function handleCheckboxChange(checkbox) {
-    stwCheckboxes.forEach(cb => {
-      if (cb !== checkbox) {
-        cb.checked = false;
-      }
-    });
-    updateCreateJobButton();
-  }
-    
-    // Add event listeners to checkboxes
-  stwCheckboxes.forEach(checkbox => {
-    checkbox.addEventListener("change", () => {
-      handleCheckboxChange(checkbox); // Handle checkbox change
-      updateCreateJobButton(); // Update the "Add Job" button
-    });
-  });
-    
-    // Initial check
-    updateCreateJobButton();
-
-    // Add an onclick event listener to the createJobButton button
-    createJobButton.addEventListener("click", function() {
-      // Get the stw_id of the checked checkbox
-      const stwId = Array.from(stwCheckboxes).filter(checkbox => checkbox.checked)[0].value;
-
-      // Construct the redirect URL with the stw_id
-      const redirectUrl = `/work_planning/stw_job/add/${stwId}/`;
-
-      // Redirect the user to the redirect URL
-      window.location.href = redirectUrl;
-  });
-  });
-
-
+    // Check URL parameters on page load and update search and filter selections
+    window.addEventListener('DOMContentLoaded', function () {
+        const filterNames = ['dateRange', 'q'];
+        filterNames.forEach(filterName => {
+          const filterValue = new URLSearchParams(window.location.search).get(filterName);
+  
+          if (filterValue) {
+            let displayedValue = filterValue; // Default displayed value is the filter value itself
+  
+            if (filterName === 'dateRange') {
+              const formattedDateRange = filterValue.replace('_', ' to ');
+              displayedValue = formattedDateRange;
+  
+              // Also update the date range input field if needed
+              document.getElementById('reportrange').value = formattedDateRange;
+            }
+            else if (filterValue.length > 16 && filterName != 'q') {
+              // Truncate the filter value if it's longer than 5 characters
+              displayedValue = filterValue.substring(0, 16) + '..';
+            }
+  
+            // Update the dropdown element with the displayed value
+            document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+          }
+        });
+      });
 </script>
-
-
-
-{% endblock %}     
+{% endblock %}

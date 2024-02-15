@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} FRA Actions Surveys {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+{% include "survey_actions.html" %}
+<div class="container-fluid py-2">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header pt-3 pb-0">
+          <div class="row justify-content-between">
+            <div class="col-6">
+              <h4 class="mb-0">Survey Customer List</h4>
+            </div>
+          </div>
+          <div class="row mt-3">
+            {% include "components/custom_table_search.html" %}
+          </div>
+        </div>
+        <div class="card-body pb-3 pt-0 mt-3">
+          <div class="table-responsive">
+            <table class="table table-hover text-dark" id="requirement-customer-list">
+              <thead class="thead-light">
+                <tr>
+                  <th>Customer Name</th>
+                  <th>Company Name</th>
+                  <th>Customer Email</th>
+                  <th>Phone Number</th>
+                  {% if request.user.roles.name == "quantity_surveyor" %}
+                  <th class="custom-last-column">FRA Counts</th>
+                  {% endif %}
+                  {% if request.user.roles.name == "surveyor" %}
+                  <th class="custom-last-column">FRA Counts</th>
+                  {% endif %}
+                  {% if request.user.roles.name == "projects_admin_(IT)" %}
+                  <th class="custom-last-column">FRA Count</th>
+                  {% endif %}
+                </tr>
+              </thead>
+              <tbody class="ml-4">
+                {% for query_obj in customers_with_counts %}
+                <tr class="text-sm">
+                  <td>
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
+                      {{ query_obj.customer.first_name|truncatechars:20|title }} {{query_obj.customer.last_name|truncatechars:20|lower }}
+                    </a>
+                  </td>
+
+                  <td>
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{query_obj.customer.company_name|truncatechars:20|default:'-'|title}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{query_obj.customer.email}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{query_obj.customer.phone_number|default:'-'}}
+                    </a>
+                  </td>
+                  {% if request.user.roles.name == "quantity_surveyor" %}
+                  <td>
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{ query_obj.fra_counts_for_qs }}
+                    </a>
+                  </td>
+                  {% endif %}
+
+                  {% if request.user.roles.name == "surveyor" %}
+                  <td>
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{ query_obj.fra_counts_for_surveyor }}
+                    </a>
+                  </td>
+                  {% endif %}
+
+                  {% if request.user.roles.name == "projects_admin_(IT)" %}
+                  <td>
+                    <a href="{% url 'customer_survey_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                      {{ query_obj.fra_counts }}
+                    </a>
+                  </td>
+                  {% endif %}
+
+
+
+
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if customers_with_counts.paginator.num_pages > 1 %}
+          <div class="row justify-content-start justify-content-lg-between pagination-row">
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">Showing {{customers_with_counts.number}} of
+                {{customers_with_counts.paginator.num_pages}} pages</div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                  {% if customers_with_counts.has_previous %}
+                  <li class="page-item"><a class="page-link" href="?page={{ customers_with_counts.previous_page_number }}"><i
+                        class="fas fa-angle-left"></i></a></li>
+                  {% else %}
+                  <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
+                  </li>
+                  {% endif %}
+                  {% for i in customers_with_counts.paginator.page_range %}
+                  {% if customers_with_counts.number == i %}
+                  <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                  {% else%}
+                  <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                  {% endif %}
+                  {% endfor %}
+                  {% if customers_with_counts.has_next %}
+                  <li class="page-item"><a class="page-link" href="?page={{ customers_with_counts.next_page_number }}"><i
+                        class="fas fa-angle-right"></i></a></li>
+                  {% else %}
+                  <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+{% endblock %}

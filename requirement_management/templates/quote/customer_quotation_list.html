@@ -94,37 +94,37 @@
                                 {% for quotation in quotation_list %}
                                 <tr class="text-sm">
                                     <td>
-                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ quotation.requirement_id.action|safe|truncatechars_html:30}}
                                         </a>
                                     </td>
                                     <td>
-                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ quotation.requirement_id.description|safe|truncatechars_html:30}}
                                         </a>
                                     </td>
                                     <td>
-                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ quotation.requirement_id.UPRN}}
                                         </a>
                                     </td>
                                     <td>
-                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ quotation.total_amount}}
                                         </a>
                                     </td>
                                     {% comment %} <td class="text-sm">
-                                        {{quotation.requirement_id.quantity_surveyor.first_name|default:''|title}}
-                                        {{quotation.requirement_id.quantity_surveyor.last_name|default:''|title}}
+                                        {{quotation.requirement_id.quantity_surveyor.first_name|default:'-'|title}}
+                                        {{quotation.requirement_id.quantity_surveyor.last_name|default:'-'|title}}
                                     </td> {% endcomment %}
                                     <td class="text-sm">
-                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{quotation.requirement_id.surveyor.first_name|default:''|title}} {{quotation.requirement_id.surveyor.last_name|default:''|title}}
+                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{quotation.requirement_id.surveyor|safe|default:'-'|title}}
                                         </a>
                                     </td>
                                     <td class="text-sm">
-                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id.id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{quotation.get_status_display}}
+                                        <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{quotation.status}}
                                         </a>
                                     </td>
 
@@ -135,16 +135,16 @@
                                                 <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
                                             </a>
                                             <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
-                                                {% if quotation.pdf_path and quotation.status != "draft" %}
+                                                {% if quotation.pdf_path and quotation.status != "Draft" %}
                                                 <li> 
                                                     <a href="{{quotation.pdf_path|get_quotation_pdf_path}}" class="dropdown-item border-radius-md" download="">
                                                         Download
                                                     </a>
                                                 </li>
                                                 {% endif %}
-                                                {% if quotation.status == "draft" or quotation.status == "send_for_approval" %} 
+                                                {% if quotation.status == "Draft" or quotation.status == "Send For Approval" %} 
                                                 <li> 
-                                                    <a href="{% url 'edit_customer_estimation' quotation.requirement_id.customer_id.id quotation.id %}" class="dropdown-item border-radius-md">
+                                                    <a href="{% url 'edit_customer_estimation' quotation.requirement_id.customer_id quotation.id %}" class="dropdown-item border-radius-md">
                                                         {% if quotation.status == "send_for_approval" %}  Approve {% else %} Edit {% endif %}
                                                     </a>
                                                 </li>
@@ -313,7 +313,7 @@
     function clearAllFilters() {
         const currentUrl = new URL(window.location.href);
         const queryParams = new URLSearchParams(currentUrl.search);
-        const filterNames = ['surveyor', 'q']; // Add dateRange to the filterNames array
+        const filterNames = ['status', 'surveyor', 'q']; // Add dateRange to the filterNames array
   
         filterNames.forEach(filterName => {
           queryParams.delete(filterName);
@@ -325,7 +325,7 @@
 
     // Check URL parameters on page load and update search and filter selections
     window.addEventListener('DOMContentLoaded', function () {
-        const filterNames = ['surveyor', 'q'];
+        const filterNames = ['status', 'surveyor', 'q'];
         filterNames.forEach(filterName => {
           const filterValue = new URLSearchParams(window.location.search).get(filterName);
   

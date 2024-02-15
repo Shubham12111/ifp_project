@@ -8,7 +8,13 @@
 
 {% block extra_css %}
 <style>
-  /* Add your custom styles here */
+  div.choices__inner{
+    padding-top: 1px!important;
+    padding-bottom: 0!important;
+  }
+  .choices__placeholder {
+    opacity: 1;
+  }
 </style>
 {% endblock %}
 
@@ -18,234 +24,225 @@
       <!-- Card Basic Info -->
       <div class="card" id="basic-info">
         <div class="card-header">
-          <h5>RLO Form</h5>
+          <div class="row">
+            <div class="col-12 col-lg-6">
+              <h5 class="mb-0">Create RLO</h5>
+            </div>
+            <div class="col-12 col-lg-6 text-end">
+              {% include 'components/back_button.html' %}
+            </div>
+          </div>
         </div>
         <div class="card-body pt-0">
-          <form role="form" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+          <form role="form" method="POST" id="addRLOForm" enctype="multipart/form-data">
             <div class='row'>
               {% csrf_token %}
-              {% render_form serializer %}
+              <input type="hidden" name="edited_content" id="editedContent">
+              
+              <div class="col-12 col-lg-6">
+                <div>
+                  <label for="rlo_name" class="form-label">RLO Name</label>
+                  <input class="form-control" type="text" name="name" id="rlo_name">
+                  {% if errors %}
+                  <div class="help-block ps-1">
+                    {% for fieldKey, fieldError in errors.items %}
+                    {% if fieldKey == 'name' %}
+                    {{fieldError}}
+                    {% endif %}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-12 col-lg-6">
+                <div>
+                  <label for="rlo-template-choices" class="form-label">RLO Template</label>
+                  <select class="form-control" id="rlo-template-choices" name="base_template" placeholder="Base Template" required>
+                    {% for rlo in default_rlo %}
+                        <option value="{{rlo.id}}" {% if forloop.first%}selected{%endif%}>{{rlo.name}}</option>
+                    {% endfor %}
+                  </select>
+                  {% if errors %}
+                  <div class="help-block ps-1">
+                    {% for fieldKey, fieldError in errors.items %}
+                    {% if fieldKey == 'base_template' %}
+                    {{fieldError}}
+                    {% endif %}
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
             </div>
-
-            <div class="error-message">
-              <p class="text-secondary text-sm">Hint: You must select the sample template to add the RLO.</p>
-            </div>
-
-            <!-- Add a hidden input field for template_id -->
-            <input type="hidden" name="template_id" id="templateId" >
-            <input type="hidden" name="edited_content" id="editedContent">
-
-            <button type="button" class="btn bg-gradient-primary btn-sm float-start mt-2 mb-0"
-              data-bs-toggle="modal" data-bs-target="#templateModal">
-              Sample Template
-            </button>
-
-            <button type="button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2" onclick="saveChanges()">
-              Save
-            </button>
-
-            {% include 'components/back_button.html' %}
           </form>
+
+          <div class="row mt-3">
+            <div class="col-6">
+              <div class="section-header p-1 mb-2" id="editableHeader" style="background-color:#8fa0be66;">
+                <h6>Editable Format</h6>
+              </div>
+        
+              <!-- CKEditor container -->
+              <div id="editor">
+              </div>
+              {% if errors %}
+              <div class="help-block ps-1">
+                {% for fieldKey, fieldError in errors.items %}
+                {% if fieldKey == 'edited_content' %}
+                {{fieldError}}
+                {% endif %}
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="col-6">
+              <div class="section-header p-1 mb-2" id="previewHeader" style="background-color:#8fa0be66;">
+                <h6>Final Preview</h6>
+              </div>
+        
+              <!-- Final Preview iframe -->
+              <iframe id="target" style="width:100%; height: 595px;"></iframe>
+        
+            </div>
+          </div>
+
+          <div class="row mt-3">
+            <div class="col-12 text-end">
+              <button type="button" id="addRLOButton" class="btn bg-gradient-dark btn-sm mb-0" onclick="saveChanges()">
+                Save
+              </button>
+            </div>
+          </div>
 
           {% include 'components/loader.html' %}
         </div>
       </div>
     </div>
   </div>
-
-  <div class="modal fade" id="templateModal" tabindex="-1" aria-labelledby="templateModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="templateModalLabel">Select a Template</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="template-options">
-            {% for template in templates %}
-            <div class="form-check">
-              <input class="form-check-input" type="radio" name="template_id" id="template{{ forloop.counter }}"
-                value="{{ template.id }}">
-              <label class="form-check-label" for="template{{ forloop.counter }}">
-                {{ template.name }}
-              </label>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-            Close
-          </button>
-          <button class="btn bg-gradient-dark btn-sm" onclick="openCompleteTemplate()">
-            Open Complete Template
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="container-fluid" style="max-width:none;">
-  <div class="row">
-    <div class="col-6">
-      <div class="section-header" id="editableHeader" style="display: none;background-color:#8fa0be66;
-        border-radius:5px;padding:5px 5px 5px 5px;">
-        <h5>Editable Format</h5>
-      </div>
-
-      <!-- CKEditor container -->
-      <div id="editor" style="width: 100%; height: 100vh; height: 100vh; overflow: hidden; border: none; outline: none;"></div>
-    </div>
-    <div class="col-6">
-      <div class="section-header" id="previewHeader" style="display: none;background-color:#8fa0be66;
-        border-radius:5px;padding:5px 5px 5px 5px;">
-        <h5>Final Preview</h5>
-      </div>
-
-      <!-- Final Preview iframe -->
-      <iframe id="target" style="width:100%; height: 595px;"></iframe>
-
-    </div>
-  </div>
 </div>
 
 {% endblock %}
 {% block extra_js %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/quill.min.js' %}"></script>
 <script src="https://cdn.ckeditor.com/4.17.2/standard/ckeditor.js"></script>
-<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
-<script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
-<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
-<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
-<script src="{% static 'assets/js/custom_delete.js' %}"></script>
-
 <script>
-    var csrf_token = "{{ csrf_token }}";
-  </script>
+  document.addEventListener('DOMContentLoaded', function () {
 
-<script>
-    
-  function openCompleteTemplate() {
-    var selectedTemplateId = document.querySelector('input[name="template_id"]:checked').value;
-    var templateIdField = document.getElementById('templateId');
-    var editedContentField = document.getElementById('editedContent');
+    let rlo_template_choices = null;
 
-    if (!selectedTemplateId) {
-      alert("Please select a template.");
-      return;
+    if (document.getElementById('rlo-template-choices')) {
+      var rlo_template_element = document.getElementById('rlo-template-choices');
+      rlo_template_choices = new Choices(rlo_template_element, {
+        default: false,
+        items: [],
+        choices: [],
+        renderChoiceLimit: 10,
+        maxItemCount: 1,
+        searchEnabled: false,
+        searchChoices: true,
+        searchFloor: 1,
+        searchResultLimit: 5,
+        resetScrollPosition: true,
+        shouldSort: true,
+        shouldSortItems: false,
+        searchFields: ['label'],
+        duplicateItemsAllowed: false,
+        searchPlaceholderValue: "Search Base Template",
+        placeholderValue: "Select Base Template",
+        fuseOptions: {
+          includeScore: true,
+          includeMatches: true,
+          threshold: 0, // Set to 0 for exact match
+          location: 0,
+          distance: 100,
+          maxPatternLength: 32,
+          minMatchCharLength: 1
+        }
+      });
+
+      rlo_template_choices.passedElement.element.addEventListener(
+        'change',
+        function(event) {
+          showTemplate();
+        },
+        false,
+      );
     }
 
-    templateIdField.value = selectedTemplateId;
+    // Handle the onchange event of both the CKEditor and editable format div
+    function change() {
+      var editedContentField = document.getElementById('editedContent');
+      var iFrame = document.getElementById('target');
+      var iFrameBody;
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', '/work_planning/RLO/get_template_content/?template_id=' + selectedTemplateId, true);
-
-    xhr.onload = function () {
-      if (xhr.status === 200) {
-        var response = JSON.parse(xhr.responseText);
-        var templateContent = response.template_content;
-
-        var editorContainer = document.getElementById('editor');
-        var editableHeader = document.getElementById('editableHeader');
-        var previewHeader = document.getElementById('previewHeader');
-
-        editorContainer.style.display = "block";
-        editableHeader.style.display = "block";
-        previewHeader.style.display = "block";
-
-        // Initialize CKEditor
-        CKEDITOR.replace('editor', {
-            // Add any CKEditor configurations as needed
-            toolbar: 'basic',
-            height: 500,
-            iconSize: 'small',  // Set the icon size to 'small'
-          }).on('change', function () {
-            change();
-          });
-        // Set the value of the CKEditor instance
-        CKEDITOR.instances.editor.setData(templateContent);
-
-        // Set the value in the hidden input field
-        editedContentField.value = templateContent;
-
-        // Trigger the change event to update the iframe
-        change();
-
-        // Close the modal
-        $('#templateModal').modal('hide');
-      } else {
-        alert('Error fetching template content.');
+      if (iFrame.contentDocument) {
+        iFrameBody = iFrame.contentDocument.getElementsByTagName('body')[0];
+      } else if (iFrame.contentWindow) {
+        iFrameBody = iFrame.contentWindow.document.getElementsByTagName('body')[0];
       }
-    };
+      // Get the content from CKEditor
+      var editorContent = CKEDITOR.instances.editor.getData();
 
-    xhr.send();
-  }
-
-  // Function to strip HTML tags from a string
-  function stripHtmlTags(html) {
-    var div = document.createElement("div");
-    div.innerHTML = html;
-    return div.textContent || div.innerText;
-  }
-
-  // Handle the onchange event of both the CKEditor and editable format div
-  function change() {
-    var iFrame = document.getElementById('target');
-    var iFrameBody;
-
-    if (iFrame.contentDocument) {
-      iFrameBody = iFrame.contentDocument.getElementsByTagName('body')[0];
-    } else if (iFrame.contentWindow) {
-      iFrameBody = iFrame.contentWindow.document.getElementsByTagName('body')[0];
+      // Update the content of the iframe
+      iFrameBody.innerHTML = editorContent;
+      editedContentField.value = editorContent;
     }
 
-    // Get the content from CKEditor
-    var editorContent = CKEDITOR.instances.editor.getData();
+    function showTemplate(){
+      var selected_template = rlo_template_choices.getValue();
+      var xhr = new XMLHttpRequest();
+      if (selected_template){
+        xhr.open('GET', '/work_planning/RLO/get_template_content/?template_id=' + selected_template.value, true);
+        xhr.onload = function () {
+          if (xhr.status === 200) {
+            var response = JSON.parse(xhr.responseText);
+            var templateContent = response.template_content;
+            
+            var editorContainer = document.getElementById('editor');
+            var editableHeader = document.getElementById('editableHeader');
+            var previewHeader = document.getElementById('previewHeader');
 
-    // Update the content of the iframe
-    iFrameBody.innerHTML = editorContent;
-  }
+            editorContainer.style.display = "block";
+            editableHeader.style.display = "block";
+            previewHeader.style.display = "block";
 
-  function saveChanges() {
-    // Get the edited content from CKEditor
-    var editedContent = CKEDITOR.instances.editor.getData();
+            if (!CKEDITOR.instances.editor){
+              // Initialize CKEditor
+              CKEDITOR.replace('editor', {
+                // Add any CKEditor configurations as needed
+                toolbar: 'basic',
+                height: 500,
+                iconSize: 'small',  // Set the icon size to 'small'
+              }).on('change', function () {
+                change();
+              });
+            }
+            // Set the value of the CKEditor instance
+            CKEDITOR.instances.editor.setData(templateContent);
 
-    // Get the selected template ID
-    var selectedTemplateId = document.getElementById('templateId').value;
-     // Get the form data
-  var formData = new FormData(document.querySelector('form'));
-    // You can access the values of name and job fields using formData
-    var name = formData.get('name');
-    var job = formData.get('job');
-  
+            // Trigger the change event to update the iframe
+            change();
+          } else {
+            console.log('Error fetching template content.');
+          }
+        };
+        xhr.send();
+      }
+    }
 
-    // You can send the edited content and template ID to the server using an AJAX request
-    // For example, using jQuery AJAX
-    $.ajax({
-      type: "POST",
-      url: "/work_planning/RLO/add/",
-      data: {
-        name: name,
-        job: job,
-        template_id: selectedTemplateId,
-        edited_content: editedContent,
-        csrfmiddlewaretoken: '{{ csrf_token }}',
-        // Add any additional data if required by your view
-      },
-      success: function (response) {
-        // Handle the success response, if needed
-        console.log(response);
-        // Redirect or perform any other actions as necessary
-        window.location.href = '{% url "rlo_list" %}';
-      },
-      error: function (error) {
-        // Handle the error, if needed
-        console.log(error);
-        // You might want to display an error message to the user
-        alert("Error saving changes. Please try again.");
-      },
+    showTemplate();
+
+    // Get the button element
+    var submitButton = document.getElementById('addRLOButton');
+
+    // Add a click event listener to the button
+    submitButton.addEventListener('click', function () {
+      var addRLOForm = document.getElementById('addRLOForm');
+      // Submit the form
+      addRLOForm.submit();
     });
-  }
+  });
 </script>
 {% endblock %}

@@ -6,10 +6,41 @@ from authentication.models import User
 from rest_framework.exceptions import ValidationError
 from datetime import date
 
+def get_html_text(html_content):
+    """
+    Summary:
+        Fetches HTML content from a given URL and extracts the text enclosed in HTML tags.
+    Arguments:
+        url (str): The URL of the webpage to fetch.
+    Returns:
+        html_text (str): The text content enclosed in HTML tags.
+    """
+    # Parse the HTML content using BeautifulSoup
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Extract text enclosed in HTML tags
+    html_text = soup.get_text()
+    
+    return html_text
+
 class TodoListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Todo
-        fields = ('id','module', 'assigned_to', 'title', 'description','priority', 'start_date', 'end_date', )
+        fields = ('id', 'user_id', 'module', 'assigned_to', 'title', 'description','priority', 'status', 'start_date', 'end_date')
+    
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        
+        ret['user_id'] = f"{instance.user_id.first_name} {instance.user_id.last_name}"
+        ret['assigned_to'] = f"{instance.assigned_to.first_name} {instance.assigned_to.last_name} - <i>{instance.assigned_to.roles}</i>"
+        ret['module'] = f'{instance.module.name}'
+        ret['priority'] = f'{instance.get_priority_display()}'
+        ret['status'] = f'{instance.get_status_display()}'
+        ret['start_date'] = f"{instance.start_date.strftime('%d/%m/%Y')}"
+        ret['end_date'] = f"{instance.end_date.strftime('%d/%m/%Y')}"
+        ret['description'] = get_html_text(instance.description)
+
+        return ret 
     
 class TodoAddSerializer(serializers.ModelSerializer):
     module = serializers.SlugRelatedField(

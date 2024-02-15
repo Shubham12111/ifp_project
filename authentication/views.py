@@ -55,8 +55,11 @@ class LoginView(APIView):
             )
     }
     
-    @swagger_auto_schema(operation_id='Login', responses={**common_post_response})
+    def get_redirect_url(self):
+        redirect_url: str = self.request.query_params.get('next', '')
+        return redirect_url.strip() if redirect_url else reverse('dashboard')
 
+    @swagger_auto_schema(operation_id='Login', responses={**common_post_response})
     def post(self, request):
         """
         Handle POST request for user login.
@@ -92,7 +95,7 @@ class LoginView(APIView):
                 # User authentication succeeded
                 if request.accepted_renderer.format == 'html':
                     # Render the HTML template for successful login
-                    return redirect(reverse('dashboard'))
+                    return redirect(self.get_redirect_url())
                 else:
                     try:
                         existing_token = Token.objects.get(user=user)

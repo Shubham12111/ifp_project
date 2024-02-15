@@ -49,7 +49,7 @@
                 <tr>
                   <th class="custom-last-column"></th><!-- Add an empty th for the checkbox column -->
                   <th>UPRN</th>
-                  <th>RBNO</th>
+                  <th>Job Number</th>
                   <th>Action</th>
                   <th>Description</th>
                   <th>Surveyor Name</th>
@@ -73,7 +73,7 @@
                   <td class="text-sm">{{requirement.description|truncatechars:20|title}}<br>
                   </td>
                   </td>
-                  <td class="text-sm">{{requirement.surveyor__email|default:''}}</td>
+                  <td class="text-sm">{{requirement.surveyor__email|default:'-'}}</td>
                   <td class="text-sm">#</td>
                   <td class="text-sm">{{requirement.created_at|date:"d/m/Y"}}</td>
                   <td class="text-sm">

@@ -20,6 +20,7 @@ from drf_yasg.utils import swagger_auto_schema
 from infinity_fire_solutions.utils import docs_schema_response_new
 from django.views import View
 from io import BytesIO
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
@@ -69,6 +70,22 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
         queryset = queryset.filter(pk=self.kwargs.get('vendor_id')).first()
         return queryset
 
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 10
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
     def get_item_queryset(self):
          # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -123,7 +140,7 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
                 else:
                     serializer = self.serializer_class()
                 
-                context = {'item_list':self.get_item_queryset(),
+                context = {'item_list':self.get_paginated_queryset(ItemListSerializer(self.get_item_queryset(), many=True).data),
                 'vendor_instance':vendor_instance,
                 'vendor_id':vendor_id,
                 'serializer':serializer}
@@ -137,6 +154,8 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
         Handle POST request to add a item.
         """
         vendor_instance = self.get_queryset()
+        item_list =[]
+
         if vendor_instance:
             item_instance = self.get_item_instancee()
             data = request.data
@@ -171,7 +190,7 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
 
             else:
                 context = {
-                    'item_list':self.get_item_queryset(),
+                    'item_list':self.get_item_queryset(item_list),
                     'vendor_instance':vendor_instance,
                     'serializer':serializer}
                 return render_html_response(context,self.template_name)

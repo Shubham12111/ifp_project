@@ -56,6 +56,10 @@
   <div class="input-group">
   <input type="text" id="module_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   <i class="fas fa-chevron-down input-group-icon"></i> </div>
+  {% elif field.name == 'category_id' %}
+  <div class="input-group">
+  <input type="text" id="category_id_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
+  <i class="fas fa-chevron-down input-group-icon"></i> </div>
   {% elif field.name == 'priority' %}
   <input type="text" id="priority_search" name="{{ field.name }}" placeholder="Search {{ field.label }}" {% if field.value %}value={{field.value}}{% endif %} class="form-control">
   {% elif field.name == 'contact_type' %}
@@ -109,21 +113,36 @@
             return false;
         }
       });
-    {% elif field.name == 'module' %}
-    var moduleInput= $("#module_search")
-    moduleInput.autocomplete({
-        source: "{% url 'module-autocomplete' %}",
+    {% elif field.name == 'category_id' %}
+    var category_idInput= $("#category_id_search")
+    category_idInput.autocomplete({
+        source: "{% url 'sorcategory-autocomplete' %}",
         minLength: 1,
         select: function(event, ui) {
             console.log('Selected item:', ui.item);
             var convertedValue = parseInt(ui.item.value);
             console.log('Converted value:', convertedValue, typeof convertedValue); // Log the type of the converted value
-            $("#id_module").val(convertedValue); // Convert to integer
-            moduleInput.val(ui.item.label); // Display the name in the input
+            $("#id_category_id").val(convertedValue); // Convert to integer
+            category_idInput.val(ui.item.label); // Display the name in the input
             return false;
           }
 
       });
+      {% elif field.name == 'module' %}
+      var moduleInput= $("#module_search")
+      moduleInput.autocomplete({
+          source: "{% url 'module-autocomplete' %}",
+          minLength: 1,
+          select: function(event, ui) {
+              console.log('Selected item:', ui.item);
+              var convertedValue = parseInt(ui.item.value);
+              console.log('Converted value:', convertedValue, typeof convertedValue); // Log the type of the converted value
+              $("#id_module").val(convertedValue); // Convert to integer
+              moduleInput.val(ui.item.label); // Display the name in the input
+              return false;
+            }
+  
+        });
     {% elif field.name == 'priority' %}
       $("#priority_search").autocomplete({
         source: ["High", "Medium", "Low"],

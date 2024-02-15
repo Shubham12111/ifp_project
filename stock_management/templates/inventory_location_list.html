@@ -46,12 +46,12 @@
               <tbody class="ml-4">
                 {% for inventory_location in inventory_location_list %}
                 <tr  class="text-sm">
-                    <td>{{ inventory_location.name|default:''|truncatechars:20|title }}</td>
-                    <td>{{ inventory_location.address|default:''|truncatechars:50|title  }}</td>
-                    <td>{{ inventory_location.town|default:''|title  }}</td>
-                    <td>{{ inventory_location.county|default:''|title  }}</td>
-                    <td>{{ inventory_location.country|default:''|title  }}</td>
-                    <td>{{ inventory_location.post_code|default:'' }}</td>
+                    <td>{{ inventory_location.name|default:'-'|truncatechars:20|title }}</td>
+                    <td>{{ inventory_location.address|default:'-'|truncatechars:50|title  }}</td>
+                    <td>{{ inventory_location.town|default:'-'|title  }}</td>
+                    <td>{{ inventory_location.county|default:'-'|title  }}</td>
+                    <td>{{ inventory_location.country|default:'-'|title  }}</td>
+                    <td>{{ inventory_location.post_code|default:'-' }}</td>
 
                     {% if request.user|has_update_permission:"stock_management" or request.user|has_add_permission:"stock_management" or request.user|has_delete_permission:"stock_management" or request.user|has_view_permission:"stock_management" %} 
                   <td>

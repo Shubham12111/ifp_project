@@ -7,7 +7,7 @@ from .quotation_serializers import *
 from rest_framework import filters
 from infinity_fire_solutions.email import *
 from .views import get_customer_data
-from .models import Requirement, Report, SORItem,Quotation
+from .models import Requirement, Report, SORItem,Quotation, QUOTATION_STATUS_CHOICES
 from django.contrib import messages
 from django.db.models import F
 from django.http import JsonResponse
@@ -17,23 +17,48 @@ from infinity_fire_solutions.email import *
 import uuid
 from work_planning_management.models import Job
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from requirement_management.serializers import RequirementReportListSerializer, RequirementQuotationListSerializer
 
 
 class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = QuotationCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['customer_id__first_name', 'customer_id__last_name']
+    search_fields = ['first_name', 'last_name', 'email', 'company_name']
     template_name = 'quote/quotation_customer_list.html'
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
-            return queryset
+        reports = Report.objects.filter(
+            status__in=['submit'],
+        ).order_by('requirement_id__customer_id').values_list('requirement_id__customer_id', flat=True).distinct()
+        
+        if not reports:
+            return []
+        
+        queryset = User.objects.filter(
+            is_active=True,  roles__name__icontains='customer',
+            id__in=reports
+            ).exclude(pk=self.request.user.id)
+        return queryset
     
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
     def get_paginated_queryset(self, base_queryset):
         items_per_page = 20 
-        paginator = Paginator(base_queryset, items_per_page)
+        paginator = Paginator(self.get_searched_queryset(base_queryset), items_per_page)
         page_number = self.request.GET.get('page')
         
         try:
@@ -58,8 +83,10 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         
 
         if request.accepted_renderer.format == 'html':
-
-            context = {'queryset': self.get_paginated_queryset(queryset)}  # Pass the list of customers with counts to the template
+            context = {'queryset': self.get_paginated_queryset(queryset),
+                       'search_fields': self.search_fields,
+                        'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
+                }  # Pass the list of customers with counts to the template
             return render_html_response(context, self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -69,7 +96,7 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
 
 class QuotationCustomerReportListView(CustomAuthenticationMixin,generics.ListAPIView):
     
-    serializer_class = QuotationCustomerSerializer
+    serializer_class = RequirementReportListSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     search_fields = ['requirement_id__action', 'requirement_id__description', 'requirement_id__UPRN']
@@ -126,11 +153,12 @@ class QuotationCustomerReportListView(CustomAuthenticationMixin,generics.ListAPI
 
     def get_queryset(self):
 
-            queryset = Report.objects.filter(
-                requirement_id__customer_id=self.kwargs.get('customer_id'), 
-                status = 'submit'
-            )
-            return self.get_paginated_queryset(self.get_filtered_queryset(queryset))
+        queryset = Report.objects.filter(
+            requirement_id__customer_id=self.kwargs.get('customer_id'), 
+            status = 'submit',
+            quotations__isnull=True
+        )
+        return self.get_filtered_queryset(queryset)
 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -144,8 +172,9 @@ class QuotationCustomerReportListView(CustomAuthenticationMixin,generics.ListAPI
 
         if customer_data:
             queryset = self.get_queryset()
+            report_list = self.serializer_class(queryset, many=True).data
             if request.accepted_renderer.format == 'html':
-                context = {'report_list': queryset,
+                context = {'report_list': self.get_paginated_queryset(report_list),
                 'customer_id': customer_id,
                 'customer_data':customer_data,
                 'search_fields': self.search_fields,
@@ -190,10 +219,6 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         Get the filtered queryset for requirements based on the authenticated user.
         """
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
-        )
-        
         queryset = Report.objects.filter(id=self.kwargs.get('report_id')).first()
         
         return queryset
@@ -241,6 +266,12 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
 
 
     def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
         customer_id = kwargs.get('customer_id')
         customer_data = get_customer_data(customer_id)
         report_instance = {}
@@ -331,7 +362,9 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                         if sor_id:
                             sor_items_dict[key][sub_key] = {
                                 'sor-id': sor_id,
-                                'price': defect_sor_values[key][sub_key].get('price'),
+                                'price': float(defect_sor_values[key][sub_key].get('price')),
+                                'total_price': float(defect_sor_values[key][sub_key].get('price')) * int(defect_sor_values[key][sub_key].get('quantity', 1)),
+                                'quantity': int(defect_sor_values[key][sub_key].get('quantity', 1)),
                                 'sor_items': sor_items_data.get(int(sor_id), [])  # Reference 'sor_items_data' using the 'sor-id'
                             }
             # Create a dictionary to store the final JSON data
@@ -391,10 +424,6 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 if request.data.get('status') == "approved":
                     # Ensure that the Quotation is saved before creating the Job
                     quotation_instance.save()
-                    # Create a Job associated with this Quotation
-                    job_instance = Job(quotation=quotation_instance)
-                    # Save the Job instance
-                    job_instance.save()
 
 
             if request.data.get('status') == "send_for_approval":
@@ -417,6 +446,7 @@ class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
     search_fields = ['requirement_id__action', 'requirement_id__description', 'requirement_id__UPRN']
     template_name = 'quote/customer_quotation_list.html'
     ordering_fields = ['created_at'] 
+    serializer_class = RequirementQuotationListSerializer
 
     def get_paginated_queryset(self, base_queryset):
         items_per_page = 20 
@@ -452,23 +482,31 @@ class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
         # Get the filtering parameters from the request's query parameters
         filters = {
             'surveyor': self.request.GET.get('surveyor'),
+            'status': self.request.GET.get('status'),
         }
 
         # Apply additional filters based on the received parameters
         for filter_name, filter_value in filters.items():
             if filter_value:
-                value_list = filter_value.split()
-                if 2 >= len(value_list) > 1:
-                    queryset = queryset.filter(requirement_id__surveyor__first_name=value_list[0], requirement_id__surveyor__last_name=value_list[1])
+                if filter_name == 'surveyor':
+                    value_list = filter_value.split()
+                    if 2 >= len(value_list) > 1:
+                        queryset = queryset.filter(requirement_id__surveyor__first_name=value_list[0], requirement_id__surveyor__last_name=value_list[1])
+                    else:
+                        queryset = queryset.filter(requirement_id__surveyor__first_name = filter_value)
                 else:
-                    queryset = queryset.filter(requirement_id__surveyor__first_name = filter_value)
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                    }
+                    queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
                     
         
         return self.get_searched_queryset(queryset)
 
     def get_queryset(self):
-        queryset = Quotation.objects.filter(requirement_id__customer_id=self.kwargs.get('customer_id'))
-        return self.get_paginated_queryset(self.get_filtered_queryset(queryset))
+        queryset = Quotation.objects.filter(requirement_id__customer_id=self.kwargs.get('customer_id'), status__in=['draft', 'submitted', 'send_for_approval', 'rejected'])
+        return self.get_filtered_queryset(queryset)
 
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
@@ -482,11 +520,12 @@ class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         if customer_data:
             queryset = self.get_queryset()
-           
+            quotation_list = self.serializer_class(queryset, many=True).data
             if request.accepted_renderer.format == 'html':
-                context = {'quotation_list': queryset,
+                context = {'quotation_list': self.get_paginated_queryset(quotation_list),
                 'customer_id': customer_id,
                 'customer_data':customer_data,
+                'status_values': QUOTATION_STATUS_CHOICES,
                 'search_fields': self.search_fields,
                 'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))}  # Pass the list of customers with counts to the template
                 return render_html_response(context, self.template_name)

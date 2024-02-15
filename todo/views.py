@@ -216,7 +216,7 @@ class ToDoListAPIView(CustomAuthenticationMixin,generics.ListAPIView):
         if request.accepted_renderer.format == 'html':
             # If the client accepts HTML, render the template
             context = {
-                'todo_list': queryset,
+                'todo_list': self.serializer_class(queryset, many=True).data,
                 'search_fields': ['module name',],
                 'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
                 'status_values': STATUS_CHOICES,

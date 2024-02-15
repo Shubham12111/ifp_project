@@ -203,9 +203,9 @@
                           <div class="row mt-3">
                             <div class="col text-start">
                               <label
-                                for="RBNO"
+                                for="job_number"
                                 class="col-form-label text-start"
-                                >RBNO:</label
+                                >Job Number:</label
                               >
                             </div>
                             <div class="col">
@@ -213,7 +213,7 @@
                                 class="form-select"
                                 aria-label="Default select example"
                                 type="radio"
-                                name="RBNO"
+                                name="job_number"
                                 id="mappings"
                               >
                                 <option selected>Open this select menu</option>
@@ -439,7 +439,7 @@
                   {% comment %}
                   <th>Quantity Surveyor</th>
                   {% endcomment %}
-                  <th>Surveyor</th>
+                  {% comment %} <th>Surveyor</th> {% endcomment %}
                   <th>Status</th>
                   <th>Due Date</th>
                   <th class="custom-last-column">Actions</th>
@@ -457,49 +457,49 @@
                   </td>
                   <td class="text-sm">
                     <a
-                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.action|safe|truncatechars_html:20|title|default:''}}</a
+                      >{{requirement.action|truncatechars:20|title|default:'-'}}</a
                     >
                   </td>
                   <td class="text-sm">
                     <a
-                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.description|safe|truncatechars_html:20|title|default:''}}</a
+                      >{{requirement.description|truncatechars:20|title|default:'-'}}</a
                     >
                   </td>
                   <td class="text-sm">
                     <a
-                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.site_address|default:''|truncatechars:20|title}}</a
+                      >{{requirement.site_address|truncatechars:20|title|default:'-'}}</a
                     >
                   </td>
                   {% comment %}
                   <td class="text-sm">
-                    {{requirement.quantity_surveyor|default:''}}
+                    {{requirement.quantity_surveyor|default:'-'}}
                   </td>
                   {% endcomment %}
+                  {% comment %} <td class="text-sm">
+                    <a
+                      href="{% url 'customer_requirement_view' customer_id requirement.id %}"
+                      class="text-decoration-none w-100 nav-link"
+                      >{{requirement.surveyor|default:'-'}}</a
+                    >
+                  </td> {% endcomment %}
                   <td class="text-sm">
                     <a
-                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.surveyor|default:''}}</a
+                      >{{requirement.status|default:'-'|title}}</a
                     >
                   </td>
                   <td class="text-sm">
                     <a
-                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
+                      href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.get_status_display|default:''|title}}</a
-                    >
-                  </td>
-                  <td class="text-sm">
-                    <a
-                      href="{% url 'customer_requirement_view' customer_id requirement.pk %}"
-                      class="text-decoration-none w-100 nav-link"
-                      >{{requirement.due_date|date:"d/m/Y"}}</a
+                      >{{requirement.due_date}}</a
                     >
                   </td>
                   <td class="text-sm">
@@ -523,7 +523,7 @@
                         {% if request.user|has_update_permission:"fire_risk_assessment" %}
                         <li>
                           <a
-                            href="{% url 'customer_requirement_edit' customer_id requirement.pk %}"
+                            href="{% url 'customer_requirement_edit' customer_id requirement.id %}"
                             class="dropdown-item border-radius-md"
                           >
                             Edit

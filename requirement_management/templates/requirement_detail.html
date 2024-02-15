@@ -102,7 +102,7 @@ table > tbody > tr > td > i{
                 {% for defect in requirement_defect %}
                 <tr class="text-sm">
                   <td class="align-middle">
-                      <input type="checkbox" name="defect_checkbox" value="{{ defect.id }}">
+                      <input type="checkbox" name="defect_checkbox" value="{{ defect.id }}" {% if defect.used_in_report %}disabled{% endif %}>
                   </td>
                   <td class="align-middle">
                     <a href="{% url 'customer_requirement_defect_detail' customer_id requirement_instance.id defect.id %}" class="text-decoration-none w-100 nav-link">
@@ -214,65 +214,66 @@ table > tbody > tr > td > i{
 </div>
 
 <div class="modal fade" id="cretaeReportModal" tabindex="-1" aria-labelledby="cretaeReportModal" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl  modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="cretaeReportModal">Create Report</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form id="selectForm" method="POST" onsubmit="showLoader()">
-            {% csrf_token %}
-            <h5>Defects</h5>
-              <div id="defects-container">
-                <!-- Defects will be displayed here -->
-              </div>
-              <div class="row mt-4">
-                <div class="col-12">
-                  <label>Comments <span class="text-sm text-danger">*</span></label>
-                  <div id="editor" class="ql-toolbar ql-snow">
-                    <span class="ql-formats">
-                      <button type="button" class="ql-bold"></button>
-                      <button type="button" class="ql-italic"></button>
-                      <button type="button" class="ql-underline"></button>
-                      <button type="button" class="ql-list" value="bullet"></button>
-                    </span>
-                  </div>
-                  <div id="quill-editor" style="height: 300px;"></div>
-                </div>
-                <div name = "comments" id="error-messages-comment" ></div>
-                
-                 <div class="col-4 mt-4">
-                  <label>Signature <span class="text-sm text-danger">*</span></label> 
-                  <i class="fas fa-sync-alt" id="clear-button" style="float: right;"
-                  data-bs-toggle="tooltip" data-bs-original-title="Clear Signature"> </i>
-                  <div class="signature-container">
-                    <canvas id="signature-canvas" height="80"></canvas>
-                  </div>
-                </div>
-                <div id="error-messages-signature" ></div>
-                 
-              </div>
-              
-              
-            <input type="hidden" name="selected_defect_ids" id="selected-defect-ids">
-            <input type="hidden" name="signature_data" id="signature-data">
-            
-             <!-- Container for error messages -->
-
-            {% include 'components/loader.html' %}
-          </form>
-      </div>
+  <form id="selectForm" method="POST" action="{% url 'customer_requirement_view' customer_id requirement_instance.id %}" onsubmit="showLoader()">
+      <div class="modal-dialog modal-dialog-centered modal-xl  modal-dialog-scrollable">
         
-        <div class="modal-footer">
-          
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          
-          <button type="button" id="submit-darft-button" class="btn bg-gradient-primary">Save As Draft</button>
-          <button type="button" id="submit-button" class="btn bg-gradient-primary">Submit</button>
-        </div>
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="cretaeReportModal">Create Report</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              
+                {% csrf_token %}
+                <h5>Defects</h5>
+                  <div id="defects-container">
+                    <!-- Defects will be displayed here -->
+                  </div>
+                  <div class="row mt-4">
+                    <div class="col-12">
+                      <label>Comments <span class="text-sm text-danger">*</span></label>
+                      <div id="editor" class="ql-toolbar ql-snow">
+                        <span class="ql-formats">
+                          <button type="button" class="ql-bold"></button>
+                          <button type="button" class="ql-italic"></button>
+                          <button type="button" class="ql-underline"></button>
+                          <button type="button" class="ql-list" value="bullet"></button>
+                        </span>
+                      </div>
+                      <div id="quill-editor" style="height: 300px;"></div>
+                    </div>
+                    <div name="comments-errors" id="error-messages-comment" ></div>
+                    
+                    <div class="col-4 mt-4">
+                      <label>Signature <span class="text-sm text-danger">*</span></label> 
+                      <i class="fas fa-sync-alt" id="clear-button" style="float: right;"
+                      data-bs-toggle="tooltip" data-bs-original-title="Clear Signature"> </i>
+                      <div class="signature-container">
+                        <canvas id="signature-canvas" height="80"></canvas>
+                      </div>
+                    </div>
+                    <div id="error-messages-signature" ></div>
+                    
+                  </div>
+                  
+                <input type="hidden" name="comments" id="comments">
+                <input type="hidden" name="selected_defect_ids" id="selected-defect-ids">
+                <input type="hidden" name="signature_data" id="signature-data">
+                
+                <!-- Container for error messages -->
+
+                {% include 'components/loader.html' %}
+              
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <input type="submit" name="status" value="Draft" class="btn bg-gradient-primary"/>
+              <input type="submit" name="status" value="Submit" class="btn bg-gradient-primary"/>
+            </div>
+          </div>
+        
       </div>
-    </div>
+  </form>
 </div>
 
 {% endblock %}
@@ -580,11 +581,11 @@ cretaeReportModal._element.addEventListener('click', function (event) {
 });
   
 // Assuming you have a button to submit the form
-const draftButton = document.getElementById("submit-darft-button");
-const submitButton = document.getElementById("submit-button");
+{% comment %} const draftButton = document.getElementById("submit-darft-button");
+const submitButton = document.getElementById("submit-button"); {% endcomment %}
 const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
 
-draftButton.addEventListener("click", function () {
+{% comment %} draftButton.addEventListener("click", function () {
     // Set the status to "draft"
     const formData = new FormData(document.getElementById("selectForm"));
     formData.append("status", "draft"); // Add status field with value "draft"
@@ -598,7 +599,7 @@ submitButton.addEventListener("click", function () {
     formData.append("status", "submit"); // Add status field with value "submit"
     showLoader(); // Show the loader overlay before submitting
     saveFormData(formData);
-});
+}); {% endcomment %}
 
 function showLoader() {
     loaderOverlay.classList.remove("d-none"); // Show the loader overlay
@@ -613,7 +614,7 @@ function hideLoader() {
 
 
 
-function saveFormData(formData) {
+{% comment %} function saveFormData(formData) {
     // Define the URL for saving the data
     const saveUrl = "{% url 'customer_requirement_view' customer_id requirement_instance.id %}";
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -660,14 +661,16 @@ function saveFormData(formData) {
         // Hide the loader overlay after processing the response
         hideLoader();
         // Reload the page after processing the response
+        debugger;
         window.location.reload();
     })
     .catch(error => {
         console.error('Error:', error);
         // Hide the loader overlay in case of an error
         hideLoader();
+        debugger;
     });
-}
+} {% endcomment %}
 
 
 
@@ -728,11 +731,17 @@ function saveFormData(formData) {
     });
 } {% endcomment %}
 var quill = new Quill('#quill-editor', {
-    theme: 'snow',
-    modules: {
-      toolbar: '#editor',
-    },
-  });
+  theme: 'snow',
+  modules: {
+    toolbar: '#editor',
+  },
+});
+
+
+commentInput = document.getElementById('comments')
+quill.on('text-change', function () {
+  commentInput.value = quill.root.innerHTML;
+});
 </script>
 
 {% endblock %}

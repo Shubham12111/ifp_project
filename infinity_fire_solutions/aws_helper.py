@@ -1,3 +1,4 @@
+from io import BytesIO
 import boto3
 from botocore.exceptions import ClientError
 from django.conf import settings
@@ -66,3 +67,53 @@ def generate_presigned_url(s3_key, expiration=3600):
         return None
 
     return response
+
+def fetch_file_from_s3(unique_filename, s3_folder=''):
+    """
+    Fetches a file from Amazon S3 and keeps it in memory.
+
+    Parameters:
+        bucket_name (str): The name of the S3 bucket.
+        key (str): The key of the file in the S3 bucket.
+
+    Returns:
+        BytesIO: A BytesIO object containing the file content.
+    """
+    try:
+        s3_key = f"{s3_folder}/{unique_filename}" if s3_folder else f'{unique_filename}'
+
+        # Download the file from S3
+        file_object = BytesIO()
+        s3_client.download_fileobj(settings.AWS_BUCKET_NAME, s3_key, file_object)
+        file_object.seek(0)  # Reset the file pointer to the beginning
+        return file_object
+    
+    except Exception as e:
+        return None
+
+def move_s3_file(source_key, destination_key):
+    # Copy the file
+    s3_client.copy_object(Bucket=settings.AWS_BUCKET_NAME, CopySource={'Bucket': settings.AWS_BUCKET_NAME, 'Key': source_key}, Key=destination_key)
+
+    # Delete the original file if needed
+    s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=source_key)
+
+
+def delete_file_from_s3(file_key, s3_folder=''):
+    """
+    Delete a file from AWS S3.
+
+    Args:
+        file_key (str): The key of the file to be deleted in the S3 bucket.
+
+    Returns:
+        bool: True if the file was successfully deleted, False otherwise.
+    """
+    s3_key = f"{s3_folder}/{file_key}"
+    try:
+        # Delete the file from S3
+        s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=s3_key)
+        return True
+    except Exception as e:
+        # Log or handle the exception appropriately
+        return False

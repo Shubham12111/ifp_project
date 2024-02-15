@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %} Job List {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<link
+  id="pagestyle"
+  href="{% static 'assets/css/daterangepicker.css' %}"
+  rel="stylesheet"
+/>
+<style>
+  div.choices__list.choices__list--dropdown.is-active {
+    z-index: 100 !important;
+  }
+</style>
+<style>
+  ul li input[type="text"] {
+    display: inline-block;
+  }
+</style>
+<style>
+  .daterangepicker .ranges ul li.active {
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+  }
+</style>
+{% include 'customer_management/customer_actions.html'%}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header">
+          <div class="row justify-content-between">
+            <div class="col-6">
+              <h4 class="mb-0">Jobs List</h4>
+            </div>
+            <div class="col-6 text-end">
+              {% include 'components/back_button.html' %}
+            </div>
+          </div>
+
+          <div class="row">
+            {% include "customer_fra_job_quote_list.html" %}
+          </div>
+        </div>
+        <div class="card-body pt-0">
+          <div class="table-responsive">
+            <table class="table table-hover text-dark" id="job-list">
+              <thead class="thead-light">
+                <tr>
+                  <th>Reference Number</th>
+                  <th>Start Date/Time</th>
+                  <th>End Date/Time</th>
+                  <th>Site Address</th>
+                  <th>Team</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody class="ml-4">
+                {% for job in jobs %}
+                <tr class="text-sm align-middle">
+                  <td class="text-sm">
+                    <a href="{% url 'job_detail' customer_instance.id job.id %}"
+                    class="text-decoration-none w-100 nav-link" >
+                      {{ job }}
+                    </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'job_detail' customer_instance.id job.id %}"
+                    class="text-decoration-none w-100 nav-link" >
+                      {{ job.start_date|date:"d/m/Y - h:m A" }}
+                    </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'job_detail' customer_instance.id job.id %}"
+                    class="text-decoration-none w-100 nav-link" >
+                      {{ job.end_date|date:"d/m/Y - h:m A" }}
+                    </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'job_detail' customer_instance.id job.id %}"
+                    class="text-decoration-none w-100 nav-link" >
+                      {% if job.quotation.all %}
+                      {% for quotation in job.quotation.all %}
+                      {% if forloop.first %}
+                      {{ quotation.requirement_id.site_address|title|default:'-' }}
+                      {% endif %}
+                      {% endfor %}
+                      {% elif job.stw.all %}
+                      {% for stw in job.stw.all %}
+                      {% if forloop.first %}
+                      {{ stw.site_address|title|default:'-' }}
+                      {% endif %}
+                      {% endfor %}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'job_detail' customer_instance.id job.id %}"
+                    class="text-decoration-none w-100 nav-link" >
+                      {% if job.assigned_to_team %}
+                      {% for member in job.assigned_to_team.members.all %}
+                      {{ member }}{% if not forloop.last %},<br>{% endif %}
+                      {% endfor %}
+                      {% elif job.assigned_to_member %}
+                      {% for member in job.assigned_to_member.all %}
+                      {{ member }}{% if not forloop.last %},<br>{% endif %}
+                      {% endfor %}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </a>
+                  </td>
+                  <td class="text-sm">
+                    <a href="{% url 'job_detail' customer_instance.id job.id %}"
+                    class="text-decoration-none w-100 nav-link" >
+                      {{ job.status|title }}
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/js/daterangepicker.js' %}"></script>
+<script>
+    // Initialize the Date Range Picker
+    document.addEventListener('DOMContentLoaded', function () {
+      let initialStartDate, initialEndDate; // Variables to store the initial dates
+
+      function cb(start, end) {
+        const formattedStartDate = start.format('DD/MM/YYYY');
+        const formattedEndDate = end.format('DD/MM/YYYY');
+        const formattedDateRange = formattedStartDate + ' - ' + formattedEndDate;
+
+        $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
+
+        applyFilter('dateRange', formattedDateRange);
+      }
+
+      // Initialize the Date Range Picker without setting an initial date range
+      const datePicker = $('#reportrange').daterangepicker({
+        autoUpdateInput: false,
+        autoApply: true,
+        showCustomRangeLabel: true, // Hide the "Custom Range" label
+        format: 'DD/MM/YYYY', // Change the format here
+        ranges: {
+          'Today': [moment(), moment()],
+          'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+          'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+          'Last 30 Days': [moment().subtract(29, 'days'), moment()]
+        },
+      });
+
+      if (datePicker.data('daterangepicker').showCustomRangeLabel) {
+        datePicker.data('daterangepicker').container.find('.ranges ul').append(
+          $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
+        );
+      }
+
+      datePicker.on('apply.daterangepicker', function (ev, picker) {
+        cb(picker.startDate, picker.endDate);
+      });
+
+      datePicker.on('show.daterangepicker', function (ev, picker) {
+        initialStartDate = picker.startDate.clone(); // Store initial start date
+        initialEndDate = picker.endDate.clone();     // Store initial end date
+      });
+
+      function dateclearFilter(filterType) {
+        if (filterType === 'dateRange') {
+          $('#reportrange').data('daterangepicker').setStartDate(moment());
+          $('#reportrange').data('daterangepicker').setEndDate(moment());
+          $('#reportrange span').html('');
+          clearFilter('dateRange'); // Apply empty filter value
+        }
+      }
+    });
+</script>
+
+<script>
+    // JavaScript code to apply the filter on each field
+    function applyFilter(filterName, filterValue) {
+
+        // Handle date range filter
+        if (filterName === 'dateRange') {
+          filterValue = filterValue; // Use a custom delimiter to separate start and end dates
+  
+  
+        }
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set(filterName, filterValue);
+        window.location.href = currentUrl.toString();
+  
+  
+    }
+
+    // JavaScript code to clear single filter on onclick event
+    function clearFilter(filterName) {
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.delete(filterName);
+        window.location.href = currentUrl.toString();
+      }
+    // JavaScript code to clear all the filters
+    function clearAllFilters() {
+        const currentUrl = new URL(window.location.href);
+        const queryParams = new URLSearchParams(currentUrl.search);
+        const filterNames = ['status', 'dateRange', 'q']; // Add dateRange to the filterNames array
+  
+        filterNames.forEach(filterName => {
+          queryParams.delete(filterName);
+        });
+        window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+        window.location.reload(); // Reload the page after clearing all filters
+    }
+
+
+    // Check URL parameters on page load and update search and filter selections
+    window.addEventListener('DOMContentLoaded', function () {
+        const filterNames = ['status', 'dateRange', 'q'];
+        filterNames.forEach(filterName => {
+          const filterValue = new URLSearchParams(window.location.search).get(filterName);
+  
+          if (filterValue) {
+            let displayedValue = filterValue; // Default displayed value is the filter value itself
+  
+            if (filterName === 'dateRange') {
+              const formattedDateRange = filterValue.replace('_', ' to ');
+              displayedValue = formattedDateRange;
+  
+              // Also update the date range input field if needed
+              document.getElementById('reportrange').value = formattedDateRange;
+            }
+            else if (filterValue.length > 16 && filterName != 'q') {
+              // Truncate the filter value if it's longer than 5 characters
+              displayedValue = filterValue.substring(0, 16) + '..';
+            }
+  
+            // Update the dropdown element with the displayed value
+            document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+          }
+        });
+      });
+</script>
+{% endblock %}

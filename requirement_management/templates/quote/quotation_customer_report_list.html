@@ -92,35 +92,35 @@
                                 {% for report in report_list %}
                                 <tr class="text-sm">
                                     <td>
-                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ report.requirement_id.action|safe|truncatechars_html:30}}
                                         </a>
                                     </td>
                                     <td>
-                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ report.requirement_id.description|safe|truncatechars_html:30}}
                                         </a>
                                     </td>
                                     <td>
-                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ report.requirement_id.UPRN}}
                                         </a>
                                     </td>
-                                    {% comment %} <td class="text-sm">{{report.requirement_id.quantity_surveyor.first_name|default:''|title}}
-                                        {{report.requirement_id.quantity_surveyor.last_name|default:''|title}}
+                                    {% comment %} <td class="text-sm">{{report.requirement_id.quantity_surveyor.first_name|default:'-'|title}}
+                                        {{report.requirement_id.quantity_surveyor.last_name|default:'-'|title}}
                                     </td> {% endcomment %}
                                     <td class="text-sm">
-                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{report.requirement_id.surveyor.first_name|default:''|title}} {{report.requirement_id.surveyor.last_name|default:''|title}}
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{report.requirement_id.surveyor|safe|default:'-'|title}}
                                         </a>
                                     </td>
                                     <td class="text-truncate">
-                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id.id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{ report.defect_id.all|length }}
+                                        <a href="{% url 'requirement_report_view' report.requirement_id.customer_id  report.requirement_id.id report.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{ report.defect_count }}
                                         </a>
                                     </td>
                                     <td class="text-truncate">
-                                        <a href="{% url 'add_customer_estimation' report.requirement_id.customer_id.id report.id %}" class="text-decoration-none nav-link">
+                                        <a href="{% url 'add_customer_estimation' report.requirement_id.customer_id report.id %}" class="text-decoration-none nav-link">
                                             <i class="fas fa-file" data-bs-toggle="tooltip" data-bs-placement="top"
                                             data-bs-title="Create Quotation"></i>
                                         </a>

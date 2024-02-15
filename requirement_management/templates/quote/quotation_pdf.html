@@ -120,11 +120,15 @@
                     </tr>
                     <tr>
                         <td><strong>UPRN:</strong></td>
-                        <td>{{ requirement_instance.UPRN|default:''|title }}</td>
+                        <td>{{ requirement_instance.UPRN|default:'-'|title }}</td>
                     </tr>
                     <tr>
-                        <td><strong>RBNO:</strong></td>
-                        <td>{{ requirement_instance.RBNO|default:''|title }}</td>
+                        <td><strong>Job Number:</strong></td>
+                        <td>{{ requirement_instance.RBNO|default:'-'|title }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Reference Number:</strong></td>
+                        <td>IFP-{{ queryset.id }}</td>
                     </tr>
                 </table>
             </div>
@@ -140,21 +144,24 @@
                 <th scope="col" class="pe-2 text-center">SOR Description</th>
                 <th scope="col" class="pe-2 text-center">Category</th>
                 <th scope="col" class="pe-2 text-center">Price(£)</th>
-
+                <th scope="col" class="text-start pe-2">Quantity</th>
+                <th scope="col" class="text-start pe-2">Total Price(£)</th>
             </tr>
         </thead>
         <tbody id="sor-items-table">
             {% for defect_key, value in queryset.quotation_json.defectSorValues.items %}
             {% for inner_key, item in value.items %}
             <tr>
-                        <td>{{ item.sor_items.reference_number }}</td>
-                        <td>{{defect_key|get_defect_action|safe}}</td>
-                        <td>{{defect_key|get_defect_rectification|safe}}</td>
-                        <td>{{ item.sor_items.description|safe }}</td>
-                        <td>{{ item.sor_items.category_id }}</td>
-                        <td>{{ item.sor_items.price }}</td>
-                    </tr>
-                {% endfor %}
+                <td>{{ item.sor_items.reference_number }}</td>
+                <td>{{defect_key|get_defect_action|safe}}</td>
+                <td>{{defect_key|get_defect_rectification|safe}}</td>
+                <td>{{ item.sor_items.description|safe }}</td>
+                <td>{{ item.sor_items.category_id }}</td>
+                <td>{{ item.sor_items.price }}</td>
+                <td class="pe-2 text-start">{{ item.quantity }}</td>
+                <td class="pe-2 text-start">{{ item.total_price }}</td>
+            </tr>
+            {% endfor %}
             {% endfor %}
         </tbody>
     </table>

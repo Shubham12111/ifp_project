@@ -173,8 +173,7 @@ class RequirementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Requirement
-        # fields = ('user_id', 'customer_id', 'description', 'quantity_surveyor', 'status')
-        fields = ('user_id', 'customer_id', 'description', 'status')
+        fields = '__all__'
 
     def to_representation(self, instance):
         """
@@ -187,7 +186,12 @@ class RequirementSerializer(serializers.ModelSerializer):
             dict: JSON representation of the model instance.
         """
         data = super().to_representation(instance)
+        data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['site_address'] = instance.site_address.site_name if instance.site_address else ''
+        data['surveyor'] = f"{instance.surveyor.first_name} {instance.surveyor.last_name} - <i>{instance.surveyor.roles}</i>" if instance.surveyor else ''
+        data['status'] = instance.get_status_display() if instance.status else ''
+        data['due_date'] = f"{instance.due_date.strftime('%d/%m/%Y')}" if instance.due_date else ''
         return data
 
 class SiteAddressField(serializers.PrimaryKeyRelatedField):
@@ -213,6 +217,9 @@ class SiteAddressField(serializers.PrimaryKeyRelatedField):
             return SiteAddress.objects.filter(user_id=user_id)
         else:
             return SiteAddress.objects.none()
+    
+    def display_value(self, instance):
+        return f'{instance.address}, {instance.town}, {instance.country}, {instance.post_code}'
 
 
 
@@ -220,19 +227,19 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     """
     Serializer for creating and updating Requirement instances with additional fields.
 
-    This serializer includes additional fields such as 'action', 'RBNO', 'UPRN', 'description',
+    This serializer includes additional fields such as 'action', 'Job Number', 'UPRN', 'description',
     'site_address', and 'file_list' to create and update Requirement instances.
 
     Fields:
         action (str): The action associated with the Requirement.
-        RBNO (str): The RBNO (Reference Building Number) associated with the Requirement.
+        Job Number (str): The Job Number (Reference Building Number) associated with the Requirement.
         UPRN (str): The UPRN (Unique Property Reference Number) associated with the Requirement.
         description (str): The description of the Requirement.
         site_address (SiteAddressField): A field for selecting the site address.
         file_list (List[FileField]): A list of files associated with the Requirement.
 
     Methods:
-        validate_RBNO: Validate the uniqueness of RBNO.
+        validate_job_number: Validate the uniqueness of Job Number.
         validate_UPRN: Validate the uniqueness of UPRN.
         get_initial: Get the initial data for the serializer.
         create: Create a new Requirement instance with associated files.
@@ -252,13 +259,13 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     )
     
     RBNO = serializers.CharField(
-        label=('RBNO'),
+        label=('Job Number'),
         required=True,
         max_length=12,
         style={'base_template': 'custom_input.html'},
         error_messages={
             "required": "This field is required.",
-            "blank": "RBNO is required.",
+            "blank": "job_number is required.",
         },
     )
     
@@ -345,7 +352,10 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = Requirement
         fields = ('RBNO', 'UPRN', 'action','description','site_address','due_date','file_list')
-
+    
+    
+    
+    
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
         soup = BeautifulSoup(value, 'html.parser')
@@ -390,7 +400,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         """
         if not self.instance:
             if Requirement.objects.filter(RBNO=value).exists():
-                raise serializers.ValidationError("RBNO already exists.")
+                raise serializers.ValidationError("Job Number already exists.")
         return value
 
 
@@ -509,6 +519,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
                         print(f"Error uploading file {file.name}: {str(e)}")
         
         return instance
+   
     
     def to_representation(self, instance):
         """
@@ -1199,13 +1210,13 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
     """
     # Add a field to accept the date from the CSV file
     RBNO = serializers.CharField(
-        label=('RBNO'),
+        label=('Job Number'),
         required=True,
         max_length=12,
         style={'base_template': 'custom_input.html'},
         error_messages={
             "required": "This field is required.",
-            "blank": "RBNO is required.",
+            "blank": "Job Number is required.",
         },
     )
     
@@ -1314,7 +1325,7 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
         """
         if not self.instance:
             if Requirement.objects.filter(RBNO=value).exists():
-                raise serializers.ValidationError("RBNO already exists.")
+                raise serializers.ValidationError("Job Number already exists.")
         return value
 
 
@@ -1413,6 +1424,7 @@ class RequirementDefectListSerializer(serializers.ModelSerializer):
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
         data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
         data['rectification_description'] = strip_tags(data['rectification_description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['used_in_report'] = instance.report_set.exists() 
         return data
 
 class RequirementReportListSerializer(serializers.ModelSerializer):
@@ -1427,7 +1439,7 @@ class RequirementReportListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Report
-        fields = ('id', 'user_id', 'pdf_path', 'comments', 'status', 'created_at')
+        fields = '__all__'
 
     def to_representation(self, instance):
         """
@@ -1440,6 +1452,8 @@ class RequirementReportListSerializer(serializers.ModelSerializer):
             dict: JSON representation of the model instance.
         """
         data = super().to_representation(instance)
+        data['requirement_id'] = RequirementSerializer(instance.requirement_id).data if instance.requirement_id else {}
+        data['defect_id'] = RequirementDefectListSerializer(instance.defect_id.all(), many=True).data if instance.defect_id.all() else {}
         data['user_id'] = instance.user_id
         data['comments'] = strip_tags(data['comments']) # to strip html tags attached to response by ckeditor RichText field.
         data['status'] = instance.get_status_display() if instance.status else ''
@@ -1449,5 +1463,41 @@ class RequirementReportListSerializer(serializers.ModelSerializer):
             pdf_url = None
         
         data['pdf_path'] = pdf_url
+        data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
+        data['defect_count'] = instance.defect_id.count()
+        return data
+
+class RequirementQuotationListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for RequirementQuotation model.
+
+    This serializer is used to convert RequirementQuotation model instances to JSON representations.
+
+    Methods:
+        to_representation: Convert the model instance to JSON representation.
+    """
+    
+    class Meta:
+        model = Quotation
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        """
+        Convert the model instance to JSON representation.
+
+        Args:
+            instance (RequirementQuotation): The RequirementQuotation model instance.
+
+        Returns:
+            dict: JSON representation of the model instance.
+        """
+        data = super().to_representation(instance)
+        data['requirement_id'] = RequirementSerializer(instance.requirement_id).data if instance.requirement_id else {}
+        data['defect_id'] = RequirementDefectListSerializer(instance.defect_id.all(), many=True).data if instance.defect_id.all() else {}
+        data['report_id'] = RequirementReportListSerializer(instance.report_id).data if instance.report_id else {}
+        data['user_id'] = instance.user_id
+        data['status'] = instance.get_status_display() if instance.status else ''
+        data['defect_counts'] = instance.defect_id.count()
+        data['submitted_at'] = instance.submitted_at.strftime("%d/%m/%Y") if instance.submitted_at else ''
         data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
         return data
