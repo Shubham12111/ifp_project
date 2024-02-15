@@ -593,26 +593,26 @@ class RequirementDefectAddSerializer(serializers.ModelSerializer):
 
     file_list = serializers.ListField(
         child=serializers.FileField(
-                allow_empty_file=False,
-                validators=[CustomFileValidator()],
-            ),
-    label=('Documents'),  # Adjust the label as needed
-    required=False,
-    write_only=True,
-    initial=[],
-    style={
-        "input_type": "file",
-        "class": "form-control",
-        "autofocus": False,
-        "autocomplete": "off",
-        'base_template': 'custom_multiple_file.html',
-        'help_text': True,
-        'multiple': True,
-        'accept': ','.join(settings.SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
-        'allow_null': True,  # Allow None values
-        'custom_class': 'col-6'
-    },
-    help_text=('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
+            allow_empty_file=False,
+            validators=[CustomFileValidator()],
+        ),
+        label=('Documents'),  # Adjust the label as needed
+        required=False,
+        write_only=True,
+        initial=[],
+        style={
+            "input_type": "file",
+            "class": "form-control",
+            "autofocus": False,
+            "autocomplete": "off",
+            'base_template': 'custom_multiple_file.html',
+            'help_text': True,
+            'multiple': True,
+            'accept': ','.join(settings.SUPPORTED_EXTENSIONS),  # Set the accepted file extensions
+            'allow_null': True,  # Allow None values
+            'custom_class': 'col-6'
+        },
+        help_text=('Supported file extensions: ' + ', '.join(settings.SUPPORTED_EXTENSIONS))
     )
     
     defect_type = serializers.ChoiceField(
