@@ -252,4 +252,4 @@ requires_system_checks = [
     # ... other checks ...
 ]
 
-
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 1024
