@@ -120,10 +120,12 @@ class ItemSerializer(serializers.ModelSerializer):
         },
     )
     
-    quantity_per_box = serializers.CharField(
+    quantity_per_box = serializers.DecimalField(
         label=('Quantity Per Box'),
-        max_length=50,
-        required=False,
+        # max_length=50,
+        max_digits=10, 
+        default=1.0, 
+        decimal_places=2,
         style={
             'base_template': 'custom_input.html',
             'custom_class':'col-6 quantity_per_box'
