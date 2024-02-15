@@ -1424,6 +1424,7 @@ class RequirementDefectListSerializer(serializers.ModelSerializer):
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
         data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
         data['rectification_description'] = strip_tags(data['rectification_description']) # to strip html tags attached to response by ckeditor RichText field.
+        data['used_in_report'] = instance.report_set.exists() 
         return data
 
 class RequirementReportListSerializer(serializers.ModelSerializer):
