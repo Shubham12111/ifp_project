@@ -529,7 +529,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 
             except Exception as e:
                 # Handle any exceptions that occur during PDF generation
-                print("error")
+                print("error", f'{str(e)}')
 
         return output_file
     
@@ -612,16 +612,36 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         Returns:
             HttpResponse: The response, either a success message or an error message.
         """
-        instance = self.get_queryset()
+        # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasViewDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        customer_id = kwargs.get('customer_id')
+        customer_data = User.objects.filter(id=customer_id).first()
+
+        if not customer_data:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customers_list'))
+            
+        
+        instance = self.get_queryset(data_access_value)
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
+
+        if not instance.surveyor:
+            messages.error(request, "You cannot create the report before assigning a Surveyor to this requirement.")
+            return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+
         try:
             import base64
             import os
             
-            
             data = request.POST
             # Extract the relevant fields from the data
             comments = data.get('comments', '')
-            
             signature_data_url = data.get('signature_data', '')
 
             if signature_data_url:
@@ -648,11 +668,17 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     print(f"An error occurred: {str(e)}")
                     return False
             else:
-                signature_path = ""
+                messages.error(request, 'You cannot create the report without signature.')
+                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
                 
                 
             # Assuming you also have a requirement_id and defect_id in your data
             defect_ids = data.get('selected_defect_ids', [])
+            defects = RequirementDefect.objects.filter(pk__in=defect_ids.split(','), report__isnull=True).all()
+
+            if not defects:
+                messages.error(request, "You cannot create the report for the defects that are already used in other reports.")
+                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
             
             # Create a new Report instance and save it to the database
             report = Report(
@@ -660,15 +686,12 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 comments=comments,
                 signature_path = signature_path,
                 user_id=request.user,
-                status=request.POST.get('status')
-                
+                status=request.POST.get('status', '').lower()
             )
             
             report.save()
-            
-            report.defect_id.set(RequirementDefect.objects.filter(pk__in=defect_ids.split(',')))
-            
-            if request.POST.get('status') == "submit":
+            report.defect_id.set(defects)
+            if request.POST.get('status', '').lower() == "submit":
                 all_report_defects = report.defect_id.all()
                
                 requirement_document_images = RequirementAsset.objects.filter(requirement_id=instance.id)
@@ -694,35 +717,35 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 
                 unique_pdf_filename = f"{str(uuid.uuid4())}_report_{report.id}.pdf"
                 
-                pdf_file = self.save_pdf_from_html(context=context, file_name=unique_pdf_filename)
-                pdf_path = f'requirement/{instance.id}/report/pdf'
-                
-               
-                
-                upload_signature_to_s3(unique_pdf_filename, pdf_file, pdf_path)
-                
-                report.pdf_path = f'requirement/{instance.id}/report/pdf/{unique_pdf_filename}'
-                report.save()
-                
-                # send email to QS
-                if instance.quantity_surveyor and instance.surveyor:
-                    context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
+                try:
+                    pdf_file = self.save_pdf_from_html(context=context, file_name=unique_pdf_filename)
+                    pdf_path = f'requirement/{instance.id}/report/pdf'
+                    
+                    upload_signature_to_s3(unique_pdf_filename, pdf_file, pdf_path)
+                    report.pdf_path = f'requirement/{instance.id}/report/pdf/{unique_pdf_filename}'
+                    report.save()
+                    # send email to QS
+                    if instance.quantity_surveyor and instance.surveyor:
+                        context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
 
-                    email = Email()
-                    attachment_path = generate_presigned_url(report.pdf_path)
-                    email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
+                        email = Email()
+                        attachment_path = generate_presigned_url(report.pdf_path)
+                        email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
 
-                
-                
-            messages.success(request, "Your requirement report has been added successfully. ")
-            return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
-                                        message="Your requirement report has been added successfully.", )
+                except Exception as e:
+                    pass
             
+            if request.accepted_renderer.format == 'html':
+                messages.success(request, "Your requirement report has been added successfully. ")
+                return redirect(reverse('customer_requirement_reports', kwargs={'requirement_id':instance.id, 'customer_id':customer_id}))
+            else:
+                return create_api_response(status_code=status.HTTP_200_OK,
+                                        message="Your requirement report has been added successfully.", )
         except Exception as e:
             message = "Something went wrong"
             if request.accepted_renderer.format == 'html':
                 messages.warning(request, message)
-                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':kwargs.get('customer_id')}))
+                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
             else:
                 return create_api_response(
                         status_code=status.HTTP_400_BAD_REQUEST,
