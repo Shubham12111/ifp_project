@@ -150,6 +150,11 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
             return redirect(reverse('vendor_list'))
 
     def post(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "stock_management", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
         """
         Handle POST request to add a item.
         """
@@ -190,9 +195,11 @@ class ItemListView(CustomAuthenticationMixin,generics.CreateAPIView):
 
             else:
                 context = {
-                    'item_list':self.get_item_queryset(item_list),
+                    'item_list':self.get_paginated_queryset(ItemListSerializer(self.get_item_queryset(), many=True).data),
                     'vendor_instance':vendor_instance,
-                    'serializer':serializer}
+                    'vendor_id':vendor_instance.id,
+                    'serializer':serializer
+                }
                 return render_html_response(context,self.template_name)
             
         else:

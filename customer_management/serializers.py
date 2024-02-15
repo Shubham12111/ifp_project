@@ -4,7 +4,7 @@ from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
 from authentication.models import CUSTOMER_TYPES, User
-from rest_framework.validators import UniqueValidator
+from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from .models import *
 import re
 from customer_management.constants import POST_CODE_LIST
@@ -16,6 +16,8 @@ from decimal import Decimal
 
 from requirement_management.models import *
 from requirement_management.serializers import CustomFileValidator
+
+from django.shortcuts import get_object_or_404
 
 # Define a serializer for ContactCustomer model
 class ContactCustomerSerializer(serializers.ModelSerializer):
@@ -879,3 +881,86 @@ class SORSerializer(serializers.ModelSerializer):
         
         representation['document_paths'] = document_paths
         return representation
+
+class BulkSorAddSerializer(serializers.ModelSerializer):
+    
+    description = serializers.CharField(
+        max_length=1000,
+        required=True,
+        validators=[validate_description],
+    )
+    category_id = serializers.CharField(
+        required=True, 
+        allow_null=False, 
+        allow_blank=False
+    )
+    price = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+    )
+    units = serializers.ChoiceField(
+        choices=UNIT_CHOICES,
+        required=True,
+    )
+    customer_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.filter(is_active=True, roles__name='Customer').all(),
+        required=True
+    )
+
+    class Meta:
+        model = SORItem
+        fields = ['customer_id', 'name', 'reference_number', 'category_id', 'price', 'description', 'units']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=SORItem.objects.all(),
+                fields=['reference_number', 'customer_id'],
+                message='The combination of reference_number, and customer must be unique.'
+            )
+        ]
+
+    def validate_price(self, value):
+        # Ensure that the price is not empty or None
+        if value is None:
+            raise ValidationError("Price is required.")
+
+        # Ensure that the price is a valid Decimal with 2 decimal places
+        if not isinstance(value, Decimal) and not isinstance(value, int):
+            raise ValidationError("Price is invalid.")
+
+        # Ensure that the price is not negative
+
+        if value <=0:
+
+            raise ValidationError("Price cannot be negative or zero")
+
+        # Ensure that the price has at most 10 digits in total
+        if len(str(value)) > 10:
+            raise ValidationError("Invalid price, max limit should be 10 digits.")
+
+        # Ensure that the price has at most 2 decimal places
+        if value.as_tuple().exponent < -2:
+            raise ValidationError("Price can have at most 2 decimal places.")
+
+        return value
+
+    def validate_name(self, value):
+        # Check for minimum length of 3 characters
+        if len(value) < 3:
+            raise serializers.ValidationError("Item Name must be at least 3 characters long.")
+         # Check if the value consists entirely of digits (integers)
+        if value.isdigit():
+            raise serializers.ValidationError("Item Name cannot consist of only integers.")
+
+        # Check for alphanumeric characters and spaces
+        if not re.match(r'^[a-zA-Z0-9\s]*$', value):
+            raise serializers.ValidationError("Item Name can only contain alphanumeric characters and spaces.")
+
+        return value
+
+    def validate_category_id(self, value):
+        try:
+            category_instance = get_object_or_404(SORCategory, name=value)
+            return category_instance
+        except Exception as e:
+            raise serializers.ValidationError(f"Category with name '{value}' does not exist.")

@@ -91,41 +91,39 @@
             </div>
           </div>
           <div class="row mt-2">
-            <div class="col-12">
               <div class="table-responsive">
-                <table class="table text-dark">
-                  <thead class="bg-default">
+                <table class="table">
+                  <thead>
                     <tr class="text-sm">
-                      <th scope="col" class="pe-2 text-start">SOR Code </th>
-                      <th scope="col" class="pe-2 text-start">Defect Action </th>
-                      <th scope="col" class="pe-2 text-start">Defect Rectification </th>
-                      <th scope="col" class="text-start pe-2">SOR Description</th>
-                      <th scope="col" class="text-start pe-2">Category</th>
-                      <th scope="col" class="text-start pe-2">Price(£)</th>
-                      <th scope="col" class="text-start pe-2">Quantity</th>
-                      <th scope="col" class="text-start pe-2">Total Price(£)</th>
+                      <th scope="col" class="text-start">SOR Code</th>
+                      <th scope="col" class="text-start">Defect Action</th>
+                      <th scope="col" class="text-start">Defect Rectification</th>
+                      <th scope="col" class="text-start">SOR Description</th>
+                      <th scope="col" class="text-start">Category</th>
+                      <th scope="col" class="text-start">Price(£)</th>
+                      <th scope="col" class="text-start">Quantity</th>
+                      <th scope="col" class="text-start">Total Price(£)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for defect_key, value in queryset.quotation_json.defectSorValues.items %}
                     {% for inner_key, item in value.items %}
                     <tr class="text-sm">
-                      <td class="pe-2 text-start">{{ item.sor_items.reference_number }}</td>
-                      <td class="pe-2 text-start">{{defect_key|get_defect_action|safe}}</td>
-                      <td class="pe-2 text-start">{{defect_key|get_defect_rectification|safe}}</td>
-                      <td class="pe-2 text-start">{{ item.sor_items.description|safe }}</td>
-                      <td class="pe-2 text-start">{{ item.sor_items.category_id }}</td>
-                      <td class="pe-2 text-start">{{ item.sor_items.price }}</td>
-                      <td class="pe-2 text-start">{{ item.quantity }}</td>
-                      <td class="pe-2 text-start">{{ item.total_price }}</td>
+                      <td class="text-start">{{ item.sor_items.reference_number }}</td>
+                      <td class="text-start"><span class="text-wrap">{{defect_key|get_defect_action|safe}}</span></td>
+                      <td class="text-start"><span class="text-wrap">{{defect_key|get_defect_rectification|safe}}</span></td>
+                      <td class="text-start">{{ item.sor_items.description|safe }}</td>
+                      <td class="text-start">{{ item.sor_items.category_id }}</td>
+                      <td class="text-start">{{ item.sor_items.price }}</td>
+                      <td class="text-start">{% if item.quantity %}{{ item.quantity }}{% else %}1{% endif %}</td>
+                      <td class="text-start">{% if item.total_price %}{{ item.total_price }}{% else %}{{ item.sor_items.price }}{% endif %}</td>
                     </tr>
                     {% endfor %}
                     {% endfor %}
-
+                  </tbody>
                 </table>
               </div>
             </div>
-          </div>
         </div>
         <div class="card-footer  mt-2">
           <div class="row">
