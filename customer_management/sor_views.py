@@ -818,6 +818,7 @@ class SorBulkUploadView(CustomAuthenticationMixin, generics.CreateAPIView):
         else:
             update_instances = []
             errors = []
+            instances = None
             items_data_list_copy = items_data_list.copy()
             if serializer.errors:
                 indexes_with_unique_errors = list(map(lambda x: x[0], filter(lambda x: 'non_field_errors' in x[1], enumerate(serializer.errors))))
