@@ -1425,7 +1425,6 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'requirement_list.html'
     serializer_class = RequirementAddSerializer
-
     def post(self, request, *args, **kwargs):
          # Get customer_id from URL kwargs
         customer_id = kwargs.get('customer_id', None)
@@ -1442,7 +1441,6 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                 if not csv_file:
                     messages.error(request, "Please select a file to import")
                     return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
-
                 # Check if the file extension is in the list of allowed formats
                 allowed_formats = ['csv', 'xls', 'xlsx']
                 file_extension = csv_file.name.split('.')[-1]
@@ -1450,11 +1448,9 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                 if file_extension not in allowed_formats:
                     messages.error(request, 'Unsupported file format. Please upload a CSV, XLS, or XLSX file.')
                     return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
-
                 # Explicitly specify the encoding as ISO-8859-1 (latin1)
                 decoded_file = csv_file.read().decode('ISO-8859-1').splitlines()
                 # print(decoded_file)
-                
                 if file_extension == 'csv':
                     csv_reader = csv.DictReader(decoded_file)
                 else:
@@ -1462,21 +1458,19 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                     xls = pd.ExcelFile(csv_file)
                     df = xls.parse(xls.sheet_names[0])  # Assuming you want to read the first sheet
                     csv_reader = df.to_dict(orient='records')
-
                 success = True  # Flag to track if the import was successful
-                existing_job_number_set = set()  # To store existing Job Number values encountered in the file
+                existing_rbno_set = set()  # To store existing Job Number values encountered in the file
                 existing_uprn_set = set()  # To store existing UPRN values encountered in the file
                 for row in csv_reader:
                     # Extract the date from the CSV row (you may need to format it properly)
                     csv_date = row.get('date', None)
-                    RBNO = row.get('RBNO', '')
+                    rbno = row.get('RBNO', '')
                     uprn = row.get('UPRN', '')
                     # Check if the Job Number already exists in the database
-                    if RBNO and Requirement.objects.filter(RBNO=RBNO).exists():
-                        messages.error(request, f"Job Number '{RBNO}' already exists.")
+                    if rbno and Requirement.objects.filter(RBNO=rbno).exists():
+                        messages.error(request, f"Job Number '{rbno}' already exists.")
                         success = False
                         continue
-
                     # Check if the UPRN already exists in the database
                     if uprn and Requirement.objects.filter(UPRN=uprn).exists():
                         messages.error(request, f"UPRN '{uprn}' already exists.")
@@ -1484,7 +1478,7 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         continue
                     serializer_data = {
                         'action': row.get('action', ''),
-                        'RBNO': RBNO,
+                        'RBNO': rbno,
                         'UPRN': uprn,
                         'description': row.get('description', ''),
                         'site_address': row.get('site_address', ''),
@@ -1493,28 +1487,23 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                     }
                     # Retrieve the customer's site address using the related name
                     customer_site_address = SiteAddress.objects.filter(user_id=customer_data.id, id=serializer_data['site_address']).first()
-
                     # Check if the customer's site address matches the one in the CSV
                     if not customer_site_address:
                         messages.error(request, "Invalid site address. It does not match the customer's site address.")
                         success = False
                         continue
-            
                     serializer = RequirementAddSerializer(data=serializer_data,context={'request': request})
                     print(serializer_data)
-
                     if serializer.is_valid():
-                        serializer.validated_data['user_id'] = request.user 
+                        serializer.validated_data['user_id'] = request.user
                         serializer.validated_data['customer_id'] = customer_data
                         # print(serializer.data)
-                        requirement = serializer.save() 
+                        requirement = serializer.save()
                         print(requirement) # Save the requirement
-                        
                         requirement.update_created_at(csv_date)
                         print(requirement)
                     else:
                         success = False
-
                 # Fetch the imported data and pass it to the template
                 if success:
                     requirements = Requirement.objects.filter(customer_id=customer_data.id)
@@ -1522,13 +1511,11 @@ class RequirementCSVView(CustomAuthenticationMixin, generics.CreateAPIView):
                         'requirements': requirements,
                     }
                     messages.success(request,'FRA CSV file imported and data imported successfully.')
-            
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except ValidationError as e:
             print(e)
             messages.error(self.request, "Something went wrong !")
-        
         return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))
 
 def retriveSurveyorAssignedFRA(request, surveyor_id, customer_id):

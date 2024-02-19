@@ -352,11 +352,12 @@ async function fetchSiteAddresses() {
                 option.text = siteAddress.site_name;
                 siteAddressDropdown.add(option);
             });
-            site_address_choices = new Choices(document.getElementById('site_address-choices'), {
+
+            site_address_choices = new Choices(siteAddressDropdown, {
                 default: false,
                 items: [],
-                choices: dataArray,
-                renderChoiceLimit: 1,
+                choices: [],
+                renderChoiceLimit: 10,
                 searchEnabled: true,
                 searchChoices: true,
                 searchFloor: 1,
