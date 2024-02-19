@@ -67,7 +67,7 @@
                   <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{% if order.inventory_location_id %}{{order.inventory_location_id.name}} - <i>Inventory Location</i>{% else %}{{order.site_address}} - <i>Site Address</i>{% endif %}</a></td>
                   <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.total_amount}}</a></td>
                   <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.created_at|date:"d/m/Y "}}</a></td>
-                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.status}}</a></td>
+                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.get_status_display|title|default:"-"}}</a></td>
                     <td>
                       <div class="dropstart ms-auto pe-0">
                         <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
