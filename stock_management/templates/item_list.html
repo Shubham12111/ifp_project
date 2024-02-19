@@ -303,12 +303,12 @@ table > tbody > tr > td > i{
                   </td>
                   <td>
                     <a href="{% url 'item_view' vendor_id item.id  %}"
-                      class="text-decoration-none w-100 nav-link">{{item.reference_number|title|default:'-'|truncatechars:20|title}}
+                      class="text-decoration-none w-100 nav-link">{{item.price|title|default:'-'|truncatechars:20|title}}
                     </a>
                   </td>
                   <td>
                     <a href="{% url 'item_view' vendor_id item.id  %}"
-                      class="text-decoration-none w-100 nav-link">{{item.price|title|default:'-'|truncatechars:20|title}}
+                      class="text-decoration-none w-100 nav-link">{{item.reference_number|title|default:'-'|truncatechars:20|title}}
                     </a>
                   </td>
                   <td>
