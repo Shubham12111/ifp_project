@@ -34,6 +34,12 @@ from work_planning_management.serializers import Job, STWJobListSerializer, Job_
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
+from invoice_management.serializers import (
+    Invoice,
+    InvoiceListSerializer,
+
+    INVOICE_STATUS_CHOICES
+)
 
 def generate_strong_password(length=12):
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -1115,6 +1121,109 @@ class CMQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
                 'status_values': QUOTATION_STATUS_CHOICES,
                 'search_fields': self.search_fields,
                 'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))}  # Pass the list of customers with counts to the template
+                return render_html_response(context, self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('view_customer_list_quotation'))
+
+class CMInvoiceListView(CustomAuthenticationMixin,generics.ListAPIView):
+    
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['requirement__action', 'requirement__description', 'requirement__UPRN']
+    template_name = 'customer_invoice_list.html'
+    ordering_fields = ['created_at'] 
+    serializer_class = InvoiceListSerializer
+
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
+    def get_filtered_queryset(self, queryset):
+        filters = {
+            'status': self.request.GET.get('status'),
+            'surveyor': self.request.GET.get('surveyor'),
+            'dateRange': self.request.GET.get('dateRange'),
+        }
+        date_format = '%d/%m/%Y'
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.strptime(end_date_str.strip(), date_format).date()
+                    queryset = queryset.filter(submitted_at__isnull=False)
+                    queryset = queryset.filter(submitted_at__date__gte=start_date, submitted_at__date__lte=end_date)
+                elif filter_name == 'surveyor':
+                    value_list = filter_value.split()
+                    if 2 >= len(value_list) > 1:
+                        queryset = queryset.filter(requirement__surveyor__first_name=value_list[0], requirement__surveyor__last_name=value_list[1])
+                    else:
+                        queryset = queryset.filter(requirement__surveyor__first_name = filter_value)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                    }
+                    queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
+        
+        return self.get_searched_queryset(queryset)
+
+    def get_queryset(self):
+        queryset = Invoice.objects.filter(customer=self.kwargs.get('customer_id'))
+        return self.get_filtered_queryset(queryset)
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasListDataPermission, 'list'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = kwargs.get('customer_id')
+        customer_data = User.objects.filter(id=customer_id).first()
+
+        if customer_data:
+            queryset = self.get_queryset()
+           
+            if request.accepted_renderer.format == 'html':
+                context = {
+                    'invoice_list': self.get_paginated_queryset(self.serializer_class(queryset, many=True).data),
+                    'customer_id': customer_id,
+                    'customer_instance': customer_data,
+                    'status_values': INVOICE_STATUS_CHOICES,
+                    'search_fields': self.search_fields,
+                    'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
+                }  # Pass the list of customers with counts to the template
                 return render_html_response(context, self.template_name)
         else:
             messages.error(request, "You are not authorized to perform this action")

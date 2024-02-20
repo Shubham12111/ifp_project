@@ -46,6 +46,7 @@ urlpatterns = [
     path('fra/<int:customer_id>', CMRequirementListView.as_view(), name='cs_customer_fra_list'),
     path('job/<int:customer_id>', CMJobsListView.as_view(), name='cs_customer_job_list'),
     path('quotation/<int:customer_id>', CMQuotationListView.as_view(), name='cs_customer_quote_list'),
+    path('invoice/<int:customer_id>', CMInvoiceListView.as_view(), name='cs_customer_invoice_list'),
 
 ]
 

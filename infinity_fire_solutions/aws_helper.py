@@ -109,7 +109,7 @@ def delete_file_from_s3(file_key, s3_folder=''):
     Returns:
         bool: True if the file was successfully deleted, False otherwise.
     """
-    s3_key = f"{s3_folder}/{file_key}"
+    s3_key = f"{s3_folder}/{file_key}" if s3_folder else f"{file_key}"
     try:
         # Delete the file from S3
         s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=s3_key)

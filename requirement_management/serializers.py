@@ -1500,4 +1500,7 @@ class RequirementQuotationListSerializer(serializers.ModelSerializer):
         data['defect_counts'] = instance.defect_id.count()
         data['submitted_at'] = instance.submitted_at.strftime("%d/%m/%Y") if instance.submitted_at else ''
         data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
+        data['job_status'] = [job.status for job in instance.job_set.all()] if instance.job_set.exists() else []
+        data['invoice_generated'] = True if instance.invoice_set.exists() else False
+        data['invoice_id'] = instance.invoice_set.first().id if instance.invoice_set.exists() else ''
         return data

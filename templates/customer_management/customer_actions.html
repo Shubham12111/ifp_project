@@ -84,6 +84,15 @@
                 <a class="nav-link " >Jobs</a>        
             {% endif %}
            </li>
+           <li class="nav-item ">
+            {% if customer_instance %}
+                <a class="nav-link {% if '/customer/invoice/' in request.path  %}active{% endif %}"  href="{% url 'cs_customer_invoice_list' customer_instance.id  %}">
+                    Invoices
+                </a>
+            {% else %}
+                <a class="nav-link " >Invoices</a>        
+            {% endif %}
+           </li>
         </ul>
     </div>
 </div>
