@@ -1181,8 +1181,8 @@ class CMInvoiceListView(CustomAuthenticationMixin,generics.ListAPIView):
                     start_date_str, end_date_str = filter_value.split('-')
                     start_date = datetime.strptime(start_date_str.strip(), date_format).date()
                     end_date = datetime.strptime(end_date_str.strip(), date_format).date()
-                    queryset = queryset.filter(submitted_at__isnull=False)
-                    queryset = queryset.filter(submitted_at__date__gte=start_date, submitted_at__date__lte=end_date)
+                    queryset = queryset.filter(Q(submitted_at__isnull=False) | Q(paid_at__isnull=False))
+                    queryset = queryset.filter(Q(submitted_at__date__gte=start_date, submitted_at__date__lte=end_date) | Q(paid_at__date__gte=start_date, paid_at__date__lte=end_date))
                 elif filter_name == 'surveyor':
                     value_list = filter_value.split()
                     if 2 >= len(value_list) > 1:

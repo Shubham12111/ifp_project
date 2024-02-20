@@ -85,13 +85,14 @@
                         <table class="table table-hover text-dark" id="report-requirement-list">
                             <thead class="thead-light">
                                 <tr class="text-sm">
+                                    <th>Job ID</th>
                                     <th>Action</th>
-                                    <th>Description</th>
                                     <th>UPRN</th>
-                                    <th>Amount</th>
                                     <th>Surveyor</th>
                                     <th>Submitted On</th>
+                                    <th>Paid On</th>
                                     <th>Status</th>
+                                    <th>Amount</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -100,22 +101,17 @@
                                 <tr class="text-sm">
                                     <td>
                                         <a href="{% url 'view_customer_invoice' invoice.requirement.customer_id invoice.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{ invoice.quotation.job_id|default:'-'}}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'view_customer_invoice' invoice.requirement.customer_id invoice.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ invoice.requirement.action|safe|truncatechars:30|default:'-'|title }}
                                         </a>
                                     </td>
                                     <td>
                                         <a href="{% url 'view_customer_invoice' invoice.requirement.customer_id invoice.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{ invoice.requirement.description|safe|truncatechars:30|default:'-'|title }}
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'view_customer_invoice' invoice.requirement.customer_id invoice.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{ invoice.requirement.UPRN }}
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'view_customer_invoice' invoice.requirement.customer_id invoice.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{ invoice.total_amount }}
                                         </a>
                                     </td>
                                     <td class="text-sm">
@@ -130,7 +126,17 @@
                                     </td>
                                     <td class="text-sm">
                                         <a href="{% url 'view_customer_invoice' invoice.requirement.customer_id invoice.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{invoice.paid_at|default:'-'|title}}
+                                        </a>
+                                    </td>
+                                    <td class="text-sm">
+                                        <a href="{% url 'view_customer_invoice' invoice.requirement.customer_id invoice.id %}" class="text-decoration-none w-100 h-100 nav-link">
                                             {{invoice.status|default:'-'|title}}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'view_customer_invoice' invoice.requirement.customer_id invoice.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            {{ invoice.total_amount }}
                                         </a>
                                     </td>
 
