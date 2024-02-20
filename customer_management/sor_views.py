@@ -611,7 +611,8 @@ class CSSORDetailView(generics.RetrieveAPIView):
     """
     serializer_class = SORSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
-    template_name = 'sor/sor_detail.html'
+    template_name = 'sor_detail.html'
+
 
     def get_queryset(self):
         """
@@ -805,8 +806,8 @@ class SorBulkUploadView(CustomAuthenticationMixin, generics.CreateAPIView):
         for index, row in df.iterrows():
             items_data = {}
             for key, value in mapping_dict.items():
-                items_data[key] = row[value]
-
+                items_data[key] = row[value].strip() if isinstance(row[value], str) else row[value]
+                
             items_data['customer_id'] = customer_data.id
             items_data_list.append(items_data)
 
