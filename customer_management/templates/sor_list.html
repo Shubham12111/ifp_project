@@ -119,13 +119,12 @@ table > tbody > tr > td > i{
                 {% for item in list_sor %}
                 <tr class="text-sm">
                   
-                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.reference_number}}</a></td>
-                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.name}}</a></td>
-                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.description|safe|truncatechars:50}}</a></td>
-                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.units|safe|truncatechars:50}}</a></td>
-                  <td><a href="{% url 'cs_view_sor_customer' customer_id %}" class="text-decoration-none w-100 nav-link">{{item.price}}</a></td>
-                 
-
+                  <td><a href="{% url 'cs_view_sor_customer' item.id %}" class="text-decoration-none w-100 nav-link">{{item.reference_number}}</a></td>
+                  <td><a href="{% url 'cs_view_sor_customer' item.id %}" class="text-decoration-none w-100 nav-link">{{item.name}}</a></td>
+                  <td><a href="{% url 'cs_view_sor_customer' item.id %}" class="text-decoration-none w-100 nav-link">{{item.description|safe|truncatechars:50}}</a></td>
+                  <td><a href="{% url 'cs_view_sor_customer' item.id %}" class="text-decoration-none w-100 nav-link">{{item.units|safe|truncatechars:50}}</a></td>
+                  <td><a href="{% url 'cs_view_sor_customer' item.id %}" class="text-decoration-none w-100 nav-link">{{item.price}}</a></td>
+                  
                   <td>
                     <div class="dropstart ms-auto pe-0">
                       <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
