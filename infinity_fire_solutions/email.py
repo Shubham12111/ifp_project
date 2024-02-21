@@ -19,10 +19,7 @@ class Email:
         """
         Initializes the Email instance with the necessary configurations for Amazon SES.
         """
-        self.client = boto3.client('ses',
-                                   region_name=settings.AWS_DEFAULT_REGION, 
-                                   aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                                   aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+        self.client = boto3.client('ses',region_name=settings.AWS_REGION)
 
    
     def get_html_content(self, template_name: str, context: dict):
