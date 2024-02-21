@@ -87,7 +87,7 @@ table > tbody > tr > td > i{
           <table class="table table-hover text-dark" id="defect-requirement-list">
             <thead class="thead-light">
                 <tr class="text-sm">
-                    <th><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th>
+                    {% comment %} <th><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th> {% endcomment %}
                     <th class="col-3">Type</th>
                     <th class="col-3">Action</th>
                     <th>Description</th>
@@ -100,9 +100,9 @@ table > tbody > tr > td > i{
             <tbody class="ml-4">
                 {% for defect in requirement_defect %}
                 <tr class="text-sm">
-                  <td class="align-middle">
+                  {% comment %} <td class="align-middle">
                       <input type="checkbox" name="defect_checkbox" value="{{ defect.id }}" {% if defect.used_in_report %}disabled{% endif %}>
-                  </td>
+                  </td> {% endcomment %}
                   <td class="align-middle">
                     <a href="{% url 'customer_requirement_defect_detail' customer_id requirement_instance.id defect.id %}" class="text-decoration-none w-100 nav-link">
                       {{ defect.defect_type}}
