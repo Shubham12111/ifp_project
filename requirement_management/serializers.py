@@ -1219,17 +1219,6 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
             "blank": "Job Number is required.",
         },
     )
-    
-    UPRN = serializers.CharField(
-        label=('UPRN'),
-        required=True, 
-        max_length=12,
-        style={'base_template': 'custom_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "UPRN is required.",
-        },
-    )
 
       # Custom CharField for the message with more rows (e.g., 5 rows)
     description = serializers.CharField(

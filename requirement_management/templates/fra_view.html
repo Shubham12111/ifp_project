@@ -5,6 +5,27 @@
                 <h5> FRA Actions </h5>
             </div>
             <div class="col-6 text-end">
+                {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user  %}
+                    <div class="ms-auto my-auto mt-lg-0 mt-4">
+                        {% if not existing_report_for_requirement %}
+                            <button id="createreportButton" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;">
+                                Create Report
+                            </button>
+                        {% else %}
+                            <button id="createreportButton" class="btn bg-gradient-primary btn-sm mb-0" style="float: right;" disabled onclick="showErrorMessage()">
+                                Report Created
+                            </button>
+                        {% endif %}
+                    </div>
+                    <script>
+                        document.getElementById('createreportButton').addEventListener('click', function (event) {
+                            if (this.disabled) {
+                                alert("Report has already been generated for this requirement.");
+                                event.preventDefault(); // prevent the default click action
+                            }
+                        });
+                    </script>
+                {% endif %}
                 {% include 'components/back_button.html' %}
             </div>
         </div>

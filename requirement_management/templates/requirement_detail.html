@@ -77,7 +77,6 @@ table > tbody > tr > td > i{
           {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user  %} 
         <div class="ms-auto my-auto mt-lg-0 mt-4">
             <a href="{% url 'customer_requirement_defects' customer_id requirement_instance.id %}" class="btn bg-gradient-primary btn-sm mb-0 mx-2"  style="float: right;">+&nbsp; Add Defect</a>
-            <button id="createreportButton" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;" disabled> Create Report</button>
           </div>
           {% endif %}
         </div>

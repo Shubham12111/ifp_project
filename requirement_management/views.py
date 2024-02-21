@@ -586,6 +586,12 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     
                     page_number = request.GET.get('page', 1)
                     
+                    is_surveyor_assigned = bool(instance.surveyor)
+
+                    # Check if any defects exist
+                    has_defects = RequirementDefect.objects.filter(requirement_id=instance.id, report__isnull=True).exists()
+
+
                     context = {
                         'serializer': serializer, 
                         'requirement_instance': instance, 
@@ -593,7 +599,9 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                         'document_paths': document_paths,
                         'surveyers': users_with_survey_permission,
                         'customer_id': kwargs.get('customer_id'),
-                        'customer_data':customer_data
+                        'customer_data':customer_data,
+                        'is_surveyor_assigned': is_surveyor_assigned,
+                        'has_defects': has_defects,
                         }
                
 
@@ -624,7 +632,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         if not customer_data:
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customers_list'))
-            
+
         
         instance = self.get_queryset(data_access_value)
         if not instance:
@@ -633,7 +641,17 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
         if not instance.surveyor:
             messages.error(request, "You cannot create the report before assigning a Surveyor to this requirement.")
-            return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+            return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
+
+        # Assuming you also have a requirement_id and defect_id in your data
+        defects = RequirementDefect.objects.filter(requirement_id=instance, report__isnull=True).all()
+
+        # Check if there is already a report for all selected defects
+        existing_report = Report.objects.filter(requirement_id=instance, defect_id__in=defects, status='submit').first()
+
+        if existing_report:
+            messages.error(request, "There is already a submitted report for the selected defects.")
+            return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
 
         try:
             import base64
@@ -661,30 +679,33 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 # Optionally, upload the image to S3
                 try:
                     signature_path = f'requirement/{instance.id}/report'
-                    upload_signature_to_s3(unique_filename, image_path,signature_path)
+                    upload_signature_to_s3(unique_filename, image_path, signature_path)
                     signature_path = f'requirement/{instance.id}/report/{unique_filename}'
                     
                 except Exception as e:
                     print(f"An error occurred: {str(e)}")
                     return False
             else:
-                messages.error(request, 'You cannot create the report without signature.')
-                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+                messages.error(request, 'You cannot create the report without a signature.')
+                return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
                 
-                
-            # Assuming you also have a requirement_id and defect_id in your data
-            defect_ids = data.get('selected_defect_ids', [])
-            defects = RequirementDefect.objects.filter(pk__in=defect_ids.split(','), report__isnull=True).all()
+            
+            # Check if there is already a report for all selected defects
+            existing_report_for_requirement = Report.objects.filter(requirement_id=instance, defect_id__in=defects, status='submit').first()
+            
+            if existing_report_for_requirement:
+                messages.error(request, "There is already a submitted report for this requirement.")
+                return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
 
             if not defects:
                 messages.error(request, "You cannot create the report for the defects that are already used in other reports.")
-                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+                return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
             
             # Create a new Report instance and save it to the database
             report = Report(
                 requirement_id=instance,
                 comments=comments,
-                signature_path = signature_path,
+                signature_path=signature_path,
                 user_id=request.user,
                 status=request.POST.get('status', '').lower()
             )
@@ -693,7 +714,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
             report.defect_id.set(defects)
             if request.POST.get('status', '').lower() == "submit":
                 all_report_defects = report.defect_id.all()
-               
+            
                 requirement_document_images = RequirementAsset.objects.filter(requirement_id=instance.id)
                 requirement_document_images_serializer = RequirementAssetSerializer(requirement_document_images, many=True)
 
@@ -712,7 +733,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     'requirement_images': requirement_document_images_serializer.data,
                     'requirement_defect_images': requirement_defect_images_serializer.data,
                     'comment': report.comments,
-                    'signature_data_url':signature_data_url,
+                    'signature_data_url': signature_data_url,
                 }
                 
                 unique_pdf_filename = f"{str(uuid.uuid4())}_report_{report.id}.pdf"
@@ -726,18 +747,20 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     report.save()
                     # send email to QS
                     if instance.quantity_surveyor and instance.surveyor:
-                        context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
+                        context = {'user': instance.quantity_surveyor, 'surveyor': instance.surveyor, 'site_url': get_site_url(request)}
 
                         email = Email()
                         attachment_path = generate_presigned_url(report.pdf_path)
-                        email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
+                        email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context,
+                                        "Submission of Survey Report", attachment_path)
 
                 except Exception as e:
                     pass
             
             if request.accepted_renderer.format == 'html':
                 messages.success(request, "Your requirement report has been added successfully. ")
-                return redirect(reverse('customer_requirement_reports', kwargs={'requirement_id':instance.id, 'customer_id':customer_id}))
+                return redirect(reverse('customer_requirement_reports',
+                                        kwargs={'requirement_id': instance.id, 'customer_id': customer_id}))
             else:
                 return create_api_response(status_code=status.HTTP_200_OK,
                                         message="Your requirement report has been added successfully.", )
@@ -745,12 +768,13 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
             message = "Something went wrong"
             if request.accepted_renderer.format == 'html':
                 messages.warning(request, message)
-                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+                return redirect(reverse('customer_requirement_view',
+                                    kwargs={'pk': instance.id, 'customer_id': customer_id}))
             else:
                 return create_api_response(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        message=message
-                    )
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message=message
+                )
 
 class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
