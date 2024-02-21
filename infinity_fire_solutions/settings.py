@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-3&1voj3_&(tzrsww4^_!x!wht%0a2&x@jc@vw(y!23di798(6^
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
+CSRF_TRUSTED_ORIGINS = ['http://127.0.0.1:8000/']
 
 # Application definition
 
@@ -127,7 +127,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('DB_NAME', 'infinity_fire_solutions'),
         'USER': os.environ.get('DB_USER', 'root'),
-        'PASSWORD': os.environ.get('DB_PASSWORD', 'password'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'Gurpreet@1322'),
         'HOST': os.environ.get('DB_HOST', 'localhost'),
         'PORT': '3306',
     }
@@ -187,13 +187,13 @@ USE_TZ = True
 # AWS
 FROM_EMAIL = 'no-reply@infinityfireprevention.com'
 AWS_REGION = 'eu-west-2'
-STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
-# STATIC_URL = '/static/'
+# STATIC_URL= 'https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/'
+STATIC_URL = '/static/'
 # STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
 
 
-# STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 # if not DEBUG:
 #     STATICFILES_DIRS = (
@@ -254,3 +254,9 @@ requires_system_checks = [
 ]
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 1024 * 1024 * 1024
+
+if 'IF_AWS_ACCESS_KEY_ID' in os.environ:
+    AWS_ACCESS_KEY_ID = os.getenv('IF_AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.getenv('IF_AWS_SECRET_ACCESS_KEY')
+    AWS_DEFAULT_REGION = os.getenv('IF_AWS_DEFAULT_REGION')
+

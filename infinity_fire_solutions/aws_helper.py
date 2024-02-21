@@ -4,7 +4,9 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 
 # Set up the S3 client with your AWS credentials and region
-s3_client = boto3.client('s3', region_name='eu-west-2')
+s3_client = boto3.client('s3', region_name='eu-west-2',
+                      aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
 
 # Function to upload a file to Amazon S3
 def upload_signature_to_s3(file_name, file_path, s3_folder=''):
