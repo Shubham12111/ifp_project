@@ -245,9 +245,10 @@ class InvoiceListSerializer(serializers.ModelSerializer):
         data['requirement'] = RequirementSerializer(instance.requirement).data if instance.requirement else {}
         data['defects'] = RequirementDefectListSerializer(instance.defects.all(), many=True).data if instance.defects.all() else {}
         data['report'] = RequirementReportListSerializer(instance.report).data if instance.report else {}
-        data['quotation'] = RequirementQuotationListSerializer(instance.quotation) if instance.quotation else {}
+        data['quotation'] = RequirementQuotationListSerializer(instance.quotation).data if instance.quotation else {}
         data['user'] = instance.user
         data['status'] = instance.get_status_display() if instance.status else ''
         data['submitted_at'] = instance.submitted_at.strftime("%d/%m/%Y") if instance.submitted_at else ''
+        data['paid_at'] = instance.paid_at.strftime("%d/%m/%Y") if instance.paid_at else ''
         data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
         return data
