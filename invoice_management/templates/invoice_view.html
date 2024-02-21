@@ -18,31 +18,73 @@
         <div class="col-12 mx-auto">
             <div class="card">
                 <div class="card-header pb-0">
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <h4 class="mb-0">Invoice</h4>
-                    </div>
-                    <div class="col-6 text-end">
-                        {% include 'components/back_button.html' %}
-                        {% if instance.get_status_display != 'Draft' %}
-                        <a href="{{instance.pdf_path|get_quotation_pdf_path}}" class="btn bg-gradient-primary btn-sm mb-0 mx-2" download="">
-                            Download Invoice
-                        </a>
-                        {% endif %}
-                        
-                        {% if instance.get_status_display == 'Submitted' %}
-                        <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2">
-                            Send To Customer
-                        </a>
-                        {% endif %}
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h4 class="mb-0">Invoice</h4>
+                        </div>
+                        <div class="col-6 text-end">
+                            {% include 'components/back_button.html' %}
+                            {% if instance.get_status_display != 'Draft' %}
+                            <a href="{{instance.pdf_path|get_quotation_pdf_path}}" class="btn bg-gradient-primary btn-sm mb-0 mx-2" download="">
+                                Download Invoice
+                            </a>
+                            {% endif %}
+                            
+                            {% if instance.get_status_display == 'Submitted' or instance.get_status_display == 'Sent to Customer' or instance.get_status_display == 'Paid' %}
+                            <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#sendToCustomerModal">
+                                Send To Customer
+                            </a>
+                            <!-- Modal -->
+                            <div class="modal fade text-start" id="sendToCustomerModal" tabindex="-1" aria-labelledby="sendToCustomerModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="sendToCustomerModalLabel">Confirmations</h1>
+                                            <button type="button" class="btn-close ps-0 py-0 fs-3 text-dark mb-0" data-bs-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                        Are you sure you want to send the customer the invoice?<br>
+                                        As soon as you confirm, the invoice will be sent to the customer via email. Once submitted, there is no way to reverse this process, so be sure the invoice contains all the necessary information and that all of the charges are reasonable.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn bg-gradient-secondary btn-sm mb-0 mx-2" data-bs-dismiss="modal">No</button>
+                                            <a href="{% url "send_invoice_to_customer" instance.requirement.customer_id.id instance.id %}" class="btn bg-gradient-primary btn-sm mb-0 mx-2">Yes</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
 
-                        {% if instance.get_status_display == 'Sent to Customer' or instance.get_status_display == 'Submitted' %}
-                        <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2">
-                            Mark as Paid
-                        </a>
-                        {% endif %}
+                            {% if instance.get_status_display == 'Sent to Customer' or instance.get_status_display == 'Submitted' %}
+                            <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#markAsPaidModal">
+                                Mark as Paid
+                            </a>
+                            <!-- Modal -->
+                            <div class="modal fade text-start" id="markAsPaidModal" tabindex="-1" aria-labelledby="markAsPaidModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="markAsPaidModalLabel">Confirmations</h1>
+                                            <button type="button" class="btn-close ps-0 py-0 fs-3 text-dark mb-0" data-bs-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Do you really wish to designate this invoice as paid?<br>
+                                            You will still be able to download the invoice PDF after you confirm, but the invoice will be listed as paid and you will be unable to do anything with it.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn bg-gradient-secondary btn-sm mb-0 mx-2" data-bs-dismiss="modal">No</button>
+                                            <a href="{% url "mark_invoice_as_paid" instance.requirement.customer_id.id instance.id %}" class="btn bg-gradient-primary btn-sm mb-0 mx-2">Yes</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
                 </div>
                 <div class="card-body text-sm">
                     <div class="row justify-content-lg-start text-sm">
