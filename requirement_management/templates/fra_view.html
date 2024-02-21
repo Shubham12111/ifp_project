@@ -11,51 +11,6 @@
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-md-5">
-                <div class=" product-sticky">
-                  <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
-                    <div class="carousel-inner bg-light rounded">
-                        {% for item in document_paths %}
-                        <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                            <div class="zoomable-media">
-                                {% if item.is_image %}
-                                <img src="{{ item.presigned_url }}" class="d-block zoomable-image" alt="Product Image">
-                                <div class="zoom-controls">
-                                    <i class="fas fa-plus zoom-in-button m-2"></i>
-                                    <i class="fas fa-minus zoom-out-button  mx-2"></i>
-                                    <i class="fas  fa-sync-alt reset-button  mx-2"></i>
-                                    
-                                </div>
-                                {% endif %}
-                                {% comment %} {% if item.is_video %}
-                                <video controls class="d-block zoomable-video">
-                                    <source src="{{ item.presigned_url }}" type="video/mp4">
-                                </video>
-                                {% endif %} {% endcomment %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0 mt-0">
-                        {% for item in document_paths %}
-                        {% if item.is_image %}
-                        <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
-                            <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded  border me-4" alt="Product media">
-                        </li>
-                        {% endif %}
-                        {% comment %} {% if item.is_video %}
-                        <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
-                          <video  class="d-block wid-100 zoomable-video rounded  border p-2" >
-                            <source src="{{ item.presigned_url }}" type="video/mp4">
-                        </video>
-                        </li>
-                        {% endif %} {% endcomment %}
-                        {% endfor %}
-                    </ol>
-                </div>
-                
-                </div>
-              </div>
             <!-- Requirement and Customer Details -->
             <div class="col-lg-7">
                 <div class="card-body p-0">
@@ -69,57 +24,42 @@
 
                         {{ requirement_instance.description|safe}}
                     </p>
-                    <hr class="horizontal gray-light">
-                    <div class="row text-sm">
-                        <table class="table">
-                            <tbody>
-                                <tr>
-                                    <td><strong class="text-dark">Customer</strong></td>
-                                    <td>{{ requirement_instance.customer_id.first_name|title }} {{ requirement_instance.customer_id.last_name|title }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong class="text-dark">Email</strong></td>
-                                    <td>{{ requirement_instance.customer_id.email }}</td>
-                                </tr>
-                                {% if requirement_instance.UPRN %}
-                                    <tr>
-                                        <td><strong class="text-dark">UPRN</strong></td>
-                                        <td>{{ requirement_instance.UPRN }}</td>
-                                    </tr>
-                                {% endif %}
-                                {% if requirement_instance.RBNO %}
-                                    <tr>
-                                        <td><strong class="text-dark">Job Number</strong></td>
-                                        <td>{{ requirement_instance.RBNO }}</td>
-                                    </tr>
-                                {% endif %}
-                                <tr>
-                                    <td><strong class="text-dark">Site Address</strong></td>
-                                    <td>
-                                        {{ requirement_instance.site_address.site_name|default:'-'|truncatechars:20 }},
-                                        {{ requirement_instance.site_address.address|default:'-'|truncatechars:20|title }},
-                                        {{ requirement_instance.site_address.town|default:'-'|title }},
-                                        {{ requirement_instance.site_address.county|default:'-'|title }},
-                                        {{ requirement_instance.site_address.country|default:'-'|title }},
-                                        {{ requirement_instance.site_address.post_code|default:'-' }}
-                                    </td>
-                                </tr>
-                                </tr>
-                                {% if requirement_instance.surveyor %}
-                                    <tr>
-                                        <td><strong class="text-dark">Surveyor</strong></td>
-                                        <td>{{ requirement_instance.surveyor.first_name|title }} {{ requirement_instance.surveyor.last_name|title }}</td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                   
                 </div>
-                
-               
             </div>
-        </div>
+            <div class="col-lg-5">
+                <h4> Customer Information </h4>
+                <p class="text-sm mt-2" style="text-align: justify;">
+                    {{ requirement_instance.customer_id.first_name|title }} {{ requirement_instance.customer_id.last_name|title }}
+                </p>
+
+                <p class="text-sm mt-2" style="text-align: justify;">
+                    {{ requirement_instance.customer_id.email }}
+                </p>
+                <p class="text-sm mt-2" style="text-align: justify;">
+                    {% if requirement_instance.UPRN %}    
+                    {{ requirement_instance.UPRN }}
+                    {% endif %}
+                </p>
+                <p class="text-sm mt-2" style="text-align: justify;">
+                    {% if requirement_instance.RBNO %}
+                    {{ requirement_instance.RBNO }}
+                    {% endif %}
+                </p>
+                <p class="text-sm mt-2" style="text-align: justify;">
+                    {{ requirement_instance.site_address.site_name|default:'-'|truncatechars:20 }},
+                    {{ requirement_instance.site_address.address|default:'-'|truncatechars:20|title }},
+                    {{ requirement_instance.site_address.town|default:'-'|title }},
+                    {{ requirement_instance.site_address.county|default:'-'|title }},
+                    {{ requirement_instance.site_address.country|default:'-'|title }},
+                    {{ requirement_instance.site_address.post_code|default:'-' }}
+                </p>
+                <p class="text-sm mt-2" style="text-align: justify;">
+                    {% if requirement_instance.surveyor %}
+                    {{ requirement_instance.surveyor.first_name|title }} {{ requirement_instance.surveyor.last_name|title }}
+                    {% endif %}
+                </p>
+            </div>
+
+        </div>                             
     </div>
 </div>

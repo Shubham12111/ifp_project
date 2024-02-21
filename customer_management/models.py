@@ -38,6 +38,9 @@ class BillingAddress(models.Model):
         default=True,  
         verbose_name='Is a Purchase Order number required?'
     )  
+    CIS = models.BooleanField(
+        default=True
+    )
 
 
     class Meta:

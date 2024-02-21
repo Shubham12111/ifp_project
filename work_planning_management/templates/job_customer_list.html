@@ -24,28 +24,28 @@
             <table class="table table-hover text-dark" id="stw-customer-list">
               <thead class="thead-light">
                 <tr>
-                  <th>Customer Name</th>
-                  <th>Company Name</th>
+                  {% comment %} <th>Customer Name</th>
+                  <th>Company Name</th> {% endcomment %}
                   <th>Customer Email</th>
-                  <th>Phone Number</th>
+                  {% comment %} <th>Phone Number</th> {% endcomment %}
                   <th class="custom-last-column">Job Counts</th>
                 </tr>
               </thead>
               <tbody class="ml-4"> 
                 {% for query_obj  in customers_with_counts %}
                     <tr class="text-sm">
-                      <td>
+                      {% comment %} <td>
                         <a class="font-weight-bolder text-decoration-none w-100 nav-link" href="{% url 'jobs_list' query_obj.customer.id  %}">
                           {{ query_obj.customer.first_name|truncatechars:20|title }} {{ query_obj.customer.last_name|truncatechars:20|lower }}
                         </a>
                       </td>
-                         
+                          {% endcomment %}
                       <td>
-                        <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
+                        <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
                           {{query_obj.customer.company_name|default:'-'|title}}
                         </a>
                       </td>
-                      <td>
+                      {% comment %} <td>
                         <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
                           {{query_obj.customer.email}}
                         </a>
@@ -54,7 +54,7 @@
                         <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
                           {{query_obj.customer.phone_number|default:'-'}}
                         </a>
-                      </td>
+                      </td> {% endcomment %}
                       <td >
                         <a href="{% url 'jobs_list' query_obj.customer.id  %}" class="text-decoration-none w-100 nav-link">
                           {{query_obj.job_counts}}

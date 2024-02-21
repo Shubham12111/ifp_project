@@ -24,10 +24,10 @@
             <table class="table table-hover text-dark" id="requirement-customer-list">
               <thead class="thead-light">
                 <tr>
-                  <th>Customer Name</th>
+                  {% comment %} <th>Customer Name</th> {% endcomment %}
                   <th>Company Name</th>
-                  <th>Customer Email</th>
-                  <th>Phone Number</th>
+                  {% comment %} <th>Customer Email</th>
+                  <th>Phone Number</th> {% endcomment %}
                   {% if request.user.roles.name == "quantity_surveyor" %}
                   <th class="custom-last-column">FRA Counts</th>
                   {% endif %}
@@ -42,27 +42,27 @@
               <tbody class="ml-4">
                 {% for query_obj in customers_with_counts %}
                 <tr class="text-sm">
-                  <td>
+                  {% comment %} <td>
                     <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
                       {{ query_obj.customer.first_name|truncatechars:20|title }} {{query_obj.customer.last_name|truncatechars:20|lower }}
                     </a>
-                  </td>
+                  </td> {% endcomment %}
 
                   <td>
-                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                    <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
                       {{query_obj.customer.company_name|truncatechars:20|default:'-'|title}}
                     </a>
                   </td>
-                  <td>
+                  {% comment %} <td>
                     <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
                       {{query_obj.customer.email}}
                     </a>
-                  </td>
-                  <td>
+                  </td> {% endcomment %}
+                  {% comment %} <td>
                     <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
                       {{query_obj.customer.phone_number|default:'-'}}
                     </a>
-                  </td>
+                  </td> {% endcomment %}
                   {% if request.user.roles.name == "quantity_surveyor" %}
                   <td>
                     <a href="{% url 'customer_requirement_list' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
