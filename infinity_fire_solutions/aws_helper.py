@@ -4,7 +4,9 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 
 # Set up the S3 client with your AWS credentials and region
-s3_client = boto3.client('s3', region_name='eu-west-2')
+s3_client = boto3.client('s3', region_name='eu-west-2',
+                      aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                      aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
 
 # Function to upload a file to Amazon S3
 def upload_signature_to_s3(file_name, file_path, s3_folder=''):
@@ -109,7 +111,7 @@ def delete_file_from_s3(file_key, s3_folder=''):
     Returns:
         bool: True if the file was successfully deleted, False otherwise.
     """
-    s3_key = f"{s3_folder}/{file_key}"
+    s3_key = f"{s3_folder}/{file_key}" if s3_folder else f"{file_key}"
     try:
         # Delete the file from S3
         s3_client.delete_object(Bucket=settings.AWS_BUCKET_NAME, Key=s3_key)

@@ -1,0 +1,32 @@
+{% extends 'email_templates/base.html' %}
+{% block content %}
+<tr>
+    <td style="padding:0 35px;">
+        
+        <span
+            style="display:block; vertical-align:middle; margin:21px 0px; border-bottom:1px solid #cecece; width:fit-content; text-align: left">
+
+            <h3><b>Hey {{ invoice.billing_information_json.contact_name|title }}</b></h3>
+        </span>
+    </td>
+</tr>
+<tr>
+    <td style="padding:0 35px;">
+        <p
+            style="color:#000; font-size:15px;line-height:24px; margin:0; text-align: left;">
+            There is a invoice for your latest job we have completed on {{ invoice.quotation.job_completed_date }}. You can access the complete invoice by clicking on the attached PDF document. 
+        </p>
+    </td>
+</tr>
+
+<tr>
+    <td style="padding:0 35px;">
+        <br><p
+            style="color:#000; font-size:15px;line-height:24px; margin:0; text-align: left;">
+            If you have any questions or need assistance, don't hesitate to contact our support team.</br><br>
+            support@infinityfireprevention.com
+        </p></br><br>
+    </td>
+</tr>
+{% endblock content %}
+                               

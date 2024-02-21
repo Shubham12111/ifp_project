@@ -37583,4 +37583,9 @@ div.dropdown > a::after{
 div.dropdown > ul.dropdown-menu > li > a.dropdown-item{
   color: #344767;
 }
+
+.width-fill {
+  width: -webkit-fill-available;
+  width: -moz-available;
+}
 /*# sourceMappingURL=dashboard-pro.css.map */

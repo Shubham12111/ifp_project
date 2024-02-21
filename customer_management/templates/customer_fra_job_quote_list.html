@@ -26,7 +26,7 @@
         </ul>
     </div> 
 
-    {% if '/customer/job/' not in request.path %}
+    {% if '/customer/job/' not in request.path and '/customer/invoice/' not in request.path %}
 
     <!-- Surveyor list filter-->
     <div class="dropdown d-inline me-2 col-auto px-0 mb-2">

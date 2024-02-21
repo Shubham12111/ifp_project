@@ -1,0 +1,1840 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<style>
+  .ui-autocomplete {
+    max-height: 400px;
+    overflow-y: auto;
+    /* Add additional styles as needed */
+    border: 1px solid #ccc;
+    /* Add border */
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    /* Adjust shadow values as desired */
+  }
+
+  .ui-menu-item {
+    padding: 2px;
+    transition: background-color 0.3s;
+    /* Smooth hover transition */
+
+  }
+
+  .ui-menu .ui-menu-item-wrapper:hover {
+    background-color: #a6b3c3 !important;
+    /* Desired hover color */
+    border: 1px solid #ccc;
+    /* Add border on hover */
+    border-radius: 10px;
+    /* Maintain rounded corners on hover */
+    color: #344767;
+  }
+
+  .input-group {
+    position: relative;
+    /* Allow positioning of child elements */
+    border-right: 1px solid #ccc;
+    /* Add border */
+  }
+
+  .input-group-icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    /* Center the icon vertically */
+    right: 15px;
+    /* Adjust right spacing as needed */
+    font-size: 10px;
+    font-weight: bold;
+
+  }
+</style>
+<style>
+  /* Add borders to the table */
+  .custom-table th,
+  .custom-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+  }
+
+  .read-more {
+    cursor: pointer;
+    /* Add a pointer cursor when hovering */
+  }
+
+  /* Custom styles for the accordion header */
+  .accordion-button {
+    background-color: #eff0f18a;
+    /* Set your desired background color */
+    color: #344767;
+    /* Set text color */
+    padding: 10px 20px;
+    /* Adjust padding as needed */
+    border: none;
+    /* Remove border */
+    border: 1px solid #ccc;
+  }
+
+  /* Custom styles for the active (expanded) header button */
+  .accordion-button[aria-expanded="true"] {
+    background-color: #8fa0be66;
+    /* Set a different background color for active state */
+    border: 1px solid #ccc;
+  }
+
+  .accordion-button:focus {
+    z-index: 3;
+    border-color: #ccc;
+    outline: 0;
+    box-shadow: var(--bs-accordion-btn-focus-box-shadow);
+  }
+
+  /* Custom styles for the accordion body */
+  .accordion-body {
+    padding: 20px;
+    /* Adjust padding as needed */
+  }
+
+  .accordion-item {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, .125);
+  }
+
+  .btn.btn-outline-dotted {
+    border: 1px dotted #000;
+    /* Replace #000 with the desired color for the border */
+    background-color: transparent;
+    color: #000;
+    /* Replace #000 with the desired text color */
+  }
+
+  table>tbody>tr>td>a>p {
+    margin-bottom: 0 !important;
+  }
+
+  table>tbody>tr>td>a>ul {
+    margin-bottom: 0 !important;
+  }
+
+  table>tbody>tr>td>a>b {
+    margin-bottom: 0 !important;
+  }
+
+  table>tbody>tr>td>a>i {
+    margin-bottom: 0 !important;
+  }
+
+  table>tbody>tr>td>p {
+    margin-bottom: 0 !important;
+  }
+
+  table>tbody>tr>td>ul {
+    margin-bottom: 0 !important;
+  }
+
+  table>tbody>tr>td>b {
+    margin-bottom: 0 !important;
+  }
+
+  table>tbody>tr>td>i {
+    margin-bottom: 0 !important;
+  }
+
+
+  div#defectHeading>span>p {
+    margin-left: 0.25rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  div.defect-safed-text.mt-1.mb-2>p {
+    margin-bottom: 0 !important;
+  }
+</style>
+
+{% endblock %}
+{% load rest_framework %}
+{% block title %}FRA Reports {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-4">
+  <div class="card">
+    <div class="card-header mb-3">
+      <div class="row align-items-center">
+        <div class="col-12 col-lg-6">
+          <h4>{% if quotation_data %}Create{% else %}Edit{% endif %} Invoice</h4>
+        </div>
+        <div class="col-12 col-lg-6 text-end">
+          {% include 'components/back_button.html' %}
+        </div>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      
+      <!-- DESCRIPTIVE DATA  -->
+      <div class="row">
+
+        <!-- FRA Details START -->
+        <div class="col-12 col-lg-6">
+          <!-- Works Description and Defects Section -->
+          <div class="card shadow-none">
+            <div class="card-header py-0">
+              <h5 class="card-title">FRA Details</h5>
+            </div>
+            <div class="card-body mt-0 text-sm">
+              <b>Action</b>
+              <p class="text-sm mt-2" style="text-align: justify;">
+                <span id="actionText">{{ requirement_instance.action|safe|truncatechars_html:300 }}</span>
+                <span id="actionMore" style="display: none;">{{ requirement_instance.action|safe }}</span>
+                {% if requirement_instance.action|safe|length > 300 %}
+                <span class="read-more text-primary" id="actionToggle"
+                  onclick="toggleReadMore('actionText', 'actionMore', 'actionToggle')">
+                  Read More
+                </span>
+                {% endif %}
+              </p>
+
+              <b>Description</b>
+              <p class="text-sm mt-2" style="text-align: justify;">
+                <span id="descriptionText">{{ requirement_instance.description|safe|truncatechars_html:300 }}</span>
+                <span id="descriptionMore" style="display: none;">{{ requirement_instance.description|safe }}</span>
+                {% if requirement_instance.description|safe|length > 300 %}
+                <span class="read-more text-primary" id="descriptionToggle"
+                  onclick="toggleReadMore('descriptionText', 'descriptionMore', 'descriptionToggle')">
+                  Read More
+                </span>
+                {% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+        <!-- FRA Details END -->
+
+        <!-- Customer Details START -->
+        <div class="col-12 col-lg-6">
+          <div class="card shadow-none">
+            <div class="card-header py-0">
+              <h5>Client Details</h5>
+            </div>
+            <div class="card-body mt-0 text-sm">
+              <div class="row mb-2">
+                <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
+                <div class="col-7 text-sm">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
+                <div class="col-7 text-sm">
+                  {{ customer_address.address|default:'-' }}
+                  {% if customer_address.town %}
+                  {{ customer_address.town }},
+                  {% endif %}
+                  {% if customer_address.county %}
+                  {{ customer_address.county }},
+                  {% endif %}
+                  {% if customer_address.country %}
+                  {{ customer_address.country }},
+                  {% endif %}
+                  {% if customer_address.post_code %}
+                  {{ customer_address.post_code }}
+                  {% endif %}
+                </div>
+              </div>
+              <div class="row mb-2">
+                <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
+                <div class="col-7 text-sm">{{ requirement_instance.site_address }}</div>
+              </div>
+              <div class="row">
+                <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
+                <div class="col-7 text-sm">{{ requirement_instance.UPRN|default:'-'|title }}</div>
+              </div>
+              <div class="row">
+                <div class="col-5 text-sm text-start"><strong>Job Number:</strong></div>
+                <div class="col-7 text-sm">{{ requirement_instance.RBNO|default:'-'|title }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Customer Details END -->
+
+      </div>
+      <!-- DESCRIPTIVE DATA END -->
+
+    </div>
+  </div>
+
+
+  <div class="row">
+    <div class="col-12">
+      <div class="card mt-4 mx-0">
+        <div class="card-header pb-0">
+          <h5>Defects</h5>
+        </div>
+        <div class="card-body mt-0 ">
+          <div class="accordion" id="accordionDefect">
+            {% for defect in requiremnt_defect_instances %}
+
+            <div class="accordion-item column-with-border mb-3 " data-defect-id="{{ defect.id }}">
+              
+              <h5 class="accordion-header text-sm" id="headingOne">
+                <button class="accordion-button py-2" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapse{{ forloop.counter }}"
+                  aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapseOne">
+                  <div class="col-7 d-flex align-items-center" id="defectHeading">
+                    <strong>{{ forloop.counter }} -</strong>&nbsp;<span>{{ defect.action|safe|truncatechars_html:50 }}</span>
+                  </div>
+                  <div class="col-5 text-end">
+                    <span class="badge badge-sm bg-gradient-dark">{{ defect.get_defect_type_display }}</span>
+                    <i class="fas fa-chevron-down  mx-2 " aria-hidden="true"></i>
+                  </div>
+                </button>
+              </h5>
+              
+              <div id="collapse{{ forloop.counter }}"
+                class="accordion-collapse  collapse {% if forloop.first %}show {% endif %}"
+                aria-labelledby="heading{{ forloop.counter }}" id="accordionBody">
+                <div class="accordion-body text-sm">
+
+                  <div class="row mb-4" id="defectIntroduction">
+                    
+                    <div class="col-12 text-sm">
+                      <strong>Action: </strong><br>
+                      <div class="defect-safed-text mt-1 mb-2">{{ defect.action|safe }}</div>
+                    </div>
+                    
+                    <div class="col-12 text-sm">
+                      <strong>Description: </strong><br>
+                      <div class="defect-safed-text mt-1 mb-2">{{ defect.description|safe }}</div>
+                    </div>
+                    
+                    <div class="col-12 text-sm">
+                      <strong>Rectification Description: </strong><br>
+                      <div class="defect-safed-text mt-1">{{ defect.rectification_description|safe }}</div>
+                    </div>
+
+                  </div>
+
+                  <div class="col-12">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                      <!-- Empty table element with a unique ID -->
+                      <table id="table-{{ defect.id }}" class="table text-dark text-sm" style="width:100%">
+                        <thead class="bg-default">
+                          <!-- Table content will be added dynamically here -->
+                          <tr id="header-{{ defect.id }}">
+                            <th class="col-3">SOR Code</th>
+                            <th class="col-3">SOR Name</th>
+                            <th>Category</th>
+                            <th>Price(£)</th>
+                            <th class="col-1">Quantity</th>
+                            <th>Total Price(£)</th>
+                            <th class="col-1">Action</th>
+                            <!-- Add more headers as needed -->
+                          </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="col-12 mb-0">
+                    <button class="btn btn-outline-dotted text-lower btn-sm mt-4" data-defect-id="{{ defect.id }}"
+                      onclick="addTable(this)">Add SOR</button>
+                    {% if requiremnt_defect_instances|length > 1 %}
+                    <button class="btn bg-gradient-secondary btn-sm mt-4" data-defect-id="{{ defect.id }}"
+                      onclick="removeDefect(this)">Remove Defect</button>
+                    {% endif %}
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+            {% endfor %}
+            <div class="row justify-content-end">
+              <div class="col-6 mt-4 text-end">
+                <h5 class="text-md">
+                  <strong>Total (£) : </strong> <span id="total-price">0.00</span>
+                </h5>
+              </div>
+
+              <div class="col-12 mt-4">
+                <button id="submit-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Submit Invoice</button>
+                <button id="submit-darft-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save As Draft</button>
+                <button id="reset-button" class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0 mx-2"
+                  onclick="resetPage()">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% include 'components/loader.html' %}
+</div>
+
+
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content ">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
+        <button type="button" class="btn btn-sm shadow-none py-0 mb-0 pe-2" data-bs-dismiss="modal" aria-label="Close">
+          <i class="fas fa-times fs-6"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to submit the Invoice?<br>
+        The invoice cannot be edited after it has been submitted. Verify that you have included the necessary information.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn bg-gradient-dark" id="confirmSubmit">I Acknowledge</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
+  aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content ">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Error</h5>
+        <button type="button" class="btn btn-sm shadow-none py-0 mb-0 pe-2" data-bs-dismiss="modal" aria-label="Close">
+          <i class="fas fa-times fs-6"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        Please add/select SOR
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn bg-gradient-dark" id="closeModal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+<script>
+
+  const allSors = JSON.parse('{{ all_sors|safe }}');
+
+  const allSORSRefrenceNumber = []
+  allSors.forEach(sor => {
+    allSORSRefrenceNumber.push(sor.reference_number);
+  });
+
+  const allSORSNames = []
+  allSors.forEach(sor => {
+    allSORSNames.push(sor.name);
+  });
+
+  const existingSelectedSORs = []
+
+  function resetPage() {
+    // Reload the current page
+    window.location.reload();
+  }
+
+  const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
+
+  function showLoader() {
+    loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+  }
+
+  function hideLoader() {
+    loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+  }
+
+
+  function removeDefect(button) {
+    // Find the parent div of the button
+    var defectDiv = button.closest('.column-with-border');
+
+    if (defectDiv) {
+      // Extract the defect ID from the data attribute
+      var defectId = defectDiv.getAttribute('data-defect-id');
+
+      // Find the tbody element within the defect table
+      var tbody = document.querySelector('#table-' + defectId + ' tbody');
+
+      if (tbody) {
+        // Find all rows within the tbody element
+        var rows = tbody.querySelectorAll('tr');
+
+
+        // After removing the rows inside tbody, you can remove rows after tbody
+        var table = document.querySelector('#table-' + defectId);
+        if (table) {
+          var rowsAfterTbody = Array.from(table.querySelectorAll('tr')).slice(rows.length); // Get rows after tbody
+          rowsAfterTbody.forEach(function (row) {
+            var rowId = row.getAttribute('id');
+            // Remove the price associated with the row after tbody
+            if (rowPrices[defectId] && rowPrices[defectId][rowId]) {
+              delete rowPrices[defectId][rowId];
+            }
+            // Remove the row
+            row.remove();
+          });
+        }
+      }
+      // After removing the defect, call updateTotalPrice to update the total prices for all defect tables
+      updateTotalPrice();
+
+      // Finally, remove the entire defect div, including the table
+      defectDiv.remove();
+    }
+  }
+
+
+  function toggleReadMore(truncateId, fullId, toggleId) {
+    const truncateElement = document.getElementById(truncateId);
+    const fullElement = document.getElementById(fullId);
+    const toggleElement = document.getElementById(toggleId);
+
+    if (truncateElement.style.display === 'none') {
+      // Show truncated text and hide full text
+      truncateElement.style.display = '';
+      fullElement.style.display = 'none';
+      toggleElement.textContent = 'Read More';
+    } else {
+      // Show full text and hide truncated text
+      truncateElement.style.display = 'none';
+      fullElement.style.display = '';
+      toggleElement.textContent = 'Read Less';
+    }
+  }
+
+  var totalAllDefects = 0;
+  var rowPrices = {};
+  var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+  {% if quotation_data %}
+  // Assuming you have a JSON string in quotation_data.quotation_json
+  var jsonString = '{{ quotation_data.quotation_json|safe|escapejs }}';
+
+  // will not replace apostrophe's when making '' around key/value to be a valid JSON value
+  var sanitizedJsonString = jsonString.replace(/(\W)'|'(\W)/g, function (match, p1, p2) {
+    return p1 ? p1 + '"' : '"' + p2;
+    sanitizedJsonString = sanitizedJsonString.replace(/\\xa0/g, '\\u0020')
+
+  });
+  try {
+    var savedData = JSON.parse(sanitizedJsonString);
+    console.log(savedData);
+  } catch (e) {
+    console.error("Error parsing sanitizedJsonString :", e);
+  }
+
+  function populateSavedRows(defectId) {
+
+    if (savedData.defectSorValues[defectId]) {
+
+      Object.keys(savedData.defectSorValues[defectId]).forEach(function (inner_key) {
+
+        var tableId = "table-" + defectId;
+        var headerId = "header-" + defectId;
+
+        rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
+
+        // Check if the table already exists, and if not, create it
+        var existingTable = document.getElementById(tableId);
+        var tbody = document.createElement('tbody');
+        existingTable.appendChild(tbody)
+
+
+        var savedRow = savedData.defectSorValues[defectId][inner_key];
+        var sorItem = savedRow['sor_items'];
+
+        var newRow = document.createElement('tr');
+        var rowId = inner_key; // Create a unique ID for each row
+        newRow.id = rowId;
+
+        var firstCell = document.createElement('td');
+        var sorCodeFormGroupDiv = document.createElement('div');
+        var sorCodeInput = document.createElement('input');
+
+        sorCodeFormGroupDiv.className = 'form-group';
+        sorCodeInput.className = 'form-control';
+        sorCodeInput.type = 'text';
+        sorCodeInput.placeholder = 'Sor Code';
+        sorCodeInput.id = 'sor-code-' + defectId + '-' + rowId;
+        sorCodeInput.value = sorItem.reference_number;
+
+        firstCell.appendChild(sorCodeInput);
+        newRow.appendChild(firstCell);
+
+        var secondCell = document.createElement('td');
+        var sorNameFormGroupDiv = document.createElement('div');
+        var sorNameInput = document.createElement('input');
+
+        sorNameFormGroupDiv.className = 'form-group';
+        sorNameInput.className = 'form-control';
+        sorNameInput.type = 'text';
+        sorNameInput.placeholder = 'Sor Name';
+        sorNameInput.id = 'sor-name-' + defectId + '-' + rowId;
+        sorNameInput.value = sorItem.name;
+
+        secondCell.appendChild(sorNameInput);
+        newRow.appendChild(secondCell);
+
+        // Create and append the second <td> for category
+        var categoryCell = document.createElement('td');
+        categoryCell.className = 'ps-2';
+        categoryCell.textContent = sorItem.category_id;
+        newRow.appendChild(categoryCell);
+
+        // Create and append the third <td> for price
+        var priceCell = document.createElement('td');
+        priceCell.className = 'ps-2';
+        priceCell.textContent = sorItem.price;
+        newRow.appendChild(priceCell);
+
+        var quantityCell = document.createElement('td');
+        var sorQuantityFormGroupDiv = document.createElement('div');
+        var sorQuantityInput = document.createElement('input');
+
+        sorQuantityFormGroupDiv.className = 'form-group';
+        sorQuantityInput.className = 'form-control';
+        sorQuantityInput.type = 'number';
+        sorQuantityInput.min = 1;
+        sorQuantityInput.placeholder = 'Sor Quantity';
+        if (savedRow.quantity) {
+          sorQuantityInput.value = savedRow.quantity;
+        } else {
+          sorQuantityInput.value = 1;
+        }
+        sorQuantityInput.id = 'sor-quantity-' + defectId + '-' + rowId;
+
+        quantityCell.appendChild(sorQuantityInput);
+        newRow.appendChild(quantityCell);
+
+        var totalPriceCell = document.createElement('td');
+        totalPriceCell.className = 'ps-2';
+        if (savedRow.total_price) {
+          totalPriceCell.textContent = savedRow.total_price;
+        } else {
+          totalPriceCell.textContent = sorItem.price;
+        }
+        newRow.appendChild(totalPriceCell);
+
+        // Create and append the fourth <td> with the "x" icon to delete the row
+        var deleteCell = document.createElement('td');
+        var deleteIcon = document.createElement('span');
+        deleteIcon.textContent = 'x';
+        deleteIcon.style.cursor = 'pointer';
+        deleteIcon.classList.add('text-danger', 'text-center');
+
+        deleteIcon.addEventListener('click', function () {
+          removeRow(defectId, rowId);
+        });
+
+        deleteCell.appendChild(deleteIcon);
+        newRow.appendChild(deleteCell);
+
+        // Create and append the hidden input for the SOR ID
+        var sorIdInput = document.createElement('input');
+        sorIdInput.type = 'hidden';
+        sorIdInput.name = 'sor-id'; // You can specify a unique name here if needed
+        sorIdInput.id = 'sor-id-' + defectId + '-' + rowId;
+        sorIdInput.value = sorItem.id; // Set the value of the SOR ID input
+        newRow.appendChild(sorIdInput);
+
+        // Update the row price in the array
+        if (savedRow.total_price) {
+          rowPrices[defectId][rowId] = savedRow.total_price;
+        } else {
+          rowPrices[defectId][rowId] = sorItem.price;
+        }
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+        // Append the new row to the table
+        existingTable.querySelector('tbody').appendChild(newRow);
+
+
+        // Listen for changes in the dropdown and update other <td> elements
+        function populateOnSorCodeChange() {
+          var selectedValue = sorCodeInput.value; // Get the selected value
+          // Find the corresponding SOR object based on the selected value
+          var selectedSor = allSors.find(sor => sor.reference_number === selectedValue);
+          if (selectedSor) {
+
+            if (existingSelectedSORs.includes(selectedSor.id.toString())) {
+              throw "The SOR is already selected please choose a different SOR.";
+            }
+
+            // Update category and price <td> elements with data from the selected SOR object
+            categoryCell.textContent = selectedSor.category_id__name; // Update category
+            priceCell.textContent = selectedSor.price;      // Update price
+            sorQuantityInput.value = 1;
+            totalPriceCell.textContent = selectedSor.price * 1;
+            sorIdInput.value = selectedSor.id;      // Update price
+            sorNameInput.value = selectedSor.name
+            // Update the row price in the array
+
+            rowPrices[defectId][rowId] = selectedSor.price;
+
+
+            // Calculate and display the total price for the current defect table
+            var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+              return sum + (parseFloat(rowPrice) || 0);
+            }, 0);
+
+            // Update the total for the current defect
+            updateDefectTotal(defectId, defectTotal);
+
+            // Update the total price for all defect tables
+            updateTotalPrice();
+          }
+
+        };
+
+        function populateOnSorNameChange() {
+          var selectedValue = sorNameInput.value; // Get the selected value
+          // Find the corresponding SOR object based on the selected value
+          var selectedSor = allSors.find(sor => sor.name === selectedValue);
+          if (selectedSor) {
+
+            if (existingSelectedSORs.includes(selectedSor.id.toString())) {
+              throw "The SOR is already selected please choose a different SOR.";
+            }
+
+            // Update category and price <td> elements with data from the selected SOR object
+            categoryCell.textContent = selectedSor.category_id__name; // Update category
+            priceCell.textContent = selectedSor.price;      // Update price
+            sorQuantityInput.value = 1;
+            totalPriceCell.textContent = selectedSor.price * 1;
+            sorIdInput.value = selectedSor.id;      // Update price
+            sorCodeInput.value = selectedSor.reference_number
+            // Update the row price in the array
+
+            rowPrices[defectId][rowId] = selectedSor.price;
+
+
+            // Calculate and display the total price for the current defect table
+            var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+              return sum + (parseFloat(rowPrice) || 0);
+            }, 0);
+
+            // Update the total for the current defect
+            updateDefectTotal(defectId, defectTotal);
+
+            // Update the total price for all defect tables
+            updateTotalPrice();
+          }
+
+        }
+
+        function checkIfSORAlreadySelected() {
+          existingTableRows = existingTable.querySelectorAll('tr')
+          if (existingTableRows) {
+            existingTableRows.forEach(row => {
+              if (!row.id.includes('header')) {
+                rowSorIdInput = row.querySelector('input[name=sor-id]')
+                if (rowSorIdInput) {
+                  if (rowSorIdInput.value) {
+                    existingSelectedSORs.push(rowSorIdInput.value)
+                  }
+
+                }
+              }
+            });
+          }
+        }
+
+        function clearExistingRowValues(template = 'code') {
+          if (categoryCell.textContent) {
+            categoryCell.textContent = ''; // Update category
+          }
+          if (priceCell.textContent) {
+            priceCell.textContent = ''; // Update price
+
+            delete rowPrices[defectId][rowId];
+
+            // Calculate and display the total price for the current defect table
+            var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+              return sum + (parseFloat(rowPrice) || 0);
+            }, 0);
+
+            // Update the total for the current defect
+            updateDefectTotal(defectId, defectTotal);
+
+            // Update the total price for all defect tables
+            updateTotalPrice();
+          }
+          if (sorIdInput.value) {
+            sorIdInput.value = ''; // Update id
+          }
+          if (template == 'code') {
+            if (sorNameInput.value) {
+              sorNameInput.value = ''; // Update id
+            }
+          } else {
+            if (sorCodeInput.value) {
+              sorCodeInput.value = '';
+            }
+          }
+        }
+
+        $(`#sor-code-${defectId}-${rowId}`).autocomplete({
+          source: allSORSRefrenceNumber,
+          minLength: 1,
+          select: function (event, ui) {
+            if (event.originalEvent.originalEvent.type == 'click') {
+              event.target.value = ui.item.value
+            }
+            try {
+              if (event.target.parentElement.querySelector('div.help-block')) {
+                event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+              }
+              clearExistingRowValues();
+              checkIfSORAlreadySelected();
+              populateOnSorCodeChange();
+            } catch (err) {
+              if (event.target.parentElement.querySelector('div.help-block')) {
+                event.target.parentElement.querySelector('div.help-block').textContent = err
+              } else {
+                const errorElement = document.createElement('div');
+                errorElement.classList.add('help-block', 'mt-2');
+                errorElement.textContent = err;
+                event.target.parentElement.appendChild(errorElement);
+              }
+            }
+            return false;
+          }
+        });
+        $(`#sor-name-${defectId}-${rowId}`).autocomplete({
+          source: allSORSNames,
+          minLength: 1,
+          select: function (event, ui) {
+            if (event.originalEvent.originalEvent.type == 'click') {
+              event.target.value = ui.item.value
+            }
+            try {
+              if (event.target.parentElement.querySelector('div.help-block')) {
+                event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+              }
+              clearExistingRowValues('name');
+              checkIfSORAlreadySelected();
+              populateOnSorNameChange();
+            } catch (err) {
+              if (event.target.parentElement.querySelector('div.help-block')) {
+                event.target.parentElement.querySelector('div.help-block').textContent = err
+              } else {
+                const errorElement = document.createElement('div');
+                errorElement.classList.add('help-block', 'mt-2');
+                errorElement.textContent = err;
+                event.target.parentElement.appendChild(errorElement);
+              }
+            }
+            return false;
+          }
+        });
+
+        $(`#sor-quantity-${defectId}-${rowId}`).on('change', function (event) {
+
+          if (this.value == 0) {
+            this.value = 1;
+          }
+
+          totalPriceCell.textContent = priceCell.textContent * this.value
+          rowPrices[defectId][rowId] = totalPriceCell.textContent;
+
+          // Calculate and display the total price for the current defect table
+          var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+            return sum + (parseFloat(rowPrice) || 0);
+          }, 0);
+
+          // Update the total for the current defect
+          updateDefectTotal(defectId, defectTotal);
+
+          // Update the total price for all defect tables
+          updateTotalPrice();
+        });
+
+
+      });
+    }
+  }
+
+
+
+  // Loop through the defectSorValues object and call the function to populate saved rows for each defectId
+  Object.keys(savedData.defectSorValues).forEach(function (defectId) {
+    populateSavedRows(defectId);
+  });
+  {% elif invoice_data %}
+  // Assuming you have a JSON string in invoice_data.quotation_json
+  var jsonString = '{{ invoice_data.invoice_json|safe|escapejs }}';
+
+  // will not replace apostrophe's when making '' around key/value to be a valid JSON value
+  var sanitizedJsonString = jsonString.replace(/(\W)'|'(\W)/g, function (match, p1, p2) {
+    return p1 ? p1 + '"' : '"' + p2;
+    sanitizedJsonString = sanitizedJsonString.replace(/\\xa0/g, '\\u0020')
+
+  });
+  try {
+    var savedData = JSON.parse(sanitizedJsonString);
+    console.log(savedData);
+  } catch (e) {
+    console.error("Error parsing sanitizedJsonString :", e);
+  }
+
+  function populateSavedRows(defectId) {
+
+    if (savedData.defectSorValues[defectId]) {
+
+      Object.keys(savedData.defectSorValues[defectId]).forEach(function (inner_key) {
+
+        var tableId = "table-" + defectId;
+        var headerId = "header-" + defectId;
+
+        rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
+
+        // Check if the table already exists, and if not, create it
+        var existingTable = document.getElementById(tableId);
+        var tbody = document.createElement('tbody');
+        existingTable.appendChild(tbody)
+
+
+        var savedRow = savedData.defectSorValues[defectId][inner_key];
+        var sorItem = savedRow['sor_items'];
+
+        var newRow = document.createElement('tr');
+        var rowId = inner_key; // Create a unique ID for each row
+        newRow.id = rowId;
+
+        var firstCell = document.createElement('td');
+        var sorCodeFormGroupDiv = document.createElement('div');
+        var sorCodeInput = document.createElement('input');
+
+        sorCodeFormGroupDiv.className = 'form-group';
+        sorCodeInput.className = 'form-control';
+        sorCodeInput.type = 'text';
+        sorCodeInput.placeholder = 'Sor Code';
+        sorCodeInput.id = 'sor-code-' + defectId + '-' + rowId;
+        sorCodeInput.value = sorItem.reference_number;
+
+        firstCell.appendChild(sorCodeInput);
+        newRow.appendChild(firstCell);
+
+        var secondCell = document.createElement('td');
+        var sorNameFormGroupDiv = document.createElement('div');
+        var sorNameInput = document.createElement('input');
+
+        sorNameFormGroupDiv.className = 'form-group';
+        sorNameInput.className = 'form-control';
+        sorNameInput.type = 'text';
+        sorNameInput.placeholder = 'Sor Name';
+        sorNameInput.id = 'sor-name-' + defectId + '-' + rowId;
+        sorNameInput.value = sorItem.name;
+
+        secondCell.appendChild(sorNameInput);
+        newRow.appendChild(secondCell);
+
+        // Create and append the second <td> for category
+        var categoryCell = document.createElement('td');
+        categoryCell.className = 'ps-2';
+        categoryCell.textContent = sorItem.category_id;
+        newRow.appendChild(categoryCell);
+
+        // Create and append the third <td> for price
+        var priceCell = document.createElement('td');
+        priceCell.className = 'ps-2';
+        priceCell.textContent = sorItem.price;
+        newRow.appendChild(priceCell);
+
+        var quantityCell = document.createElement('td');
+        var sorQuantityFormGroupDiv = document.createElement('div');
+        var sorQuantityInput = document.createElement('input');
+
+        sorQuantityFormGroupDiv.className = 'form-group';
+        sorQuantityInput.className = 'form-control';
+        sorQuantityInput.type = 'number';
+        sorQuantityInput.min = 1;
+        sorQuantityInput.placeholder = 'Sor Quantity';
+        if (savedRow.quantity) {
+          sorQuantityInput.value = savedRow.quantity;
+        } else {
+          sorQuantityInput.value = 1;
+        }
+        sorQuantityInput.id = 'sor-quantity-' + defectId + '-' + rowId;
+
+        quantityCell.appendChild(sorQuantityInput);
+        newRow.appendChild(quantityCell);
+
+        var totalPriceCell = document.createElement('td');
+        totalPriceCell.className = 'ps-2';
+        if (savedRow.total_price) {
+          totalPriceCell.textContent = savedRow.total_price;
+        } else {
+          totalPriceCell.textContent = sorItem.price;
+        }
+        newRow.appendChild(totalPriceCell);
+
+        // Create and append the fourth <td> with the "x" icon to delete the row
+        var deleteCell = document.createElement('td');
+        var deleteIcon = document.createElement('span');
+        deleteIcon.textContent = 'x';
+        deleteIcon.style.cursor = 'pointer';
+        deleteIcon.classList.add('text-danger', 'text-center');
+
+        deleteIcon.addEventListener('click', function () {
+          removeRow(defectId, rowId);
+        });
+
+        deleteCell.appendChild(deleteIcon);
+        newRow.appendChild(deleteCell);
+
+        // Create and append the hidden input for the SOR ID
+        var sorIdInput = document.createElement('input');
+        sorIdInput.type = 'hidden';
+        sorIdInput.name = 'sor-id'; // You can specify a unique name here if needed
+        sorIdInput.id = 'sor-id-' + defectId + '-' + rowId;
+        sorIdInput.value = sorItem.id; // Set the value of the SOR ID input
+        newRow.appendChild(sorIdInput);
+
+        // Update the row price in the array
+        if (savedRow.total_price) {
+          rowPrices[defectId][rowId] = savedRow.total_price;
+        } else {
+          rowPrices[defectId][rowId] = sorItem.price;
+        }
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+        // Append the new row to the table
+        existingTable.querySelector('tbody').appendChild(newRow);
+
+
+        // Listen for changes in the dropdown and update other <td> elements
+        function populateOnSorCodeChange() {
+          var selectedValue = sorCodeInput.value; // Get the selected value
+          // Find the corresponding SOR object based on the selected value
+          var selectedSor = allSors.find(sor => sor.reference_number === selectedValue);
+          if (selectedSor) {
+
+            if (existingSelectedSORs.includes(selectedSor.id.toString())) {
+              throw "The SOR is already selected please choose a different SOR.";
+            }
+
+            // Update category and price <td> elements with data from the selected SOR object
+            categoryCell.textContent = selectedSor.category_id__name; // Update category
+            priceCell.textContent = selectedSor.price;      // Update price
+            sorQuantityInput.value = 1;
+            totalPriceCell.textContent = selectedSor.price * 1;
+            sorIdInput.value = selectedSor.id;      // Update price
+            sorNameInput.value = selectedSor.name
+            // Update the row price in the array
+
+            rowPrices[defectId][rowId] = selectedSor.price;
+
+
+            // Calculate and display the total price for the current defect table
+            var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+              return sum + (parseFloat(rowPrice) || 0);
+            }, 0);
+
+            // Update the total for the current defect
+            updateDefectTotal(defectId, defectTotal);
+
+            // Update the total price for all defect tables
+            updateTotalPrice();
+          }
+
+        };
+
+        function populateOnSorNameChange() {
+          var selectedValue = sorNameInput.value; // Get the selected value
+          // Find the corresponding SOR object based on the selected value
+          var selectedSor = allSors.find(sor => sor.name === selectedValue);
+          if (selectedSor) {
+
+            if (existingSelectedSORs.includes(selectedSor.id.toString())) {
+              throw "The SOR is already selected please choose a different SOR.";
+            }
+
+            // Update category and price <td> elements with data from the selected SOR object
+            categoryCell.textContent = selectedSor.category_id__name; // Update category
+            priceCell.textContent = selectedSor.price;      // Update price
+            sorQuantityInput.value = 1;
+            totalPriceCell.textContent = selectedSor.price * 1;
+            sorIdInput.value = selectedSor.id;      // Update price
+            sorCodeInput.value = selectedSor.reference_number
+            // Update the row price in the array
+
+            rowPrices[defectId][rowId] = selectedSor.price;
+
+
+            // Calculate and display the total price for the current defect table
+            var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+              return sum + (parseFloat(rowPrice) || 0);
+            }, 0);
+
+            // Update the total for the current defect
+            updateDefectTotal(defectId, defectTotal);
+
+            // Update the total price for all defect tables
+            updateTotalPrice();
+          }
+
+        }
+
+        function checkIfSORAlreadySelected() {
+          existingTableRows = existingTable.querySelectorAll('tr')
+          if (existingTableRows) {
+            existingTableRows.forEach(row => {
+              if (!row.id.includes('header')) {
+                rowSorIdInput = row.querySelector('input[name=sor-id]')
+                if (rowSorIdInput) {
+                  if (rowSorIdInput.value) {
+                    existingSelectedSORs.push(rowSorIdInput.value)
+                  }
+
+                }
+              }
+            });
+          }
+        }
+
+        function clearExistingRowValues(template = 'code') {
+          if (categoryCell.textContent) {
+            categoryCell.textContent = ''; // Update category
+          }
+          if (priceCell.textContent) {
+            priceCell.textContent = ''; // Update price
+
+            delete rowPrices[defectId][rowId];
+
+            // Calculate and display the total price for the current defect table
+            var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+              return sum + (parseFloat(rowPrice) || 0);
+            }, 0);
+
+            // Update the total for the current defect
+            updateDefectTotal(defectId, defectTotal);
+
+            // Update the total price for all defect tables
+            updateTotalPrice();
+          }
+          if (sorIdInput.value) {
+            sorIdInput.value = ''; // Update id
+          }
+          if (template == 'code') {
+            if (sorNameInput.value) {
+              sorNameInput.value = ''; // Update id
+            }
+          } else {
+            if (sorCodeInput.value) {
+              sorCodeInput.value = '';
+            }
+          }
+        }
+
+        $(`#sor-code-${defectId}-${rowId}`).autocomplete({
+          source: allSORSRefrenceNumber,
+          minLength: 1,
+          select: function (event, ui) {
+            if (event.originalEvent.originalEvent.type == 'click') {
+              event.target.value = ui.item.value
+            }
+            try {
+              if (event.target.parentElement.querySelector('div.help-block')) {
+                event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+              }
+              clearExistingRowValues();
+              checkIfSORAlreadySelected();
+              populateOnSorCodeChange();
+            } catch (err) {
+              if (event.target.parentElement.querySelector('div.help-block')) {
+                event.target.parentElement.querySelector('div.help-block').textContent = err
+              } else {
+                const errorElement = document.createElement('div');
+                errorElement.classList.add('help-block', 'mt-2');
+                errorElement.textContent = err;
+                event.target.parentElement.appendChild(errorElement);
+              }
+            }
+            return false;
+          }
+        });
+        $(`#sor-name-${defectId}-${rowId}`).autocomplete({
+          source: allSORSNames,
+          minLength: 1,
+          select: function (event, ui) {
+            if (event.originalEvent.originalEvent.type == 'click') {
+              event.target.value = ui.item.value
+            }
+            try {
+              if (event.target.parentElement.querySelector('div.help-block')) {
+                event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+              }
+              clearExistingRowValues('name');
+              checkIfSORAlreadySelected();
+              populateOnSorNameChange();
+            } catch (err) {
+              if (event.target.parentElement.querySelector('div.help-block')) {
+                event.target.parentElement.querySelector('div.help-block').textContent = err
+              } else {
+                const errorElement = document.createElement('div');
+                errorElement.classList.add('help-block', 'mt-2');
+                errorElement.textContent = err;
+                event.target.parentElement.appendChild(errorElement);
+              }
+            }
+            return false;
+          }
+        });
+
+        $(`#sor-quantity-${defectId}-${rowId}`).on('change', function (event) {
+
+          if (this.value == 0) {
+            this.value = 1;
+          }
+
+          totalPriceCell.textContent = priceCell.textContent * this.value
+          rowPrices[defectId][rowId] = totalPriceCell.textContent;
+
+          // Calculate and display the total price for the current defect table
+          var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+            return sum + (parseFloat(rowPrice) || 0);
+          }, 0);
+
+          // Update the total for the current defect
+          updateDefectTotal(defectId, defectTotal);
+
+          // Update the total price for all defect tables
+          updateTotalPrice();
+        });
+
+
+      });
+    }
+  }
+
+
+
+  // Loop through the defectSorValues object and call the function to populate saved rows for each defectId
+  Object.keys(savedData.defectSorValues).forEach(function (defectId) {
+    populateSavedRows(defectId);
+  });
+  {% endif %}
+
+
+
+
+  function addTable(button) {
+    var defectId = button.getAttribute('data-defect-id');
+    var tableId = "table-" + defectId;
+    var headerId = "header-" + defectId;
+
+
+    // Check if the table already exists, and if not, create it
+    var existingTable = document.getElementById(tableId);
+    if (!existingTable) {
+      var table = document.createElement('table');
+      var tbody = document.createElement('tbody');
+      table.id = tableId;
+      table.className = 'custom-table mb-4 text-sm';
+      table.style.width = '100%';
+
+      // Create and add table headers initially hidden
+      var tableHeader = document.createElement('tr');
+      tableHeader.id = headerId;
+      tableHeader.style.display = 'none';
+      tableHeader.innerHTML = '<th>SOR Column 1</th><th>SOR Column 2</th>'; // Add more headers as needed
+      table.appendChild(tableHeader);
+      table.appendChild(tbody)
+
+      document.querySelector('.col-lg-12.col-sm-12').appendChild(table);
+    }
+
+    // Show the headers
+    var headerRow = document.getElementById(headerId);
+
+    // Create a new row for the table
+    var newRow = document.createElement('tr');
+    var rowId = Date.now(); // Unique row ID
+    newRow.id = rowId;
+
+    rowPrices[defectId] = rowPrices[defectId] || {}; // Ensure the defectId key exists
+
+    var firstCell = document.createElement('td');
+    var sorCodeFormGroupDiv = document.createElement('div');
+    var sorCodeInput = document.createElement('input');
+
+    sorCodeFormGroupDiv.className = 'form-group';
+    sorCodeInput.className = 'form-control';
+    sorCodeInput.type = 'text';
+    sorCodeInput.placeholder = 'Sor Code';
+    sorCodeInput.id = 'sor-code-' + defectId + '-' + rowId;
+    sorCodeInput.autocomplete = 'on';
+
+    firstCell.appendChild(sorCodeInput);
+    newRow.appendChild(firstCell);
+
+    var secondCell = document.createElement('td');
+    var sorNameFormGroupDiv = document.createElement('div');
+    var sorNameInput = document.createElement('input');
+
+    sorNameFormGroupDiv.className = 'form-group';
+    sorNameInput.className = 'form-control';
+    sorNameInput.type = 'text';
+    sorNameInput.placeholder = 'Sor Name';
+    sorNameInput.id = 'sor-name-' + defectId + '-' + rowId;
+    sorNameInput.autocomplete = 'on';
+
+    secondCell.appendChild(sorNameInput);
+    newRow.appendChild(secondCell);
+
+    // Add a hidden input for the SOR ID
+    var sorIdInput = document.createElement('input');
+    sorIdInput.type = 'hidden';
+    sorIdInput.name = 'sor-id'; // You can specify a unique name here if needed 
+    sorIdInput.id = 'sor-id-' + defectId + '-' + rowId; // 
+    newRow.appendChild(sorIdInput);
+    // Add the second <td> for category
+    var categoryCell = document.createElement('td');
+    categoryCell.className = 'ps-2';
+    newRow.appendChild(categoryCell);
+
+    // Add the third <td> for price
+    var priceCell = document.createElement('td');
+    priceCell.className = 'ps-2';
+    newRow.appendChild(priceCell);
+
+    var quantityCell = document.createElement('td');
+    var sorQuantityFormGroupDiv = document.createElement('div');
+    var sorQuantityInput = document.createElement('input');
+
+    sorQuantityFormGroupDiv.className = 'form-group';
+    sorQuantityInput.className = 'form-control';
+    sorQuantityInput.type = 'number';
+    sorQuantityInput.min = 1;
+    sorQuantityInput.placeholder = 'Sor Quantity';
+    sorQuantityInput.id = 'sor-quantity-' + defectId + '-' + rowId;
+    sorQuantityInput.disabled = true;
+
+    quantityCell.appendChild(sorQuantityInput);
+    newRow.appendChild(quantityCell);
+
+    var totalPriceCell = document.createElement('td');
+    totalPriceCell.className = 'ps-2';
+    newRow.appendChild(totalPriceCell);
+
+    // Add the fourth <td> with the "x" icon to delete the row
+    var deleteCell = document.createElement('td');
+    var deleteIcon = document.createElement('span');
+    deleteIcon.textContent = 'x';
+    deleteIcon.style.cursor = 'pointer';
+    deleteIcon.classList.add('text-danger', 'text-center'); // Add the classes to the delete icon
+
+    // Modify your existing deleteIcon.addEventListener as follows:
+    deleteIcon.addEventListener('click', function () {
+      removeRow(defectId, rowId); // Call the removeRow function when "x" is clicked
+    });
+
+    deleteCell.appendChild(deleteIcon);
+    newRow.appendChild(deleteCell);
+
+    // Append the new row to the table
+    existingTable.querySelector('tbody').appendChild(newRow);
+
+    // Listen for changes in the dropdown and update other <td> elements
+    function populateOnSorCodeChange() {
+      var selectedValue = sorCodeInput.value; // Get the selected value
+      // Find the corresponding SOR object based on the selected value
+      var selectedSor = allSors.find(sor => sor.reference_number === selectedValue);
+      if (selectedSor) {
+
+        if (existingSelectedSORs.includes(selectedSor.id.toString())) {
+          throw "The SOR is already selected please choose a different SOR.";
+        }
+
+        // Update category and price <td> elements with data from the selected SOR object
+        categoryCell.textContent = selectedSor.category_id__name; // Update category
+        priceCell.textContent = selectedSor.price;      // Update price
+        sorQuantityInput.disabled = false;
+        sorQuantityInput.value = 1;
+        totalPriceCell.textContent = selectedSor.price * 1;
+        sorIdInput.value = selectedSor.id;      // Update price
+        sorNameInput.value = selectedSor.name
+        // Update the row price in the array
+
+        rowPrices[defectId][rowId] = selectedSor.price;
+
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+
+    };
+
+    function populateOnSorNameChange() {
+      var selectedValue = sorNameInput.value; // Get the selected value
+      // Find the corresponding SOR object based on the selected value
+      var selectedSor = allSors.find(sor => sor.name === selectedValue);
+      if (selectedSor) {
+
+        if (existingSelectedSORs.includes(selectedSor.id.toString())) {
+          throw "The SOR is already selected please choose a different SOR.";
+        }
+
+        // Update category and price <td> elements with data from the selected SOR object
+        categoryCell.textContent = selectedSor.category_id__name; // Update category
+        priceCell.textContent = selectedSor.price;      // Update price
+        sorQuantityInput.disabled = false;
+        sorQuantityInput.value = 1;
+        totalPriceCell.textContent = selectedSor.price * 1;
+        sorIdInput.value = selectedSor.id;      // Update price
+        sorCodeInput.value = selectedSor.reference_number
+        // Update the row price in the array
+
+        rowPrices[defectId][rowId] = selectedSor.price;
+
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+
+    }
+
+    function checkIfSORAlreadySelected() {
+      existingTableRows = existingTable.querySelectorAll('tr')
+      if (existingTableRows) {
+        existingTableRows.forEach(row => {
+          if (!row.id.includes('header')) {
+            rowSorIdInput = row.querySelector('input[name=sor-id]')
+            if (rowSorIdInput) {
+              if (rowSorIdInput.value) {
+                existingSelectedSORs.push(rowSorIdInput.value)
+              }
+
+            }
+          }
+        });
+      }
+    }
+
+    function clearExistingRowValues(template = 'code') {
+      if (categoryCell.textContent) {
+        categoryCell.textContent = ''; // Update category
+      }
+      if (priceCell.textContent) {
+        priceCell.textContent = ''; // Update price
+
+        delete rowPrices[defectId][rowId];
+
+        // Calculate and display the total price for the current defect table
+        var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+          return sum + (parseFloat(rowPrice) || 0);
+        }, 0);
+
+        // Update the total for the current defect
+        updateDefectTotal(defectId, defectTotal);
+
+        // Update the total price for all defect tables
+        updateTotalPrice();
+      }
+      if (sorIdInput.value) {
+        sorIdInput.value = ''; // Update id
+      }
+      if (template == 'code') {
+        if (sorNameInput.value) {
+          sorNameInput.value = ''; // Update id
+        }
+      } else {
+        if (sorCodeInput.value) {
+          sorCodeInput.value = '';
+        }
+      }
+    }
+
+    $(`#sor-code-${defectId}-${rowId}`).autocomplete({
+      source: allSORSRefrenceNumber,
+      minLength: 1,
+      select: function (event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click') {
+          event.target.value = ui.item.value
+        }
+        try {
+          if (event.target.parentElement.querySelector('div.help-block')) {
+            event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+          }
+          clearExistingRowValues();
+          checkIfSORAlreadySelected();
+          populateOnSorCodeChange();
+        } catch (err) {
+          if (event.target.parentElement.querySelector('div.help-block')) {
+            event.target.parentElement.querySelector('div.help-block').textContent = err
+          } else {
+            const errorElement = document.createElement('div');
+            errorElement.classList.add('help-block', 'mt-2');
+            errorElement.textContent = err;
+            event.target.parentElement.appendChild(errorElement);
+          }
+        }
+        return true;
+      }
+    });
+    $(`#sor-name-${defectId}-${rowId}`).autocomplete({
+      source: allSORSNames,
+      minLength: 1,
+      select: function (event, ui) {
+        if (event.originalEvent.originalEvent.type == 'click') {
+          event.target.value = ui.item.value
+        }
+        try {
+          if (event.target.parentElement.querySelector('div.help-block')) {
+            event.target.parentElement.removeChild(event.target.parentElement.querySelector('div.help-block'))
+          }
+          clearExistingRowValues('name');
+          checkIfSORAlreadySelected();
+          populateOnSorNameChange();
+        } catch (err) {
+          if (event.target.parentElement.querySelector('div.help-block')) {
+            event.target.parentElement.querySelector('div.help-block').textContent = err
+          } else {
+            const errorElement = document.createElement('div');
+            errorElement.classList.add('help-block', 'mt-2');
+            errorElement.textContent = err;
+            event.target.parentElement.appendChild(errorElement);
+          }
+        }
+        return false;
+      }
+    });
+
+    $(`#sor-quantity-${defectId}-${rowId}`).on('change', function (event) {
+
+      if (this.value == 0) {
+        this.value = 1;
+      }
+
+      totalPriceCell.textContent = priceCell.textContent * this.value
+      rowPrices[defectId][rowId] = totalPriceCell.textContent;
+
+      // Calculate and display the total price for the current defect table
+      var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+        return sum + (parseFloat(rowPrice) || 0);
+      }, 0);
+
+      // Update the total for the current defect
+      updateDefectTotal(defectId, defectTotal);
+
+      // Update the total price for all defect tables
+      updateTotalPrice();
+    });
+  }
+
+
+  var totalPriceInput = document.getElementById('total-price');
+
+
+  // Function to remove a row from a defect table
+  function removeRow(defectId, rowId) {
+    // Check if the defectId exists in rowPrices
+    if (rowPrices.hasOwnProperty(defectId)) {
+      // Remove the row price from the current defect
+      delete rowPrices[defectId][rowId];
+      // Calculate and display the total price for the current defect table
+      var defectTotal = Object.values(rowPrices[defectId]).reduce(function (sum, rowPrice) {
+        return sum + (parseFloat(rowPrice) || 0);
+      }, 0);
+
+      // Update the total for the current defect
+      updateDefectTotal(defectId, defectTotal);
+
+      // Get the HTML element for the row and remove it
+      var rowToRemove = document.getElementById(rowId);
+      if (rowToRemove) {
+        rowToRemove.parentNode.removeChild(rowToRemove);
+      }
+
+      // Update the total price for all defect tables
+      updateTotalPrice();
+    }
+  }
+
+  // Function to update the total price for the current defect table
+  function updateDefectTotal(defectId, total) {
+    // Update the total price input for the current defect table
+    var totalInput = document.getElementById('total-price-' + defectId);
+    if (totalInput) {
+      totalInput.textContent = total.toFixed(2); // Format the total as needed
+    }
+  }
+
+  // Function to update the total price for all defect tables
+  function updateTotalPrice() {
+    // Calculate the total price of all defect tables
+    totalAllDefects = Object.keys(rowPrices).reduce(function (sum, defectId) {
+
+      var defectPrices = rowPrices[defectId];
+      var defectTotal = Object.values(defectPrices).reduce(function (defectSum, price) {
+        return defectSum + (parseFloat(price) || 0);
+      }, 0);
+      return sum + defectTotal;
+    }, 0);
+
+    // Update the total price input for all defect tables
+    var totalPriceInput = document.getElementById('total-price');
+    if (totalPriceInput) {
+      totalPriceInput.textContent = totalAllDefects.toFixed(2); // Format the total as needed
+    }
+  }
+
+
+
+
+  // Get references to the "send_for_approval" and "Save As Draft" buttons
+  var submitButton = document.getElementById('submit-button');
+  var saveDraftButton = document.getElementById('submit-darft-button');
+  var submitApproved = document.getElementById('submit-approved');
+  const modalContainer = document.querySelector('.container-fluid.py-4');
+
+  function addBlur() {
+    modalContainer.classList.add('blur-background');
+  }
+
+  // Function to remove the blur class
+  function removeBlur() {
+    modalContainer.classList.remove('blur-background');
+  }
+
+
+  // Check if the submitButton exists before adding an event listener
+  // Check if the submitButton exists before adding an event listener
+  if (submitButton) {
+    submitButton.addEventListener('click', function (event) {
+      event.preventDefault(); // Prevent the form from submitting immediately
+      showLoader();
+      sendDataToServer('submitted', false); // Set the status to "send_for_approval" when "Submit" is clicked
+    });
+  }
+
+  // Check if the saveDraftButton exists before adding an event listener
+  if (saveDraftButton) {
+    saveDraftButton.addEventListener('click', function () {
+      showLoader();
+      sendDataToServer('draft', true); // Set the status to "draft" when "Save As Draft" is clicked
+    });
+  }
+
+  // Check if the submitApproved button exists before adding an event listener
+  if (submitApproved) {
+    submitApproved.addEventListener('click', function () {
+      showLoader();
+      sendDataToServer('sent_to_customer', true); // Set the status to "approved" when "Submit Approved" is clicked
+    });
+  }
+  // Function to send data to the server using fetch
+  function sendDataToServer(status, acknowledge) {
+    // Collect the data you want to send to the server, including defect-SOR values
+    var dataToSend = {
+      // Include your data here
+      status: status, // Include the status based on the button clicked
+      total_amount: totalPriceInput.textContent,
+      defectSorValues: {}, // Initialize an empty object to store defect-SOR values
+      defectList: [] // Initialize an empty array to store the list of defects
+    };
+    // Loop through each defectId in rowPrices and add the corresponding SOR values with IDs to the data
+    for (var defectId in rowPrices) {
+      if (rowPrices.hasOwnProperty(defectId)) {
+        var defectSorData = {}; // Initialize an empty object for defect-SOR data
+        var hasPrices = false; // Flag to track if prices exist for this defect
+
+        for (var rowId in rowPrices[defectId]) {
+          if (rowPrices[defectId].hasOwnProperty(rowId)) {
+            // Get the price for this row
+            var price = rowPrices[defectId][rowId];
+
+            // Fetch the SOR ID from the hidden input field within the row
+            var sorIdInput = document.querySelector('#' + 'sor-id-' + defectId + '-' + rowId);
+            var sorId = sorIdInput.value; // Fetch the SOR ID from the hidden input
+
+            var sorQuantityInput = document.querySelector('#' + 'sor-quantity-' + defectId + '-' + rowId);
+            var sorQuantity = sorQuantityInput.value; // Fetch the SOR ID from the hidden input
+
+            // Add the SOR ID and price to the defect-SOR data
+            defectSorData[rowId] = { 'sor-id': sorId, 'total_price': price, 'quantity': sorQuantity, 'price': price / sorQuantity, };
+
+            // Check if there is a price, set the flag to true
+            if (price) {
+              hasPrices = true;
+            }
+          }
+        }
+
+        // Check if there are prices for this defect before adding to the list
+        if (hasPrices) {
+          // Add the defect-SOR data to the main data object
+          dataToSend.defectSorValues[defectId] = defectSorData;
+          dataToSend.defectList.push(defectId);
+        }
+      }
+    }
+    // Check if dataToSend has some values
+    if (Object.keys(dataToSend.defectSorValues).length > 0) {
+
+      if (acknowledge != true) {
+        addBlur();
+        // Get a reference to the confirmation modal
+        var confirmationModal = document.getElementById('confirmationModal');
+
+        // Show the Bootstrap confirmation modal
+        confirmationModal.classList.add('show');
+        confirmationModal.style.display = 'block';
+
+        // Attach a click event listener to the "OK" button in the modal
+        document.getElementById('confirmSubmit').addEventListener('click', function () {
+          // User clicked OK, so proceed with form submission
+          removeBlur();
+          showLoader();
+          sendDataToServer(status, true); // Set the status to "send_for_approval" when "Submit" is clicked
+          // You can submit the form here if it's a regular HTML form
+          // e.g., document.getElementById('yourFormId').submit();
+
+          // Close the modal
+          confirmationModal.classList.remove('show');
+          confirmationModal.style.display = 'none';
+        });
+
+        // Attach a click event listener to the "Cancel" button in the modal
+        confirmationModal.querySelector('[data-dismiss="modal"]').addEventListener('click', function () {
+          // User clicked Cancel, do nothing
+          // Close the modal
+          removeBlur();
+          confirmationModal.classList.remove('show');
+          confirmationModal.style.display = 'none';
+
+        });
+      } else {
+
+        // There are values to send, proceed with the fetch request
+        // Make a fetch request to send the data to the server
+        fetch("{% if quotation_data %}{% url 'create_customer_invoice_for_a_quotation' customer_id quotation_data.id %}{% else %}{% url 'edit_customer_invoice' customer_id invoice_data.id %}{% endif %}", {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken, // Include the CSRF token here
+          },
+          body: JSON.stringify(dataToSend),
+        })
+          .then(function (response) {
+            if (response.ok) {
+              // Request was successful, handle the server's response if needed
+              window.location.href = "{% url 'cs_customer_invoice_list' customer_id %}";
+            } else {
+              // Handle errors or failed requests
+              console.error('Error sending data to the server');
+            }
+          })
+          .catch(function (error) {
+            // Handle network errors or other exceptions
+            console.error('Error:', error);
+          });
+      }
+    } else {
+      // No values to send
+      hideLoader();
+      addBlur();
+      // Get a reference to the confirmation modal
+      var errorModal = document.getElementById('errorModal');
+
+      // Show the Bootstrap confirmation modal
+      errorModal.classList.add('show');
+      errorModal.style.display = 'block';
+
+      // Attach a click event listener to the "OK" button in the modal
+      document.getElementById('closeModal').addEventListener('click', function () {
+        // User clicked OK, so proceed with form submission
+        removeBlur();
+
+        // Close the modal
+        errorModal.classList.remove('show');
+        errorModal.style.display = 'none';
+      });
+
+      // Attach a click event listener to the "Cancel" button in the modal
+      errorModal.querySelector('[data-bs-dismiss="modal"]').addEventListener('click', function () {
+        // User clicked Cancel, do nothing
+        // Close the modal
+        removeBlur();
+        errorModal.classList.remove('show');
+        errorModal.style.display = 'none';
+
+      });
+    }
+  }
+
+  var acknowledgeModal = document.getElementById('confirmationModal');
+  acknowledgeModal.querySelector('[data-bs-dismiss="modal"]').addEventListener('click', function () {
+    // User clicked Cancel, do nothing
+    // Close the modal
+    removeBlur();
+    acknowledgeModal.classList.remove('show');
+    acknowledgeModal.style.display = 'none';
+    hideLoader();
+  });
+
+  var errorModal = document.getElementById('errorModal');
+  errorModal.querySelector('[data-bs-dismiss="modal"]').addEventListener('click', function () {
+    // User clicked Cancel, do nothing
+    // Close the modal
+    removeBlur();
+    errorModal.classList.remove('show');
+    errorModal.style.display = 'none';
+    hideLoader();
+  });
+
+
+
+</script>
+
+
+{% endblock %}

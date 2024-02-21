@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block extra_css %}
+<style>
+    .invoice-logo {
+        max-width: 250px;
+    }
+</style>
+{% endblock %}
+{% load rest_framework %}
+{% block title %}Invoice View {{ block.super }}{% endblock %}
+{% block content %}
+{% load custom_tags %}
+{% load requirement_tag %}
+{% include 'components/alert.html' %}
+<div class="container-fluid py-3">
+    <div class="row">
+        <div class="col-12 mx-auto">
+            <div class="card">
+                <div class="card-header pb-0">
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <h4 class="mb-0">Invoice</h4>
+                        </div>
+                        <div class="col-6 text-end">
+                            {% include 'components/back_button.html' %}
+                            {% if instance.get_status_display != 'Draft' %}
+                            <a href="{{instance.pdf_path|get_quotation_pdf_path}}" class="btn bg-gradient-primary btn-sm mb-0 mx-2" download="">
+                                Download Invoice
+                            </a>
+                            {% endif %}
+                            
+                            {% if instance.get_status_display == 'Submitted' or instance.get_status_display == 'Sent to Customer' or instance.get_status_display == 'Paid' %}
+                            <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#sendToCustomerModal">
+                                Send To Customer
+                            </a>
+                            <!-- Modal -->
+                            <div class="modal fade text-start" id="sendToCustomerModal" tabindex="-1" aria-labelledby="sendToCustomerModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="sendToCustomerModalLabel">Confirmations</h1>
+                                            <button type="button" class="btn-close ps-0 py-0 fs-3 text-dark mb-0" data-bs-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                        Are you sure you want to send the customer the invoice?<br>
+                                        As soon as you confirm, the invoice will be sent to the customer via email. Once submitted, there is no way to reverse this process, so be sure the invoice contains all the necessary information and that all of the charges are reasonable.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn bg-gradient-secondary btn-sm mb-0 mx-2" data-bs-dismiss="modal">No</button>
+                                            <a href="{% url "send_invoice_to_customer" instance.requirement.customer_id.id instance.id %}" class="btn bg-gradient-primary btn-sm mb-0 mx-2">Yes</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if instance.get_status_display == 'Sent to Customer' or instance.get_status_display == 'Submitted' %}
+                            <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#markAsPaidModal">
+                                Mark as Paid
+                            </a>
+                            <!-- Modal -->
+                            <div class="modal fade text-start" id="markAsPaidModal" tabindex="-1" aria-labelledby="markAsPaidModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="markAsPaidModalLabel">Confirmations</h1>
+                                            <button type="button" class="btn-close ps-0 py-0 fs-3 text-dark mb-0" data-bs-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Do you really wish to designate this invoice as paid?<br>
+                                            You will still be able to download the invoice PDF after you confirm, but the invoice will be listed as paid and you will be unable to do anything with it.
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn bg-gradient-secondary btn-sm mb-0 mx-2" data-bs-dismiss="modal">No</button>
+                                            <a href="{% url "mark_invoice_as_paid" instance.requirement.customer_id.id instance.id %}" class="btn bg-gradient-primary btn-sm mb-0 mx-2">Yes</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body text-sm">
+                    <div class="row justify-content-lg-start text-sm">
+                        <div class="row mb-2">
+                            <div class="col-6 text-start">
+                                <img src="{% static "/assets/img/logo2.png" %}" alt="Company Logo" class="width-fill invoice-logo">
+                            </div>
+                            <div class="col-6 text-end align-self-center">
+                                <span><strong>Invoice no:</strong> IFP-INV-{{instance.id}}</span><br>
+                                <span><strong>Issued on:</strong> {{instance.submitted_at|date:"d/m/Y"|default:"-"}}</span>
+                            </div>
+                        </div>
+                        <div class="col-4 text-start">
+                            <div class="mt-3">
+                                <p class="mb-0">Infinity Fire Prevention Ltd Infinity House</p>
+                                <p class="mb-0">38 Riverside,Sir Thomas Longley Road</p>
+                                <p class="mb-0">Medway City Estate,Rochester Kent .ME24D</p>
+                                <p class="mb-0">Tel: 03300102203</p>
+                                <p class="mb-0">Fax: 03300102204</p>
+                                <p class="mb-0">Email: <a href="mailto:enquiries@infinityfireprevention.com">enquiries@infinityfireprevention.com</a></p>
+                            </div>
+                        </div>
+                        <div class="col-4 text-start">
+                            <p class="mb-0 mt-3"><strong>To: </strong></p>
+                            <p class="mb-0">{{ instance.billing_information_json.company_name|title }}</p>
+                            <p class="mb-0">{{ instance.billing_information_json.contact_name|title }}</p>
+                            <p class="mb-0">{{ instance.billing_information_json.contact_email }}</p>
+                            <p class="mb-0">Tel: {{ instance.billing_information_json.contact_tel_no }}</p>
+                            <p class="mb-0">
+                                {{ instance.billing_information_json.address }}
+                                {% if instance.billing_information_json.town %}
+                                {{ instance.billing_information_json.town }},
+                                {% endif %}
+                                {% if instance.billing_information_json.county %}
+                                {{ instance.billing_information_json.county }},
+                                {% endif %}
+                                {% if instance.billing_information_json.country %}
+                                {{ instance.billing_information_json.country }},
+                                {% endif %}
+                                {% if instance.billing_information_json.post_code %}
+                                {{ instance.billing_information_json.post_code }}
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-4 text-start">
+                            <p class="mb-0 mt-3"><strong>Vat Number: </strong>{{ instance.billing_information_json.vat_number }}</p>
+                            <p class="mb-0"><strong>Payment Terms: </strong>{{ instance.billing_information_json.payment_terms }}</p>
+                            <p class="mb-0"><strong>Tax Prefrence: </strong>{{ instance.billing_information_json.tax_preference }}</p>
+                            <p class="mb-0"><strong>UPRN: </strong>{{ requirement_instance.UPRN|default:'-'|title }}</p>
+                            <p class="mb-0"><strong>Job Number: </strong>{{ requirement_instance.RBNO|default:'-'|title }}</p>
+                            <p class="mb-0"><strong>Reference Number: </strong>IFP-{{ quotation.id }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mt-5">
+                        <div class="table-responsive">
+                            <table class="table table-flush text-start">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" class="col-1 text-start pe-2">SOR Code </th>
+                                        <th scope="col" class="col-1 text-start pe-2">SOR Description</th>
+                                        <th scope="col" class="col-1 text-start pe-2">Category</th>
+                                        <th scope="col" class="col-1 text-start pe-2">Price(£)</th>
+                                        <th scope="col" class="col-1 text-start pe-2">Quantity</th>
+                                        <th scope="col" class="col-1 text-start pe-2">Total Price(£)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for defect_key, value in instance.invoice_json.defectSorValues.items %}
+                                    {% for inner_key, item in value.items %}
+                                    <tr>
+                                        <td class="col-1">{{ item.sor_items.reference_number }}</td>
+                                        <td class="col-1">{{ item.sor_items.description|safe }}</td>
+                                        <td class="col-1">{{ item.sor_items.category_id }}</td>
+                                        <td class="col-1">{{ item.sor_items.price }}</td>
+                                        <td class="col-1">{% if item.quantity %}{{ item.quantity }}{% else %}1{% endif %}</td>
+                                        <td class="col-1">{% if item.total_price %}{{ item.total_price }}{% else %}{{ item.sor_items.price }}{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3 justify-content-end">
+                        <div class="col-6 text-end">
+                            <h4>Total (£) : {{instance.total_amount}} </h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
