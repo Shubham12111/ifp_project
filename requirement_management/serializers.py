@@ -1504,4 +1504,5 @@ class RequirementQuotationListSerializer(serializers.ModelSerializer):
         data['invoice_generated'] = True if instance.invoice_set.exists() else False
         data['invoice_id'] = instance.invoice_set.first().id if instance.invoice_set.exists() else ''
         data['job_id'] = instance.job_set.first().__str__() if instance.job_set.exists() else ''
+        data['job_completed_date'] = instance.job_set.first().updated_at.strftime("%d/%m/%Y") if instance.job_set.exists() else ''
         return data

@@ -79,7 +79,7 @@
                                     <th>Amount</th>
                                     <th>Surveyor</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    <th>Invoice</th>
                                 </tr>
                             </thead>
                             <tbody class="ml-4">
@@ -117,11 +117,15 @@
                                     </td>
 
                                     <td>
-                                        <a href="{% url 'create_customer_invoice_for_a_quotation' customer_id=quotation.requirement_id.customer_id quotation_id=quotation.id %}" class="text-decoration-none w-100 h-100 nav-link"
-                                            {% if quotation.status != 'Approved' or not quotation.job_status or 'in-progress' in quotation.job_status or 'pending' in quotation.job_status %}disabled{% endif %}
-                                            >
-                                            <i class="fas fa-receipt" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Create Quotation"></i>
+                                        {% if quotation.status != 'Approved' or not quotation.job_status or 'in-progress' in quotation.job_status or 'pending' in quotation.job_status or quotation.invoice_id %}
+                                        <a href="#" class="text-decoration-none w-100 h-100 nav-link" disabled >
+                                            <i class="fas fa-receipt" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Create Invoice"></i>
                                         </a>
+                                        {% else %}
+                                        <a href="{% url 'create_customer_invoice_for_a_quotation' customer_id=quotation.requirement_id.customer_id quotation_id=quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
+                                            <i class="fas fa-receipt" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Create Invoice"></i>
+                                        </a>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}

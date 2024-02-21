@@ -4,8 +4,9 @@ from django.utils import timezone
 
 from rest_framework import serializers
 
-from infinity_fire_solutions.aws_helper import upload_signature_to_s3
+from infinity_fire_solutions.aws_helper import upload_signature_to_s3, generate_presigned_url
 from infinity_fire_solutions.custom_form_validation import save_pdf_from_html
+from infinity_fire_solutions.email import Email
 
 from customer_management.serializers import ( 
     BillingAddress, BillingAddressSerializer
@@ -252,3 +253,64 @@ class InvoiceListSerializer(serializers.ModelSerializer):
         data['paid_at'] = instance.paid_at.strftime("%d/%m/%Y") if instance.paid_at else ''
         data['created_at'] = instance.created_at.strftime("%d/%m/%Y")
         return data
+
+class InvoiceStatusUpdateSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for updating the status of an invoice.
+    """
+
+    email = Email()
+    
+    status = serializers.ChoiceField(
+        choices = INVOICE_STATUS_CHOICES,
+        default = 'sent_to_customer'
+    )
+
+    class Meta:
+        model = Invoice
+        fields = (
+            # Status of the Invoive
+            'status',
+        )
+    
+    def send_invoice(self, instance):
+        # Prepare context for the email template
+        context = {
+            'invoice': InvoiceListSerializer(instance).data,
+        }
+        # Generate presigned URL for the invoice attachment
+        attachment_path = generate_presigned_url(instance.pdf_path)
+
+        # Send email notification with invoice and attachment
+        self.email.send_mail(
+            instance.customer.email,
+            'email_templates/invoice_email.html',
+            context,
+            "Invoice for a quotation",
+            attachment_path
+        )
+    
+    def update(self, instance, validated_data):
+        """
+        Update the status of the invoice and perform additional actions based on the new status.
+        
+        Args:
+            instance (Invoice): The invoice instance to update.
+            validated_data (dict): Validated data containing the updated status.
+        
+        Returns:
+            Invoice: The updated invoice instance.
+        """
+        if instance.status in ['submitted', 'sent_to_customer']:
+            instance: Invoice = super().update(instance, validated_data)
+
+        if instance.status in ['sent_to_customer'] or validated_data.get('status') in ['sent_to_customer']:
+            self.send_invoice(instance)
+
+        if instance.status in ['paid'] and not instance.paid_at:
+            # Update paid_at timestamp when invoice status changes to 'paid'
+            instance.paid_at = timezone.now()
+            instance.save()
+
+        return instance

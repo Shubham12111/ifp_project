@@ -17,6 +17,7 @@ from infinity_fire_solutions.response_schemas import create_api_response, render
 from invoice_management.serializers import (
     InvoiceCreateSerializer,
     InvoiceListSerializer,
+    InvoiceStatusUpdateSerializer,
 
     # models
     Invoice,
@@ -553,3 +554,123 @@ class DeleteInvoiceView(CustomAuthenticationMixin, generics.GenericAPIView):
         else:
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('cs_customer_invoice_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+class MarkAsPaidInvoiceView(CustomAuthenticationMixin, generics.GenericAPIView):
+
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceStatusUpdateSerializer
+
+    def get_object(self, customer: User) -> Invoice:
+        instance = None
+        invoice_id = self.kwargs.get('pk', None)
+
+        if invoice_id and customer:
+            queryset = super().get_queryset()
+            instance = queryset.filter(
+                pk=invoice_id,
+                customer=customer,
+                status__in=['submitted', 'sent_to_customer']
+            ).first()
+
+        return instance
+    
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = kwargs.get('customer_id', None)
+        customer = get_customer_data(customer_id)
+
+        if not customer:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_list'))
+        
+        instance = self.get_object(customer)
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('cs_customer_invoice_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        
+        data = {
+            'status': 'paid'
+        }
+
+        serializer = self.get_serializer(
+            data=data,
+            instance=instance
+        )
+
+        if serializer.is_valid():
+            invoice = serializer.update(
+                instance,
+                serializer.validated_data
+            )
+        
+            messages.success(request, "Invoice is paid successfully!")
+            return redirect(reverse('cs_customer_invoice_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+        messages.error(request, "You are not authorized to perform this action")
+        return redirect(reverse('cs_customer_invoice_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+class SendInvoiceToCustomerView(CustomAuthenticationMixin, generics.GenericAPIView):
+
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceStatusUpdateSerializer
+
+    def get_object(self, customer: User) -> Invoice:
+        instance = None
+        invoice_id = self.kwargs.get('pk', None)
+
+        if invoice_id and customer:
+            queryset = super().get_queryset()
+            instance = queryset.filter(
+                pk=invoice_id,
+                customer=customer,
+                status__in=['submitted', 'sent_to_customer', 'paid']
+            ).first()
+
+        return instance
+    
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = kwargs.get('customer_id', None)
+        customer = get_customer_data(customer_id)
+
+        if not customer:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_list'))
+        
+        instance = self.get_object(customer)
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('cs_customer_invoice_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+        
+        data = {
+            'status': 'sent_to_customer'
+        }
+
+        serializer = self.get_serializer(
+            data=data,
+            instance=instance
+        )
+
+        if serializer.is_valid():
+            invoice = serializer.update(
+                instance,
+                serializer.validated_data
+            )
+        
+            messages.success(request, "Invoice sent to the customer successfully!")
+            return redirect(reverse('cs_customer_invoice_list', kwargs={'customer_id': kwargs.get('customer_id')}))
+
+        messages.error(request, "You are not authorized to perform this action")
+        return redirect(reverse('cs_customer_invoice_list', kwargs={'customer_id': kwargs.get('customer_id')}))
