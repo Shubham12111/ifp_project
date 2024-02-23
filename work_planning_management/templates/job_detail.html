@@ -32,6 +32,10 @@
       outline: 0;
       box-shadow: var(--bs-accordion-btn-focus-box-shadow);
   }
+
+  a[disabled]{
+    opacity: 0.5 !important;
+  }
 </style>
 {% include "job_stw_rlo_actions.html" %}
 <div class="container-fluid pt-4">
@@ -53,13 +57,73 @@
                 {% elif job.status == 'completed' %}
                 bg-gradient-success
                 {% endif %}">
-                {{ job.status|title }}
+                {{ job.get_status_display|title }}
                 </span>
               </div>
               {% endif %}
             </div>
-            <div class="col-6 text-end">
-              {% include 'components/back_button.html' %}
+              <div class="col-6 text-end">
+              {% include 'components/back_button.html' %}        
+              {% if job.status == 'pending' %}
+              <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#startJobModal">
+                  Start Job
+              </a>
+              <!-- Modal -->
+              <div class="modal fade text-start" id="startJobModal" tabindex="-1" aria-labelledby="startJobModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content">
+                          <div class="modal-header">
+                              <h1 class="modal-title fs-5" id="startJobModalLabel">Confirmations</h1>
+                              <button type="button" class="btn-close ps-0 py-0 fs-3 text-dark mb-0" data-bs-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
+                              </button>
+                          </div>
+                          <div class="modal-body">
+                          Are you sure you want to start the job?<br>
+                          As soon as you confirm, you will not be able to make any changes to the job. Once submitted, there is no way to reverse this process.
+                          </div>
+                          <div class="modal-footer">
+                              <button type="button" class="btn bg-gradient-secondary btn-sm mb-0 mx-2" data-bs-dismiss="modal">No</button>
+                              <a href="{% url "start_job" job.customer_id.id job.id %}" class="btn bg-gradient-primary btn-sm mb-0 mx-2">Yes</a>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              {% else %}
+              <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>
+                  Start Job
+              </a>
+              {% endif %}
+
+              {% if job.status == 'in-progress' or job.status == 'pending' %}
+              <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#markAsDoneModal">
+                  Mark as Done
+              </a>
+              <!-- Modal -->
+              <div class="modal fade text-start" id="markAsDoneModal" tabindex="-1" aria-labelledby="markAsDoneModal" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content">
+                          <div class="modal-header">
+                              <h1 class="modal-title fs-5" id="markAsDoneModal">Confirmations</h1>
+                              <button type="button" class="btn-close ps-0 py-0 fs-3 text-dark mb-0" data-bs-dismiss="modal" aria-label="Close">
+                                  <span aria-hidden="true">&times;</span>
+                              </button>
+                          </div>
+                          <div class="modal-body">
+                              Do you really wish to designate this job as done?<br>
+                          </div>
+                          <div class="modal-footer">
+                              <button type="button" class="btn bg-gradient-secondary btn-sm mb-0 mx-2" data-bs-dismiss="modal">No</button>
+                              <a href="{% url "mark_as_complete" job.customer_id.id job.id %}" class="btn bg-gradient-primary btn-sm mb-0 mx-2">Yes</a>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              {% else %}
+              <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>
+                  Mark as Done
+              </a>
+              {% endif %}
             </div>
           </div>
         </div>

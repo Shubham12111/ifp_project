@@ -1410,7 +1410,17 @@ class STWJobListSerializer(serializers.ModelSerializer):
     assigned_to_member = MemberSerializer(many=True)
     assigned_to_team = TeamSerializer()
     event = EventSerializer()
-    
+
+class JobStatusUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating the status of a Job.
+    """
+    class Meta:
+        model = Job
+        fields = (
+            'status',
+        )
+
 
 class MemberCalendarSerializer(serializers.ModelSerializer):
     """
