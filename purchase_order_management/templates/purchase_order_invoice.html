@@ -5,36 +5,14 @@
 {% block title %} Purchase Order View{{ block.super }}{% endblock %}
 {% block content %}
 <style>
-    /* Add CSS rules here */
     .form-control.comments {
         resize: none;
-        /* Disable textarea resizing */
     }
 </style>
 {% include 'components/alert.html' %}
-<style>
-    /* Add borders to the table */
-    .custom-table th,
-    .custom-table td {
-        border: 1px solid #dee2e6;
-        padding: 8px;
-    }
-
-    .btn.btn-outline-dotted {
-        border: 1px dotted #000;
-        /* Replace #000 with the desired color for the border */
-        background-color: transparent;
-        color: #000;
-        /* Replace #000 with the desired text color */
-    }
-
-    .choices__item--disabled {
-        display: none !important;
-    }
-</style>
 <div class="container-fluid py-2">
     <div class="card">
-        <div class="card-header mt-0">
+        <div class="card-header">
             <div class="row justify-content-between">
                 <div class="col-6">
                 <h5>Purchase Order</h5>
@@ -44,110 +22,141 @@
                 </div>
             </div>
         </div>
-        <div class="card-body px-4 pb-0">
+        <div class="card-body">
             <div class="row">
-                <div class="col-lg-4 col-md-4 col-12">
+                <div class="col-lg-4 col-12">
                     <ul class="list-group">
+                        {% if purchase_order.vendor_id %}
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-                                <h6 class="mb-3 text-sm">Vendor Information </h6>
-                                <span class="mb-2 text-sm">Vendor Name: <span class="text-dark font-weight-bold ms-2">
-                                        {{purchase_order.vendor_id.first_name}}
-                                        {{purchase_order.vendor_id.last_name}}</span></span>
-                                <span class="mb-2 text-sm">Phone Number: <span class="text-dark font-weight-bold ms-2">
-                                        {{purchase_order.vendor_id.phone_number}}</span></span>
-                                <span class="mb-2 text-sm">Email Address: <span class="text-dark ms-2 font-weight-bold">
-                                        {{purchase_order.vendor_id.email}}</span></span>
+                                <h6 class="mb-3 text-sm">Vendor Information</h6>
+                                <span class="mb-2 text-sm">Name:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.vendor_id.name|default:'-'|title}}
+                                    </span>
+                                </span>
+                                <span class="mb-2 text-sm">Phone Number:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.vendor_id.phone_number|default:'-'}}
+                                    </span>
+                                </span>
+                                <span class="mb-2 text-sm">Email Address:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap d-inline-block" style="max-width: 100%;">
+                                        {{purchase_order.vendor_id.email|default:'-'}}
+                                    </span>
+                                </span>
                             </div>
                         </li>
+                        {% else %}
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+                                <h6 class="mb-3 text-sm">Sub-Contractor Information</h6>
+                                <span class="mb-2 text-sm">Name:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.sub_contractor_id.name|default:'-'|title}}
+                                    </span>
+                                </span>
+                                <span class="mb-2 text-sm">Phone Number:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
+                                        {{purchase_order.sub_contractor_id.phone_number|default:'-'}}
+                                    </span>
+                                </span>
+                                <span class="mb-2 text-sm">Email Address:
+                                    <span class="text-dark font-weight-bold ms-2 text-wrap d-inline-block" style="max-width: 100%;">
+                                        {{purchase_order.sub_contractor_id.email|default:'-'}}
+                                    </span>
+                                </span>
+                            </div>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
-
-                <div class="col-lg-4 col-md-4 col-12">
+                
+                <div class="col-lg-4 col-12">
                     <ul class="list-group">
                         {% if purchase_order.inventory_location_id %}
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-                            <h6 class="mb-3 text-sm">Inventory Location Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.name}}</span></span>
-                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.address}}</span></span>
+                            <h6 class="mb-3 text-sm">Warehouse Information</h6>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.name|default:'-'|title}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.address|default:'-'}}</span></span>
                             </div>
                         </li>
                         {% else %}
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Customer Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap">{{purchase_order.user_id.first_name|default:'-'|truncatechars:20|title}}
-                                {{purchase_order.user_id.last_name|default:'-'|truncatechars:20|title}}</span></span>
-                            <span class="mb-2 text-sm">Email: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.user_id.email}}</span></span>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap">{{purchase_order.user_id.name|default:'-'|title}}</span></span>
+                            <span class="mb-2 text-sm">Email: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.user_id.email|default:'-'}}</span></span>
                             <h6 class="mb-3 mt-3 text-sm">Customer Site Address Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.site_address.site_name}}</span></span>
-                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.site_address.address}}</span></span>
+                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.site_address.name|default:'-'}}</span></span>
+                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.site_address.address|default:'-'}}</span></span>
                             </div>
                         </li>
                         {% endif %}
                     </ul>
                 </div>
-
-                <div class="col-lg-4 col-xs-12 col-sm-12 col-12">
+                
+                <div class="col-lg-4 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-
-                                <span class="mb-2 text-sm">PO No.: <span
-                                        class="text-dark font-weight-bold ms-2 text-wrap">
-                                        {{purchase_order.po_number}}</span></span>
-                                <span class="mb-2 text-sm">Status: <span
-                                        class=" text-dark font-weight-bold ms-2 text-wrap">
-                                        {{purchase_order.get_status_display}}</span></span>
+                                <span class="mb-2 text-sm">
+                                    PO No.: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_number|default:'-'}}</span>
+                                </span>
+                                <span class="mb-2 text-sm">
+                                    Status: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.status|default:'-'}}</span>
+                                </span>
+                                <span class="mb-2 text-sm">
+                                    PO Date: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_date|default:'-'}}</span>
+                                </span>
+                                <span class="mb-2 text-sm">
+                                    PO Due Date: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_due_date|default:'-'}}</span>
+                                </span>
                             </div>
                         </li>
                     </ul>
                 </div>
-
             </div>
             <form method="post" enctype="multipart/form-data" id="invoiceForm">
                 {% csrf_token %}
-
-                <div class="row mt-0">
-                    <div class="col-md-12 table-responsive ">
-
-                        <h6 class="mx-1 mb-3 mt-5">Item Details:</h6>
-                        <table class="custom-table mb-3 " style="width:100%">
+                <div class="row mt-5">
+                    <div class="table-responsive">
+                        <table class="table table-flush mb-3 text-sm" id="purchaseOrderItemsTable">
                             <thead>
-                                <tr class="px-0 text-sm">
-                                    <th class="text-start col-4">Item Name</th>
-                                    <th class="text-center col-2">Price(£)</th>
-                                    <th class="text-center col-2">Quantity </th>
-                                    <th class="text-center col-2">Received Quantity </th>
-                                    <th class="text-center col-3">Total(£)</th>
+                                <tr class="px-0 text-start">
+                                    <th class="col-2">Item Name</th>
+                                    <th class="col-2">Item Ref No.</th>
+                                    <th class="col-2">Price(£)</th>
+                                    <th class="col-2">Quantity </th>
+                                    <th class="col-2">Received Quantity </th>
+                                    <th class="col-1">Total(£)</th>
                                 </tr>
                             </thead>
                             <tbody>
-
-                                {% for item in purchase_order_items %}
-                                <tr class="">
-                                    <td class="text-sm">{{item.item_name}} </td>
-                                    <td class="text-sm text-center">{{item.unit_price}} </td>
-                                    <td class="text-sm text-center">{{item.quantity}} </td>
-                                    <td class="text-sm">
+                                {% for item in purchase_order.items %}
+                                <tr>
+                                    <td class="text-sm py-3">{{item.item_name}} </td>
+                                    <td class="text-sm py-3">{{item.reference_number|default:'-'}}</td>
+                                    <td class="text-sm py-3">{{item.unit_price}}</td>
+                                    <td class="text-sm py-3">{{item.quantity}} </td>
+                                    <td class="text-sm text-wrap">
                                         <input type="number" class="form-control quantity-input" value="0"
                                             data-max="{{item.quantity}}" data-item-id="{{item.id}}" id=""
                                             oninput="this.value =!!this.value && Math.abs(this.value) >= 0 ? Math.abs(this.value) : null">
                                         <p class="error-message text-sm text-danger" style=" display: none;">Exceeds
                                             available quantity or Received inventory is missing.</p>
                                     </td>
-
-                                    <td class="text-sm text-center">{{item.row_total}} </td>
+                                    <td class="text-sm py-3">{{item.row_total}} </td>
+                                    <span class="error-message text-danger text-sm mb-2" id="purchaseOrderItemsRowError"></div>
                                 </tr>
                                 {% endfor %}
-
                             </tbody>
                         </table>
                         <div class="error-message text-danger text-sm mb-2" id="rowError"></div>
                     </div>
                 </div>
-                <div class="row mt-2">
+                <div class="row justify-content-between mt-5">
                     <div class="col-md-6 ">
                         <div class="row mb-6">
                             <div class="col-md-6">
@@ -186,7 +195,7 @@
                         {% endif %}
 
                     </div>
-                    <div class="col-lg-3 col-12 col-md-6 ms-auto">
+                    <div class="col-lg-3 col-12 col-md-6 mt-5 mt-md-0 text-end">
                         <div class="row mb-2 justify-content-between">
                             <div class="col-6 text-end"><span class="text-md">Sub Total</span></div>
                             <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.sub_total }}</span></div>
@@ -196,8 +205,8 @@
                             <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.discount }}</span></div>
                         </div>
                         <div class="row mb-4 justify-content-between">
-                            <div class="col-6 text-end"><span class="text-md">Tax (%):</span></div>
-                            <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.tax }}</span></div>
+                            <div class="col-6 text-end"><span class="text-md">Tax ({{ purchase_order.tax }}%):</span></div>
+                            <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.tax_price }}</span></div>
                         </div>
                         <div class="row justify-content-between">
                             <div class="col-6 text-end"><span class="font-weight-bolder grand-total-value">Total</span></div>
@@ -205,9 +214,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="row mt-5 mb-3">
-                    <div class="col-6 col-lg-6 m-auto text-end"></div>
-                    <div class="col-md-6 m-auto text-center text-md-end">
+                <div class="row mt-5 justify-content-end mt-lg-0 mb-3">
+                    <div class="col-md-6 text-center text-md-end">
                         <button class="btn btn-md bg-gradient-primary ms-2 mb-0 js-btn-next" id="submitButton"
                             type="button">Save</button>
                     </div>
@@ -215,7 +223,7 @@
             </form>
         </div>
     </div>
-</div>
+    {% include 'components/loader.html' %}
 </div>
 
 {% endblock %}
@@ -226,29 +234,19 @@
     if (document.querySelector('.invoice_date')) {
         // Get the default value for the datetime picker
         const fieldElement = document.querySelector('.invoice_date');
-        if (fieldElement.value) {
-            var defaultDateValue = fieldElement.value;
-        }
-        else {
-            var defaultDateValue;
-        }
-
-
-
-        // Convert the default value to a Date object (if available)
-        const defaultDate = defaultDateValue ? new Date(defaultDateValue) : new Date();
-
+        var invoiceDateValue = fieldElement.defaultValue;
+        // set defaultDateValue to fieldValue or current date
+        var defaultDateValue = invoiceDateValue ? invoiceDateValue : new Date();
         // Create the flatpickr date-time picker and set the default date to the default value or current date
         flatpickr('.invoice_date', {
             allowInput: true,
-            defaultDate: defaultDate,
+            minDate: 'today',
+            defaultDate: defaultDateValue,
             dateFormat: "d/m/Y" // Set your desired date format
         });
     }
 
-
     const quantityInputs = document.querySelectorAll('.quantity-input');
-
     quantityInputs.forEach(input => {
         const maxQuantity = parseInt(input.getAttribute('data-max'));
         const errorMessage = input.parentElement.querySelector('.error-message');
@@ -266,10 +264,20 @@
         });
     });
 
+    const loaderOverlay = document.getElementById("loaderOverlay"); // Loader overlay element
+    function showLoader() {
+        loaderOverlay.classList.remove("d-none"); // Show the loader overlay
+    }
+    function hideLoader() {
+        loaderOverlay.classList.add("d-none"); // Hide the loader overlay
+    }
+
+
     document.addEventListener('DOMContentLoaded', function () {
         const submitButton = document.getElementById('submitButton');
 
         submitButton.addEventListener('click', function () {
+            showLoader();
             const formData = new FormData(document.getElementById('invoiceForm'));
             const quantityInputs = document.querySelectorAll('.quantity-input');
 
@@ -295,7 +303,7 @@
                 const rowErrorElement = document.getElementById('rowError');
                 if (rowErrorElement) {
                     rowErrorElement.textContent = "Add valid received inventory quantities to at least one item. Negative values and zero are not allowed.";
-
+                    hideLoader();
                     // Clear the error message after 3 seconds
                     setTimeout(() => {
                         rowErrorElement.textContent = "";
@@ -316,12 +324,40 @@
                 }).then(response => {
                     response.json().then(data => {
                         if (data.errors) {
+                            hideLoader();
                             const existingErrorMessages = document.querySelectorAll('.help-block');
                             existingErrorMessages.forEach(errorMessage => errorMessage.remove());
 
                             const quantityInputs = document.querySelectorAll('.quantity-input');
 
                             for (const fieldName in data.errors) {
+                                if (fieldName === "purchase_order_items"){
+                                    purchaseOrderItemsTable = document.getElementById('purchaseOrderItemsTable');
+
+                                    if(purchaseOrderItemsTable){
+                                        // Get all rows in the table body
+                                        const rows = purchaseOrderItemsTable.querySelector('tbody').querySelectorAll('tr');
+                                        
+                                        if (rows){
+                                            // Map the error messages for each row
+                                            const errorMessages = Array.from(rows).map((row, index) => {
+                                                // Get the corresponding error message for the current row
+                                                return data.errors[fieldName][index]?.received_inventory?.[0] || '';
+                                            });
+
+                                            // Update the error messages in each row
+                                            rows.forEach((row, index) => {
+                                                // Find the span element within the current row
+                                                const errorMessageSpan = row.querySelector('.error-message');
+                                                
+                                                // Set the error message in the span element
+                                                errorMessageSpan.textContent = errorMessages[index];
+                                            });
+                                        }
+                                    }
+                                    
+                                }
+
                                 const field = document.querySelector(`[name="${fieldName}"]`);
 
                                 if (field) {
