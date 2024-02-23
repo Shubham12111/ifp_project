@@ -1,0 +1,135 @@
+<!-- add_customer.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
+{% block title %} Purchase Order{{ block.super }}{% endblock %}
+{% block content %}
+{% include 'components/alert.html' %}
+{% include "job_stw_rlo_actions.html" %}
+<div class="container-fluid pt-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <!-- Card header -->
+        <div class="card-header">
+          <div class="row mb-3 justify-content-between">
+            <div class="col-6">
+              <h4>Purchase Orders</h4>
+            </div>
+            <div class="col-6 text-end">
+                {% include 'components/back_button.html' %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body pt-0">
+          <div class="table-responsive">
+            <table class="table table-hover text-dark " id="purchase-order-list">
+              <thead class="thead-light">
+                <tr>
+                  <th>PO No.</th>
+                  <th>Sub-Contractor Name</th>
+                  <th>Sub-Contractor Email</th>
+                  <th>Sub-Contractor Ph. No.</th>
+                  <th>Total(£)</th>
+                  <th>PO Date</th>
+                  <th>PO Due Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody class="ml-4">
+                {% for order in orders %}
+                <tr class="text-sm">
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.po_number}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.sub_contractor_id.first_name|default:'-'|truncatechars:20|title}}
+                      {{order.sub_contractor_id.last_name|default:'-'|truncatechars:20|title}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.sub_contractor_id.email|default:'-'}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.sub_contractor_id.phone_number|default:'-'}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.total_amount}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {% if order.po_date %}
+                      {{order.po_date|date:'d/m/Y'}}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {% if order.po_date %}
+                      {{order.po_due_date|date:'d/m/Y'}}
+                      {% else %}
+                      -
+                      {% endif %}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.get_status_display|title|default:"-"}}
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+
+            </table>
+          </div>
+
+          {% if orders.paginator.num_pages > 1 %}
+            <div class="row justify-content-start justify-content-lg-between pagination-row">
+              <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+                <div class="pagination-info mt-auto mb-auto">Showing {{orders.number}} of {{orders.paginator.num_pages}} pages</div>
+              </div>
+              <div class="col-12 col-lg-6 align-self-center">
+                <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                  <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                      {% if orders.has_previous %}
+                          <li class="page-item"><a class="page-link" href="?page={{ orders.previous_page_number }}"><i class="fas fa-angle-left"></i></a></li>
+                      {% else %}
+                          <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a></li>
+                      {% endif %}
+                      {% for i in orders.paginator.page_range %}
+                          {% if orders.number == i %}
+                              <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                          {% else%}
+                              <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                          {% endif %}
+                      {% endfor %}
+                      {% if orders.has_next %}
+                          <li class="page-item"><a class="page-link" href="?page={{ orders.next_page_number }}"><i class="fas fa-angle-right"></i></a></li>
+                      {% else %}
+                          <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a></li>
+                      {% endif %}
+                  </ul>
+                </nav>
+              </div>
+            </div>          
+            {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
