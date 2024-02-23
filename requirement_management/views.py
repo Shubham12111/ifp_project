@@ -546,6 +546,18 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         
 
         return queryset
+    
+    def get_total_defects_count(self, customer_id):
+        """
+        Get the total number of defects for a customer.
+        Args:
+            customer_id (int): ID of the customer.
+
+        Returns:
+            int: Total number of defects.
+        """
+        total_defects_count = RequirementDefect.objects.filter(requirement_id__customer_id=customer_id).count()
+        return total_defects_count
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
@@ -689,13 +701,6 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 messages.error(request, 'You cannot create the report without a signature.')
                 return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
                 
-            
-            # Check if there is already a report for all selected defects
-            existing_report_for_requirement = Report.objects.filter(requirement_id=instance, defect_id__in=defects, status='submit').first()
-            
-            if existing_report_for_requirement:
-                messages.error(request, "There is already a submitted report for this requirement.")
-                return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
 
             if not defects:
                 messages.error(request, "You cannot create the report for the defects that are already used in other reports.")
