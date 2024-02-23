@@ -224,7 +224,11 @@ table > tbody > tr > td > i{
             <div class="modal-body">
               
                 {% csrf_token %}
-                <h5>FRA Actions</h5>
+                <h5> Actions</h5>
+                    <p class="text-sm mt-2" style="text-align: justify;">
+
+                        {{ requirement_instance.action|safe}}
+                    </p>
                   <div id="defects-container">
                     <!-- Defects will be displayed here -->
                   </div>
