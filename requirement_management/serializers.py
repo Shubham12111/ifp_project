@@ -1241,20 +1241,20 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
             },
     )
 
-    # site_address = SiteAddressField(
-    #     label=('Site Address'),
-    #     required = True,
-    #     style={
-    #         'base_template': 'custom_select.html',
-    #         'custom_class':'col-6'
-    #     },
-    #     error_messages={
-    #         "required": "This field is required.",
-    #         "blank": "Site Address is required.",
-    #         "incorrect_type":"Site Address is required.",
-    #         "null": "Site Address is required."
-    #     },
-    # )
+    site_address = SiteAddressField(
+        label=('Site Address'),
+        required = True,
+        style={
+            'base_template': 'custom_select.html',
+            'custom_class':'col-6'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Site Address is required.",
+            "incorrect_type":"Site Address is required.",
+            "null": "Site Address is required."
+        },
+    )
     due_date = serializers.DateField(
         label='Due Date',
         required=True,
@@ -1268,7 +1268,7 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Requirement
-        fields = ('RBNO', 'UPRN', 'action','description' ,'due_date')
+        fields = ('RBNO', 'UPRN', 'action','description' ,'site_address','due_date')
 
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
@@ -1336,6 +1336,10 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
             if Requirement.objects.filter(UPRN=value).exists():
                 raise serializers.ValidationError("UPRN already exists.")
         return value
+    
+    def validate_site_address_mapping(self, value):
+        return value
+
 
 
 class RequirementCalendarSerializer(serializers.ModelSerializer):

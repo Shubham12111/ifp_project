@@ -1670,6 +1670,28 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
 
         data = request.data.copy()
 
+         # Extract site address fields from the request data
+        address = data.get('address')
+        site_name = data.get('site_name')
+        country = data.get('country')
+        town = data.get('town')
+        county = data.get('county')
+        post_code = data.get('post_code')
+           # Check if the site address already exists for the customer
+        site_address_instance = SiteAddress.objects.filter(user_id=customer_data, address=address).first()
+
+        if not site_address_instance:
+            # Create a new SiteAddress instance if it doesn't exist
+            site_address_instance = SiteAddress.objects.create(
+                user_id=customer_data,
+                address=address,
+                site_name=site_name,
+                country=country,
+                town=town,
+                county=county,
+                post_code=post_code,
+                # Add any other required fields for SiteAddress model
+            )
 
         # Create a mapping dictionary from the request data
         mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
