@@ -223,6 +223,26 @@
                           <div class="row mt-3">
                             <div class="col text-start">
                               <label
+                                for="UPRN"
+                                class="col-form-label text-start"
+                                >UPRN:</label
+                              >
+                            </div>
+                            <div class="col">
+                              <select
+                                class="form-select"
+                                aria-label="Default select example"
+                                type="radio"
+                                name="UPRN"
+                                id="mappings"
+                              >
+                                <option selected>Open this select menu</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row mt-3">
+                            <div class="col text-start">
+                              <label
                                 for="action"
                                 class="col-form-label text-start"
                                 >Action:</label
@@ -401,7 +421,7 @@
                               </select>
                             </div>
                           </div>
-                          <div class="row mt-3">
+                          {% comment %} <div class="row mt-3">
                             <div class="col text-start">
                               <label
                                 for="post_code"
@@ -420,7 +440,7 @@
                                 <option selected>Open this select menu</option>
                               </select>
                             </div>
-                          </div>                 
+                          </div>                  {% endcomment %}
                         </div>
                       </div>
                     </div>

@@ -703,7 +703,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 
 
             if not defects:
-                messages.error(request, "You cannot create the report for the defects that are already used in other reports.")
+                messages.error(request, "You cannot create the report for the defects as There is already a submitted report for these defects.")
                 return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
             
             # Create a new Report instance and save it to the database
@@ -1604,7 +1604,7 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
     Supports both HTML and JSON response formats.
     """
     serializer_class = BulkRequirementAddSerializer
-    default_fieldset = ['RBNO', 'UPRN', 'action','description','site_address','due_date']
+    default_fieldset = ['RBNO', 'UPRN', 'action','description','site_address','due_date','address','site_name','country','town','county','post_code']
     EXCEL = ['xlsx', 'xls', 'ods']
     CSV = ['csv',]
 
@@ -1695,7 +1695,6 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
                 town=town,
                 county=county,
                 post_code=post_code,
-                # Add any other required fields for SiteAddress model
             )
 
         # Create a mapping dictionary from the request data
