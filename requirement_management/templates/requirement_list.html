@@ -189,6 +189,11 @@
                   >
                     {% csrf_token %}
                     <div class="modal-body">
+                      <div class="row justify-content-center">
+                        <div class="col-12 text-end">
+                          <a href="{% url "download_sample_fra" %}" class="btn btn-sm bg-gradient-primary text-end">Download Sample.csv</a>
+                        </div>
+                      </div>
                       <div class="mb-3">
                         <input
                           class="form-control"

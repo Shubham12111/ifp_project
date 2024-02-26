@@ -74,4 +74,5 @@ urlpatterns = [
     path('customers/fra/import_csv/<int:customer_id>/', RequirementCSVView.as_view(), name='import_csv'),
 
 
+    path('download/sample/',DownloadFRASampleVide.as_view(), name='download_sample_fra')
 ]   
