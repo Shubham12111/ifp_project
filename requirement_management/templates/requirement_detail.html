@@ -402,6 +402,17 @@ function _stripOnce(value) {
 document.addEventListener("DOMContentLoaded", function () {
   // Get the "Add Quantity Surveyor" button
   const cretaeReportButton = document.getElementById("createreportButton");
+  const defectTableList = document.getElementById("defect-requirement-list");
+  const defectTableListBody = defectTableList.querySelector('tbody')
+  if (defectTableListBody){
+    if (defectTableListBody.children.length == 0){
+      cretaeReportButton.disabled = true;
+    } else {
+      cretaeReportButton.disabled = false;
+    }
+  }
+
+
 
   // Add an event listener to show the modal when the button is clicked
 cretaeReportButton.addEventListener("click", function () {

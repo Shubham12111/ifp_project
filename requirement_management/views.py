@@ -2043,3 +2043,35 @@ class RequirementSurvyeListView(CustomAuthenticationMixin,generics.ListAPIView):
         else:
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer_id}))  
+
+class DownloadFRASampleVide(CustomAuthenticationMixin,generics.GenericAPIView):
+    """
+    A view to download a sample FRA video.
+
+    This view generates a presigned URL for downloading a sample FRA video file
+    and redirects the user to that URL.
+
+    Attributes:
+        None
+
+    Methods:
+        get(self, request, *args, **kwargs): Retrieves the presigned URL for the sample FRA video file
+            and redirects the user to that URL.
+    """
+
+    def get(self, request, *args, **kwargs):
+        """
+        Retrieve the presigned URL for the sample FRA video file and redirect the user.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            HttpResponseRedirect: Redirects the user to the presigned URL for downloading the sample FRA video file.
+        """
+        # Generate a presigned URL for the sample FRA video file
+        url = generate_presigned_url('sample/sample_fra.csv')
+        # Redirect the user to the presigned URL
+        return redirect(url)
