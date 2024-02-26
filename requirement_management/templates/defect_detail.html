@@ -19,77 +19,62 @@
         </div>
       </div>
     </div>
-      <div class="card-body">
-          <div class="row">
-            <div class="col-md-5">
-              <div class=" product-sticky">
-                <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
-                  <div class="carousel-inner bg-light rounded">
-                      {% for item in defect_document_paths %}
-                      <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                          <div class="zoomable-media">
-                              {% if item.is_image %}
-                              <img src="{{ item.presigned_url }}" class="d-block zoomable-image" alt="Product Image">
-                              <div class="zoom-controls">
-                                  <i class="fas fa-plus zoom-in-button m-2"></i>
-                                  <i class="fas fa-minus zoom-out-button  mx-2"></i>
-                                  <i class="fas  fa-sync-alt reset-button  mx-2"></i>
-                                  
-                              </div>
-                              {% endif %}
-                              {% comment %} {% if item.is_video %}
-                              <video controls class="d-block zoomable-video">
-                                  <source src="{{ item.presigned_url }}" type="video/mp4">
-                              </video>
-                              {% endif %} {% endcomment %}
-                          </div>
-                      </div>
-                      {% endfor %}
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-5">
+          <div class=" product-sticky">
+            <div id="carouselExampleCaptions" class="carousel slide ecomm-prod-slider" data-bs-ride="carousel">
+              <div class="carousel-inner bg-light rounded">
+                {% for item in defect_document_paths %}
+                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                  <div class="zoomable-media">
+                    {% if item.is_image %}
+                    <img src="{{ item.presigned_url }}" class="d-block zoomable-image" alt="Product Image">
+                    <div class="zoom-controls">
+                      <i class="fas fa-plus zoom-in-button m-2"></i>
+                      <i class="fas fa-minus zoom-out-button  mx-2"></i>
+                      <i class="fas  fa-sync-alt reset-button  mx-2"></i>
+                    </div>
+                    {% endif %}
                   </div>
-                  <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0">
-                      {% for item in defect_document_paths %}
-                      {% if item.is_image %}
-                      <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
-                          <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded  border me-4" alt="Product media">
-                      </li>
-                      {% endif %}
-                      {% comment %} {% if item.is_video %}
-                      <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}" class="w-25 h-auto {% if forloop.first %}active{% endif %}">
-                        <video  class="d-block wid-100 zoomable-video rounded  border p-2" >
-                          <source src="{{ item.presigned_url }}" type="video/mp4">
-                      </video>
-                      </li>
-                      {% endif %} {% endcomment %}
-                      {% endfor %}
-                  </ol>
-              </div>
-              
-              </div>
-            </div>
-        
-            <div class="col-lg-7">
-                <div class="card-body p-0">
-                    <b>Action</b>
-                    <p class="text-sm mt-2" style="text-align: justify;">{{ defect_instance.action|safe }}</p>
-                    <strong class="text-dark text-sm mt-2">Description:</strong>
-                    <p class="text-sm mt-2" style="text-align: justify;">
-                      {{ defect_instance.description|safe}}
-                    </p>
-                    <strong class="text-dark text-sm mt-2">Rectification:</strong>
-                    <p class="text-sm mt-2" style="text-align: justify;">
-                      {{ defect_instance.rectification_description|safe}}
-                    </p>
-                    <hr class="horizontal gray-light my-4">
-                    
-                  
+                  {% endfor %}
                 </div>
               </div>
+              <ol class="carousel-indicators position-relative product-carousel-indicators my-sm-3 mx-0">
+                {% for item in defect_document_paths %}
+                {% if item.is_image %}
+                <li data-bs-target="#carouselExampleCaptions" data-bs-slide-to="{{ forloop.counter0 }}"
+                  class="w-25 h-auto {% if forloop.first %}active{% endif %}">
+                  <img src="{{ item.presigned_url }}" class="d-block wid-100 rounded  border me-4" alt="Product media">
+                </li>
+                {% endif %}
+                {% endfor %}
+              </ol>
             </div>
+          </div>
         </div>
-  </div> 
-  {% include 'defect_fra.html' %}
+        <div class="col-lg-7">
+          <div class="card-body p-0">
+            <b>Action</b>
+            <p class="text-sm mt-2" style="text-align: justify;">
+              {{ defect_instance.action|safe }}
+            </p>
+            <strong class="text-dark text-sm mt-2">Description:</strong>
+            <p class="text-sm mt-2" style="text-align: justify;">
+              {{ defect_instance.description|safe}}
+            </p>
+            <strong class="text-dark text-sm mt-2">Rectification:</strong>
+            <p class="text-sm mt-2" style="text-align: justify;">
+              {{ defect_instance.rectification_description|safe}}
+            </p>
+            <hr class="horizontal gray-light my-4">
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-      
+</div>
+
 
 {% endblock %}
 
@@ -100,19 +85,19 @@
 <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_delete.js' %}"></script>
 <script>
-    if (document.getElementById('defect-requirement-list')) {
-        const dataTableSearch = new simpleDatatables.DataTable("#defect-requirement-list", {
-            searchable: true,
-            fixedHeight: false,
-            perPage: 10
-        });
+  if (document.getElementById('defect-requirement-list')) {
+    const dataTableSearch = new simpleDatatables.DataTable("#defect-requirement-list", {
+      searchable: true,
+      fixedHeight: false,
+      perPage: 10
+    });
 
-    }
+  }
 
 </script>
 <script src="{% static 'assets/js/zoom_image.js' %}"></script>
 
 
 
-  
+
 {% endblock %}
