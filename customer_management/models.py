@@ -38,6 +38,9 @@ class BillingAddress(models.Model):
         default=True,  
         verbose_name='Is a Purchase Order number required?'
     )  
+    CIS = models.BooleanField(
+        default=True
+    )
 
 
     class Meta:
@@ -57,6 +60,7 @@ class SiteAddress(models.Model):
     town = models.CharField(max_length=255, null=True, blank=True)
     county = models.CharField(max_length=255, null=True, blank=True)
     post_code = models.CharField(max_length=10, choices=POST_CODE_LIST, null=True, blank=True)
+    UPRN = models.CharField(max_length=10 , null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
    
