@@ -19,6 +19,11 @@
   .custom-date-search {
     width: 120px !important;
   }
+
+  i.fw-bold.text-sm{
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+  }
 </style>
 {% include 'components/alert.html' %}
 <div class="container-fluid py-2">
@@ -50,10 +55,11 @@
               <thead class="thead-light">
                 <tr>
                   <th>PO No.</th>
-                  <th>Vendor</th>
-                  <th>Location</th>
+                  <th>PO For</th>
+                  <th>PO Location</th>
                   <th>Total(£)</th>
-                  <th>Created At</th>
+                  <th>PO Date</th>
+                  <th>PO Due Date</th>
                   <th>Status</th>
                   <th class="custom-last-column">Actions</th>
                 </tr>
@@ -61,41 +67,83 @@
               <tbody class="ml-4">
                 {% for order in orders %}
                 <tr class="text-sm">
-                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.po_number}}</a></td>
-                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.vendor_id.first_name|default:'-'|truncatechars:20|title}}
-                    {{order.vendor_id.last_name|default:'-'|truncatechars:20|title}}</a></td>
-                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{% if order.inventory_location_id %}{{order.inventory_location_id.name}} - <i>Inventory Location</i>{% else %}{{order.site_address}} - <i>Site Address</i>{% endif %}</a></td>
-                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.total_amount}}</a></td>
-                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.created_at|date:"d/m/Y "}}</a></td>
-                  <td><a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">{{order.get_status_display|title|default:"-"}}</a></td>
-                    <td>
-                      <div class="dropstart ms-auto pe-0">
-                        <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
-                          aria-expanded="false">
-                          <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
-                        </a>
-                        <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">
-                          {% if request.user|has_update_permission:"purchase_order" %}
-                          {% if order.created_by == request.user and order.status == 'pending'%}
+                  <td class="py-3">
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.po_number}}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {% if order.vendor_id %}
+                      <i class="text-sm fw-bold">Vendor:</i><br>
+                      {{order.vendor_id.first_name|default:'-'|truncatechars:20|title}}
+                      {{order.vendor_id.last_name|default:'-'|truncatechars:20|title}}
+                      {% else %}
+                      <i class="text-sm fw-bold">Sub Contractor:</i><br>
+                      {{order.sub_contractor_id.first_name|default:'-'|truncatechars:20|title}}
+                      {{order.sub_contractor_id.last_name|default:'-'|truncatechars:20|title}}
+                      {% endif %}
+                    </a>
+                  </td>
+                  <td>
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {% if order.inventory_location_id %}
+                      <i class="text-sm fw-bold">Warehouse:</i><br>
+                      {{order.inventory_location_id.name}}
+                      {% else %}
+                      <i class="text-sm fw-bold">Site Address:</i><br>
+                      {{order.site_address}}
+                      {% endif %}
+                    </a>
+                  </td>
+                  <td class="py-3">
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.total_amount}}
+                    </a>
+                  </td>
+                  <td class="py-3">
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.po_date|date:"d/m/Y"|default:"-"}}
+                    </a>
+                  </td>
+                  <td class="py-3">
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.po_due_date|date:"d/m/Y"|default:"-"}}
+                    </a>
+                  </td>
+                  <td class="py-3">
+                    <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
+                      {{order.get_status_display|title|default:"-"}}
+                    </a>
+                  </td>
+                  <td class="py-3">
+                    <div class="dropstart ms-auto pe-0">
+                      <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
+                      </a>
+                      <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">
+                        {% if request.user|has_update_permission:"purchase_order" %}
+                        {% if order.created_by == request.user and order.status == 'pending'%}
+                        <li><a class="dropdown-item border-radius-md"
+                          href="{% url 'purchase_order_edit' order.id %}">Edit</a></li>
+                        {% endif %}
+                          {% if order.status == 'sent_for_approval' and request.user.roles.name == "projects_admin_(IT)" %}
                           <li><a class="dropdown-item border-radius-md"
-                            href="{% url 'purchase_order_edit' order.id %}">Edit</a></li>
+                              href="{% url 'purchase_order_edit' order.id %}">Approve</a></li>
                           {% endif %}
-                            {% if order.status == 'sent_for_approval' and request.user.roles.name == "projects_admin_(IT)" %}
+                          {% if request.user.roles.name == "projects_admin_(IT)" %}
+                            {% if order.status == "approved" or status == "partially_completed" %}
                             <li><a class="dropdown-item border-radius-md"
-                                href="{% url 'purchase_order_edit' order.id %}">Approve</a></li>
-                            {% endif %}
-                            {% if request.user.roles.name == "projects_admin_(IT)" %}
-                              {% if order.status == "approved" or status == "partially_completed" %}
-                              <li><a class="dropdown-item border-radius-md"
-                                href="{% url 'purchase_order_convert_to_invoice' order.id %}">Invoice</a></li>
-                              {% endif %}
+                              href="{% url 'purchase_order_convert_to_invoice' order.id %}">Invoice</a></li>
                             {% endif %}
                           {% endif %}
-                          <li><a class="dropdown-item border-radius-md"
-                              href="{% url 'purchase_order_view' order.id %}">View</a></li>
-                        </ul>
-                      </div>
-                    </td>
+                        {% endif %}
+                        <li><a class="dropdown-item border-radius-md"
+                            href="{% url 'purchase_order_view' order.id %}">View</a></li>
+                      </ul>
+                    </div>
+                  </td>
                 </tr>
                 {% endfor %}
               </tbody>

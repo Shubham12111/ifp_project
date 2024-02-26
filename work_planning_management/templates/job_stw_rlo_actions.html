@@ -14,6 +14,10 @@
                     <li class="nav-item">
                         <a class="nav-link {% if '/rlo/' in request.path %}active{% endif %}" href="{% url 'job_rlo_detail' job.customer_id.id job.id %}">RLOs</a>
                     </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if '/po/' in request.path %}active{% endif %}" href="{% url 'job_po_detail' job.customer_id.id job.id %}">POs</a>
+                    </li>
                 </ul>
             </div>
         </div>

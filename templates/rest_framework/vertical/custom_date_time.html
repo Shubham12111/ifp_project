@@ -24,6 +24,7 @@
 
   datepickerFields_{{ field.name }}.forEach(datepickerField => {
     flatpickr(datepickerField, {
+      allowInput: true,
       enableTime: true,
       dateFormat: "d-m-Y H:i",
       defaultHour:	12,
