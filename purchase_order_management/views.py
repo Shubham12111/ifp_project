@@ -28,7 +28,7 @@ from stock_management.models import Item
 from django.http import JsonResponse
 from django.core import serializers
 from django.views import View
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
 from datetime import datetime
 from django.db.models import Sum
@@ -287,14 +287,96 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
     serializer_class = PurchaseOrderSerializer
-    search_fields = ['po_number', 'vendor_id__email','inventory_location_id__name','status']
+    search_fields = ['po_number',]
     template_name = 'purchase_order_list.html'
     ordering_fields = ['created_at'] 
+    queryset = PurchaseOrder.objects.all()
     
-    def get_queryset(self):
+    def get_queryset(self, data_access_value):
         """
         Get the queryset based on filtering parameters from the request.
         """
+        queryset = super().get_queryset()
+        
+        # Define a mapping of data access values to corresponding filters.
+        filter_mapping = {
+            "self": Q(created_by=self.request.user),
+            "all": Q(),  # An empty Q() object returns all data.
+        }
+        queryset = queryset.filter(filter_mapping.get(data_access_value, Q()))
+
+        # Order the queryset based on the 'ordering_fields'
+        ordering = self.request.GET.get('ordering')
+        if ordering in self.ordering_fields:
+            queryset = queryset.order_by(ordering)
+
+        return queryset
+    
+    def get_filter_queryset(self, queryset):
+        filters = {
+            'status': self.request.GET.get('status'),
+            'vendor': self.request.GET.get('vendor'),
+            'sub_contractor': self.request.GET.get('sub_contractor'),
+            'dateRange': self.request.GET.get('dateRange'),
+        }
+        date_format = '%d/%m/%Y'
+
+        # Apply additional filters based on the received parameters
+        for filter_name, filter_value in filters.items():
+            if filter_value:
+                if filter_name == 'dateRange':
+                    # If 'dateRange' parameter is provided, filter TODO items within the date range
+                    start_date_str, end_date_str = filter_value.split('-')
+                    start_date = datetime.strptime(start_date_str.strip(), date_format).date()
+                    end_date = datetime.strptime(end_date_str.strip(), date_format).date()
+                    queryset = queryset.filter(
+                        Q(po_date__gte=start_date, po_date__lte=end_date) |
+                        Q(po_due_date__gte=start_date, po_due_date__lte=end_date)
+                    )
+                elif filter_name == 'vendor':
+                    queryset = queryset.filter(vendor_id__email=filter_value)
+                elif filter_name == 'sub_contractor':
+                    queryset = queryset.filter(sub_contractor_id__email=filter_value)
+                else:
+                    # For other filters, apply the corresponding filters on the queryset
+                    filter_mapping = {
+                        'status': 'status',
+                    }
+                    queryset = queryset.filter(**{filter_mapping[filter_name]: filter_value.strip()})
+        
+        return queryset
+    
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_searched_queryset(self, queryset):
+        search_params = self.request.query_params.get('q', '')
+        if search_params:
+            search_fields = self.search_fields
+            q_objects = Q()
+
+            # Construct a Q object to search across multiple fields dynamically
+            for field in search_fields:
+                q_objects |= Q(**{f'{field}__icontains': search_params})
+
+            queryset = queryset.filter(q_objects)
+        
+        return queryset
+
+    def get(self, request, *args, **kwargs):
         # Call the handle_unauthenticated method to handle unauthenticated access
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "purchase_order", HasListDataPermission, 'list'
@@ -302,30 +384,20 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
         # Check if authenticated_user is a redirect response
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
 
-        base_queryset = filter_purchase_order(data_access_value, self.request.user)
-
-        # Order the queryset based on the 'ordering_fields'
-        ordering = self.request.GET.get('ordering')
-        if ordering in self.ordering_fields:
-            base_queryset = base_queryset.order_by(ordering)
-
-        return base_queryset
-    
-    def get(self, request, *args, **kwargs):
        # Get the filtered queryset using get_queryset method
         try:
-            queryset = self.get_queryset()  # Replace with your queryset retrieval logic
-            serializer_class = self.serializer_class()  # Replace with your serializer class
-            search_field = 'item_name'  # Replace with the field name you want to search on
-            if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
-                return JsonResponse(get_paginated_data(request, queryset, serializer_class, search_field))
-            
+            queryset = self.get_queryset(data_access_value)  # Replace with your queryset retrieval logic
+            queryset = self.get_filter_queryset(queryset)
+            queryset = self.get_searched_queryset(queryset)
+            queryset = self.get_paginated_queryset(queryset)
+
             if request.accepted_renderer.format == 'html':
                 context = {
                     'status_list':STATUS_CHOICES,
-                    'orders': get_paginated_data_for_web(request, queryset, self.search_fields),
-                    'search_fields': ['po number', 'vendor email','inventory location name','status'],
+                    'orders': queryset,
+                    'search_fields': self.search_fields,
                     'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
                 }
                 return render_html_response(context, self.template_name)

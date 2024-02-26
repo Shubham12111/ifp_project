@@ -17,6 +17,6 @@ urlpatterns = [
     path('conversation/delete/document/<int:contact_id>/<int:conversation_id>', login_required(ConversationRemoveDocumentView.as_view()), name='document_conversation'),
     path('autocomplete_contact/', ContacttypeAutocomplete.as_view(), name='contact-autocomplete'),
     path('export_csv/', ExportCSVView.as_view(), name='export_csv'),
-
+    path('sub-contractor/serach/', SubContractorSearchAPIView.as_view(), name='sub_contractor_search'),
 
 ]
