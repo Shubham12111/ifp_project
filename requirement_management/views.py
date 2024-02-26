@@ -1737,6 +1737,7 @@ class RequirementSurvyeCustomerListView(CustomAuthenticationMixin, generics.List
 
     serializer_class = RequirementCalendarSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
+    search_fields = ['company_name']
     template_name = 'survey_customer_list.html'
     queryset = Requirement.objects.filter(
         status__in=['assigned-to-surveyor']

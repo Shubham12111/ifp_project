@@ -24,7 +24,7 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = QuotationCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['first_name', 'last_name', 'email', 'company_name']
+    search_fields = ['company_name']
     template_name = 'quote/quotation_customer_list.html'
     ordering_fields = ['created_at'] 
 
