@@ -264,14 +264,14 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         Additional validation and error messages are defined for some fields.
     """
     
-    contact_name = serializers.CharField(
-        label=_('Contact Name'),
-        style={
-            'base_template': 'custom_input.html'
-        },
-    )
+    # contact_name = serializers.CharField(
+    #     label=_('Contact Name'),
+    #     style={
+    #         'base_template': 'custom_input.html'
+    #     },
+    # )
     contact_email = serializers.EmailField(
-        label=_('Contact Email'),
+        label=_('Accounts Email Address'),
         validators=[UniqueValidator(queryset=BillingAddress.objects.all(), message="Email already exists. Please use a different email.")],
         required=True,
         max_length=100,
@@ -289,7 +289,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     )
 
     contact_tel_no = serializers.CharField(
-        label=_('Contact Phone Number'),
+        label=_('Accounts Contact Number'),
         max_length=14,
         min_length=10,
         required=True,
@@ -308,32 +308,39 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     )
    
     address = serializers.CharField(
-        label=_('Address'),
+        label=_('Billing Address'),
         max_length=255,
         min_length=5,
         required=False,
         allow_blank=True,
         allow_null=True,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
     )
     
     country = serializers.CharField(
         label=_('Country'),
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-6'
         },
     )
     
     town = serializers.CharField(
         label=_('Town'),
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
     )
     
     county = serializers.CharField(
         label=_('County'),
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
     )
     
@@ -343,7 +350,8 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         choices=POST_CODE_LIST,
 
         style={
-            'base_template': 'custom_select_without_search.html'
+            'base_template': 'custom_select_without_search.html',
+            'custom_class': 'col-6'
         },
         error_messages={
             "required": "This field is required.",
@@ -401,7 +409,16 @@ class BillingAddressSerializer(serializers.ModelSerializer):
             'base_template': 'custom_boolean_input.html'
         },
     )
-
+    
+    CIS = serializers.BooleanField(
+        label=('CIS'),
+        default=False,
+        style={
+            'custom_class': 'ms-3',
+            'input_type':'checkbox',
+            'base_template': 'custom_boolean_input.html'
+        },
+    )
     
     def validate_vat_number(self, value):
         """
@@ -424,8 +441,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = BillingAddress
-        fields = ['contact_name','contact_email','contact_tel_no','payment_terms', 'address', 'country', 'town', 'county', 'post_code','vat_number', 'tax_preference', 'purchase_order_required']
-
+        fields = ['vat_number','payment_terms','CIS','address', 'town', 'county', 'country','post_code','contact_email','contact_tel_no', 'purchase_order_required', 'tax_preference' ]
 # Define a serializer for SiteAddress model
 class SiteAddressSerializer(serializers.ModelSerializer):
     """
@@ -451,7 +467,8 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         min_length=3,
         required=True,
         style={
-            'base_template': 'custom_fullwidth_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -466,7 +483,8 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         min_length=5,
         required=True,
         style={
-            'base_template': 'custom_fullwidth_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -509,12 +527,20 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         },
         # validators=[validate_uk_postcode] 
     )
+    UPRN = serializers.CharField(
+        label = _('UPRN'),
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+    )
+
     full_address = serializers.SerializerMethodField()  # New field for combined address
 
     
     class Meta:
         model = SiteAddress
-        fields = ['id', 'site_name', 'address', 'country', 'town', 'county', 'post_code','full_address']
+        fields = ['id', 'site_name', 'UPRN','address', 'country', 'town', 'county', 'post_code','full_address']
 
     def get_full_address(self, instance):
         # Create a dictionary with label names and corresponding values

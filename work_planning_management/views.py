@@ -15,7 +15,7 @@ import json
 from drf_yasg.utils import swagger_auto_schema
 
 from requirement_management.models import Requirement, Quotation,RequirementDefect
-from .serializers import QuotationSerializer, ConvertSTWToFRASerializer, STWDefectSerializer, ConvertSTWDefectsToFRADefectsSerializer, STWDefectsDetailedSerializer, STWRequirementDetailsSerializer, TeamUpdateSerializer, STWRequirementsListSerializer, STWRequirementDefectSerializer
+from .serializers import QuotationSerializer, ConvertSTWToFRASerializer, STWDefectSerializer, ConvertSTWDefectsToFRADefectsSerializer, STWDefectsDetailedSerializer, STWRequirementDetailsSerializer, TeamUpdateSerializer, STWRequirementsListSerializer, STWRequirementDefectSerializer,JobStatusUpdateSerializer
 from requirement_management.serializers  import RequirementAddSerializer,RequirementDefectAddSerializer,RequirementAssetSerializer
 
 from infinity_fire_solutions.response_schemas import create_api_response, convert_serializer_errors, render_html_response
@@ -2310,7 +2310,129 @@ class JobDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView):
             return create_api_response(status_code=status.HTTP_200_OK,
                                     message="Data retrieved",
                                     data=serializer.data)
+     
+class StartJobView(CustomAuthenticationMixin,generics.GenericAPIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'job_detail.html' 
+    serializer_class = JobStatusUpdateSerializer
+    queryset = Job.objects.all()
 
+    def get_object(self, customer: User) -> Job:
+        instance = None
+        job_id = self.kwargs.get('job_id', None)
+        
+        if job_id and customer:
+            queryset = super().get_queryset()
+            instance = queryset.filter(
+                pk=job_id,
+                customer_id=customer,
+                status__in=['pending']
+            ).first()
+        return instance
+
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"survey", HasCreateDataPermission, 'add'
+        )
+   
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = kwargs.get('customer_id', None)
+        customer = get_customer_data(customer_id)
+        if not customer:
+            messages.error(request, "You are not authorized to perform this action")
+            redirect(reverse('job_customers_list'))
+        
+        instance = self.get_object(customer)
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer.id}))
+
+        
+        data = {
+            'status': 'in-progress'
+        }
+
+        serializer = self.get_serializer(
+            data=data,
+            instance=instance
+        )
+
+        if serializer.is_valid():
+            job = serializer.update(
+                instance,
+                serializer.validated_data
+            )
+        
+            messages.success(request, "Job started successfully!")
+            return redirect(reverse('job_detail', kwargs={'job_id': instance.id, 'customer_id': customer.id}))
+
+
+        messages.error(request, "You are not authorized to perform this action")
+        return redirect(reverse('job_detail', kwargs={'job_id': instance.id, 'customer_id': customer.id}))
+
+        
+class MarkAsCompleteJobView(CustomAuthenticationMixin, generics.GenericAPIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'job_detail.html' 
+    serializer_class = JobStatusUpdateSerializer
+    queryset = Job.objects.all()
+
+    def get_object(self, customer: User) -> Job:
+        instance = None
+        job_id = self.kwargs.get('job_id', None)
+        
+        if job_id and customer:
+            queryset = super().get_queryset()
+            instance = queryset.filter(
+                pk=job_id,
+                customer_id=customer,
+                status__in=['pending', 'in-progress']
+            ).first()
+        return instance
+    
+    def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self,"survey", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer_id = kwargs.get('customer_id', None)
+        customer = get_customer_data(customer_id)
+        if not customer:
+            messages.error(request, "You are not authorized to perform this action")
+            redirect(reverse('job_customers_list'))
+        
+        instance = self.get_object(customer)
+        if not instance:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer.id}))
+
+        
+        data = {
+            'status': 'completed'
+        }
+
+        serializer = self.get_serializer(
+            data=data,
+            instance=instance
+        )
+
+        if serializer.is_valid():
+            job = serializer.update(
+                instance,
+                serializer.validated_data
+            )
+        
+            messages.success(request, "Job completed successfully!")
+            return redirect(reverse('job_detail', kwargs={'job_id': instance.id, 'customer_id': customer.id}))
+
+
+        messages.error(request, "You are not authorized to perform this action")
+        return redirect(reverse('job_detail', kwargs={'job_id': instance.id, 'customer_id': customer.id}))
+ 
 class JobSitePacksDetailView(CustomAuthenticationMixin, generics.GenericAPIView):
     """
     View for retrieving job details.

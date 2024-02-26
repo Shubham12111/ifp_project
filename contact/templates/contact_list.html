@@ -124,7 +124,7 @@
                         </li>
                         {% endif %}
                         <li>
-                          {% if request.user|has_update_permission:"contact" and contact.contact_type.name == 'Customer'%}
+                          {% if request.user|has_update_permission:"contact" and contact.contact_type.name == 'Prospect'%}
                           <a href="#" data-bs-toggle="tooltip" class="dropdown-item border-radius-md"
                             onclick="showPopupAndRedirect('{% url 'convert_to_customer' contact.pk  %}')">
                             Convert To Customer
