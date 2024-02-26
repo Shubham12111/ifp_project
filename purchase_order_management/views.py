@@ -289,7 +289,7 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = PurchaseOrderSerializer
     search_fields = ['po_number',]
     template_name = 'purchase_order_list.html'
-    ordering_fields = ['created_at'] 
+    ordering_fields = ['-created_at'] 
     queryset = PurchaseOrder.objects.all()
     
     def get_queryset(self, data_access_value):
@@ -309,6 +309,8 @@ class PurchaseOrderListView(CustomAuthenticationMixin,generics.ListAPIView):
         ordering = self.request.GET.get('ordering')
         if ordering in self.ordering_fields:
             queryset = queryset.order_by(ordering)
+        else:
+            queryset = queryset.order_by('-created_at')
 
         return queryset
     
