@@ -26,6 +26,7 @@ from datetime import datetime, time
 from django.utils import timezone
 from io import BytesIO
 from rest_framework.request import Request
+from itertools import chain
 
 
 def get_customer_data(customer_id):
@@ -1604,7 +1605,12 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
     Supports both HTML and JSON response formats.
     """
     serializer_class = BulkRequirementAddSerializer
-    default_fieldset = ['RBNO', 'UPRN', 'action','description','site_address','due_date','address','site_name','country','town','county','post_code']
+    default_fieldset = [
+        'RBNO', 'action','description','due_date'
+    ]
+    default_site_address_fieldset = [
+        'site_name', 'UPRN','address', 'country', 'town', 'county', 'post_code'
+    ]
     EXCEL = ['xlsx', 'xls', 'ods']
     CSV = ['csv',]
 
@@ -1675,31 +1681,9 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
 
         data = request.data.copy()
 
-         # Extract site address fields from the request data
-        address = data.get('address')
-        site_name = data.get('site_name')
-        country = data.get('country')
-        town = data.get('town')
-        county = data.get('county')
-        post_code = data.get('post_code')
-           # Check if the site address already exists for the customer
-        site_address_instance = SiteAddress.objects.filter(user_id=customer_data, address=address).first()
-
-        if not site_address_instance:
-            # Create a new SiteAddress instance if it doesn't exist
-            site_address_instance = SiteAddress.objects.create(
-                user_id=customer_data,
-                address=address,
-                site_name=site_name,
-                country=country,
-                town=town,
-                county=county,
-                post_code=post_code,
-            )
-
         # Create a mapping dictionary from the request data
-        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
-        
+        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset or key in self.default_site_address_fieldset}
+
         # Check if any keys have the same value
         values_set = set()
         duplicate_values = set()
@@ -1719,16 +1703,26 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
         items_data_list = []
         for index, row in df.iterrows():
             items_data = {}
+            site_address_data = {}
             for key, value in mapping_dict.items():
-                items_data[key] = row[value]
+                if key in self.default_site_address_fieldset:
+                    site_address_data[key] = row[value]
+                else:
+                    items_data[key] = row[value]
 
+            items_data['site_address'] = site_address_data
             items_data_list.append(items_data)
-        serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request})
+        
+        serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request, 'customer': customer_data})
         if serializer.is_valid():
             serializer.save(customer_id=customer_data, user_id=request.user)
             messages.success(request, 'Bulk FRA uploaded successfully.')
         else:
-            messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
+            errors = [convert_serializer_errors(errors) for errors in serializer.errors]
+            flat_error_messages_set = set(chain.from_iterable(map(dict.values, errors)))
+            flat_error_messages_set = list(flat_error_messages_set)
+
+            messages.error(request, f'{", ".join(flat_error_messages_set)}') 
     
         return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs['customer_id']}))
 

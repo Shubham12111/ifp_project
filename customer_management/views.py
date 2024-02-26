@@ -988,11 +988,6 @@ class CMJobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             "all": Q(),
         }
         queryset = queryset.filter(filter_mapping.get(data_access_value, Q())).distinct()
-
-         # Filter by customer and site address
-        site_address = self.request.data.get('site_address')  # Assuming the site address is provided in the request data
-        if site_address and customer_data.site_address != site_address:
-            return HttpResponseBadRequest("Job can only be created for the same site address.")
         
         queryset = queryset.filter(customer_id=customer_data).all()
         # Order the queryset based on the 'ordering_fields'

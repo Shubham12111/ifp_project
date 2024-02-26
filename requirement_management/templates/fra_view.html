@@ -5,24 +5,12 @@
                 <h5> FRA Actions </h5>
             </div>
             <div class="col-6 text-end">
-                <div>
-                {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user  %}
-                    <div class="ms-auto my-auto mt-lg-0 mt-4">
-                        {% if not existing_report_for_requirement %}
-                            <button id="createreportButton" class="btn bg-gradient-primary btn-sm mb-0" style="float: right; margin-bottom: 10px;">
-                                Create Report
-                            </button>
-                        {% else %}
-                            <button id="createreportButton" class="btn bg-gradient-primary btn-sm mb-0" style="float: right; margin-bottom: 10px;" disabled">
-                                Report Created
-                            </button>
-                        {% endif %}
-                    </div>                  
-                {% endif %}
-                </div>
-                <div>
                 {% include 'components/back_button.html' %}
-                </div>
+                {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user  %}
+                <button class="btn bg-gradient-primary btn-sm mb-0" {% if not existing_report_for_requirement %}id="createreportButton"{% else %}disabled{% endif %}>
+                    Create Report
+                </button>             
+                {% endif %}
             </div>
         </div>
     </div>
