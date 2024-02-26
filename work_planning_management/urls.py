@@ -35,6 +35,7 @@ urlpatterns = [
     path('customer/<int:customer_id>/jobs/<int:job_id>/rlo/<int:rlo_id>/reject/', JobRLORejectView.as_view(),name='job_rlo_reject'),
     path('customer/<int:customer_id>/jobs/<int:job_id>/mark-as-complete/', MarkAsCompleteJobView.as_view(), name='mark_as_complete'),
     path('customer/<int:customer_id>/jobs/<int:job_id>/start-job/', StartJobView.as_view(), name='start_job'), 
+    path('customer/<int:customer_id>/jobs/<int:job_id>/po/', JobPODetailView.as_view(), name='job_po_detail'),
 
 
 

@@ -5,161 +5,179 @@
 {% block title %} Purchase Order View{{ block.super }}{% endblock %}
 {% block content %}
 {% include 'components/alert.html' %}
-<style>
-    /* Add borders to the table */
-    table.table-bordered, th, td {
-        border: 1px solid gray !important;
-        border-collapse: collapse !important;
-    }
-    .btn.btn-outline-dotted {
-        border: 1px dotted #000; /* Replace #000 with the desired color for the border */
-        background-color: transparent;
-        color: #000; /* Replace #000 with the desired text color */
-    }
-    .choices__item--disabled {
-        display: none !important;
-    }
-</style>
-
 <div class="container-fluid py-2">
-    <div class="card ">
-        <div class="card-header mt-0">
+    <div class="card">
+        <div class="card-header">
             <div class="row justify-content-between">
-                <div class="col-6">
-                <h5>Purchase Order</h5>
+                <div class="col-6 d-flex align-items-center">
+                <h5 class="mb-0">Purchase Order</h5>
+                {% if purchase_order.status %}
+                <div class="ps-2"> 
+                    <span class="badge 
+                    {% if purchase_order.status == 'Pending' %}
+                    bg-gradient-info
+                    {% elif purchase_order.status == 'Sent for Approval' %}
+                    bg-gradient-warning
+                    {% elif purchase_order.status == 'Approved' or purchase_order.status == 'Completed'%}
+                    bg-gradient-success
+                    {% elif purchase_order.status == 'Partially completed' %}
+                    bg-gradient-danger
+                    {% endif %}">
+                    {{ purchase_order.status }}
+                    </span>
+                </div>
+                {% endif %}
                 </div>
                 <div class="col-6 text-end">
                     {% include 'components/back_button.html' %}
                 </div>
             </div>
         </div>
-        <div class="card-body px-4 pb-0 mb-10">
+        <div class="card-body">
             <div class="row">
-                <div class="col-lg-4  col-xs-12 col-sm-12 col-12">
+                <div class="col-lg-4 col-12">
                     <ul class="list-group">
+                        {% if purchase_order.vendor_id %}
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                                 <h6 class="mb-3 text-sm">Vendor Information</h6>
-                                <span class="mb-2 text-sm">Vendor Name:
-                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
-                                        {{purchase_order.vendor_id.first_name}} {{purchase_order.vendor_id.last_name}}
-                                    </span>
+                                <span class="text-dark text-wrap text-sm">
+                                    {{purchase_order.vendor_id.name|default:'-'|title}}
                                 </span>
-                                <span class="mb-2 text-sm">Phone Number:
-                                    <span class="text-dark font-weight-bold ms-2 text-wrap">
-                                        {{purchase_order.vendor_id.phone_number}}
-                                    </span>
+                                <span class="text-dark text-wrap text-sm">
+                                    {{purchase_order.vendor_id.phone_number|default:'-'}}
                                 </span>
-                                <span class="mb-2 text-sm">Email Address:
-                                    <span class="text-dark font-weight-bold ms-2 text-wrap d-inline-block" style="max-width: 100%;">
-                                        {{purchase_order.vendor_id.email}}
-                                    </span>
+                                <span class="text-dark text-wrap text-sm">
+                                    {{purchase_order.vendor_id.email|default:'-'}}
                                 </span>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-                
-
-                <div class="col-lg-4  col-xs-12 col-sm-12 col-12">
-                    <ul class="list-group">
-                        {% if purchase_order.inventory_location_id %}
-                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
-                            <div class="d-flex flex-column">
-                            <h6 class="mb-3 text-sm">Inventory Location Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.name}}</span></span>
-                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.address}}</span></span>
                             </div>
                         </li>
                         {% else %}
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-                            <h6 class="mb-3 text-sm">Customer Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap">{{purchase_order.user_id.first_name|default:'-'|truncatechars:20|title}}
-                                {{purchase_order.user_id.last_name|default:'-'|truncatechars:20|title}}</span></span>
-                            <span class="mb-2 text-sm">Email: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.user_id.email}}</span></span>
-                            <h6 class="mb-3 mt-3 text-sm">Customer Site Address Information</h6>
-                            <span class="mb-2 text-sm">Name: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.site_address.site_name}}</span></span>
-                            <span class="mb-2 text-sm">Address: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.site_address.address}}</span></span>
+                                <h6 class="mb-3 text-sm">Vendor Information</h6>
+                                <span class="text-dark text-wrap text-sm">
+                                    {{purchase_order.sub_contractor_id.name|default:'-'|title}}
+                                </span>
+                                <span class="text-dark text-wrap text-sm">
+                                    {{purchase_order.sub_contractor_id.phone_number|default:'-'}}
+                                </span>
+                                <span class="text-dark text-wrap text-sm">
+                                    {{purchase_order.sub_contractor_id.email|default:'-'}}
+                                </span>
+                            </div>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="col-lg-4 col-12">
+                    <ul class="list-group">
+                        {% if purchase_order.inventory_location_id %}
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+                            <h6 class="mb-3 text-sm">Warehouse Information</h6>
+                            <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.name|default:'-'|title}}</span>
+                            <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.address|default:'-'}}</span>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+                            <h6 class="mb-3 text-sm font-weight-bold">Site Address Information</h6>
+                            <span class="text-dark text-sm text-wrap">{{purchase_order.user_id.name|default:'-'|title}}</span>
+                            <span class="text-dark text-sm text-wrap"> {{purchase_order.site_address.name|default:'-'}}</span>
+                            <span class=" text-dark text-sm text-wrap"> {{purchase_order.site_address.address|default:'-'}}</span>
+                            <span class=" text-dark text-sm text-wrap"> {{purchase_order.user_id.email|default:'-'}}</span>
                             </div>
                         </li>
                         {% endif %}
                     </ul>
                 </div>
 
-                <div class="col-lg-4 col-xs-12 col-sm-12 col-12">
+                <div class="col-lg-4 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
-
-                            <span class="mb-2 text-sm">PO No.: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_number}}</span></span>
-                    <span class="mb-2 text-sm">Status: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.get_status_display}}</span></span>
-
+                                <span class="mb-2 text-sm">
+                                    PO No.: <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_number|default:'-'}}</span>
+                                </span>
+                                <span class="mb-2 text-sm">
+                                    PO Date: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_date|default:'-'}}</span>
+                                </span>
+                                <span class="mb-2 text-sm">
+                                    PO Due Date: <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.po_due_date|default:'-'}}</span>
+                                </span>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
-            </li>
-        </ul>
-    </div>
-            
+            </div>
+
             <div class="row mt-5">
-                <div class="col-12 table-responsive mb-3">
-                    <table class="table table-bordered">
-                            <thead>
-                                <tr class="px-0">
-                                    <th class="text-start col-6 text-sm">Item Name</th>
-                                    <th class="text-center col-2 text-sm">Price(£)</th>
-                                    <th class="text-center col-2 text-sm">Quantity </th>
-                                    <th class="text-center col-2 text-sm">Total(£)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in purchase_order_items %}
-                                <tr class="">
-                                    <td class="text-sm">{{item.item_name}} </td>
-                                    <td class="text-sm text-center">{{item.unit_price}} </td>
-                                    <td class="text-sm text-center">{{item.quantity}} </td>
-                                    <td class="text-sm text-center">{{item.row_total}} </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-flush mb-3 text-sm">
+                        <thead>
+                            <tr class="px-0 text-start">
+                                <th class="col-3">Item Name</th>
+                                <th class="col-3">Item Ref No.</th>
+                                <th class="col-2">Price(£)</th>
+                                <th class="col-2">Quantity </th>
+                                <th class="col-1">Total(£)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in purchase_order.items %}
+                            <tr class="">
+                                <td class="text-sm">{{item.item_name}} </td>
+                                <td class="text-sm">{{item.reference_number|default:'-'}}</td>
+                                <td class="text-sm">{{item.unit_price}}</td>
+                                <td class="text-sm">{{item.quantity}} </td>
+                                <td class="text-sm">{{item.row_total}} </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div class="row mt-4">
-                    <div class="col-md-6 ">
-                        {% if purchase_order.notes %}
-                        <h6 class=" text-sm">Additional Notes </h6>
-                        <span class="notes text-sm">{{ purchase_order.notes }}</span>
-                        <br>
-                        {% endif %}
-                        {% if purchase_order.approval_notes %}
-                            <h6 class="mt-2  text-sm">Approval Notes </h6>
-                            <span class="approval_notes text-sm">{{ purchase_order.approval_notes }}</span>
-                        {% endif %}
-                        {% if presigned_url %}
-                            <br><br>
-                            <a href="{{presigned_url.0}}" class="text-sm">{{file_name}}</a>
-                            {% endif %}
+            </div>
+
+            <div class="row justify-content-between mt-4">
+                <div class="col-12 col-md-6">
+                    {% if purchase_order.notes %}
+                    <h6 class=" text-sm">Additional Notes </h6>
+                    <span class="notes text-sm">{{ purchase_order.notes }}</span>
+                    <br>
+                    {% endif %}
+                    {% if purchase_order.approval_notes %}
+                        <h6 class="mt-2  text-sm">Approval Notes </h6>
+                        <span class="approval_notes text-sm">{{ purchase_order.approval_notes }}</span>
+                    {% endif %}
+                    {% if purchase_order.document %}
+                        <br><br>
+                        <h6 class=" text-sm">Document: </h6>
+                        <a href="{{purchase_order.document.url.0}}" class="text-sm">{{purchase_order.document.name}}</a>
+                    {% endif %}
+                </div>
+                <div class="col-lg-3 col-12 col-md-6 mt-5 mt-md-0 text-end">
+                    <div class="row mb-2 justify-content-between">
+                        <div class="col-6 text-end"><span class="text-md">Sub Total</span></div>
+                        <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.sub_total }}</span></div>
                     </div>
-                    <div class="col-lg-3 col-12 col-md-6 ms-auto">
-                        <div class="row mb-2 justify-content-between">
-                            <div class="col-6 text-end"><span class="text-md">Sub Total</span></div>
-                            <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.sub_total }}</span></div>
-                        </div>
-                        <div class="row mb-2 justify-content-between">
-                            <div class="col-6 text-end"><span class="text-md">Discount</span></div>
-                            <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.discount }}</span></div>
-                        </div>
-                        <div class="row mb-4 justify-content-between">
-                            <div class="col-6 text-end"><span class="text-md">Tax (%):</span></div>
-                            <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.tax }}</span></div>
-                        </div>
-                        <div class="row justify-content-between">
-                            <div class="col-6 text-end"><span class="font-weight-bolder grand-total-value">Total</span></div>
-                            <div class="col-6 text-end"><span class="text-dark font-weight-bold grand-total-value">£{{ purchase_order.total_amount }}</span></div>
-                        </div>
+                    <div class="row mb-2 justify-content-between">
+                        <div class="col-6 text-end"><span class="text-md">Discount</span></div>
+                        <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.discount }}</span></div>
+                    </div>
+                    <div class="row mb-4 justify-content-between">
+                        <div class="col-6 text-end"><span class="text-md">Tax ({{ purchase_order.tax }}%):</span></div>
+                        <div class="col-6 text-end"><span class="text-dark font-weight-bold">£{{ purchase_order.tax_price }}</span></div>
+                    </div>
+                    <div class="row justify-content-between">
+                        <div class="col-6 text-end"><span class="font-weight-bolder grand-total-value">Total</span></div>
+                        <div class="col-6 text-end"><span class="text-dark font-weight-bold grand-total-value">£{{ purchase_order.total_amount }}</span></div>
                     </div>
                 </div>
             </div>
+
             {% if invoice_item_list %}
             <div class="row mt-5">
                 <div class="col-md-12">
