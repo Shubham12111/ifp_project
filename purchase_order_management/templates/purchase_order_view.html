@@ -34,8 +34,8 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-lg-4 col-12">
+            <div class="row justify-content-between">
+                <div class="col-lg-3 col-12">
                     <ul class="list-group">
                         {% if purchase_order.vendor_id %}
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
@@ -71,14 +71,14 @@
                     </ul>
                 </div>
                 
-                <div class="col-lg-4 col-12">
+                <div class="col-lg-3 col-12">
                     <ul class="list-group">
                         {% if purchase_order.inventory_location_id %}
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">
                             <h6 class="mb-3 text-sm">Warehouse Information</h6>
-                            <span class="text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.name|default:'-'|title}}</span>
-                            <span class=" text-dark font-weight-bold ms-2 text-wrap"> {{purchase_order.inventory_location_id.address|default:'-'}}</span>
+                            <span class="text-dark text-sm text-wrap"> {{purchase_order.inventory_location_id.name|default:'-'|title}}</span>
+                            <span class="text-dark text-sm text-wrap"> {{purchase_order.inventory_location_id.address|default:'-'}}</span>
                             </div>
                         </li>
                         {% else %}
@@ -95,7 +95,7 @@
                     </ul>
                 </div>
 
-                <div class="col-lg-4 col-12">
+                <div class="col-lg-3 col-12">
                     <ul class="list-group">
                         <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
                             <div class="d-flex flex-column">

@@ -6,18 +6,20 @@
             </div>
             <div class="col-6 text-end">
                 {% include 'components/back_button.html' %}
+                {% if not '/fra/reports' in request.path %}
                 {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user  %}
                 <button class="btn bg-gradient-primary btn-sm mb-0" {% if not existing_report_for_requirement %}id="createreportButton"{% else %}disabled{% endif %}>
                     Create Report
                 </button>             
                 {% endif %}
+                {% endif %}
             </div>
         </div>
     </div>
     <div class="card-body">
-        <div class="row">
+        <div class="row justify-content-lg-between justify-content-lg-start">
             <!-- Requirement and Customer Details -->
-            <div class="col-lg-7">
+            <div class="col-12 col-lg-7">
                 <div class="card-body p-0">
                     <b>Action</b>
                     <p class="text-sm mt-2" style="text-align: justify;">
@@ -31,38 +33,46 @@
                     </p>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <h4> Customer Information </h4>
-                <p class="text-sm mt-2" style="text-align: justify;">
-                    {{ requirement_instance.customer_id.first_name|title }} {{ requirement_instance.customer_id.last_name|title }}
-                </p>
+            <div class="col-12 col-lg-4">
+                <div class="row mb-3">
+                    <b>Action Information</b>
+                    <p class="text-sm mt-1 mb-0" style="text-align: justify;">
+                        {% if requirement_instance.RBNO %}
+                        {{ requirement_instance.RBNO }}
+                        {% endif %}
+                    </p>
+                    
+                    <p class="text-sm mb-0" style="text-align: justify;">
+                        {% if requirement_instance.surveyor %}
+                        {{ requirement_instance.surveyor.first_name|title }} {{ requirement_instance.surveyor.last_name|title }}
+                        {% endif %}
+                    </p>
+                </div>
 
-                <p class="text-sm mt-2" style="text-align: justify;">
-                    {{ requirement_instance.customer_id.email }}
-                </p>
-                <p class="text-sm mt-2" style="text-align: justify;">
-                    {% if requirement_instance.UPRN %}    
-                    {{ requirement_instance.UPRN }}
-                    {% endif %}
-                </p>
-                <p class="text-sm mt-2" style="text-align: justify;">
-                    {% if requirement_instance.RBNO %}
-                    {{ requirement_instance.RBNO }}
-                    {% endif %}
-                </p>
-                <p class="text-sm mt-2" style="text-align: justify;">
-                    {{ requirement_instance.site_address.site_name|default:'-'|truncatechars:20 }},
-                    {{ requirement_instance.site_address.address|default:'-'|truncatechars:20|title }},
-                    {{ requirement_instance.site_address.town|default:'-'|title }},
-                    {{ requirement_instance.site_address.county|default:'-'|title }},
-                    {{ requirement_instance.site_address.country|default:'-'|title }},
-                    {{ requirement_instance.site_address.post_code|default:'-' }}
-                </p>
-                <p class="text-sm mt-2" style="text-align: justify;">
-                    {% if requirement_instance.surveyor %}
-                    {{ requirement_instance.surveyor.first_name|title }} {{ requirement_instance.surveyor.last_name|title }}
-                    {% endif %}
-                </p>
+                <div class="row mb-3">
+                    <b>Site Address Information</b>
+                    <p class="text-sm mt-1 mb-0" style="text-align: justify;">
+                        {% if requirement_instance.UPRN %}    
+                        {{ requirement_instance.UPRN }}<br>
+                        {% endif %}
+                        {{ requirement_instance.site_address.site_name|default:'-'|truncatechars:20 }},<br>
+                        {{ requirement_instance.site_address.address|default:'-'|truncatechars:20|title }},
+                        {{ requirement_instance.site_address.town|default:'-'|title }},
+                        {{ requirement_instance.site_address.county|default:'-'|title }},
+                        {{ requirement_instance.site_address.country|default:'-'|title }},
+                        {{ requirement_instance.site_address.post_code|default:'-' }}
+                    </p>
+                </div>
+
+                <div class="row">
+                    <b>Customer Information</b>
+                    <p class="text-sm mt-1 mb-0" style="text-align: justify;">
+                        {{ requirement_instance.customer_id.first_name|title }} {{ requirement_instance.customer_id.last_name|title }}
+                    </p>
+                    <p class="text-sm mb-0" style="text-align: justify;">
+                        {{ requirement_instance.customer_id.email }}
+                    </p>
+                </div>
             </div>
 
         </div>                             
