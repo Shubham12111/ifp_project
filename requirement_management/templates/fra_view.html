@@ -6,10 +6,12 @@
             </div>
             <div class="col-6 text-end">
                 {% include 'components/back_button.html' %}
+                {% if not '/fra/reports' in request.path %}
                 {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user  %}
                 <button class="btn bg-gradient-primary btn-sm mb-0" {% if not existing_report_for_requirement %}id="createreportButton"{% else %}disabled{% endif %}>
                     Create Report
                 </button>             
+                {% endif %}
                 {% endif %}
             </div>
         </div>
