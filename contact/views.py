@@ -33,6 +33,64 @@ class ContacttypeAutocomplete(View):
         results = [{'label': type.name, 'value': type.id} for type in contact_types]
         return JsonResponse(results, safe=False)
 
+class SubContractorSearchAPIView(CustomAuthenticationMixin, generics.RetrieveAPIView):
+    """
+    API view for searching SubContractors based on a search term.
+
+    This view allows searching for SubContractors by their first name, last name, or email.
+
+    Parameters:
+    - CustomAuthenticationMixin: Custom authentication mixin for handling authentication.
+    - RetrieveAPIView: A generic view for retrieving data.
+
+    Attributes:
+    - renderer_classes: List of renderer classes for rendering the API response.
+    - swagger_schema: Swagger schema for API documentation.
+    - template_name: HTML template for rendering the response.
+
+    Methods:
+    - get: Handles GET requests for searching SubContractors.
+    """
+
+    renderer_classes = [JSONRenderer]
+    swagger_schema = None
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests for searching SubContractors.
+
+        Args:
+        - request: The HTTP request object.
+        - *args: Additional positional arguments.
+        - **kwargs: Additional keyword arguments.
+
+        Returns:
+        - Response: The API response containing the search results.
+        """
+        # Get the search term from the query parameter
+        search_term = request.GET.get('term')
+        data = {}
+
+        if search_term:
+            # Filter vendors based on the search term
+            sub_contractor_list = Contact.objects.filter(
+                Q(first_name__icontains=search_term, contact_type__name__icontains="Sub-Contractor") |
+                Q(last_name__icontains=search_term, contact_type__name__icontains="Sub-Contractor") |
+                Q(email__icontains=search_term, contact_type__name__icontains="Sub-Contractor")
+            )
+
+            # Get the email from the vendor list
+            results = [user.email for user in sub_contractor_list]
+
+            data = {'results': results}
+
+        # Create an API response
+        return create_api_response(
+            status_code=status.HTTP_200_OK,
+            message="SubContractor data",
+            data=data
+        )
+
 
 class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     """

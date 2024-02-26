@@ -4,6 +4,14 @@
 {% load custom_tags %}
 {% block title %} Purchase Order{{ block.super }}{% endblock %}
 {% block content %}
+<link id="pagestyle" href="{% static 'assets/css/daterangepicker.css' %}" rel="stylesheet" />
+<style>
+  .daterangepicker .ranges ul li.active {
+    background-color: transparent !important;
+    border: none !important;
+    color: inherit !important;
+  }
+</style>
 <style>
   ul li input[type=text] {
     display: inline-block;
@@ -17,10 +25,11 @@
   }
 
   .custom-date-search {
-    width: 120px !important;
+    width: 185px !important;
+    font-weight: 700 !important;
   }
 
-  i.fw-bold.text-sm{
+  i.fw-bold.text-sm {
     font-size: 0.7rem !important;
     font-weight: 700 !important;
   }
@@ -37,13 +46,14 @@
               <h4>Purchase Orders</h4>
             </div>
             <div class="col-6 text-end">
-                {% if request.user|has_add_permission:"purchase_order" %}
-                <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
-                <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm px-4 mb-0"><i
-                  class="fas fa-plus d-lg-none" style="font-size: 0.7rem"></i><span class="d-none d-lg-block">+&nbsp; New Purchase Order</span></a>
-                {% else %}
-                <!-- The user doesn't have the permission, so don't show the "Add" button -->
-                {% endif %}
+              {% if request.user|has_add_permission:"purchase_order" %}
+              <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'Vendor' module -->
+              <a href="{% url 'purchase_order_add' %}" class="btn bg-gradient-primary btn-sm px-4 mb-0"><i
+                  class="fas fa-plus d-lg-none" style="font-size: 0.7rem"></i><span class="d-none d-lg-block">+&nbsp;
+                  New Purchase Order</span></a>
+              {% else %}
+              <!-- The user doesn't have the permission, so don't show the "Add" button -->
+              {% endif %}
             </div>
           </div>
           {% include 'purchase_order_filter.html' %}
@@ -124,10 +134,10 @@
                       </a>
                       <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">
                         {% if request.user|has_update_permission:"purchase_order" %}
-                        {% if order.created_by == request.user and order.status == 'pending'%}
-                        <li><a class="dropdown-item border-radius-md"
-                          href="{% url 'purchase_order_edit' order.id %}">Edit</a></li>
-                        {% endif %}
+                          {% if order.created_by == request.user and order.status == 'pending'%}
+                          <li><a class="dropdown-item border-radius-md"
+                              href="{% url 'purchase_order_edit' order.id %}">Edit</a></li>
+                          {% endif %}
                           {% if order.status == 'sent_for_approval' and request.user.roles.name == "projects_admin_(IT)" %}
                           <li><a class="dropdown-item border-radius-md"
                               href="{% url 'purchase_order_edit' order.id %}">Approve</a></li>
@@ -135,12 +145,10 @@
                           {% if request.user.roles.name == "projects_admin_(IT)" %}
                             {% if order.status == "approved" or status == "partially_completed" %}
                             <li><a class="dropdown-item border-radius-md"
-                              href="{% url 'purchase_order_convert_to_invoice' order.id %}">Invoice</a></li>
+                                href="{% url 'purchase_order_convert_to_invoice' order.id %}">Invoice</a></li>
                             {% endif %}
                           {% endif %}
                         {% endif %}
-                        <li><a class="dropdown-item border-radius-md"
-                            href="{% url 'purchase_order_view' order.id %}">View</a></li>
                       </ul>
                     </div>
                   </td>
@@ -152,94 +160,172 @@
           </div>
 
           {% if orders.paginator.num_pages > 1 %}
-            <div class="row justify-content-start justify-content-lg-between pagination-row">
-              <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
-                <div class="pagination-info mt-auto mb-auto">Showing {{orders.number}} of {{orders.paginator.num_pages}} pages</div>
-              </div>
-              <div class="col-12 col-lg-6 align-self-center">
-                <nav aria-label="Page navigation" class="mt-auto mb-auto">
-                  <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
-                      {% if orders.has_previous %}
-                          <li class="page-item"><a class="page-link" href="?page={{ orders.previous_page_number }}"><i class="fas fa-angle-left"></i></a></li>
-                      {% else %}
-                          <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a></li>
-                      {% endif %}
-                      {% for i in orders.paginator.page_range %}
-                          {% if orders.number == i %}
-                              <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
-                          {% else%}
-                              <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
-                          {% endif %}
-                      {% endfor %}
-                      {% if orders.has_next %}
-                          <li class="page-item"><a class="page-link" href="?page={{ orders.next_page_number }}"><i class="fas fa-angle-right"></i></a></li>
-                      {% else %}
-                          <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a></li>
-                      {% endif %}
-                  </ul>
-                </nav>
-              </div>
-            </div>          
-            {% endif %}
+          <div class="row justify-content-start justify-content-lg-between pagination-row">
+            <div class="col-12 col-lg-6 align-self-center mb-2 mb-lg-0">
+              <div class="pagination-info mt-auto mb-auto">Showing {{orders.number}} of {{orders.paginator.num_pages}}
+                pages</div>
+            </div>
+            <div class="col-12 col-lg-6 align-self-center">
+              <nav aria-label="Page navigation" class="mt-auto mb-auto">
+                <ul class="pagination justify-content-start justify-content-lg-end mb-0 ps-0">
+                  {% if orders.has_previous %}
+                  <li class="page-item"><a class="page-link" href="?page={{ orders.previous_page_number }}"><i
+                        class="fas fa-angle-left"></i></a></li>
+                  {% else %}
+                  <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-left"></i></a>
+                  </li>
+                  {% endif %}
+                  {% for i in orders.paginator.page_range %}
+                  {% if orders.number == i %}
+                  <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                  {% else%}
+                  <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                  {% endif %}
+                  {% endfor %}
+                  {% if orders.has_next %}
+                  <li class="page-item"><a class="page-link" href="?page={{ orders.next_page_number }}"><i
+                        class="fas fa-angle-right"></i></a></li>
+                  {% else %}
+                  <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-angle-right"></i></a>
+                  </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>
   </div>
 </div>
 
-  {% endblock %}
-  {% block extra_js %}
-  <script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
-  <script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
-  <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
-  <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
-  <script src="{% static 'assets/js/custom_delete.js' %}"></script>
-  <script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
-  <script>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/jquery.min.js' %}"></script>
+<script src="{% static 'assets/js/moment.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/js/daterangepicker.js' %}"></script>
+<script src="{% static 'assets/js/plugins/flatpickr.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/perfect-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/smooth-scrollbar.min.js' %}"></script>
+<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+<script src="{% static 'assets/js/custom_delete.js' %}"></script>
+<script>
+  // Initialize the Date Range Picker
+  document.addEventListener('DOMContentLoaded', function () {
+    let initialStartDate, initialEndDate; // Variables to store the initial dates
 
-    // filter vendor
-    const searchInput = document.getElementById('searchVendor');
-    const applySearchButton = document.getElementById('applySearch');
-    const searchResults = document.getElementById('searchResults');
-    const vendorDropdown = document.getElementById('vendorDropdown'); // Assigned To dropdown element
+    function cb(start, end) {
+      const formattedStartDate = start.format('DD/MM/YYYY');
+      const formattedEndDate = end.format('DD/MM/YYYY');
+      const formattedDateRange = formattedStartDate + ' - ' + formattedEndDate;
 
-    let currentSearchResults = []; // Store the current search results
-    let isDropdownOpen = false; // Variable to track dropdown open state
+      $('#reportrange span').html(formattedStartDate + ' - ' + formattedEndDate);
 
-    // Function to update search results
-    function updateSearchResults(results) {
-      currentSearchResults = results; // Store the results
-      searchResults.innerHTML = '';
+      applyFilter('dateRange', formattedDateRange);
+    }
 
-      if (results.length > 0) {
-        results.forEach(result => {
-          const li = document.createElement('li');
-          const link = document.createElement('a');
-          link.classList.add('dropdown-item', 'border-radius-md');
-          link.href = '#';
-          link.textContent = result;
-          // Add the click event to apply the filter
-          link.onclick = function () {
-            applyFilter('vendor', result);
-          };
-          li.appendChild(link);
-          searchResults.appendChild(li);
-        });
-      } else {
+    // Initialize the Date Range Picker without setting an initial date range
+    const datePicker = $('#reportrange').daterangepicker({
+      autoUpdateInput: false,
+      autoApply: true,
+      showCustomRangeLabel: true, // Hide the "Custom Range" label
+      format: 'DD/MM/YYYY', // Change the format here
+      ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()]
+      },
+    });
+
+    if (datePicker.data('daterangepicker').showCustomRangeLabel) {
+      datePicker.data('daterangepicker').container.find('.ranges ul').append(
+        $('<li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter(\'dateRange\')">Remove Filter</a></li>')
+      );
+    }
+
+    datePicker.on('apply.daterangepicker', function (ev, picker) {
+      cb(picker.startDate, picker.endDate);
+    });
+
+    datePicker.on('show.daterangepicker', function (ev, picker) {
+      initialStartDate = picker.startDate.clone(); // Store initial start date
+      initialEndDate = picker.endDate.clone();     // Store initial end date
+    });
+
+    function dateclearFilter(filterType) {
+      if (filterType === 'dateRange') {
+        $('#reportrange').data('daterangepicker').setStartDate(moment());
+        $('#reportrange').data('daterangepicker').setEndDate(moment());
+        $('#reportrange span').html('');
+        clearFilter('dateRange'); // Apply empty filter value
+      }
+    }
+  });
+</script>
+<script>
+
+  let currentVendorSearchResults = []; // Store the current search results
+  let currentSubContractorSearchResults = []; // Store the current search results
+  let isDropdownOpen = false; // Variable to track dropdown open state
+
+  // Function to update search results
+  function updateSearchResults(results, filter_type = "vendor") {
+    if (filter_type === "vendor") {
+      currentVendorSearchResults = results; // Store the results
+    }
+
+    if (filter_type === "sub_contractor") {
+      currentSubContractorSearchResults = results; // Store the results
+    }
+
+    var filterDropdown = document.getElementById(filter_type + 'Dropdown');
+    var searchResults = filterDropdown.parentNode.querySelector('#searchResults');
+
+    searchResults.innerHTML = '';
+
+    if (results.length > 0) {
+      results.forEach(result => {
         const li = document.createElement('li');
-        li.classList.add('dropdown-item', 'text-muted');
-        li.textContent = 'No results found.';
+        const link = document.createElement('a');
+        link.classList.add('dropdown-item', 'border-radius-md');
+        link.href = '#';
+        link.textContent = result;
+        // Add the click event to apply the filter
+        link.onclick = function () {
+          applyFilter(filter_type, result);
+        };
+        li.appendChild(link);
         searchResults.appendChild(li);
-      }
+      });
+    } else {
+      const li = document.createElement('li');
+      li.classList.add('dropdown-item', 'text-muted');
+      li.textContent = 'No results found.';
+      searchResults.appendChild(li);
+    }
+  }
+
+  // Function to handle Apply Filter button click
+  function handleApplyFilter(searchInput, filter_type = "vendor") {
+    const searchTerm = searchInput.value;
+    var url = '';
+    if (filter_type === "vendor") {
+      url = '/stock/vendor/serach/?term=';
     }
 
-    // Function to handle Apply Filter button click
-    function handleApplyFilter() {
-      const searchTerm = searchInput.value;
+    if (filter_type === "sub_contractor") {
+      url = '/contact/sub-contractor/serach/?term=';
+    }
 
+    if (url) {
       // Make a request to your backend API with the searchTerm
       // Example using fetch:
-      fetch(`/stock/vendor/serach/?term=${searchTerm}`)
+      fetch(`${url}${searchTerm}`)
         .then(response => {
           if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -248,391 +334,210 @@
         })
         .then(data => {
           // Update the search results
-          updateSearchResults(data.data.results);
+          updateSearchResults(data.data.results, filter_type);
 
         })
         .catch(error => console.error(error, "error"));
     }
+  }
 
-    // Function to toggle dropdown visibility
-    function toggleDropdown() {
-      isDropdownOpen = !isDropdownOpen;
-    }
+  // Function to toggle dropdown visibility
+  function toggleDropdown() {
+    isDropdownOpen = !isDropdownOpen;
+  }
 
-    const inputField = document.getElementById('searchVendor');
+  const vendorInputField = document.getElementById('searchVendor');
 
-    inputField.addEventListener('input', () => {
-      handleApplyFilter();
-      toggleDropdown();
-      event.stopPropagation();
+  vendorInputField.addEventListener('input', () => {
+    handleApplyFilter(event.target);
+    toggleDropdown();
+    event.stopPropagation();
+  });
+
+  const sub_contractorInputField = document.getElementById('searchsub_contractor');
+
+  sub_contractorInputField.addEventListener('input', () => {
+    handleApplyFilter(event.target, "sub_contractor");
+    toggleDropdown();
+    event.stopPropagation();
+  });
+
+
+  // JavaScript code to apply the filter on each field
+  function applyFilter(filterName, filterValue) {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set(filterName, filterValue);
+    window.location.href = currentUrl.toString();
+  }
+
+  // JavaScript code to clear single filter on onclick event
+  function clearFilter(filterName) {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete(filterName);
+    window.location.href = currentUrl.toString();
+  }
+// JavaScript code to clear all the filters
+function clearAllFilters() {
+    const currentUrl = new URL(window.location.href);
+    const queryParams = new URLSearchParams(currentUrl.search);
+    const filterNames = ['vendor', 'sub_contractor', 'status', 'dateRange', 'q']; // Add dateRange to the filterNames array
+
+    filterNames.forEach(filterName => {
+      queryParams.delete(filterName);
     });
+    window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
+    window.location.reload(); // Reload the page after clearing all filters
+}
 
 
+// Check URL parameters on page load and update search and filter selections
+window.addEventListener('DOMContentLoaded', function () {
+    const filterNames = ['vendor', 'sub_contractor', 'status', 'dateRange', 'q'];
+    filterNames.forEach(filterName => {
+      const filterValue = new URLSearchParams(window.location.search).get(filterName);
 
-    // Loaction search
-    const locationsearchInput = document.getElementById('searchLocation');
-    const locationsearchResults = document.getElementById('locationsearchResults');
-    const locationDropdown = document.getElementById('locationDropdown');
+      if (filterValue) {
+        let displayedValue = filterValue; // Default displayed value is the filter value itself
 
-    let locationcurrentSearchResults = []; // Store the current search results
-    let locationisDropdownOpen = false; // Variable to track dropdown open state
+        if (filterName === 'dateRange') {
+          const formattedDateRange = filterValue.replace('_', ' to ');
+          displayedValue = formattedDateRange;
 
-    // Function to update search results
-    function updateLocationSearchResults(results) {
-      locationcurrentSearchResults = results;
-      locationsearchResults.innerHTML = '';
+          // Also update the date range input field if needed
+          document.getElementById('reportrange').value = formattedDateRange;
+        }
+        else if (filterValue.length > 12 && filterName != 'q') {
+          // Truncate the filter value if it's longer than 5 characters
+          displayedValue = filterValue.substring(0, 12) + '..';
+        }
 
-      if (results.length > 0) {
-        results.forEach(result => {
-          const li = document.createElement('li');
-          const link = document.createElement('a');
-          link.classList.add('dropdown-item', 'border-radius-md');
-          link.href = '#';
-          link.textContent = result;
-          // Add the click event to apply the filter
-          link.onclick = function () {
-            applyFilter('location', result);
-          };
-          li.appendChild(link);
-          locationsearchResults.appendChild(li);
-        });
-      } else {
-        const li = document.createElement('li');
-        li.classList.add('dropdown-item', 'text-muted');
-        li.textContent = 'No results found.';
-        locationsearchResults.appendChild(li);
+        // Update the dropdown element with the displayed value
+        document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
       }
-    }
-
-    // Function to handle Apply Filter button click
-    function handlelocationApplyFilter() {
-      const searchTerm = locationsearchInput.value;
-
-      // Make a request to your backend API with the searchTerm
-      // Example using fetch:
-      fetch(`/stock/inventory_location/serach/?term=${searchTerm}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          // Update the search results
-          updateLocationSearchResults(data.data.results);
-
-        })
-        .catch(error => console.error(error, "error"));
-    }
-
-    // Function to toggle dropdown visibility
-    function toggleDropdown() {
-      locationisDropdownOpen = !locationisDropdownOpen;
-    }
-
-    const locationinputField = document.getElementById('searchLocation');
-
-    locationinputField.addEventListener('input', () => {
-      handlelocationApplyFilter();
-      toggleDropdown();
-      event.stopPropagation();
     });
+  });
+
+  var searchUrl = window.location.href;
+
+  // Function to check if any filter has a value
+  function hasFilters() {
+    var vendor = document.getElementById("vendor-filter").value;
+    var location = document.getElementById("location-filter").value;
+    var status = document.getElementById("status-filter").value;
+    var dueDate = document.getElementById("due-date-filter").value;
+    var orderDate = document.getElementById("order-date-filter").value;
+
+    return (vendor || location || status || dueDate || orderDate);
+  }
+
+  function formatDate(dateString) {
+    var date = new Date(dateString);
+
+    var day = date.getDate();
+    var month = date.getMonth() + 1; // Months are zero-based, so we add 1
+    var year = date.getFullYear();
+
+    // Add leading zeros to day and month if they are single digits
+    var formattedDay = day < 10 ? '0' + day : day;
+    var formattedMonth = month < 10 ? '0' + month : month;
+
+    // Create a formatted date string in the desired format
+    var formattedDate = formattedDay + '/' + formattedMonth + '/' + year;
+
+    return formattedDate;
+  }
+
+  // Example usage:
+  var inputDate = '03-01-2023'; // Assuming input in "DD-MM-YYYY" format
+  var formatted = formatDate(inputDate);
 
 
-    // JavaScript code to apply the filter on each field
-    function applyFilter(filterName, filterValue) {
 
-
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set(filterName, filterValue);
-      window.location.href = currentUrl.toString();
-    }
-
-
-    window.addEventListener('DOMContentLoaded', function () {
-      const filterNames = ['vendor', 'location', 'status'];
-      filterNames.forEach(filterName => {
-        const filterValue = new URLSearchParams(window.location.search).get(filterName);
-
-        if (filterValue) {
-          let displayedValue = filterValue; // Default displayed value is the filter value itself
-
-          if (filterValue.length > 9) {
-            // Truncate the filter value if it's longer than 5 characters
-            displayedValue = filterValue.substring(0, 9) + '..';
-          }
-
-          // Update the dropdown element with the displayed value
-          const dropdownElement = document.getElementById(`${filterName}Dropdown`);
-          if (dropdownElement) {
-            dropdownElement.textContent = displayedValue.replace(/_/g, ' ');
-          }
-        }
-      });
+  // Function to convert string to title case and replace underscores with spaces
+  function formatStatus(status) {
+    return status.replace(/_/g, ' ').replace(/\w\S*/g, function (txt) {
+      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
     });
+  }
 
-    // JavaScript code to clear single filter on onclick event
-    function clearFilter(filterName) {
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.delete(filterName);
-      window.location.href = currentUrl.toString();
+  // Condition function to handle status color and icon
+  function getStatusCellContent(status) {
+    var cellContent = '';
+    cellContent = '<span class="status-dark">' + formatStatus(status) + '</span>';
+
+    return cellContent;
+  }
+
+  // Function to generate link action HTML
+  function generateLinkAction(item, action) {
+    var url = action.urlField;
+    if (item.status == "sent_for_approval") {
+      return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">Approve </a></li>';
     }
+    return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">' + action.label + '</a></li>';
+  }
 
-    // JavaScript code to clear all the filters
-    function clearAllFilters() {
-      const currentUrl = new URL(window.location.href);
-      const queryParams = new URLSearchParams(currentUrl.search);
-      const filterNames = ['vendor', 'location', 'status', 'q'];
-
-      filterNames.forEach(filterName => {
-        queryParams.delete(filterName);
-        const dropdownElement = document.getElementById(`${filterName}Dropdown`);
-        if (dropdownElement) {
-          dropdownElement.textContent = filterName;
-        }
-      });
-      window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
-      window.location.reload(); // Reload the page after clearing all filters
+  // Function to generate a dropdown menu of actions
+  function generateActionButtons(item, columnConfig) {
+    var status = item['status'];
+    var conditionalActionsHTML = '';
 
 
+    {% if request.user|has_update_permission:'purchase_order' %}
+
+    if ((status === "pending")) {
+      var actionsHTML = columnConfig.linkActions.map(function (action) {
+        return generateLinkAction(item, action);
+      }).join('');
 
 
-      // Remove the dateRange parameter if needed
-      // queryParams.delete('dateRange');
-
-      window.history.replaceState({}, document.title, `${currentUrl.pathname}?${queryParams.toString()}`);
-      // Don't reload the page here
-    }
-
-    var searchUrl = window.location.href;
-
-    var dataTable;
-    // Config for the first table
-    var columnsConfig1 = [
-      // Define column configurations for your DataTable
-      // Each object in this array corresponds to a column
-      { fieldName: 'po_number' },
-      { fieldName: 'vendor_id' },
-      { fieldName: 'inventory_location_id' },
-      { fieldName: 'total_amount' },
-      { fieldName: 'created_at' },
-      {
-        fieldName: 'status',
-        type: 'status',
-      },
-      {
-        fieldName: 'actions',
-        type: 'actions',
-        linkActions: [
-          { label: 'Edit', iconClass: 'fas fa-edit text-secondary', urlField: '/purchase_order/edit/' },
-        ]
-      },
-    ];
-
-    // Call the function to initialize the DataTable
-    {% comment %} initializeDataTable("purchase-order-list", searchUrl, columnsConfig1); {% endcomment %}
-
-    // Function to check if any filter has a value
-    function hasFilters() {
-      var vendor = document.getElementById("vendor-filter").value;
-      var location = document.getElementById("location-filter").value;
-      var status = document.getElementById("status-filter").value;
-      var dueDate = document.getElementById("due-date-filter").value;
-      var orderDate = document.getElementById("order-date-filter").value;
-
-      return (vendor || location || status || dueDate || orderDate);
-    }
-
-
-
-    {% comment %} function initializeDataTable(tableId, dataUrl, columnsConfig) {
-      if (document.getElementById(tableId)) {
-
-        // Fetch data from the provided URL
-        fetch(dataUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest"
-          }
-        }).then(function (response) {
-          // Check if the network response is successful
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
-          return response.json();
-        }).then(function (data) {
-          // Parse the received data
-          const responseData = data.data;
-          console.log(responseData)
-          if (responseData.length > 0) {
-            // Format the data for DataTable consumption
-            var formattedData = {
-              "draw": 1, // Set the appropriate draw value
-              "recordsTotal": responseData.length,
-              "recordsFiltered": responseData.length,
-              "data": responseData.map(function (item) {
-
-                // Generate cell content based on column type
-                var row = [];
-                for (var columnConfig of columnsConfig) {
-                  var cellContent = item[columnConfig.fieldName];
-
-                  if (columnConfig.type === 'status') {
-                    cellContent = getStatusCellContent(item.status);
-                  }
-                  else if (columnConfig.type === 'actions') {
-                    cellContent = generateActionButtons(item, columnConfig);
-                  }
-                  else if (columnConfig.fieldName === 'created_at') {
-                    // Convert date fields from "DD/MM/YYYY" to "dd.mm.yyyy" format
-                    cellContent = formatDate(cellContent);
-                  }
-
-                  row.push(cellContent);
-                }
-                return row;
-              })
-            };
-          }
-          else {
-            var formattedData;
-          }
-          // Destroy the existing DataTable (if any)
-          if (dataTable) {
-            dataTable.destroy();
-          }
-
-          // Initialize the DataTable using the simpleDatatables library
-          dataTable = new simpleDatatables.DataTable("#" + tableId, {
-            searchable: true,
-            fixedHeight: false,
-            perPage: 10,
-            serverSide: true,
-            processing: true,
-            data: formattedData // Pass the formatted data
-          });
-          // Get all table cells and add the 'text-sm' class to each cell
-          const tableCells = document.querySelectorAll("#" + tableId + " td");
-          tableCells.forEach((cell) => {
-            cell.classList.add("text-sm");
-          });
-
-
-        }).catch(function (error) {
-          console.error("Fetch error for table " + tableId, error);
-        });
-      }
-    } {% endcomment %}
-    function formatDate(dateString) {
-      var date = new Date(dateString);
-
-      var day = date.getDate();
-      var month = date.getMonth() + 1; // Months are zero-based, so we add 1
-      var year = date.getFullYear();
-
-      // Add leading zeros to day and month if they are single digits
-      var formattedDay = day < 10 ? '0' + day : day;
-      var formattedMonth = month < 10 ? '0' + month : month;
-
-      // Create a formatted date string in the desired format
-      var formattedDate = formattedDay + '/' + formattedMonth + '/' + year;
-
-      return formattedDate;
-    }
-
-    // Example usage:
-    var inputDate = '03-01-2023'; // Assuming input in "DD-MM-YYYY" format
-    var formatted = formatDate(inputDate);
-    console.log(formatted); // Output: "01/03/2023"
-
-
-
-    // Function to convert string to title case and replace underscores with spaces
-    function formatStatus(status) {
-      return status.replace(/_/g, ' ').replace(/\w\S*/g, function (txt) {
-        return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-      });
-    }
-
-    // Condition function to handle status color and icon
-    function getStatusCellContent(status) {
-      var cellContent = '';
-      cellContent = '<span class="status-dark">' + formatStatus(status) + '</span>';
-
-      return cellContent;
-    }
-
-    // Function to generate link action HTML
-    function generateLinkAction(item, action) {
-      var url = action.urlField;
-      if (item.status == "sent_for_approval") {
-        return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">Approve </a></li>';
-      }
-      return '<li><a class="dropdown-item" href="' + url + item['id'] + '/">' + action.label + '</a></li>';
-    }
-
-    // Function to generate a dropdown menu of actions
-    function generateActionButtons(item, columnConfig) {
-      var status = item['status'];
-      var conditionalActionsHTML = '';
-
-
-      {% if request.user|has_update_permission:'purchase_order' %}
-
-      if ((status === "pending")) {
-        var actionsHTML = columnConfig.linkActions.map(function (action) {
-          return generateLinkAction(item, action);
-        }).join('');
-
-
-        if (actionsHTML !== "") {
-          conditionalActionsHTML = actionsHTML;
-        }
-
+      if (actionsHTML !== "") {
+        conditionalActionsHTML = actionsHTML;
       }
 
-      else if ((status === "sent_for_approval")) {
-        var actionsHTML = columnConfig.linkActions.map(function (action) {
-          return generateLinkAction(item, action);
-        }).join('');
+    }
 
-        {% if request.user.roles.name == "projects_admin_(IT)" %}
-
-        if (actionsHTML !== "") {
-          conditionalActionsHTML = actionsHTML;
-        }
-        {% endif %}
-
-      }
-
-
-      {% endif %}
-
-
-
+    else if ((status === "sent_for_approval")) {
+      var actionsHTML = columnConfig.linkActions.map(function (action) {
+        return generateLinkAction(item, action);
+      }).join('');
 
       {% if request.user.roles.name == "projects_admin_(IT)" %}
-      else if (status === "approved" || status == "partially_completed") {
-        conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/' + item['id'] + '/">Invoice</a></li>';
+
+      if (actionsHTML !== "") {
+        conditionalActionsHTML = actionsHTML;
       }
       {% endif %}
 
-      var dropdownHTML = '<div class="dropstart ms-auto pe-0">' +
-        '<a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">' +
-        ' <i class="fa fa-cog text-secondary" aria-hidden="true"></i></a>' +
-        '<ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">' +
-        conditionalActionsHTML +
-        '<li><a class="dropdown-item" href="/purchase_order/view/' + item['id'] + '/">View</a></li>' +
-        '</ul>' +
-        '</div>';
-
-      return dropdownHTML;
     }
 
 
+    {% endif %}
 
-  </script>
 
 
-  {% endblock %}
+
+    {% if request.user.roles.name == "projects_admin_(IT)" %}
+      else if (status === "approved" || status == "partially_completed") {
+      conditionalActionsHTML = '<li><a class="dropdown-item" href="/purchase_order/invoice/' + item['id'] + '/">Invoice</a></li>';
+    }
+    {% endif %}
+
+    var dropdownHTML = '<div class="dropstart ms-auto pe-0">' +
+      '<a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">' +
+      ' <i class="fa fa-cog text-secondary" aria-hidden="true"></i></a>' +
+      '<ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2" style="">' +
+      conditionalActionsHTML +
+      '<li><a class="dropdown-item" href="/purchase_order/view/' + item['id'] + '/">View</a></li>' +
+      '</ul>' +
+      '</div>';
+
+    return dropdownHTML;
+  }
+
+
+
+</script>
+
+
+{% endblock %}

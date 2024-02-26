@@ -25,27 +25,28 @@
 
   <div class="col-auto px-0 mb-2">
     <div class="dropdown d-inline me-2">
-      <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 " data-bs-toggle="dropdown"
-        id="locationDropdown">
-        Location
+      <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0" data-bs-toggle="dropdown"
+        id="sub_contractorDropdown">
+        Sub-Contractor
       </a>
-      <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="locationDropdown"
+      <ul class="dropdown-menu dropdown-menu-lg-start px-2 py-3" aria-labelledby="sub_contractorDropdown"
         data-popper-placement="left-start">
         <li>
-          <input type="text" id="searchLocation" class="form-control" placeholder="Search">
+          <input type="text" id="searchsub_contractor" class="form-control" placeholder="Search">
         </li>
         <li>
           <hr class="dropdown-divider">
         </li>
-        <li id="locationsearchResults"></li>
+        <li id="searchResults"></li>
         <li>
           <hr class="horizontal dark my-2">
         </li>
-        <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('location')">Remove
+        <li><a class="dropdown-item border-radius-md text-danger" href="#" onclick="clearFilter('sub_contractor')">Remove
             Filter</a>
         </li>
     </div>
   </div>
+
   <div class="col-auto px-0 mb-2">
     <div class="dropdown d-inline me-2">
       <a href="javascript:;" class="btn btn-outline-dark dropdown-toggle text-start ps-2 mb-0 " data-bs-toggle="dropdown"
@@ -70,6 +71,14 @@
       </ul>
     </div>
   </div>
+
+  <!--  Date Range list filter-->
+  <div class="responsive-date-filter d-inline me-2 col-auto px-0 mb-2" style="width: auto;">
+      <input type="text" id="reportrange" class="form-control custom-date-search text-uppercase"
+          style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc;"
+          placeholder="Select date range">
+  </div>
+
   <div class="d-flex mt-0 col-auto px-0 mb-2" id="table-search-bar-form-row">
     <form class="row justify-content-start justify-content-lg-end w-100" method="get" autocomplete="off" id="searchForm">
         <div class="col-12 text-start text-md-end align-self-center me-0 pe-0">
