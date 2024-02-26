@@ -29,7 +29,7 @@
     font-weight: 700 !important;
   }
 
-  i.fw-bold.text-sm {
+  span.fw-bold.text-sm {
     font-size: 0.7rem !important;
     font-weight: 700 !important;
   }
@@ -85,11 +85,11 @@
                   <td>
                     <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
                       {% if order.vendor_id %}
-                      <i class="text-sm fw-bold">Vendor:</i><br>
+                      <span class="text-sm fw-bold">Vendor:</span><br>
                       {{order.vendor_id.first_name|default:'-'|truncatechars:20|title}}
                       {{order.vendor_id.last_name|default:'-'|truncatechars:20|title}}
                       {% else %}
-                      <i class="text-sm fw-bold">Sub Contractor:</i><br>
+                      <span class="text-sm fw-bold">Sub Contractor:</span><br>
                       {{order.sub_contractor_id.first_name|default:'-'|truncatechars:20|title}}
                       {{order.sub_contractor_id.last_name|default:'-'|truncatechars:20|title}}
                       {% endif %}
@@ -98,10 +98,10 @@
                   <td>
                     <a href="{% url 'purchase_order_view' order.id %}" class="text-decoration-none w-100 nav-link">
                       {% if order.inventory_location_id %}
-                      <i class="text-sm fw-bold">Warehouse:</i><br>
+                      <span class="text-sm fw-bold">Warehouse:</span><br>
                       {{order.inventory_location_id.name}}
                       {% else %}
-                      <i class="text-sm fw-bold">Site Address:</i><br>
+                      <span class="text-sm fw-bold">Site Address:</span><br>
                       {{order.site_address}}
                       {% endif %}
                     </a>
