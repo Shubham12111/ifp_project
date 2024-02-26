@@ -1008,7 +1008,16 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
                 'quotation': ['This field is required.'],
                 'stw': ['This field is required.']
             })
+         # Additional validation to check if all jobs have the same site_address
+        site_address = set()
+        for quotation in quotations:
+            site_address.add(quotation.requirement_id.site_address)
 
+        for stw in stws:
+            site_address.add(stw.requirement_id.site_address)
+
+        if len(site_address) > 1:
+            raise serializers.ValidationError("You are not authorised to perform this operation")
         return attrs
 
 class JobCreateSerializer(serializers.ModelSerializer):

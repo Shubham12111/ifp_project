@@ -1,6 +1,6 @@
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import render, redirect
-from django.http import Http404, JsonResponse, HttpResponse
+from django.http import Http404, JsonResponse, HttpResponse,HttpResponseBadRequest
 from django.conf import settings
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.permission import *
@@ -988,6 +988,7 @@ class CMJobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             "all": Q(),
         }
         queryset = queryset.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        
         queryset = queryset.filter(customer_id=customer_data).all()
         # Order the queryset based on the 'ordering_fields'
         ordering = self.request.GET.get('ordering')

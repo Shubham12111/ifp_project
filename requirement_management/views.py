@@ -26,6 +26,7 @@ from datetime import datetime, time
 from django.utils import timezone
 from io import BytesIO
 from rest_framework.request import Request
+from itertools import chain
 
 
 def get_customer_data(customer_id):
@@ -546,6 +547,18 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         
 
         return queryset
+    
+    def get_total_defects_count(self, customer_id):
+        """
+        Get the total number of defects for a customer.
+        Args:
+            customer_id (int): ID of the customer.
+
+        Returns:
+            int: Total number of defects.
+        """
+        total_defects_count = RequirementDefect.objects.filter(requirement_id__customer_id=customer_id).count()
+        return total_defects_count
 
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
@@ -586,6 +599,12 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     
                     page_number = request.GET.get('page', 1)
                     
+                    is_surveyor_assigned = bool(instance.surveyor)
+
+                    # Check if any defects exist
+                    has_defects = RequirementDefect.objects.filter(requirement_id=instance.id, report__isnull=True).exists()
+
+
                     context = {
                         'serializer': serializer, 
                         'requirement_instance': instance, 
@@ -593,7 +612,9 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                         'document_paths': document_paths,
                         'surveyers': users_with_survey_permission,
                         'customer_id': kwargs.get('customer_id'),
-                        'customer_data':customer_data
+                        'customer_data':customer_data,
+                        'is_surveyor_assigned': is_surveyor_assigned,
+                        'has_defects': has_defects,
                         }
                
 
@@ -624,7 +645,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         if not customer_data:
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customers_list'))
-            
+
         
         instance = self.get_queryset(data_access_value)
         if not instance:
@@ -633,7 +654,17 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
 
         if not instance.surveyor:
             messages.error(request, "You cannot create the report before assigning a Surveyor to this requirement.")
-            return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+            return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
+
+        # Assuming you also have a requirement_id and defect_id in your data
+        defects = RequirementDefect.objects.filter(requirement_id=instance, report__isnull=True).all()
+
+        # Check if there is already a report for all selected defects
+        existing_report = Report.objects.filter(requirement_id=instance, defect_id__in=defects, status='submit').first()
+
+        if existing_report:
+            messages.error(request, "There is already a submitted report for the selected defects.")
+            return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
 
         try:
             import base64
@@ -661,30 +692,26 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                 # Optionally, upload the image to S3
                 try:
                     signature_path = f'requirement/{instance.id}/report'
-                    upload_signature_to_s3(unique_filename, image_path,signature_path)
+                    upload_signature_to_s3(unique_filename, image_path, signature_path)
                     signature_path = f'requirement/{instance.id}/report/{unique_filename}'
                     
                 except Exception as e:
                     print(f"An error occurred: {str(e)}")
                     return False
             else:
-                messages.error(request, 'You cannot create the report without signature.')
-                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+                messages.error(request, 'You cannot create the report without a signature.')
+                return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
                 
-                
-            # Assuming you also have a requirement_id and defect_id in your data
-            defect_ids = data.get('selected_defect_ids', [])
-            defects = RequirementDefect.objects.filter(pk__in=defect_ids.split(','), report__isnull=True).all()
 
             if not defects:
-                messages.error(request, "You cannot create the report for the defects that are already used in other reports.")
-                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+                messages.error(request, "You cannot create the report for the defects as There is already a submitted report for these defects.")
+                return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
             
             # Create a new Report instance and save it to the database
             report = Report(
                 requirement_id=instance,
                 comments=comments,
-                signature_path = signature_path,
+                signature_path=signature_path,
                 user_id=request.user,
                 status=request.POST.get('status', '').lower()
             )
@@ -693,7 +720,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
             report.defect_id.set(defects)
             if request.POST.get('status', '').lower() == "submit":
                 all_report_defects = report.defect_id.all()
-               
+            
                 requirement_document_images = RequirementAsset.objects.filter(requirement_id=instance.id)
                 requirement_document_images_serializer = RequirementAssetSerializer(requirement_document_images, many=True)
 
@@ -712,7 +739,7 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     'requirement_images': requirement_document_images_serializer.data,
                     'requirement_defect_images': requirement_defect_images_serializer.data,
                     'comment': report.comments,
-                    'signature_data_url':signature_data_url,
+                    'signature_data_url': signature_data_url,
                 }
                 
                 unique_pdf_filename = f"{str(uuid.uuid4())}_report_{report.id}.pdf"
@@ -726,18 +753,20 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
                     report.save()
                     # send email to QS
                     if instance.quantity_surveyor and instance.surveyor:
-                        context = {'user': instance.quantity_surveyor,'surveyor': instance.surveyor,'site_url': get_site_url(request) }
+                        context = {'user': instance.quantity_surveyor, 'surveyor': instance.surveyor, 'site_url': get_site_url(request)}
 
                         email = Email()
                         attachment_path = generate_presigned_url(report.pdf_path)
-                        email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context, "Submission of Survey Report", attachment_path)
+                        email.send_mail(instance.quantity_surveyor.email, 'email_templates/report.html', context,
+                                        "Submission of Survey Report", attachment_path)
 
                 except Exception as e:
                     pass
             
             if request.accepted_renderer.format == 'html':
                 messages.success(request, "Your requirement report has been added successfully. ")
-                return redirect(reverse('customer_requirement_reports', kwargs={'requirement_id':instance.id, 'customer_id':customer_id}))
+                return redirect(reverse('customer_requirement_reports',
+                                        kwargs={'requirement_id': instance.id, 'customer_id': customer_id}))
             else:
                 return create_api_response(status_code=status.HTTP_200_OK,
                                         message="Your requirement report has been added successfully.", )
@@ -745,12 +774,13 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
             message = "Something went wrong"
             if request.accepted_renderer.format == 'html':
                 messages.warning(request, message)
-                return redirect(reverse('customer_requirement_view', kwargs={'pk':instance.id, 'customer_id':customer_id}))
+                return redirect(reverse('customer_requirement_view',
+                                    kwargs={'pk': instance.id, 'customer_id': customer_id}))
             else:
                 return create_api_response(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        message=message
-                    )
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    message=message
+                )
 
 class RequirementUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
@@ -1575,7 +1605,12 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
     Supports both HTML and JSON response formats.
     """
     serializer_class = BulkRequirementAddSerializer
-    default_fieldset = ['RBNO', 'UPRN', 'action','description','site_address','due_date']
+    default_fieldset = [
+        'RBNO', 'action','description','due_date'
+    ]
+    default_site_address_fieldset = [
+        'site_name', 'UPRN','address', 'country', 'town', 'county', 'post_code'
+    ]
     EXCEL = ['xlsx', 'xls', 'ods']
     CSV = ['csv',]
 
@@ -1646,10 +1681,9 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
 
         data = request.data.copy()
 
-
         # Create a mapping dictionary from the request data
-        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset}
-        
+        mapping_dict = {key: value for key, value in data.items() if key in self.default_fieldset or key in self.default_site_address_fieldset}
+
         # Check if any keys have the same value
         values_set = set()
         duplicate_values = set()
@@ -1669,16 +1703,26 @@ class BulkImportRequirementView(CustomAuthenticationMixin, generics.CreateAPIVie
         items_data_list = []
         for index, row in df.iterrows():
             items_data = {}
+            site_address_data = {}
             for key, value in mapping_dict.items():
-                items_data[key] = row[value]
+                if key in self.default_site_address_fieldset:
+                    site_address_data[key] = row[value]
+                else:
+                    items_data[key] = row[value]
 
+            items_data['site_address'] = site_address_data
             items_data_list.append(items_data)
-        serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request})
+        
+        serializer = self.serializer_class(data=items_data_list, many=True, context={'request': request, 'customer': customer_data})
         if serializer.is_valid():
             serializer.save(customer_id=customer_data, user_id=request.user)
             messages.success(request, 'Bulk FRA uploaded successfully.')
         else:
-            messages.error(request, 'The file contains irrelevant data. Please review the data and try again.')
+            errors = [convert_serializer_errors(errors) for errors in serializer.errors]
+            flat_error_messages_set = set(chain.from_iterable(map(dict.values, errors)))
+            flat_error_messages_set = list(flat_error_messages_set)
+
+            messages.error(request, f'{", ".join(flat_error_messages_set)}') 
     
         return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs['customer_id']}))
 

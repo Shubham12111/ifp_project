@@ -5,7 +5,7 @@ from rest_framework.fields import empty
 from .models import *
 from django.utils.html import strip_tags
 from authentication.models import User
-from customer_management.models import SiteAddress
+from customer_management.models import SiteAddress, POST_CODE_LIST
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
 from django.db import transaction
@@ -15,6 +15,10 @@ from collections import OrderedDict
 from collections.abc import Mapping
 from decimal import Decimal
 from django.urls import reverse
+from django.http import (
+    Http404
+)
+from django.shortcuts import get_object_or_404
 
 class CustomerNameField(serializers.RelatedField):
     """
@@ -1186,6 +1190,36 @@ class SurveyorRequirementSerializer(serializers.ModelSerializer):
         except:
             return {}
 
+class BulkRequirementAddSiteAddressSerializer(serializers.ModelSerializer):
+
+    site_name = serializers.CharField(
+        max_length=255,
+        min_length=3,
+        required=True,
+    )
+    
+    address = serializers.CharField(
+        max_length=255,
+        min_length=5,
+        required=True,
+    )
+    
+    country = serializers.CharField()
+    
+    town = serializers.CharField()
+    
+    county = serializers.CharField()
+    
+    post_code = serializers.ChoiceField(
+        required = True,
+        choices=POST_CODE_LIST,
+    )
+    UPRN = serializers.CharField()
+
+    class Meta:
+        model = SiteAddress
+        fields = ['site_name', 'UPRN','address', 'country', 'town', 'county', 'post_code']
+
 class BulkRequirementAddSerializer(serializers.ModelSerializer):
     """
     Serializer for creating and updating Requirement instances with additional fields.
@@ -1210,76 +1244,34 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
     """
     # Add a field to accept the date from the CSV file
     RBNO = serializers.CharField(
-        label=('Job Number'),
         required=True,
         max_length=12,
-        style={'base_template': 'custom_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Job Number is required.",
-        },
-    )
-    
-    UPRN = serializers.CharField(
-        label=('UPRN'),
-        required=True, 
-        max_length=12,
-        style={'base_template': 'custom_input.html'},
-        error_messages={
-            "required": "This field is required.",
-            "blank": "UPRN is required.",
-        },
     )
 
       # Custom CharField for the message with more rows (e.g., 5 rows)
     description = serializers.CharField(
-            max_length=1000, 
-            required=True, 
-            style={'base_template': 'rich_textarea.html', 'rows': 5},
-            error_messages={
-                "required": "This field is required.",
-                "blank": "Message is required.",},
+        max_length=1000, 
+        required=True, 
     )
 
       # Custom CharField for the message with more rows (e.g., 5 rows)
     action = serializers.CharField(
-            max_length=1000, 
-            required=True, 
-            style={'base_template': 'rich_textarea.html', 'rows': 5},
-            error_messages={
-                "required": "This field is required.",
-                "blank": "Message is required.",
-            },
+        max_length=1000, 
+        required=True, 
     )
 
-    # site_address = SiteAddressField(
-    #     label=('Site Address'),
-    #     required = True,
-    #     style={
-    #         'base_template': 'custom_select.html',
-    #         'custom_class':'col-6'
-    #     },
-    #     error_messages={
-    #         "required": "This field is required.",
-    #         "blank": "Site Address is required.",
-    #         "incorrect_type":"Site Address is required.",
-    #         "null": "Site Address is required."
-    #     },
-    # )
+    site_address = BulkRequirementAddSiteAddressSerializer(
+        required = True,
+    )
     due_date = serializers.DateField(
-        label='Due Date',
         required=True,
         input_formats=['%d/%m/%Y','iso-8601'],
-        style={
-            'base_template': 'custom_datepicker.html',
-            'custom_class': 'col-6'
-        },
         # Add any additional styles or validators if needed
     )
     
     class Meta:
         model = Requirement
-        fields = ('RBNO', 'UPRN', 'action','description' ,'due_date')
+        fields = ('RBNO', 'action', 'description' ,'site_address','due_date')
 
     def validate_description(self, value):
         # Custom validation for the message field to treat <p><br></p> as blank
@@ -1327,26 +1319,29 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
             if Requirement.objects.filter(RBNO=value).exists():
                 raise serializers.ValidationError("Job Number already exists.")
         return value
+    
+    def validate_site_address(self, value):
+        uprn = value.get('UPRN', '')
+        customer = self.context.get('customer')
+        
+        site_address = None
+        site_address_serializer = None
 
+        if uprn and customer:
+            try:
+                site_address = get_object_or_404(SiteAddress, user_id=customer, UPRN=uprn)
+            except Http404:
+                site_address_serializer = BulkRequirementAddSiteAddressSerializer(data = dict(value))
+                site_address_serializer.is_valid(raise_exception=True)
+                site_address = site_address_serializer.save(user_id=customer)
 
-    def validate_UPRN(self, value):
-        """
-        Validate the uniqueness of UPRN.
+        if not site_address:
+            if not uprn or not customer:
+                raise serializers.ValidationError('UPRN and Customer is a required field for Site Address')
+            raise serializers.ValidationError('An Error occured while creating Site Address for the customer.')
 
-        Args:
-            value (str): The UPRN value to be validated.
+        return site_address
 
-        Returns:
-            str: The validated UPRN value.
-
-        Raises:
-            serializers.ValidationError: If the UPRN is not unique.
-        """
-        if not self.instance:
-            # Check if an object with the same UPRN already exists
-            if Requirement.objects.filter(UPRN=value).exists():
-                raise serializers.ValidationError("UPRN already exists.")
-        return value
 
 
 class RequirementCalendarSerializer(serializers.ModelSerializer):
