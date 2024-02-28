@@ -37,7 +37,7 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return []
         
         queryset = User.objects.filter(
-            is_active=True,  roles__name__icontains='customer',
+            is_active=False,  roles__name__icontains='customer',
             id__in=reports
             ).exclude(pk=self.request.user.id)
         return queryset
@@ -80,10 +80,23 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
         queryset = self.get_queryset()    
+        reports = Report.objects.filter()
+
+        
+        customers_with_counts = []  # Create a list to store customer objects with counts
+
+        for customer in queryset:
+            report_counts = reports.filter(requirement_id__customer_id=customer, status__in=['submit'], quotations__isnull=True).count()
+            # Check if the user has any roles before accessing the first one
+            
+            customers_with_counts.append({
+                'customer': customer,
+                'report_counts': report_counts
+            })
         
 
         if request.accepted_renderer.format == 'html':
-            context = {'queryset': self.get_paginated_queryset(queryset),
+            context = {'queryset': self.get_paginated_queryset(customers_with_counts),
                        'search_fields': self.search_fields,
                         'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', [])),
                 }  # Pass the list of customers with counts to the template

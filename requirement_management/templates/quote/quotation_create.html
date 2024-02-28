@@ -228,7 +228,7 @@
                 </div>
                 <div class="row">
                   <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
-                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.UPRN|default:'-'|title }}</div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.site_address.UPRN|default:"-" }}</div>
                 </div>
                 <div class="row">
                   <div class="col-5 text-sm text-start"><strong>Job Number:</strong></div>

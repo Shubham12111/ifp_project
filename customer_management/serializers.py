@@ -1,9 +1,12 @@
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
+from django.core.validators import RegexValidator
 from infinity_fire_solutions.aws_helper import *
 from infinity_fire_solutions.custom_form_validation import *
+from infinity_fire_solutions.utils import generate_random_password
 from authentication.models import CUSTOMER_TYPES, User
+from authentication.serializers import SignupSerializer, UserRole
 from rest_framework.validators import UniqueValidator, UniqueTogetherValidator
 from .models import *
 import re
@@ -15,107 +18,109 @@ from django.core.exceptions import ValidationError
 from decimal import Decimal
 
 from requirement_management.models import *
-from requirement_management.serializers import CustomFileValidator
+from infinity_fire_solutions.validators import CustomFileValidator
 
 from django.shortcuts import get_object_or_404
 
 # Define a serializer for ContactCustomer model
 class ContactCustomerSerializer(serializers.ModelSerializer):
-    """
-    Serializer for ContactCustomer model.
-
-    This serializer defines the fields and their characteristics for ContactCustomer objects.
-
-    Attributes:
-        first_name (serializers.CharField): Field for first name.
-        last_name (serializers.CharField): Field for last name.
-        email (serializers.EmailField): Field for email.
-        phone_number (serializers.CharField): Field for phone number.
-        company_name (serializers.CharField): Field for company name.
-
-    Note:
-        Additional validation and error messages are defined for each field.
-    """
-    
-    first_name = serializers.CharField(
-        label=_('First Name'),
-        required=True,
-        max_length=50,
-        style={
-            "input_type": "text",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True,
-            'base_template': 'custom_input.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "First Name is required.",
-            "invalid": "First Name can only contain characters.",
-        },
-        validators=[validate_first_name] 
-    )
-    
-    last_name = serializers.CharField(
-        label=_('Last Name'),
-        required=True,
-        max_length=50,
-        style={
-            "input_type": "text",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True,
-            'base_template': 'custom_input.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Last Name is required.",
-            "invalid": "Last Name can only contain characters.",
-        },
-        validators=[validate_last_name] 
-    )
-    
-    email = serializers.EmailField(
-        label=_('Email'),
-        validators=[UniqueValidator(queryset=User.objects.all(), message="Email already exists. Please use a different email.")],
-        required=True,
-        max_length=100,
-        style={
-            "input_type": "email",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True,
-            'base_template': 'custom_input.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Email is required.",
-        },
-    )
-
-    phone_number = serializers.CharField(
-        label=_('Phone Number'),
-        max_length=14,
-        min_length=10,
-        required=False,
-        allow_null=True,
-        allow_blank=True,
-        style={
-            'base_template': 'custom_input.html'
-        },
-        validators=[validate_phone_number] 
-    )
-    
-    company_name = serializers.CharField(
-        label=_('Company Name'),
-        max_length=100,
-        min_length=3,
-        required=False,
-    )
     
     class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'email', 'company_name', 'phone_number')
+        model = CustomerMeta
+        fields = (
+            'company_name', 'company_registration_number', 
+            'registered_address', 'registered_town', 'registered_county', 'registered_country',  'registered_post_code',
+            'email', 'main_telephone_number'
+        )
+    
+    def get_or_create_user(self, attr):
+        """
+        Get or create a user based on the provided attributes.
+        
+        Args:
+            attr (dict): A dictionary containing user attributes.
+
+        Returns:
+            User: The created or existing user object.
+
+        Raises:
+            serializers.ValidationError: If unable to create a customer with the provided name.
+        """
+        # Generate a unique email based on company name and current timestamp
+        company_name = attr.get('company_name', '')
+        currenttimestamp = int(datetime.now().timestamp())
+        email = f'{"".join(company_name.split()).lower()}_{currenttimestamp}@infinityfireprevention.com'
+        
+        # Generate a random password
+        password = generate_random_password()
+
+        last_name = 'infinity'
+
+        # Split company name to first name and last name
+        if len(company_name.split()) > 1:
+            first_name = company_name.split()[0].lower()
+            last_name = ''.join(company_name.split()[1:]).lower()
+        else:
+            first_name = company_name.lower()
+        
+        # Create user data for serializer
+        data = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email,
+            'password': password,
+            'password2': password
+        }
+
+        # Validate and save user data using SignupSerializer
+        serializer = SignupSerializer(data=data)
+        if not serializer.is_valid():
+            raise serializers.ValidationError({
+                'company_name': ['Unable to create Customer with this name please choose a different name and try again.']
+            })
+        
+        # Save user with inactive status and company name
+        user = serializer.save()
+        user.is_active = False
+        user.company_name = company_name
+        
+        # Assign 'Customer' role to the user
+        customer_role = UserRole.objects.filter(name__icontains='customer').first()
+        if customer_role:
+            user.roles = customer_role
+        else:
+            customer_role = UserRole.objects.create(name='Customer')
+            user.roles = customer_role
+        
+        user.save()
+
+        return user
+
+    def validate(self, attr):
+        """
+        Validate the attributes.
+        
+        Args:
+            attr (dict): A dictionary containing user attributes.
+
+        Returns:
+            dict: The validated attributes.
+
+        """
+        # Call the base class validate method
+        attr = super().validate(attr)
+
+        # If instance exists, assign user_id or create a new user
+        if self.instance:
+            if not self.instance.user_id:
+                attr['user_id'] = self.get_or_create_user(attr)
+            else:
+                attr['user_id'] = self.instance.user_id
+        else:
+            attr['user_id'] = self.get_or_create_user(attr)
+        
+        return attr
+
 
 # Define a serializer for Customer model
 class CustomerSerializer(serializers.ModelSerializer):
@@ -135,82 +140,6 @@ class CustomerSerializer(serializers.ModelSerializer):
     Note:
         Additional validation and error messages are defined for each field.
     """
-    
-    first_name = serializers.CharField(
-        label=_('First Name'),
-        required=True,
-        max_length=50,
-        style={
-            "input_type": "text",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True,
-            'base_template': 'custom_input.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "First Name is required.",
-            "invalid": "First Name can only contain characters.",
-        },
-        validators=[validate_first_name] 
-    )
-    
-    last_name = serializers.CharField(
-        label=_('Last Name'),
-        required=True,
-        max_length=50,
-        style={
-            "input_type": "text",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True,
-            'base_template': 'custom_input.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Last Name is required.",
-            "invalid": "Last Name can only contain characters.",
-        },
-        validators=[validate_last_name] 
-    )
-    
-    email = serializers.EmailField(
-        label=_('Email'),
-        validators=[UniqueValidator(queryset=User.objects.all(), message="Email already exists. Please use a different email.")],
-        required=True,
-        max_length=100,
-        style={
-            "input_type": "email",
-            "autofocus": False,
-            "autocomplete": "off",
-            "required": True,
-            'base_template': 'customer_email.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Email is required.",
-        },
-    )
-   
-    phone_number = serializers.CharField(
-        label=_('Phone Number'),
-        max_length=14,
-        min_length=10,
-        required=True,
-        allow_null=True,
-        allow_blank=True,
-        style={
-            'base_template': 'custom_input.html'
-        },
-        error_messages={
-            "required": "This field is required.",
-            "blank": "Phone number field is required.",
-            "max_length": "Invalid Phone number and max limit should be 14.",
-            "min_length": "Invalid Phone number and min limit should be 10."
-        },
-        validators=[validate_phone_number] 
-    )
-    
     company_name = serializers.CharField(
         label=_('Company Name'),
         max_length=100,
@@ -220,7 +149,8 @@ class CustomerSerializer(serializers.ModelSerializer):
             "input_type": "text",
             "autocomplete": "off",
             "autofocus": False,
-            "base_template": 'custom_input.html'
+            "base_template": 'custom_input.html',
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -236,13 +166,318 @@ class CustomerSerializer(serializers.ModelSerializer):
         default='public sector-NHS',
         style={
             'base_template': 'custom_select.html',
+            'custom_class': 'col-4'
+        },
+    )
+    
+    company_registration_number = serializers.CharField(
+        label=_('Company Registration Number'),
+        max_length=100,
+        min_length=3,
+        required=True,
+        style={
+            "input_type": "text",
+            "autocomplete": "off",
+            "autofocus": False,
+            "base_template": 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Company Registration Number is required.",
+            "min_length": "Company Registration Number must consist of at least 3 characters."
+        },
+        validators=[RegexValidator(regex=r'^[a-zA-Z0-9]+(?:[-_][a-zA-Z0-9]+)*$')] 
+    )
+    
+    registered_address = serializers.CharField(
+        label=_('Registered Address'),
+        max_length=255,
+        min_length=5,
+        required=True,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Address is required.",
+        },
+    )
+    registered_town = serializers.CharField(
+        label=_('Registered Town'),
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+    )
+    registered_county = serializers.CharField(
+        label=_('Registered County'),
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+    )
+    registered_country = serializers.CharField(
+        label=_('Registered Country'),
+        style={
+            'base_template': 'custom_input.html',
             'custom_class': 'col-6'
         },
     )
-   
+    registered_post_code = serializers.ChoiceField(
+        label=_('Registered Post Code'),
+        required = True,
+        choices=POST_CODE_LIST,
+
+        style={
+            'base_template': 'custom_select_without_search.html',
+            'custom_class': 'col-6'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Post Code is required.",
+        },
+        # validators=[validate_uk_postcode] 
+    )
+
+    trading_address = serializers.CharField(
+        label=_('Trading Address'),
+        max_length=255,
+        min_length=5,
+        required=True,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Address is required.",
+        },
+    )
+    trading_town = serializers.CharField(
+        label=_('Trading Town'),
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+    )
+    trading_county = serializers.CharField(
+        label=_('Trading County'),
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+    )
+    trading_country = serializers.CharField(
+        label=_('Trading Country'),
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-6'
+        },
+    )
+    trading_post_code = serializers.ChoiceField(
+        label=_('Trading Post Code'),
+        required = True,
+        choices=POST_CODE_LIST,
+
+        style={
+            'base_template': 'custom_select_without_search.html',
+            'custom_class': 'col-6'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Post Code is required.",
+        },
+        # validators=[validate_uk_postcode] 
+    )
+
+
+    utr_number = serializers.CharField(
+        label=_('UTR Number'),
+        max_length=100,
+        min_length=3,
+        required=True,
+        style={
+            "input_type": "text",
+            "autocomplete": "off",
+            "autofocus": False,
+            "base_template": 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "UTR Number is required.",
+            "min_length": "UTR Number must consist of at least 3 characters."
+        },
+        validators=[RegexValidator(regex=r'^[A-Z]{3}\d{6}\w$')] 
+    )
+    
+    email = serializers.EmailField(
+        label=_('Email Address'),
+        validators=[UniqueValidator(queryset=User.objects.all(), message="Email already exists. Please use a different email.")],
+        required=True,
+        max_length=100,
+        style={
+            "input_type": "email",
+            "autofocus": False,
+            "autocomplete": "off",
+            "required": True,
+            'base_template': 'customer_email.html',
+            'custom_class': 'col-4'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Email Address is required.",
+        },
+    )
+
+    main_telephone_number = serializers.CharField(
+        label=_('Main Telephone Number'),
+        max_length=14,
+        min_length=10,
+        required=True,
+        allow_null=True,
+        allow_blank=True,
+        style={
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
+        },
+        error_messages={
+            "required": "This field is required.",
+            "blank": "Main Telephone Number field is required.",
+            "max_length": "Invalid Main Telephone Number and max limit should be 14.",
+            "min_length": "Invalid Main Telephone Number and min limit should be 10."
+        },
+        validators=[validate_phone_number] 
+    )
+    
+
     class Meta:
-        model = User
-        fields = ('first_name', 'last_name', 'email', 'company_name', 'phone_number', 'customer_type')
+        model = CustomerMeta
+        fields = (
+            'company_name', 'customer_type', 'company_registration_number', 
+            'registered_address', 'registered_town', 'registered_county', 'registered_country',  'registered_post_code',
+            'trading_address', 'trading_town', 'trading_county', 'trading_country',  'trading_post_code',
+            'utr_number', 'email', 'main_telephone_number')
+    
+    def validate_company_name(self, value):
+        """
+        Validates the uniqueness of the company name.
+        
+        Args:
+            value (str): The company name to be validated.
+            
+        Returns:
+            str: The validated company name.
+        
+        Raises:
+            serializers.ValidationError: If the company name is already in use.
+        """
+        
+        # Query the database for existing customers with the same company name
+        customers = CustomerMeta.objects.filter(company_name=value).all()
+
+        # Check if creating a new instance and the company name already exists
+        if not self.instance and customers:
+            raise serializers.ValidationError('Company Name is already in use.')
+        
+        # Check if updating an existing instance and the company name is already in use by another instance
+        if self.instance and [customer for customer in customers if customer.id != self.instance.id]:
+            raise serializers.ValidationError('Company Name is already in use.')
+        
+        return value
+
+    def get_or_create_user(self, attr):
+        """
+        Get or create a user based on the provided attributes.
+        
+        Args:
+            attr (dict): A dictionary containing user attributes.
+
+        Returns:
+            User: The created or existing user object.
+
+        Raises:
+            serializers.ValidationError: If unable to create a customer with the provided name.
+        """
+        # Generate a unique email based on company name and current timestamp
+        company_name = attr.get('company_name', '')
+        currenttimestamp = int(datetime.now().timestamp())
+        email = f'{"".join(company_name.split()).lower()}_{currenttimestamp}@infinityfireprevention.com'
+        
+        # Generate a random password
+        password = generate_random_password()
+
+        last_name = 'infinity'
+
+        # Split company name to first name and last name
+        if len(company_name.split()) > 1:
+            first_name = company_name.split()[0].lower()
+            last_name = ''.join(company_name.split()[1:]).lower()
+        else:
+            first_name = company_name.lower()
+        
+        # Create user data for serializer
+        data = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email,
+            'password': password,
+            'password2': password
+        }
+
+        # Validate and save user data using SignupSerializer
+        serializer = SignupSerializer(data=data)
+        if not serializer.is_valid():
+            raise serializers.ValidationError({
+                'company_name': ['Unable to create Customer with this name please choose a different name and try again.']
+            })
+        
+        # Save user with inactive status and company name
+        user = serializer.save()
+        user.is_active = False
+        user.company_name = company_name
+        
+        # Assign 'Customer' role to the user
+        customer_role = UserRole.objects.filter(name__icontains='customer').first()
+        if customer_role:
+            user.roles = customer_role
+        else:
+            customer_role = UserRole.objects.create(name='Customer')
+            user.roles = customer_role
+        
+        user.save()
+
+        return user
+
+    def validate(self, attr):
+        """
+        Validate the attributes.
+        
+        Args:
+            attr (dict): A dictionary containing user attributes.
+
+        Returns:
+            dict: The validated attributes.
+
+        """
+        # Call the base class validate method
+        attr = super().validate(attr)
+
+        # If instance exists, assign user_id or create a new user
+        if self.instance:
+            if not self.instance.user_id:
+                attr['user_id'] = self.get_or_create_user(attr)
+            else:
+                attr['user_id'] = self.instance.user_id
+        else:
+            attr['user_id'] = self.get_or_create_user(attr)
+
+        return attr
+    
+    def create(self, validated_data):
+        return super().create(validated_data)
 
 # Define a serializer for BillingAddress model
 class BillingAddressSerializer(serializers.ModelSerializer):
@@ -263,13 +498,6 @@ class BillingAddressSerializer(serializers.ModelSerializer):
     Note:
         Additional validation and error messages are defined for some fields.
     """
-    
-    # contact_name = serializers.CharField(
-    #     label=_('Contact Name'),
-    #     style={
-    #         'base_template': 'custom_input.html'
-    #     },
-    # )
     contact_email = serializers.EmailField(
         label=_('Accounts Email Address'),
         validators=[UniqueValidator(queryset=BillingAddress.objects.all(), message="Email already exists. Please use a different email.")],
@@ -556,8 +784,13 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         return formatted_address
 
 
+class ContactProfileSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'phone_number']
 
+    
 
 # Define a serializer for ContactPerson model
 class ContactPersonSerializer(serializers.ModelSerializer):
@@ -616,7 +849,11 @@ class ContactPersonSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField(
         label=_('Email'),
-        validators=[UniqueValidator(queryset=ContactPerson.objects.all(), message="Email already exists. Please use a different email.")],
+        validators=[
+            UniqueValidator(
+                queryset=User.objects.all(), message="Email already exists. Please use a different email."
+            )
+        ],
         required=True,
         max_length=100,
         style={
@@ -670,6 +907,123 @@ class ContactPersonSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactPerson
         fields = ['first_name', 'last_name', 'email', 'phone_number','job_role']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance:
+            self.fields['email'].required = False
+            self.fields['email'].style.update({'disabled': True})
+    
+    def to_representation(self, instance):
+        ret = {
+            'first_name': instance.user.first_name,
+            'last_name': instance.user.last_name,
+            'email': instance.user.email,
+            'phone_number': instance.user.phone_number,
+            'job_role': instance.job_role
+        }
+        return ret
+
+    def validate_first_name(self, value):
+        """
+        Validate the first name field.
+
+        Args:
+            value (str): First name value.
+
+        Returns:
+            str: Validated first name.
+
+        Raises:
+            serializers.ValidationError: If the first name is invalid.
+        """
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid First Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("First Name should be at least 2 characters long.")
+
+        return value
+
+    def validate_last_name(self, value):
+        """
+        Validate the last name field.
+
+        Args:
+            value (str): Last name value.
+
+        Returns:
+            str: Validated last name.
+
+        Raises:
+            serializers.ValidationError: If the last name is invalid.
+        """
+        if not re.match(r'^[a-zA-Z\s]+$', value):
+            raise serializers.ValidationError("Invalid Last Name. Only alphabets and spaces are allowed.")
+
+        if len(value) < 2:
+            raise serializers.ValidationError("Last Name should be at least 2 characters long.")
+
+        return value
+    
+    def create(self, validated_data):
+        """
+        Method to create a new user with the provided validated data.
+
+        Args:
+            validated_data (dict): Validated data containing user information.
+
+        Returns:
+            User: Newly created user instance.
+
+        Raises:
+            None.
+        """
+
+        # get the role for the contact
+        contact_role = UserRole.objects.filter(name='customer_contact').first()
+        # if the role is not present create the role
+        if not contact_role:
+            contact_role = UserRole.objects.create(name='customer_contact')
+        
+        # Generate a random password for the user
+        password = generate_random_password()
+        
+        # Extract user data from validated data and create a new user
+        data = {
+            'first_name': validated_data.pop('first_name', ''),
+            'last_name': validated_data.pop('last_name', ''),
+            'email': validated_data.pop('email', ''),
+            'password': password
+        }
+
+        user = User.objects.create_user(**data)
+        
+        # Update additional user fields
+        user.phone_number = validated_data.pop('phone_number', '')
+        user.is_active = False
+        user.roles = contact_role
+        user.save()
+        
+        # Assign the newly created user to the validated data and call the superclass create method
+        validated_data['user'] = user
+        instance = super().create(validated_data)
+        return instance
+    
+    def update(self, instance, validated_data):
+        # Extract user data from validated data and create a new user
+        data = {
+            'first_name': validated_data.pop('first_name', ''),
+            'last_name': validated_data.pop('last_name', ''),
+            'phone_number': validated_data.pop('phone_number', '')
+        }
+        serializer = ContactProfileSerializer(data=data, instance=instance.user)
+        serializer.is_valid()
+        serializer.update(instance=instance.user, validated_data=serializer.validated_data)
+
+        validated_data['user'] = instance.user
+        instance = super().update(instance, validated_data)
+        return instance
         
 class PostCodeInfoSerializer(serializers.Serializer):
     post_code = serializers.CharField(max_length=255)
@@ -930,7 +1284,7 @@ class BulkSorAddSerializer(serializers.ModelSerializer):
         required=True,
     )
     customer_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.filter(is_active=True, roles__name='Customer').all(),
+        queryset=User.objects.filter(is_active=False, roles__name='Customer').all(),
         required=True
     )
 

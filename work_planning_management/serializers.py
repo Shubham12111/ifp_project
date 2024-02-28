@@ -22,6 +22,7 @@ from collections.abc import Mapping
 from authentication.models import User
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
+from infinity_fire_solutions.validators import CustomImageFileValidator
 from customer_management.models import SiteAddress
 from rest_framework.validators import UniqueValidator
 
@@ -34,32 +35,7 @@ class QuotationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quotation
         fields = '__all__'
-
-class CustomFileValidator(FileExtensionValidator):
-    def __init__(self, allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS, *args, **kwargs):
-        super().__init__(allowed_extensions, *args, **kwargs)
-
-    def __call__(self, value):
-        extension_error = None
-        size_error = None
-
-        try:
-            super().__call__(value)
-        except ValidationError as e:
-            extension_error = e.error_list[0].messages[0]
-
-        max_size = 5 * 1024 * 1024  # 5MB in bytes
-        if value.size > max_size:
-            size_error = "File size must be no more than 5MB."
-
-        if extension_error or size_error:
-            errors = {}
-            if extension_error:
-                errors['extension'] = [extension_error]
-            if size_error:
-                errors['size'] = [size_error]
-            raise serializers.ValidationError(errors)   
-            
+         
 class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -194,7 +170,7 @@ class STWRequirementSerializer(serializers.ModelSerializer):
     file_list = serializers.ListField(
         child=serializers.FileField(
             allow_empty_file=False,
-            validators=[CustomFileValidator()],
+            validators=[CustomImageFileValidator()],
         ),
         label=('Documents'),  # Adjust the label as needed
         required=False,
@@ -609,7 +585,7 @@ class STWDefectSerializer(serializers.ModelSerializer):
     file_list = serializers.ListField(
         child=serializers.FileField(
                 allow_empty_file=False,
-                validators=[CustomFileValidator()],
+                validators=[CustomImageFileValidator()],
             ),
     label=('Documents'),  # Adjust the label as needed
     required=False,
@@ -1014,7 +990,7 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
             site_address.add(quotation.requirement_id.site_address)
 
         for stw in stws:
-            site_address.add(stw.requirement_id.site_address)
+            site_address.add(stw.site_address)
 
         if len(site_address) > 1:
             raise serializers.ValidationError("You are not authorised to perform this operation")
@@ -1216,7 +1192,7 @@ class AddAndAttachSitePackSerializer(serializers.ModelSerializer):
 
     document_path = serializers.FileField(
         allow_empty_file=False,
-        validators=[CustomFileValidator(allowed_extensions=settings.SUPPORTED_EXTENSIONS)],
+        validators=[CustomImageFileValidator(allowed_extensions=settings.SUPPORTED_EXTENSIONS)],
         required=True,
     )
 

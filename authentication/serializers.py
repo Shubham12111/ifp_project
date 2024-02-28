@@ -5,7 +5,7 @@ from rest_framework.renderers import HTMLFormRenderer
 from django.contrib.auth import update_session_auth_hash
 from infinity_fire_solutions.custom_form_validation import *
 from cities_light.models import City, Country, Region
-from .models import User
+from .models import User, UserRole
 import re
 from customer_management.constants import POST_CODE_LIST
 

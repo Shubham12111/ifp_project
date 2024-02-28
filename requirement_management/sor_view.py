@@ -31,7 +31,7 @@ class SORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+            queryset = User.objects.filter(is_active=False,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
 
     def get(self, request, *args, **kwargs):

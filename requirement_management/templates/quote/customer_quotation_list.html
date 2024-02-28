@@ -105,7 +105,7 @@
                                     </td>
                                     <td>
                                         <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="text-decoration-none w-100 h-100 nav-link">
-                                            {{ quotation.requirement_id.UPRN}}
+                                            {{ quotation.requirement_id.site_address.UPRN|default:"-" }}
                                         </a>
                                     </td>
                                     <td>
@@ -337,8 +337,29 @@
               displayedValue = filterValue.substring(0, 16) + '..';
             }
   
-            // Update the dropdown element with the displayed value
-            document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+            if (filterName === 'status'){
+                statusDropdown = document.getElementById(`${filterName}Dropdown`);
+                if (statusDropdown){
+                  ul = statusDropdown.parentElement.querySelector('ul');
+                  if (ul){
+                    liElements = ul.querySelectorAll('li');
+                    liElements.forEach(li => {
+                      // Get the text content of the anchor element within the li
+                      anchor = li.querySelector('a')
+                      if(anchor){
+                          anchorValue = anchor.getAttribute('onclick').split("'")[3]
+                          anchorText = anchor.textContent.trim();
+                          if (anchorValue && anchorValue === filterValue){
+                            statusDropdown.textContent = anchorText;
+                          }
+                      }
+                    });
+                  }
+                }
+              }else{
+                // Update the dropdown element with the displayed value
+                document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+              }
           }
         });
       });

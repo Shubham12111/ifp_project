@@ -40,7 +40,7 @@ def get_customer_data(customer_id):
     Returns:
         User: The customer data if found, otherwise None.
     """
-    customer_data = User.objects.filter(id=customer_id, is_active=True,
+    customer_data = User.objects.filter(id=customer_id, is_active=False,
                                         roles__name__icontains='customer').first()
     
     return customer_data
@@ -208,7 +208,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
         Returns:
             QuerySet: A queryset of stw Requirement customers.
         """
-        queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+        queryset = User.objects.filter(is_active=False,  roles__name='Customer').exclude(pk=self.request.user.id)
         return queryset
         
     def get_paginated_queryset(self, base_queryset):
@@ -1804,7 +1804,7 @@ class RequirementSurvyeCustomerListView(CustomAuthenticationMixin, generics.List
             return []
         
         queryset = User.objects.filter(
-            is_active=True,  roles__name__icontains='customer',
+            is_active=False,  roles__name__icontains='customer',
             id__in=requirements
             ).exclude(pk=self.request.user.id)
         

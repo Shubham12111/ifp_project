@@ -31,7 +31,7 @@ def get_customer_data(customer_id):
     Returns:
         User: The customer data if found, otherwise None.
     """
-    customer_data = User.objects.filter(id=customer_id, is_active=True,
+    customer_data = User.objects.filter(id=customer_id, is_active=False,
                                         roles__name__icontains='customer').first()
     
     return customer_data
@@ -48,7 +48,7 @@ class CSSORCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     ordering_fields = ['created_at'] 
 
     def get_queryset(self):
-            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+            queryset = User.objects.filter(is_active=False,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
 
     def get(self, request, *args, **kwargs):
@@ -104,7 +104,7 @@ class CSSORListView(CustomAuthenticationMixin, generics.ListAPIView):
         Returns:
             QuerySet: A queryset of Requirement customers.
         """
-            queryset = User.objects.filter(is_active=True,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
+            queryset = User.objects.filter(is_active=False,  roles__name__icontains='customer').exclude(pk=self.request.user.id)
             return queryset
 
     def get_paginated_queryset(self, base_queryset):
@@ -181,7 +181,7 @@ class CSSORListView(CustomAuthenticationMixin, generics.ListAPIView):
                 )
         else:
             messages.error(request, "You are not authorized to perform this action")
-            return redirect(reverse('cs_sor_customers_list'))
+            return redirect(reverse('customer_list'))
 
 
 

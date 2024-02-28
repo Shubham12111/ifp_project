@@ -41,7 +41,7 @@ def get_customer_data(customer_id):
     if not customer_id:
         return None
     
-    customer_data = User.objects.filter(id=customer_id, is_active=True,
+    customer_data = User.objects.filter(id=customer_id, is_active=False,
                                         roles__name__icontains='customer').first()
     
     return customer_data
@@ -168,6 +168,9 @@ class CreateInvoiceView(CustomAuthenticationMixin,generics.GenericAPIView):
             return redirect(reverse('customer_list'))
 
         customer_billing_address = self.get_customer_billing_address(customer)
+        if not customer_billing_address:
+            messages.error(request, "The Customer does not have the billing information, please update the billing information before you issue an invoice for the customer.")
+            return redirect(reverse('cs_customer_quote_list', kwargs={'customer_id': kwargs.get('customer_id')}))
         
         instance = self.get_object(customer)
         if not instance:

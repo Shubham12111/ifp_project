@@ -74,10 +74,10 @@
                                         <td><strong class="text-dark">Email</strong></td>
                                         <td>{{ requirement_instance.customer_id.email }}</td>
                                     </tr>
-                                    {% if requirement_instance.UPRN %}
+                                    {% if requirement_instance.site_address %}
                                         <tr>
                                             <td><strong class="text-dark">UPRN</strong></td>
-                                            <td>{{ requirement_instance.UPRN }}</td>
+                                            <td>{{ requirement_instance.site_address.UPRN|default:"-" }}</td>
                                         </tr>
                                     {% endif %}
                                     {% if requirement_instance.RBNO %}

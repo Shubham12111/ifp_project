@@ -20,49 +20,46 @@
           </div>
         </div>
         <div class="card-body px-4">
-                 <div class="row">
-                        <div class="col-2">
-                          <label>First Name:</label>
-                        </div>
-                        <div class="col-6">
-                          <p>{{ serializer.data.first_name }}</p>
-                        </div>
-                    </div>
-               
+          <div class="row">
+            <div class="col-2">
+              <label>First Name:</label>
+            </div>
+            <div class="col-6">
+              <p>{{ serializer.first_name }}</p>
+            </div>
+          </div>
 
-                    <div class="row">
-                        <div class="col-2">
-                              <label>Last Name:</label>
-                            </div>
-                            <div class="col-6">
-                              <p>{{ serializer.data.last_name }}</p>
-                            </div>
-                        </div>
-                     
-                        
-                         
-                                        <div class="row">
-                                            <div class="col-2">
-                                            <label>Phone Number:</label>
-                                            </div>
-                                            <div class="col-6">
-                                            <p>{{ serializer.data.phone_number}}</p>
-                                          </div>
-                                        </div>
+          <div class="row">
+            <div class="col-2">
+              <label>Last Name:</label>
+            </div>
+            <div class="col-6">
+              <p>{{ serializer.last_name }}</p>
+            </div>
+          </div>
 
+          <div class="row">
+            <div class="col-2">
+              <label>Phone Number:</label>
+            </div>
+            <div class="col-6">
+              <p>{{ serializer.phone_number}}</p>
+            </div>
+          </div>
 
-                                        <div class="row">
-                                            <div class="col-2">
-                                            <label>Email Address:</label>
-                                            </div>
-                                            <div class="col-6">
-                                            <p>{{ serializer.data.email }}</p>
-                                          </div>
-                                        </div>
-
-                                            </div>
-                                        </div>
-                                    </div>
+          <div class="row">
+            <div class="col-2">
+              <label>Email Address:</label>
+            </div>
+            <div class="col-6">
+              <p>{{ serializer.email }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
                 
 {% endblock %}

@@ -38,7 +38,7 @@
                       {{ query_obj.customer.first_name|truncatechars:20|title }} {{ query_obj.customer.last_name|truncatechars:20|lower }}
                     </a>
                   </td>
-                  <td>{{query_obj.customer.company_name|default:'-'|title}}</td>
+                  <td>{{query_obj.customer.customermeta|default:'-'|title}}</td>
                   <td>{{query_obj.customer.email}}</td>
                   <td>{{query_obj.customer.phone_number|default:'-'}}</td>
                   <td class="text-center">{{query_obj.sor_counts}}</td>

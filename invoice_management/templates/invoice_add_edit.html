@@ -221,7 +221,7 @@
             <div class="card-body mt-0 text-sm">
               <div class="row mb-2">
                 <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
-                <div class="col-7 text-sm">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</div>
+                <div class="col-7 text-sm">{{ customer_data.customermeta.company_name|title }}</div>
               </div>
               <div class="row mb-2">
                 <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
@@ -243,11 +243,29 @@
               </div>
               <div class="row mb-2">
                 <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
-                <div class="col-7 text-sm">{{ requirement_instance.site_address }}</div>
+                <div class="col-7 text-sm">
+                  {% if requirement_instance.site_address %}
+                  {{ requirement_instance.site_address.address|default:'-' }}
+                  {% if requirement_instance.site_address.town %}
+                  {{ requirement_instance.site_address.town }},
+                  {% endif %}
+                  {% if requirement_instance.site_address.county %}
+                  {{ requirement_instance.site_address.county }},
+                  {% endif %}
+                  {% if requirement_instance.site_address.country %}
+                  {{ requirement_instance.site_address.country }},
+                  {% endif %}
+                  {% if requirement_instance.site_address.post_code %}
+                  {{ requirement_instance.site_address.post_code }}
+                  {% endif %}
+                  {% else %}
+                  -
+                  {% endif %}
+                </div>
               </div>
               <div class="row">
                 <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
-                <div class="col-7 text-sm">{{ requirement_instance.UPRN|default:'-'|title }}</div>
+                <div class="col-7 text-sm">{{ requirement_instance.site_address.UPRN|default:'-' }}</div>
               </div>
               <div class="row">
                 <div class="col-5 text-sm text-start"><strong>Job Number:</strong></div>
@@ -1770,6 +1788,51 @@
               // Request was successful, handle the server's response if needed
               window.location.href = "{% url 'cs_customer_invoice_list' customer_id %}";
             } else {
+              response.json().then(data => {
+                // Here, data will contain the error message and any additional data sent by the server
+                if(data.data.billing_information_json){
+                  alertRow = document.getElementById('alert-row');
+                  alertCol = alertRow.querySelector('.col-md-12');
+                  
+                  alert = document.createElement('div');
+                  alert.className = "alert alert-danger alert-dismissible fade show text-white slide-down-alert col";
+                  alert.role = "alert"
+
+                  alertSpan = document.createElement('span');
+                  alertSpan.className = "alert-text";
+                  alertSpan.textContent = "The Customer does not have the billing information, please update the billing information before you issue an invoice for the customer.";
+
+                  alertButton = document.createElement('button');
+                  alertButton.type = "button";
+                  alertButton.className = "btn-close";
+                  // Add the data-bs-dismiss attribute
+                  alertButton.setAttribute('data-bs-dismiss', 'alert');
+                  // Add the aria-label attribute
+                  alertButton.setAttribute('aria-label', 'Close');
+
+                  alertButtonSpan = document.createElement('span');
+                  alertButtonSpan.setAttribute('aria-hidden', 'true');
+                  alertButtonSpan.innerHTML = "&times;"
+                  
+                  alertButton.appendChild(alertButtonSpan);
+                  alert.appendChild(alertSpan);
+                  alert.appendChild(alertButton);
+                  
+                  alertCol.appendChild(alert);
+
+                  alert.classList.add('show');
+
+                  // Auto-close the alert after 3 seconds (3000 milliseconds)
+                  setTimeout(() => {
+                  alert.classList.remove('show'); // Remove the 'show' class to hide the alert
+                  }, 3000);
+                  hideLoader();
+                }
+              }).catch(error => {
+                // Handle parsing error if unable to parse response JSON
+                console.error('Error parsing JSON:', error);
+              });
+              
               // Handle errors or failed requests
               console.error('Error sending data to the server');
             }

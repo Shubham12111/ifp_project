@@ -10,13 +10,13 @@ from infinity_fire_solutions.aws_helper import upload_file_to_s3, fetch_file_fro
 from authentication.models import User
 
 from work_planning_management.models import SitePack
-from work_planning_management.serializers import CustomFileValidator
+from infinity_fire_solutions.validators import CustomImageFileValidator
 
 
 class SitePackAdminForm(forms.ModelForm):
     document_path = forms.FileField(
         label='Upload Document',
-        validators=[CustomFileValidator()],
+        validators=[CustomImageFileValidator()],
         required=True,
         widget=forms.ClearableFileInput(),
         initial = False

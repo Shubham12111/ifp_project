@@ -133,7 +133,7 @@
                             <p class="mb-0 mt-3"><strong>Vat Number: </strong>{{ instance.billing_information_json.vat_number }}</p>
                             <p class="mb-0"><strong>Payment Terms: </strong>{{ instance.billing_information_json.payment_terms }}</p>
                             <p class="mb-0"><strong>Tax Prefrence: </strong>{{ instance.billing_information_json.tax_preference }}</p>
-                            <p class="mb-0"><strong>UPRN: </strong>{{ requirement_instance.UPRN|default:'-'|title }}</p>
+                            <p class="mb-0"><strong>UPRN: </strong>{{ requirement_instance.site_address.UPRN|default:"-" }}</p>
                             <p class="mb-0"><strong>Job Number: </strong>{{ requirement_instance.RBNO|default:'-'|title }}</p>
                             <p class="mb-0"><strong>Reference Number: </strong>IFP-{{ quotation.id }}</p>
                         </div>
