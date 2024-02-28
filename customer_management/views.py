@@ -481,7 +481,7 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
         message = f"Your Customer billing address has been {'updated' if instance else 'added'} successfully!"
 
         if serializer.is_valid():
-            serializer.validated_data['user_id'] = customer.user_id
+            serializer.validated_data['user_id'] = customer
             # If the serializer data is valid, save the billing address instance.
             serializer.update(instance=instance, validated_data=serializer.validated_data) if instance else serializer.save()
 
