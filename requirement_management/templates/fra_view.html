@@ -8,7 +8,7 @@
                 {% include 'components/back_button.html' %}
                 {% if not '/fra/reports' in request.path %}
                 {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user  %}
-                <button class="btn bg-gradient-primary btn-sm mb-0" {% if not existing_report_for_requirement %}id="createreportButton"{% else %}disabled{% endif %}>
+                <button class="btn bg-gradient-primary btn-sm mb-0" {% if not requirement_instance.report_set.exists %}id="createreportButton"{% else %}disabled{% endif %}>
                     Create Report
                 </button>             
                 {% endif %}
@@ -52,8 +52,8 @@
                 <div class="row mb-3">
                     <b>Site Address Information</b>
                     <p class="text-sm mt-1 mb-0" style="text-align: justify;">
-                        {% if requirement_instance.UPRN %}    
-                        {{ requirement_instance.UPRN }}<br>
+                        {% if requirement_instance.site_address %}    
+                        {{ requirement_instance.site_address.UPRN|default:"-" }}<br>
                         {% endif %}
                         {{ requirement_instance.site_address.site_name|default:'-'|truncatechars:20 }},<br>
                         {{ requirement_instance.site_address.address|default:'-'|truncatechars:20|title }},
@@ -67,10 +67,10 @@
                 <div class="row">
                     <b>Customer Information</b>
                     <p class="text-sm mt-1 mb-0" style="text-align: justify;">
-                        {{ requirement_instance.customer_id.first_name|title }} {{ requirement_instance.customer_id.last_name|title }}
+                        {{ requirement_instance.customer_id.customermeta.company_name|title }}
                     </p>
                     <p class="text-sm mb-0" style="text-align: justify;">
-                        {{ requirement_instance.customer_id.email }}
+                        {{ requirement_instance.customer_id.customermeta.email|default:'-' }}
                     </p>
                 </div>
             </div>

@@ -40,7 +40,7 @@
                 <thead class="thead-light">
                     <tr>
                         <th>First Name</th>
-                        <th>First Name</th>
+                        <th>Last Name</th>
                         <th>Email</th>
                         <th>Phone Number</th>
                         <th>Job Role</th>
@@ -50,10 +50,10 @@
                 <tbody class="ml-4">
                     {% for contact_person in contact_person_list %}
                     <tr class="text-sm">
-                        <td>{{ contact_person.first_name|default:'-'|truncatechars:20|title }}</td>
-                        <td>{{ contact_person.last_name|default:'-'|truncatechars:20|title  }}</td>
-                        <td>{{ contact_person.email }}</td>
-                        <td>{{ contact_person.phone_number }}</td>
+                        <td>{{ contact_person.user.first_name|default:'-'|truncatechars:20|title }}</td>
+                        <td>{{ contact_person.user.last_name|default:'-'|truncatechars:20|title  }}</td>
+                        <td>{{ contact_person.user.email }}</td>
+                        <td>{{ contact_person.user.phone_number }}</td>
                         <td>{{ contact_person.job_role }}</td>
 
                         <td> 

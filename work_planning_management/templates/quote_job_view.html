@@ -18,7 +18,7 @@
               
               <div class="form-group col-6">
                 <label>UPRN </label>
-                <p>{{ query_object.requirement_id.UPRN }}</p>
+                <p>{{ query_object.requirement_id.site_address.UPRN|default:"-" }}</p>
               </div>
 
               <div class="form-group col-6">

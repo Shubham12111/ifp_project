@@ -15,35 +15,10 @@ from collections.abc import Mapping
 
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
+from infinity_fire_solutions.validators import CustomFileValidator
 
 from .models import *
 
-
-
-class CustomFileValidator(FileExtensionValidator):
-    def __init__(self, allowed_extensions=settings.SUPPORTED_EXTENSIONS, *args, **kwargs):
-        super().__init__(allowed_extensions, *args, **kwargs)
-
-    def __call__(self, value):
-        extension_error = None
-        size_error = None
-
-        try:
-            super().__call__(value)
-        except ValidationError as e:
-            extension_error = e.error_list[0].messages[0]
-
-        max_size = 5 * 1024 * 1024  # 5MB in bytes
-        if value.size > max_size:
-            size_error = "File size must be no more than 5MB."
-
-        if extension_error or size_error:
-            errors = {}
-            if extension_error:
-                errors['extension'] = [extension_error]
-            if size_error:
-                errors['size'] = [size_error]
-            raise serializers.ValidationError(errors)   
         
 
 class DocumentSerializer(serializers.ModelSerializer):

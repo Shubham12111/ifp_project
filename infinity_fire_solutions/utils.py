@@ -1,3 +1,9 @@
+import random
+import re
+
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
 from drf_yasg import openapi
 
 def get_status_from_code(status_code):
@@ -88,3 +94,49 @@ def docs_schema_response_new(status_code: str,
     
     
     return response
+
+def validate_generated_password(value):
+    # Validate password complexity
+    validate_password(value)
+
+    # Custom validation rules
+    if 'password' in value.lower():
+        raise ValidationError('Password should not contain the word "password".')
+    if len(value) < 8:
+        raise ValidationError('Password should be at least 8 characters long.')
+    if value.isnumeric() or value.isalpha():
+        raise ValidationError('Password should contain a mix of letters, numbers, and symbols.')
+    if not any(char.isupper() for char in value):
+        raise ValidationError('Password should contain a capital character')
+    if not re.search(r"[!@#$%^&*()\-=_+{}[\]|\\:;\"'<>,.?/]", value):
+        raise ValidationError("Password must contain at least one special character.")
+    if not re.search(r"\d", value):
+        raise ValidationError("Password must contain at least one numeric character.")
+    return value
+
+def generate_random_password(length=12):
+    """
+    Generate a random password of the specified length.
+
+    Parameters:
+    - length: The length of the generated password. Default is 12.
+
+    Returns:
+    - A randomly generated password as a string.
+    """
+    
+    while True:
+        password = ''.join(random.choice('!@#$%^&*()abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789') for _ in range(length))
+
+        # Validate the generated password
+        errors = []
+
+        try:
+            validate_generated_password(password)
+        except ValidationError as e:
+            errors.extend(e.messages)
+
+        if not errors:
+            break
+
+    return password

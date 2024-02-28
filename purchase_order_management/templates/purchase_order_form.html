@@ -211,7 +211,7 @@
                                         <select class="form-select" name="user_id" id="customer-choices">
                                             <option disabled selected value> Select a Customer </option>
                                             {% for customer in customer_list %}
-                                            <option value="{{customer.id}}">{{customer.email}}</option>
+                                            <option value="{{customer.id}}">{{customer.company_name}}</option>
                                             {% endfor %}
                                         </select>
                                     </div>

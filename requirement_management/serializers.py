@@ -6,11 +6,12 @@ from .models import *
 from django.utils.html import strip_tags
 from authentication.models import User
 from customer_management.models import SiteAddress, POST_CODE_LIST
+from customer_management.serializers import SiteAddressSerializer
 from infinity_fire_solutions.custom_form_validation import *
+from infinity_fire_solutions.validators import CustomFileValidator
 from infinity_fire_solutions.aws_helper import *
 from django.db import transaction
 from django.core.exceptions import ValidationError
-from django.core.validators import FileExtensionValidator
 from collections import OrderedDict
 from collections.abc import Mapping
 from decimal import Decimal
@@ -40,57 +41,6 @@ class CustomerNameField(serializers.RelatedField):
             str: The full name of the customer.
         """
         return f"{value.first_name} {value.last_name}"
-
-class CustomFileValidator(FileExtensionValidator):
-    """
-    Custom file validator for validating file extensions and size.
-
-    This validator extends the functionality of Django's FileExtensionValidator by also checking
-    the file size to ensure it doesn't exceed a maximum allowed size.
-
-    Attributes:
-        allowed_extensions (list): The list of allowed file extensions.
-    """
-    def __init__(self, allowed_extensions=settings.SUPPORTED_EXTENSIONS, *args, **kwargs):
-        """
-        Initialize the CustomFileValidator.
-
-        Args:
-            allowed_extensions (list): The list of allowed file extensions.
-        """
-        super().__init__(allowed_extensions, *args, **kwargs)
-
-    def __call__(self, value):
-        """
-        Validate the file's extension and size.
-
-        This method checks both the file extension and size to ensure they meet the specified criteria.
-
-        Args:
-            value (File): The uploaded file.
-
-        Raises:
-            serializers.ValidationError: If the file extension or size is invalid.
-        """
-        extension_error = None
-        size_error = None
-
-        try:
-            super().__call__(value)
-        except ValidationError as e:
-            extension_error = e.error_list[0].messages[0]
-
-        max_size = 5 * 1024 * 1024  # 5MB in bytes
-        if value.size > max_size:
-            size_error = "File size must be no more than 5MB."
-
-        if extension_error or size_error:
-            errors = {}
-            if extension_error:
-                errors['extension'] = [extension_error]
-            if size_error:
-                errors['size'] = [size_error]
-            raise serializers.ValidationError(errors)
 
 class RequirementDefectSerializer(serializers.ModelSerializer):
     """
@@ -192,7 +142,7 @@ class RequirementSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['action'] = strip_tags(data['action']) # to strip html tags attached to response by ckeditor RichText field.
         data['description'] = strip_tags(data['description']) # to strip html tags attached to response by ckeditor RichText field.
-        data['site_address'] = instance.site_address.site_name if instance.site_address else ''
+        data['site_address'] = SiteAddressSerializer(instance.site_address).data if instance.site_address else {}
         data['surveyor'] = f"{instance.surveyor.first_name} {instance.surveyor.last_name} - <i>{instance.surveyor.roles}</i>" if instance.surveyor else ''
         data['status'] = instance.get_status_display() if instance.status else ''
         data['due_date'] = f"{instance.due_date.strftime('%d/%m/%Y')}" if instance.due_date else ''

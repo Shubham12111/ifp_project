@@ -25,6 +25,7 @@
               <thead class="thead-light">
                 <tr>
                   <th>Company Name</th>
+                  <th>Report Counts</th>
                 </tr>
               </thead>
               <tbody class="ml-4"> 
@@ -38,12 +39,17 @@
                       </td> {% endcomment %}
                          
                       <td>
-                        <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
-                          {{query_obj.company_name|default:'-'|title}}
+                        <a href="{% url 'view_customer_fra_list_report' query_obj.customer.id %}" class="font-weight-bolder text-decoration-none w-100 nav-link">
+                          {{query_obj.customer.company_name|default:'-'|title}}
                         </a>
                       </td>
                       <td>
-                        {% comment %} <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="text-decoration-none w-100 nav-link">
+                        <a href="{% url 'view_customer_fra_list_report' query_obj.customer.id %}" class="text-decoration-none w-100 nav-link">
+                          {{query_obj.report_counts|default:'0'}}
+                        </a>
+                      </td>
+        {% comment %} <td>
+                        <a href="{% url 'view_customer_fra_list_report' query_obj.id %}" class="text-decoration-none w-100 nav-link">
                           {{query_obj.email}}
                         </a>
                       </td>

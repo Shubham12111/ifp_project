@@ -265,6 +265,18 @@
         clearFilter('dateRange'); // Apply empty filter value
       }
     }
+    // Validate input format on keypress event
+    $('#reportrange').on('keypress', function(e) {
+      const input = e.key;
+      const inputValue = $(this).val();
+      const regexPattern = /^(?:\d{2}\/\d{2}\/\d{4}|(?:\d{2}\/\d{2}\/\d{4}\s*-\s*\d{2}\/\d{2}\/\d{4}))$/; // Regex pattern for "DD/MM/YYYY" or "DD/MM/YYYY - DD/MM/YYYY"
+      
+      // Test if the new input plus existing value matches the regex pattern
+      if (!regexPattern.test(inputValue + input)) {
+          // Prevent the default action (typing)
+          e.preventDefault();
+      }
+    });
   });
 </script>
 <script>
@@ -411,8 +423,29 @@ window.addEventListener('DOMContentLoaded', function () {
           displayedValue = filterValue.substring(0, 12) + '..';
         }
 
-        // Update the dropdown element with the displayed value
-        document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+        if (filterName === 'status'){
+          statusDropdown = document.getElementById(`${filterName}Dropdown`);
+          if (statusDropdown){
+            ul = statusDropdown.parentElement.querySelector('ul');
+            if (ul){
+              liElements = ul.querySelectorAll('li');
+              liElements.forEach(li => {
+                // Get the text content of the anchor element within the li
+                anchor = li.querySelector('a')
+                if(anchor){
+                    anchorValue = anchor.getAttribute('onclick').split("'")[3]
+                    anchorText = anchor.textContent.trim();
+                    if (anchorValue && anchorValue === filterValue){
+                      statusDropdown.textContent = anchorText;
+                    }
+                }
+              });
+            }
+          }
+        }else{
+          // Update the dropdown element with the displayed value
+          document.getElementById(`${filterName}Dropdown`).textContent = displayedValue;
+        }
       }
     });
   });

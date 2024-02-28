@@ -93,9 +93,32 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['first_name','last_name', 'email','company_name']
+    search_fields = ['company_name', ]
     template_name = 'customer_list.html'
-    ordering_fields = ['created_at'] 
+    ordering_fields = ['created_at']
+    queryset = CustomerMeta.objects.all()
+
+    def get_paginated_queryset(self, base_queryset):
+        items_per_page = 20 
+        paginator = Paginator(base_queryset, items_per_page)
+        page_number = self.request.GET.get('page')
+        
+        try:
+            current_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            # If page is not an integer, deliver the first page.
+            current_page = paginator.page(1)
+        except EmptyPage:
+            # If page is out of range, deliver the last page of results.
+            current_page = paginator.page(paginator.num_pages)
+        
+        return current_page
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = self.get_searched_queryset(queryset)
+        queryset = self.get_paginated_queryset(queryset)
+        return queryset
 
     def get_searched_queryset(self, queryset):
         search_params = self.request.query_params.get('q', '')
@@ -132,21 +155,13 @@ class CustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(created_by=request.user),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='Customer').exclude(pk=request.user.id)
+        queryset = self.get_queryset()
         if request.accepted_renderer.format == 'html':
-            queryset = self.get_searched_queryset(queryset)
-            page_number = request.GET.get('page', 1)
-            context = {'customers': Paginator(queryset, 20).get_page(page_number),
-                       'search_fields': ['name', 'email', 'company name'],
-                       'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
-                       }
+            context = {
+                'customers': queryset,
+                'search_fields': ['company name'],
+                'search_value': request.query_params.get('q', '') if isinstance(request.query_params.get('q', []), str) else ', '.join(request.query_params.get('q', []))
+            }
             return render_html_response(context,self.template_name)
         else:
             serializer = self.serializer_class(queryset, many=True)
@@ -178,12 +193,7 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
   
-        contact_id = kwargs.get('contact_id')
-        if contact_id:
-            contact = Contact.objects.get(pk=contact_id)
-            serializer = self.serializer_class(contact)  # Serialize the contact data
-        else:
-            serializer = self.serializer_class()  # Create an empty serializer
+        serializer = self.serializer_class()  # Create an empty serializer
 
         if request.accepted_renderer.format == 'html':
             context = {'serializer':serializer}
@@ -223,31 +233,27 @@ class CustomerAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         message = "Your customer has been added successfully."
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            user.save()
-            
-            create_customer(user, request)
+            customer = serializer.save()
             if request.accepted_renderer.format == 'html':
                 messages.success(request, message)
                 return redirect(reverse('customer_list'))
-
             else:
                 # Return JSON response with success message and serialized data
                 return create_api_response(status_code=status.HTTP_201_CREATED,
-                                    message=message,
-                                    data=serializer.data
-                                    )
-        else:
-            # Invalid serializer data
-            if request.accepted_renderer.format == 'html':
-                # Render the HTML template with invalid serializer data
-                context = {'serializer':serializer}
-                return render_html_response(context,self.template_name)
-            else:   
-                # Return JSON response with error message
-                return create_api_response(status_code=status.HTTP_400_BAD_REQUEST,
-                                    message="We apologize for the inconvenience, but please review the below information.",
-                                    data=convert_serializer_errors(serializer.errors))
+                    message=message,
+                    data=serializer.data
+                )
+        if request.accepted_renderer.format == 'html':
+            # Render the HTML template with invalid serializer data
+            context = {'serializer':serializer}
+            return render_html_response(context,self.template_name)
+        else:   
+            # Return JSON response with error message
+            return create_api_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                message="We apologize for the inconvenience, but please review the below information.",
+                data=convert_serializer_errors(serializer.errors)
+        )
 
 class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     """
@@ -266,6 +272,7 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
     serializer_class = CustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer.html'
+    queryset = User.objects.all()
     
     def get_queryset(self):
         """
@@ -274,7 +281,17 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         Returns:
             QuerySet: A queryset of Conatct items filtered based on the authenticated user's ID.
         """
-        
+        pk = self.kwargs.get('customer_id', '')
+        queryset = super().get_queryset()
+        instance = None
+        if pk and queryset:
+            # Get the appropriate filter from the mapping based on the data access value,
+            # or use an empty Q() object if the value is not in the mapping
+            instance = queryset.filter(pk=pk).first()
+        return instance
+
+    @swagger_auto_schema(auto_schema=None)
+    def get(self, request, *args, **kwargs):
         # Get the model class using the provided module_name string
         authenticated_user, data_access_value = check_authentication_and_permissions(
             self, "customer", HasUpdateDataPermission, 'change'
@@ -282,25 +299,18 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(created_by=self.request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='customer')
-        queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
-        return queryset
-
-    @swagger_auto_schema(auto_schema=None)
-    def get(self, request, *args, **kwargs):
         # This method handles GET requests for updating an existing Conatct object.
         if request.accepted_renderer.format == 'html':
             instance = self.get_queryset()
-            if instance:
-                serializer = self.serializer_class(instance=instance, context={'request': request})
+            company_meta = None
+            try:
+                company_meta = instance.customermeta
+            except:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('customer_list'))
+
+            if instance and company_meta:
+                serializer = self.serializer_class(instance=company_meta, context={'request': request})
                 context = {'serializer': serializer, 'customer_instance': instance}
                 return render_html_response(context, self.template_name)
             else:
@@ -346,43 +356,53 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
                 If successful, the customer is updated, and the appropriate response is returned.
                 If unsuccessful, an error response is returned.
         """
-        data = request.data
+       # Get the model class using the provided module_name string
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
         instance = self.get_queryset()
-        if instance:
-            # If the customer instance exists, initialize the serializer with instance and provided data.
-            data_dict = request.data.dict()
-            data_dict['email'] = instance.email if instance else None
-            serializer = self.serializer_class(instance = instance, data = data_dict, context = {'request': request} )
-            if serializer.is_valid():
-                # If the serializer data is valid, save the updated customer instance.
-                serializer.save()
-                message = "Your Customer has been updated successfully!"
+        company_meta = None
+        try:
+            company_meta = instance.customermeta
+        except:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_list'))
 
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests, display a success message and redirect to contact_list.
-                    messages.success(request, message)
-                    return redirect(reverse('customer_edit', kwargs={'customer_id': kwargs['customer_id']}))
+        if instance and not company_meta:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_list'))
+        
+        # If the customer instance exists, initialize the serializer with instance and provided data.
+        data = request.data.dict()
+        data['email'] = company_meta.email
+        serializer = self.serializer_class(instance = company_meta, data = data, context = {'request': request} )
+        if serializer.is_valid():
+            # If the serializer data is valid, save the updated customer instance.
+            serializer.update(
+                company_meta,
+                serializer.validated_data
+            )
+            message = "Your Customer has been updated successfully!"
 
-                else:
-                    # For API requests, return a success response with serialized data.
-                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
-            else:
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer, 'customer_instance': instance}
-                    return render(request, self.template_name, context)
-                else:
-                    # For API requests with invalid data, return an error response with serializer errors.
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            error_message = "You are not authorized to perform this action"
             if request.accepted_renderer.format == 'html':
-                # For HTML requests with no instance, display an error message and redirect to contact_list.
-                messages.error(request, error_message)
-                return redirect('customer_list')
+                # For HTML requests, display a success message and redirect to contact_list.
+                messages.success(request, message)
+                return redirect(reverse('customer_edit', kwargs={'customer_id': kwargs['customer_id']}))
+
             else:
-                # For API requests with no instance, return an error response with an error message.
-                return Response({'message': error_message}, status=status.HTTP_400_BAD_REQUEST)
+                # For API requests, return a success response with serialized data.
+                return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests with invalid data, render the template with error messages.
+                context = {'serializer': serializer, 'customer_instance': instance}
+                return render(request, self.template_name, context)
+            else:
+                # For API requests with invalid data, return an error response with serializer errors.
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIView):
     """
@@ -393,128 +413,97 @@ class CustomerBillingAddressView(CustomAuthenticationMixin, generics.CreateAPIVi
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'customer_billing_address.html'
     swagger_schema = None
+    queryset = BillingAddress.objects.all()
 
-    def get_billing_address(self):
-        billing_address_list = BillingAddress.objects.filter(user_id__id=self.kwargs.get('customer_id'))
+    def get_customer(self):
+        customer_id = self.kwargs.get('customer_id', '')
+        if customer_id:
+            return User.objects.filter(id=customer_id).first()
+        return None
     
-        return billing_address_list
-    
-    def get_queryset(self):
+    def get_queryset(self, customer):
         """
         Get the queryset for listing Conatct items.
 
         Returns:
             QuerySet: A queryset of Conatct items filtered based on the authenticated user's ID.
         """
-        # Get the model class using the provided module_name string
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "customer", HasUpdateDataPermission, 'change'
-        )
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(created_by=self.request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), roles__name__icontains='customer')
-        queryset = queryset.filter(pk=self.kwargs.get('customer_id')).first()
-        return queryset
-
-    def get_billing_address_instance(self):
-        
-        
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "customer", HasUpdateDataPermission, 'change'
-        )
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
-
-        filter_mapping = {
-            "self": Q(user_id__created_by=self.request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-        
-        billing_address = BillingAddress.objects.filter(filter_mapping.get(data_access_value, Q()))
-        billing_address = billing_address.filter(user_id__id=self.kwargs.get('customer_id')).first()
-        return billing_address
-
+        queryset = super().get_queryset()
+        if customer and queryset:
+            queryset = queryset.filter(user_id=customer).first()
+            return queryset
+        return None
+    
     def get(self, request, *args, **kwargs):
         """
         Handle GET request to display a form for updating a customer.
         If the customer exists, retrieve the serialized data and render the HTML template.
         If the customer does not exist, render the HTML template with an empty serializer.
         """
-        if request.accepted_renderer.format == 'html':
-            address_instance = self.get_billing_address_instance()
-            if address_instance:
-                serializer = self.serializer_class(instance=address_instance)
-            else:
-                serializer = self.serializer_class()
-            
-            queryset = self.get_queryset()
-            if queryset:
-                context = {'serializer':serializer, 
-                       'customer_instance':self.get_queryset(),
-                       'billing_address_list':self.get_billing_address()}
-                return render_html_response(context,self.template_name)
-            else:
-                messages.error(request, "You are not authorized to perform this action")
-                return redirect(reverse('customer_list'))
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        else:
-            return create_api_response(status_code=status.HTTP_201_CREATED,
-                                message="GET Method Not Alloweded",)
-
-    def post(self, request, *args, **kwargs):
-        data = request.data
-        company_instance = self.get_queryset()
-
-        # Check if the company instance exists
-        if company_instance:
-            address_instance = self.get_billing_address_instance()
-
-            # Check if the billing address instance exists for the customer
-            if address_instance:
-                # If the billing address instance exists, update it.
-                serializer = self.serializer_class(data=data, instance=address_instance, context={'request': request})
-                message = "Your Customer billing address has been updated successfully!"
-            else:
-                # If the billing address instance does not exist, create a new one.
-                serializer = self.serializer_class(data=data, context={'request': request})
-                message = "Your Customer billing address has been added successfully!"
-
-            if serializer.is_valid():
-                # If the serializer data is valid, save the billing address instance.
-                if not address_instance:
-                    serializer.validated_data['user_id'] = company_instance
-                serializer.save()
-
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests, display a success message and redirect to the customer's billing address list.
-                    messages.success(request, message)
-                    return redirect(reverse('customer_billing_address', kwargs={'customer_id': kwargs['customer_id']}))
-                else:
-                    # For API requests, return a success response with serialized data.
-                    return Response({'message': message, 'data': serializer.data}, status=status.HTTP_200_OK)
-            else:
-                if request.accepted_renderer.format == 'html':
-                    # For HTML requests with invalid data, render the template with error messages.
-                    context = {'serializer': serializer,
-                                'customer_instance': self.get_queryset(),
-                                'billing_address_list': self.get_billing_address()}
-                    return render(request, self.template_name, context)
-                else:
-                    # For API requests with invalid data, return an error response with serializer errors.
-                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            # If the company instance does not exist, return an error response.
+        customer = self.get_customer()
+        if not customer:
             messages.error(request, "You are not authorized to perform this action")
             return redirect(reverse('customer_list'))
+
+        instance = self.get_queryset(customer)
+        serializer = self.serializer_class(instance=instance) if instance else self.serializer_class()
+        if request.accepted_renderer.format == 'html':
+            context = {
+                'serializer': serializer, 
+                'customer_instance': customer,
+            }
+            return render_html_response(context,self.template_name)
+        else:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_list'))
+
+    def post(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "customer", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        customer = self.get_customer()
+        if not customer:
+            messages.error(request, "You are not authorized to perform this action")
+            return redirect(reverse('customer_list'))
+
+        instance = self.get_queryset(customer)
+
+        serializer = self.serializer_class(data=request.data, instance=instance, context={'request': request}) if instance else self.serializer_class(data=request.data, context={'request': request})
+        message = f"Your Customer billing address has been {'updated' if instance else 'added'} successfully!"
+
+        if serializer.is_valid():
+            serializer.validated_data['user_id'] = customer.user_id
+            # If the serializer data is valid, save the billing address instance.
+            serializer.update(instance=instance, validated_data=serializer.validated_data) if instance else serializer.save()
+
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests, display a success message and redirect to the customer's billing address list.
+                messages.success(request, message)
+                return redirect(reverse('customer_billing_address', kwargs={'customer_id': kwargs['customer_id']}))
+            else:
+                # For API requests, return a success response with serialized data.
+                return create_api_response(message=message, data=serializer.data, status=status.HTTP_200_OK)
+        else:
+            message = "Unable to submit your data please validate and try again."
+            if request.accepted_renderer.format == 'html':
+                # For HTML requests with invalid data, render the template with error messages.
+                context = {
+                    'serializer': serializer,
+                    'customer_instance': customer,
+                }
+                return render(request, self.template_name, context)
+            else:
+                # For API requests with invalid data, return an error response with serializer errors.
+                return create_api_response(message=message, data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomerRemoveBillingAddressView(CustomAuthenticationMixin, generics.DestroyAPIView):
     """
@@ -573,6 +562,23 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     # permission_classes = [IsAuthenticated]
     template_name = 'customer.html'
+    queryset = User.objects.filter(is_active=False).all()
+    
+    def get_queryset(self):
+        """
+        Get the queryset for listing Conatct items.
+
+        Returns:
+            QuerySet: A queryset of Conatct items filtered based on the authenticated user's ID.
+        """
+        pk = self.kwargs.get('pk', '')
+        queryset = super().get_queryset()
+        instance = None
+        if pk and queryset:
+            # Get the appropriate filter from the mapping based on the data access value,
+            # or use an empty Q() object if the value is not in the mapping
+            instance = queryset.filter(pk=pk).first()
+        return instance
     
     common_delete_response = {
         status.HTTP_200_OK: 
@@ -604,21 +610,11 @@ class CustomerDeleteView(CustomAuthenticationMixin, generics.DestroyAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        # Define a mapping of data access values to corresponding filters
-        filter_mapping = {
-            "self": Q(created_by=request.user ),
-            "all": Q(),  # An empty Q() object returns all data
-        }
-
-        # Get the appropriate filter from the mapping based on the data access value,
-        # or use an empty Q() object if the value is not in the mapping
-
-        queryset = User.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'), roles__name__icontains='Customer').exclude(pk=request.user.id)
-        
-        customer = queryset.first()
-        
+        customer = self.get_queryset()
         if customer:
             # Proceed with the deletion
+            contacts = ContactPerson.objects.filter(customer=customer.customermeta).all()
+            contacts.delete()
             customer.delete()
             messages.success(request, "Customer has been deleted successfully!")
             return create_api_response(status_code=status.HTTP_404_NOT_FOUND,
@@ -680,46 +676,79 @@ class ConvertToCustomerView(CustomAuthenticationMixin,generics.CreateAPIView):
     serializer_class = ContactCustomerSerializer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     swagger_schema = None
+    queryset = Contact.objects.all()
+
+    def get_object(self) -> Contact:
+        queryset = super().get_queryset()
+        contact_id = self.kwargs.get('contact_id')
+
+        if queryset and contact_id:
+            instance = queryset.filter(id=contact_id, contact_type__name__icontains='prospect').first()
+            return instance
+
+        return None
+
 
     def get(self, request, *args, **kwargs):
         """
         Handle both AJAX (JSON) and HTML requests.
         """
-        contact_id = kwargs.get('contact_id')
-        if contact_id:
-            contact = Contact.objects.get(pk=contact_id)
-            
-            data = {
-                'email': contact.email,
-                'first_name': contact.first_name,
-                'last_name': contact.last_name,
-                
-                
-            }
-            
-            serializer = self.serializer_class(data=data)  # Serialize the contact data
-            # Check if the serialized data is valid
-            if serializer.is_valid():
-                customer = serializer.save()  # Save the serialized data and get the customer instance
-                create_customer(customer, request)  # Create customer, assign role, generate password, and send email
-
-                # Update customer details if available in the original contact data
-                if contact.company_name:
-                    customer.company_name = contact.company_name
-                if contact.phone_number:
-                    customer.phone_number = contact.phone_number
-
-                customer.save()  # Save the updated customer details
-                messages.success(request, 'The contact has been successfully converted into a customer.')
-                return redirect(reverse('customer_edit', kwargs={'customer_id': customer.id}))
-            else:
-                # If serialized data is invalid, display error messages for each field
-                for field, errors in serializer.errors.items():
-                    error_message = f"{field.capitalize()}: {', '.join(errors)}"
-                    messages.error(request, error_message)
-
-            # Redirect back to the contact list page
+        instance = self.get_object()
+        if not instance:
+            messages.error(request, 'You are not authorised to perform this action.')
             return redirect(reverse('contact_list'))
+
+        if CustomerMeta.objects.filter(company_name=instance.company_name).exists():
+            messages.error(request, 'You cannot convert the Contact into Customer as a Customer with this company name is already present.')
+            return redirect(reverse('contact_list'))
+        
+        data = {
+            'company_name': instance.company_name, 
+            'company_registration_number': f'IFP-C-{CustomerMeta.objects.count()+1}',
+            'registered_address': instance.address, 
+            'registered_town': instance.town, 
+            'registered_county': instance.county, 
+            'registered_country': instance.country,  
+            'registered_post_code': instance.post_code,
+            'email': instance.email, 
+            'main_telephone_number': instance.phone_number
+        }
+
+        user_data = {
+            'first_name': instance.first_name, 
+            'last_name': instance.last_name, 
+            'email': instance.email, 
+            'phone_number': instance.phone_number,
+            'job_role': instance.job_title
+        }
+
+        serializer = self.get_serializer(
+            data = data
+        )
+
+        if serializer.is_valid():
+            customer = serializer.save()
+
+            contact_serializer = ContactPersonSerializer(data=user_data)
+            if contact_serializer.is_valid():
+                contact_serializer.validated_data['customer'] = customer
+                contact_serializer.save()
+                messages.success(request, 'The contact has been successfully converted into a customer.')
+                return redirect(reverse('customer_edit', kwargs={'customer_id': customer.user_id.id}))
+            
+            else:
+                customer.delete()
+                # If serialized data is invalid, display error messages for each field
+                errors = [ f"{', '.join(errors)}" for field, errors in serializer.errors.items() ]
+                error_message = f"{', '.join(errors)}"
+                messages.error(request, error_message)
+        else:
+            # If serialized data is invalid, display error messages for each field
+            errors = [ f"{', '.join(errors)}" for field, errors in serializer.errors.items() ]
+            error_message = f"{', '.join(errors)}"
+            messages.error(request, error_message)
+
+        return redirect(reverse('contact_list'))
         
 class BillingAddressInfoView(CustomAuthenticationMixin, APIView):
     """

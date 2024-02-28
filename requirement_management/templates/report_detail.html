@@ -93,7 +93,7 @@
                         </tr>
                         <tr>
                             <th>UPRN</th>
-                            <td>{{ requirement_instance.UPRN|default:'-'|title }}</td>
+                            <td>{{ requirement_instance.site_address.UPRN|default:"-" }}</td>
                         </tr>
                     </tbody>
                     <tbody> <!-- Use tbody for table body -->

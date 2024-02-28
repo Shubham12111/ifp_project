@@ -23483,7 +23483,7 @@ html {
   }
 
   .g-sidenav-hidden .navbar-vertical.fixed-start~.main-content {
-    margin-left: 7.5rem;
+    margin-left: 4.5rem;
   }
 
   .g-sidenav-hidden .navbar-vertical .navbar-brand img {
@@ -23546,7 +23546,7 @@ html {
   }
 
   .g-sidenav-hidden .navbar-vertical:hover.fixed-start~.main-content {
-    margin-left: 17.125rem;
+    margin-left: 15.125rem;
   }
 
   .g-sidenav-hidden .navbar-vertical:hover .navbar-brand span {

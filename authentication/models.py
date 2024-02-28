@@ -36,6 +36,7 @@ CUSTOMER_TYPES = (
 
 ROLE_CHOICES = (
     ('Customer', 'Customer'),
+    ('customer_contact', 'Customer Contact'),
     ('contractor', 'Contractor'),
     ('sale_executive', 'Sale Executive'),
     ('quantity_surveyor', 'Quantity Surveyor'),
