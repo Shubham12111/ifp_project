@@ -310,7 +310,7 @@ class CustomerSerializer(serializers.ModelSerializer):
             "blank": "UTR Number is required.",
             "min_length": "UTR Number must consist of at least 3 characters."
         },
-        validators=[RegexValidator(regex=r'^[A-Z]{3}\d{6}\w$')] 
+        validators=[RegexValidator(regex=r'^[A-Z]+[0-9]+$')] 
     )
     
     email = serializers.EmailField(
