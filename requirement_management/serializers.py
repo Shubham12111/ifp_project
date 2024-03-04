@@ -1250,6 +1250,23 @@ class BulkRequirementAddSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Job Number already exists.")
         return value
     
+    def validate_due_date(self, value):
+        """
+        Validate the Due Date.
+
+        Args:
+            value (str): The Date value to be validated.
+
+        Returns:
+            str: The validated Date value.
+
+        Raises:
+            serializers.ValidationError: If the due date is smaller than current date.
+        """
+        if value < datetime.now().date():
+            raise serializers.ValidationError("Due Date must not be smaller than today's date.")
+        return value
+    
     def validate_site_address(self, value):
         uprn = value.get('UPRN', '')
         customer = self.context.get('customer')

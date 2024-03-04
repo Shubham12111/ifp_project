@@ -18,9 +18,9 @@ REQUIREMENT_DEFECT_CHOICES = (
 )
 
 REQUIREMENT_CHOICES = (
-    ('active', 'Active'),
-    ('to-surveyor', 'To Surveyor'),
-    ('assigned-to-surveyor', 'Assigned To Surveyor')
+    ('to-survey', 'To Survey'),
+    ('assigned-to-surveyor', 'Assigned To Surveyor'),
+    ('surveyed', 'Surveyed')
 )
 
 REQUIREMENT_DEFECT_STATUS_CHOICES = (
@@ -30,21 +30,21 @@ REQUIREMENT_DEFECT_STATUS_CHOICES = (
 )
 
 STATUS_CHOICES = (
-        ('draft', 'Draft'),
-        ('submit', 'submitted'),
-    )
+    ('draft', 'Draft'),
+    ('submit', 'submitted'),
+)
 
 CATEGORY_STATUS_CHOICES = (
-        ('active', 'Active'),
-        ('in-active', 'Inactive'),
+    ('active', 'Active'),
+    ('in-active', 'Inactive'),
 )
 
 # Define the choices for the status field
 QUOTATION_STATUS_CHOICES = [
     ('draft', 'Draft'),
-    ('submitted', 'Submitted'),
-    ('send_for_approval', 'Send For Approval'),
-    ('approved', 'Approved'),
+    ('quoted', 'Quoted'),
+    ('awaiting-approval', 'Awaiting Approval'),
+    ('to-commence', 'To Commence'),
     ('rejected', 'Rejected'),
 ]
 
@@ -89,7 +89,7 @@ class Requirement(models.Model):
     survey_end_date = models.DateTimeField(null=True, blank=True)
     quantity_surveyor = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='surveyor_requirement')
     surveyor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='surveyor', null=True, blank=False)
-    status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='active')
+    status = models.CharField(max_length=30,choices = REQUIREMENT_CHOICES, default='to-survey')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

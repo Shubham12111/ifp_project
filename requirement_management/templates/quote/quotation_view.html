@@ -30,10 +30,17 @@
               </div>
               <div class="col-6 text-end">
                 {% include 'components/back_button.html' %}
+                {% if queryset.status == 'quoted' %}
+                  <button class="btn btn-sm bg-gradient-primary mb-0" data-bs-toggle="modal" data-bs-target="#sendForApprovalModal">Send For Approval</button>
+                {% endif %}
+                {% if queryset.status == 'awaiting-approval' %}
+                  <button class="btn btn-sm bg-gradient-primary mb-0" data-bs-toggle="modal" data-bs-target="#approvalModal">I Approve This
+                    Quotation</button>
+                {% endif %}
               </div>
           </div>
         </div>
-        <div class="card-body pt-0 text-center">
+        <div class="card-body text-center">
           <div class="row justify-content-between mb-4">
             <div class="col-md-6 text-start">
               <h6 class="text-sm">
@@ -74,7 +81,20 @@
               </div>
               <div class="row mb-2">
                 <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
-                <div class="col-7 text-sm">{{ requirement_instance.site_address }}</div>
+                <div class="col-7 text-sm">
+                  {% if requirement_instance.site_address.town %}
+                  {{ requirement_instance.site_address.town }},
+                  {% endif %}
+                  {% if requirement_instance.site_address.county %}
+                  {{ requirement_instance.site_address.county }},
+                  {% endif %}
+                  {% if requirement_instance.site_address.country %}
+                  {{ requirement_instance.site_address.country }},
+                  {% endif %}
+                  {% if requirement_instance.site_address.post_code %}
+                  {{ requirement_instance.site_address.post_code }}
+                  {% endif %}
+                </div>
               </div>
               <div class="row mb-2">
                 <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
@@ -129,14 +149,57 @@
           <div class="row">
             <div class="col-lg-12 text-end">
               <h5>Total(£) : {{queryset.total_amount}}</h5>
-
             </div>
           </div>
         </div>
-        </form>
       </div>
     </div>
-
   </div>
+
+  {% if queryset.status == 'quoted' %}
+  <div class="modal fade" id="sendForApprovalModal" tabindex="-1" aria-labelledby="sendForApprovalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="sendForApprovalModalLabel">Confirmation</h1>
+          <button type="button" class="btn-close text-dark" data-bs-dismiss="modal" aria-label="Close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          The customer will receive an email asking for approval for this Quotation. Make sure you've included all the
+          necessary details. This action cannot be undone.  
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn bg-gradient-secondary btn-sm mb-0" data-bs-dismiss="modal">Close</button>
+          <a href="{% url "send_estimation_for_approval" requirement_instance.customer_id.id queryset.id %}" class="btn bg-gradient-primary btn-sm mb-0">Send</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if queryset.status == 'awaiting-approval' %}
+  <div class="modal fade" id="approvalModal" tabindex="-1" aria-labelledby="approvalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="approvalModalLabel">Confirmation</h1>
+          <button type="button" class="btn-close text-dark" data-bs-dismiss="modal" aria-label="Close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to Approve this Quotation?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn bg-gradient-secondary btn-sm mb-0" data-bs-dismiss="modal">No</button>
+          <a href="{% url "approve_estimation" requirement_instance.customer_id.id queryset.id %}" class="btn bg-gradient-primary btn-sm mb-0">Yes</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </div>
+
 {% endblock %}

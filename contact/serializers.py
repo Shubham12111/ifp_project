@@ -181,7 +181,7 @@ class ContactSerializer(serializers.ModelSerializer):
     )
     address = serializers.CharField(
         label=('Address'),
-        max_length=225,
+        max_length=100,
         min_length=5,
         required=False,
         allow_null=True,
@@ -214,18 +214,27 @@ class ContactSerializer(serializers.ModelSerializer):
      
     country = serializers.CharField(
         label=_('Country'),
+        max_length=50,
+        min_length=5,
+        required=False,
         style={
             'base_template': 'custom_input.html'
         },
     )
     town = serializers.CharField(
         label=_('Town'),
+        max_length=50,
+        min_length=5,
+        required=False,
         style={
             'base_template': 'custom_input.html'
         },
     )
     county = serializers.CharField(
         label=_('County'),
+        max_length=50,
+        min_length=5,
+        required=False,
         style={
             'base_template': 'custom_input.html'
         },
@@ -234,7 +243,7 @@ class ContactSerializer(serializers.ModelSerializer):
     
     post_code = serializers.ChoiceField(
         label=('Post Code'),
-        required=True,        
+        required=False,        
         choices=POST_CODE_LIST,
         style={
             "input_type": "text",

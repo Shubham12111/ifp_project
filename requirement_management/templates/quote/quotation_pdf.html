@@ -94,7 +94,7 @@
                 <table class="quotation-table">
                     <tr>
                         <td><strong>Client:</strong></td>
-                        <td>{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</td>
+                        <td>{{ customer_data.company_name|title }}</td>
                     </tr>
                     <tr>
                         <td><strong>Client Address:</strong></td>
@@ -116,7 +116,20 @@
                     </tr>
                     <tr>
                         <td><strong>Job Address:</strong></td>
-                        <td>{{ requirement_instance.site_address }}</td>
+                        <td>
+                            {% if requirement_instance.site_address.town %}
+                            {{ requirement_instance.site_address.town }},
+                            {% endif %}
+                            {% if requirement_instance.site_address.county %}
+                            {{ requirement_instance.site_address.county }},
+                            {% endif %}
+                            {% if requirement_instance.site_address.country %}
+                            {{ requirement_instance.site_address.country }},
+                            {% endif %}
+                            {% if requirement_instance.site_address.post_code %}
+                            {{ requirement_instance.site_address.post_code }}
+                            {% endif %}
+                        </td>
                     </tr>
                     <tr>
                         <td><strong>UPRN:</strong></td>

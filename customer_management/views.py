@@ -719,7 +719,8 @@ class ConvertToCustomerView(CustomAuthenticationMixin,generics.CreateAPIView):
             'last_name': instance.last_name, 
             'email': instance.email, 
             'phone_number': instance.phone_number,
-            'job_role': instance.job_title
+            'job_role': instance.job_title,
+            'is_active': True
         }
 
         serializer = self.get_serializer(

@@ -102,7 +102,7 @@ class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.List
             QuerySet: A queryset of stw Requirement customers.
         """
         quote = Quotation.objects.filter(
-            status__in=['approved'],
+            status__in=['to-commence'],
             job__isnull=True
         ).order_by('customer_id').values_list('customer_id', flat=True).distinct()
         
@@ -174,7 +174,7 @@ class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.List
 
         queryset = self.get_queryset()
         queryset = self.get_searched_queryset(queryset)
-        all_quotes = Quotation.objects.filter(status="approved")
+        all_quotes = Quotation.objects.filter(status="to-commence")
         
         customers_with_counts = []  # Create a list to store customer objects with counts
 
@@ -236,7 +236,7 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
     def get_queryset(self):
 
         customer_id = self.kwargs.get('customer_id') 
-        queryset = Quotation.objects.filter(status="approved")
+        queryset = Quotation.objects.filter(status="to-commence")
         if customer_id:
             queryset = queryset.filter(customer_id=customer_id, job__isnull=True)
         
@@ -1924,7 +1924,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
     search_fields = ['assigned_to_team__members__name', 'assigned_to_member__name']
     template_name = 'job_list.html'
     ordering_fields = ['created_at']
-    queryset = Job.objects.filter(status__in=['pending', 'in-progress']).all()
+    queryset = Job.objects.filter(status__in=['planned', 'in-progress']).all()
 
     common_get_response = {
         status.HTTP_200_OK: docs_schema_response_new(
@@ -2352,7 +2352,7 @@ class StartJobView(CustomAuthenticationMixin,generics.GenericAPIView):
             instance = queryset.filter(
                 pk=job_id,
                 customer_id=customer,
-                status__in=['pending']
+                status__in=['planned']
             ).first()
         return instance
 
@@ -2414,7 +2414,7 @@ class MarkAsCompleteJobView(CustomAuthenticationMixin, generics.GenericAPIView):
             instance = queryset.filter(
                 pk=job_id,
                 customer_id=customer,
-                status__in=['pending', 'in-progress']
+                status__in=['planned', 'in-progress']
             ).first()
         return instance
     
@@ -3507,7 +3507,7 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
             QuerySet: A queryset of stw Requirement customers.
         """
         job = Job.objects.filter(
-            status__in=['pending', 'in-progress'],
+            status__in=['planned', 'in-progress'],
         ).order_by('customer_id').values_list('customer_id', flat=True).distinct()
         
         if not job:
@@ -3571,7 +3571,7 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
 
         queryset = self.get_queryset()
         queryset = self.get_searched_queryset(queryset)
-        all_jobs = Job.objects.filter(status__in=['pending', 'in-progress'])
+        all_jobs = Job.objects.filter(status__in=['planned', 'in-progress'])
         
         customers_with_counts = []  # Create a list to store customer objects with counts
 

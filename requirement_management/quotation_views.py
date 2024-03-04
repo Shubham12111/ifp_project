@@ -262,7 +262,7 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
         """
         if quotation_id:
             # Retrieve the Quotation instance if a quotation_id is provided
-            quotation_data = Quotation.objects.filter(id=quotation_id).first()
+            quotation_data = Quotation.objects.filter(id=quotation_id, status='draft').first()
         else:
             # If no quotation_id is provided, set quotation_data as an empty dictionary
             quotation_data = {}
@@ -425,17 +425,17 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
 
 
 
-            if request.data.get('status') == "send_for_approval" or request.data.get('status') == "approved":
+            if request.data.get('status') == "quoted":
                 quotation_instance.submitted_at = datetime.now() 
                 unique_pdf_filename = f"{str(uuid.uuid4())}_quotation_{requirement_instance.id}.pdf"
-                context= {'customer_id': customer_id,
-                            'customer_data':customer_data,
-                            'customer_address':customer_address,
-                            'requirement_instance':requirement_instance,
-                            'queryset':quotation_instance
-                        }
+                context= {
+                    'customer_id': customer_id,
+                    'customer_data':customer_data,
+                    'customer_address':customer_address,
+                    'requirement_instance':requirement_instance,
+                    'queryset':quotation_instance
+                }
                 pdf_file = save_pdf_from_html(context=context, file_name=unique_pdf_filename, content_html = 'quote/quotation_pdf.html')
-                
                 pdf_path = f'requirement/{requirement_instance.id}/quotation/pdf'
                 
                 upload_signature_to_s3(unique_pdf_filename, pdf_file, pdf_path)
@@ -443,22 +443,166 @@ class QuotationAddView(CustomAuthenticationMixin,generics.ListAPIView):
                 quotation_instance.pdf_path = f'requirement/{requirement_instance.id}/quotation/pdf/{unique_pdf_filename}'
                 quotation_instance.save()
 
-                if request.data.get('status') == "approved":
-                    # Ensure that the Quotation is saved before creating the Job
-                    quotation_instance.save()
-
-
-            if request.data.get('status') == "send_for_approval":
-                if customer_data.email:
-                    context = {'user': customer_data,'site_url': get_site_url(request) }
-
-                    email = Email()
-                    attachment_path = generate_presigned_url(quotation_instance.pdf_path)
-                    email.send_mail(customer_data.email, 'email_templates/quotation_client.html', context, "Quotation Submission for Review", attachment_path)
-
-
             messages.success(request, message)
             return JsonResponse({'success': True,  'status':status.HTTP_204_NO_CONTENT})  # Return success response
+
+class QuotationSendForApprovalView(CustomAuthenticationMixin, generics.GenericAPIView):
+    """
+    View for sending a quotation for approval to a customer.
+    """
+    
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    queryset = Quotation.objects.filter(status='quoted').all()  # Queryset of quoted quotations
+
+    def get_queryset(self, customer):
+        """
+        Retrieves the quotation queryset filtered by customer and quotation ID.
+
+        Arguments:
+            self: The instance of the class.
+            customer: The customer object.
+
+        Returns:
+            Quotation: The quotation instance.
+        """
+        queryset = super().get_queryset()
+        pk = self.kwargs.get('quotation_id', None)
+
+        if queryset and customer and pk:
+            instance = queryset.filter(customer_id=customer, pk=pk).first()
+            return instance
+
+        return None
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Handles GET request to send a quotation for approval to a customer.
+
+        Arguments:
+            self: The instance of the class.
+            request: The HTTP request object.
+            args: Additional arguments passed to the view.
+            kwargs: Additional keyword arguments passed to the view.
+
+        Returns:
+            HttpResponseRedirect: Redirects the user to a specific URL after sending the quotation for approval.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        customer_id = kwargs.get('customer_id')
+        customer = get_customer_data(customer_id)
+
+        if not customer:
+            messages.error(request, 'You are not authorized to perform this task.')
+            return redirect(reverse('view_customer_list_quotation'))
+        
+        instance = self.get_queryset(customer)
+        if not instance:
+            messages.error(request, 'You are not authorized to perform this task.')
+            return redirect(reverse('view_customer_quotation_list', kwargs={'customer_id': customer.id}))
+        
+        customermeta = customer.customermeta
+        if not customermeta:
+            messages.error(request, 'You are not authorized to perform this task.')
+            return redirect(reverse('view_customer_quotation_list', kwargs={'customer_id': customer.id}))
+        
+        if not customermeta.email:
+            messages.error(request, 'No Customer email found, please add a email in Customer General Information.')
+            return redirect(reverse('view_customer_quotation_list', kwargs={'customer_id': customer.id}))
+
+        context = {
+            'user': customer,
+        }
+
+        email = Email()
+        attachment_path = generate_presigned_url(instance.pdf_path)
+
+        try:
+            email.send_mail(
+                customermeta.email, 
+                'email_templates/quotation_client.html', 
+                context, 
+                "Quotation Submission for Review", 
+                attachment_path
+            )
+        except Exception as e:
+            pass
+
+        instance.status = 'awaiting-approval'
+        instance.save()
+
+        messages.success(request, 'Your Quotation has been sent to the customer for review successfully!')
+        return redirect(reverse('view_customer_quotation_list', kwargs={'customer_id': customer.id}))
+
+class QuotationApproveView(CustomAuthenticationMixin, generics.GenericAPIView):
+    """
+    View for approving a quotation.
+    """
+    
+    renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
+    queryset = Quotation.objects.filter(status='awaiting-approval').all()  # Queryset of awaiting-approval quotations
+
+    def get_queryset(self, customer):
+        """
+        Retrieves the quotation queryset filtered by customer and quotation ID.
+
+        Arguments:
+            self: The instance of the class.
+            customer: The customer object.
+
+        Returns:
+            Quotation: The quotation instance.
+        """
+        queryset = super().get_queryset()
+        pk = self.kwargs.get('quotation_id', None)
+
+        if queryset and customer and pk:
+            instance = queryset.filter(customer_id=customer, pk=pk).first()
+            return instance
+
+        return None
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Handles GET request to approve a quotation.
+
+        Arguments:
+            self: The instance of the class.
+            request: The HTTP request object.
+            args: Additional arguments passed to the view.
+            kwargs: Additional keyword arguments passed to the view.
+
+        Returns:
+            HttpResponseRedirect: Redirects the user to a specific URL after approving the quotation.
+        """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "fire_risk_assessment", HasUpdateDataPermission, 'change'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        customer_id = kwargs.get('customer_id')
+        customer = get_customer_data(customer_id)
+
+        if not customer:
+            messages.error(request, 'You are not authorized to perform this task.')
+            return redirect(reverse('view_customer_list_quotation'))
+        
+        instance = self.get_queryset(customer)
+        if not instance:
+            messages.error(request, 'You are not authorized to perform this task.')
+            return redirect(reverse('view_customer_quotation_list', kwargs={'customer_id': customer.id}))
+        
+
+        instance.status = 'to-commence'
+        instance.save()
+
+        messages.success(request, 'Your Quotation has been approved successfully!')
+        return redirect(reverse('view_customer_quotation_list', kwargs={'customer_id': customer.id}))
 
 
 class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
@@ -527,7 +671,7 @@ class CustomerQuotationListView(CustomAuthenticationMixin,generics.ListAPIView):
         return self.get_searched_queryset(queryset)
 
     def get_queryset(self):
-        queryset = Quotation.objects.filter(requirement_id__customer_id=self.kwargs.get('customer_id'), status__in=['draft', 'submitted', 'send_for_approval', 'rejected'])
+        queryset = Quotation.objects.filter(requirement_id__customer_id=self.kwargs.get('customer_id'), status__in=['draft', 'quoted', 'awaiting-approval', 'rejected'])
         return self.get_filtered_queryset(queryset)
 
     def get(self, request, *args, **kwargs):
