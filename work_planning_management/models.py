@@ -34,7 +34,7 @@ RLO_STATUS_CHOICES = (
 )
 
 Job_STATUS_CHOICES = (
-    ('pending', 'Pending'),
+    ('planned', 'Planned'),
     ('in-progress', 'In Progress'),
     ('completed', 'Completed')
 )
@@ -235,7 +235,7 @@ class Job(models.Model):
     assigned_to_member = models.ManyToManyField(Member) 
     assigned_to_team = models.ForeignKey(Team, null=True, blank=True, on_delete=models.CASCADE)
     event = models.ForeignKey(Events, on_delete=models.CASCADE, null=True, blank=True)
-    status = models.CharField(max_length=30, choices=Job_STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=30, choices=Job_STATUS_CHOICES, default='planned')
     start_date = models.DateTimeField(null=True)
     end_date = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)

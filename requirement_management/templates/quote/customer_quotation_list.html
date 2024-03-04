@@ -144,10 +144,24 @@
                                                     </a>
                                                 </li>
                                                 {% endif %}
-                                                {% if quotation.status == "Draft" or quotation.status == "Send For Approval" %} 
+                                                {% if quotation.status == "Draft" %} 
                                                 <li> 
                                                     <a href="{% url 'edit_customer_estimation' quotation.requirement_id.customer_id quotation.id %}" class="dropdown-item border-radius-md">
-                                                        {% if quotation.status == "send_for_approval" %}  Approve {% else %} Edit {% endif %}
+                                                        Edit
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if quotation.status == "Quoted" %} 
+                                                <li> 
+                                                    <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="dropdown-item border-radius-md">
+                                                       Send For Approval
+                                                    </a>
+                                                </li>
+                                                {% endif %}
+                                                {% if quotation.status == "Awaiting Approval" %} 
+                                                <li> 
+                                                    <a href="{% url 'customer_quotation_view' quotation.requirement_id.customer_id quotation.id %}" class="dropdown-item border-radius-md">
+                                                        Send To Commence
                                                     </a>
                                                 </li>
                                                 {% endif %}

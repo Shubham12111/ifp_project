@@ -200,11 +200,11 @@
               <h5>Client Details</h5>
             </div>
               <div class="card-body mt-0 text-sm">
-                <div class="row mb-2">
+                <div class="row">
                   <div class="col-5 text-sm text-start"><strong>Client:</strong></div>
-                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ customer_data.first_name|title }} {{ customer_data.last_name|title }}</div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ customer_data.company_name|title|default:"-" }}</div>
                 </div>
-                <div class="row mb-2">
+                <div class="row">
                   <div class="col-5 text-sm text-start"><strong>Client Address:</strong></div>
                   <div class="col-7 text-sm" style="margin: 5px 0;">
                     {{ customer_address.address|default:'-' }}
@@ -222,9 +222,22 @@
                     {% endif %}
                   </div>
                 </div>
-                <div class="row mb-2">
+                <div class="row">
                   <div class="col-5 text-sm text-start"><strong>Job Address:</strong></div>
-                  <div class="col-7 text-sm" style="margin: 5px 0;">{{ requirement_instance.site_address }}</div>
+                  <div class="col-7 text-sm" style="margin: 5px 0;">
+                    {% if requirement_instance.site_address.town %}
+                    {{ requirement_instance.site_address.town }},
+                    {% endif %}
+                    {% if requirement_instance.site_address.county %}
+                    {{ requirement_instance.site_address.county }},
+                    {% endif %}
+                    {% if requirement_instance.site_address.country %}
+                    {{ requirement_instance.site_address.country }},
+                    {% endif %}
+                    {% if requirement_instance.site_address.post_code %}
+                    {{ requirement_instance.site_address.post_code }}
+                    {% endif %}
+                  </div>
                 </div>
                 <div class="row">
                   <div class="col-5 text-sm text-start"><strong>UPRN:</strong></div>
@@ -353,15 +366,9 @@
               </div>
 
               <div class="col-lg-12 col-sm-12 mt-4">
-                {% if quotation_data.status == "send_for_approval" %}
-                <button id="submit-approved" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">I Approve This
-                  Quotation </button>
-                {% else %}
-                <button id="submit-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Send For
-                  Approval </button>
+                <button id="submit-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Submit</button>
                 <button id="submit-darft-button" class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save As
                   Draft</button>
-                {% endif %}
 
                 <button id="reset-button" class="btn bg-gradient-secondary btn-sm float-end mt-2 mb-0 mx-2"
                   onclick="resetPage()">Reset</button>
@@ -390,13 +397,14 @@
         </button>
       </div>
       <div class="modal-body">
-        The customer will receive an email asking for approval for this Quotation. Make sure you've included all the
-        necessary details. This action cannot be undone.
+        Are you sure you want to submit this quotation?
+        The quotation cannot be updated after it has been submitted; it will be identified as quoted. Do you still wish to move forward?
       </div>
 
 
       <div class="modal-footer">
-        <button type="button" class="btn bg-gradient-dark" id="confirmSubmit">I Acknowledge </button>
+        <button type="button" class="btn bg-gradient-secondary" id="closeModal">No</button>
+        <button type="button" class="btn bg-gradient-dark" id="confirmSubmit">Yes</button>
       </div>
     </div>
   </div>
@@ -1290,7 +1298,6 @@
   // Get references to the "send_for_approval" and "Save As Draft" buttons
   var submitButton = document.getElementById('submit-button');
   var saveDraftButton = document.getElementById('submit-darft-button');
-  var submitApproved = document.getElementById('submit-approved');
   const modalContainer = document.querySelector('.container-fluid.py-4');
 
   function addBlur() {
@@ -1309,7 +1316,7 @@
     submitButton.addEventListener('click', function (event) {
       event.preventDefault(); // Prevent the form from submitting immediately
       showLoader();
-      sendDataToServer('send_for_approval', false); // Set the status to "send_for_approval" when "Submit" is clicked
+      sendDataToServer('quoted', false); // Set the status to "send_for_approval" when "Submit" is clicked
     });
   }
 
@@ -1318,14 +1325,6 @@
     saveDraftButton.addEventListener('click', function () {
       showLoader();
       sendDataToServer('draft', true); // Set the status to "draft" when "Save As Draft" is clicked
-    });
-  }
-
-  // Check if the submitApproved button exists before adding an event listener
-  if (submitApproved) {
-    submitApproved.addEventListener('click', function () {
-      showLoader();
-      sendDataToServer('approved', true); // Set the status to "approved" when "Submit Approved" is clicked
     });
   }
   // Function to send data to the server using fetch
@@ -1479,6 +1478,15 @@
     hideLoader();
   });
 
+  acknowledgeModal.querySelector('#closeModal').addEventListener('click', function () {
+    // User clicked Cancel, do nothing
+    // Close the modal
+    removeBlur();
+    acknowledgeModal.classList.remove('show');
+    acknowledgeModal.style.display = 'none';
+    hideLoader();
+  });
+  
 
 
 </script>

@@ -282,7 +282,7 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
         customers_with_counts = []  # Create a list to store customer objects with counts
 
         for customer in queryset:
-            fra_counts = all_fra.filter(customer_id=customer, status__in=['active', 'to-surveyor']).count()
+            fra_counts = all_fra.filter(customer_id=customer, status__in=['to-survey']).count()
              # Check if the user has any roles before accessing the first one
             
             # fra_counts_for_qs = all_fra.filter(customer_id=customer, quantity_surveyor=self.request.user).count()
@@ -365,7 +365,7 @@ class RequirementListView(CustomAuthenticationMixin,generics.ListAPIView):
                 return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
             queryset = filter_requirements(data_access_value, self.request.user, customer_data, request)
-            queryset = queryset.filter(status__in=['active', 'to-surveyor'])
+            queryset = queryset.filter(status__in=['to-survey'])
             queryset = self.get_searched_queryset(queryset)
             # qs_role = UserRole.objects.filter(name='quantity_surveyor')
             # quantity_sureveyors = User.objects.filter(roles__in=qs_role)
@@ -672,16 +672,13 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
         if not instance.surveyor:
             messages.error(request, "You cannot create the report before assigning a Surveyor to this requirement.")
             return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
-
-        # Assuming you also have a requirement_id and defect_id in your data
-        defects = RequirementDefect.objects.filter(requirement_id=instance, report__isnull=True).all()
-
-        # Check if there is already a report for all selected defects
-        existing_report = Report.objects.filter(requirement_id=instance, defect_id__in=defects, status='submit').first()
-
-        if existing_report:
+        
+        if instance.report_set.exists():
             messages.error(request, "There is already a submitted report for the selected defects.")
             return redirect(reverse('customer_requirement_view', kwargs={'pk': instance.id, 'customer_id': customer_id}))
+
+        # Assuming you also have a requirement_id and defect_id in your data
+        defects = instance.requirementdefect_set.all()
 
         try:
             import base64
@@ -735,7 +732,14 @@ class RequirementDetailView(CustomAuthenticationMixin, generics.RetrieveAPIView)
             
             report.save()
             report.defect_id.set(defects)
+            
             if request.POST.get('status', '').lower() == "submit":
+                
+                # mark instance as surveyed by surveyor
+                instance.status = 'surveyed'
+                instance.save()
+
+
                 all_report_defects = report.defect_id.all()
             
                 requirement_document_images = RequirementAsset.objects.filter(requirement_id=instance.id)

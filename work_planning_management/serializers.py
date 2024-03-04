@@ -943,7 +943,7 @@ class JobAssignmentSerializer(serializers.ModelSerializer):
     )
 
     quotation = serializers.PrimaryKeyRelatedField(
-        queryset = Quotation.objects.all(),
+        queryset = Quotation.objects.filter(status='to-commence').all(),
         many=True,
         style={
             'base_template': 'custom_hidden_select_input.html',
@@ -1013,7 +1013,7 @@ class JobCreateSerializer(serializers.ModelSerializer):
     )
 
     quotation = serializers.PrimaryKeyRelatedField(
-        queryset = Quotation.objects.all(),
+        queryset = Quotation.objects.filter(status='to-commence').all(),
         many=True,
         required=False
     )

@@ -262,7 +262,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         label=_('Trading Address'),
         max_length=100,
         min_length=5,
-        required = False,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-4'
@@ -276,7 +278,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         label=_('Trading Town'),
         max_length=50,
         min_length=5,
-        required = False,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-4'
@@ -286,7 +290,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         label=_('Trading County'),
         max_length=50,
         min_length=5,
-        required = False,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-4'
@@ -296,7 +302,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         label=_('Trading Country'),
         max_length=50,
         min_length=5,
-        required = False,
+        required=False,
+        allow_blank=True,
+        allow_null=True,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-6'
@@ -304,7 +312,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
     trading_post_code = serializers.ChoiceField(
         label=_('Trading Post Code'),
-        required = False,
+        required=False,
         choices=POST_CODE_LIST,
 
         style={
@@ -341,7 +349,6 @@ class CustomerSerializer(serializers.ModelSerializer):
     
     email = serializers.EmailField(
         label=_('Email Address'),
-        validators=[UniqueValidator(queryset=User.objects.all(), message="Email already exists. Please use a different email.")],
         required=True,
         max_length=100,
         style={
