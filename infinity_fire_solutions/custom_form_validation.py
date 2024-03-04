@@ -269,12 +269,8 @@ def validate_company_name(value):
         raise serializers.ValidationError("Company name cannot be a whole number.")
     
     # Check if the company name consists of only special characters
-    if re.match("^[&$^#]+$", value):
-        raise serializers.ValidationError("Company name cannot consist of only special characters.")
-
-    # Check if the company name contains repeating characters
-    if re.search(r'([^a-zA-Z0-9])\1{2,}', value):
-        raise serializers.ValidationError("Company name cannot contain repeating special characters.")
+    if not re.sub('\s', '', value).isalpha():
+        raise serializers.ValidationError("Company name must contain only alphabets.")
     
     return value
 

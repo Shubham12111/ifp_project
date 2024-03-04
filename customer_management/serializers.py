@@ -190,12 +190,17 @@ class CustomerSerializer(serializers.ModelSerializer):
             "blank": "Company Registration Number is required.",
             "min_length": "Company Registration Number must consist of at least 3 characters."
         },
-        validators=[RegexValidator(regex=r'^[a-zA-Z0-9]+(?:[-_][a-zA-Z0-9]+)*$')] 
+        validators=[
+            RegexValidator(regex=r'^[a-zA-Z0-9]+(?:[-_][a-zA-Z0-9]+)*$'), 
+            UniqueValidator(
+                queryset=CustomerMeta.objects.all(),
+                message='This Company Registration Number already exists.',
+            )] 
     )
     
     registered_address = serializers.CharField(
         label=_('Registered Address'),
-        max_length=255,
+        max_length=100,
         min_length=5,
         required=True,
         style={
@@ -209,6 +214,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
     registered_town = serializers.CharField(
         label=_('Registered Town'),
+        max_length=50,
+        min_length=5,
+        required=True,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-4'
@@ -216,6 +224,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
     registered_county = serializers.CharField(
         label=_('Registered County'),
+        max_length=50,
+        min_length=5,
+        required=True,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-4'
@@ -223,6 +234,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
     registered_country = serializers.CharField(
         label=_('Registered Country'),
+        max_length=50,
+        min_length=5,
+        required=True,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-6'
@@ -246,9 +260,9 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     trading_address = serializers.CharField(
         label=_('Trading Address'),
-        max_length=255,
+        max_length=100,
         min_length=5,
-        required=True,
+        required = False,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-4'
@@ -260,6 +274,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
     trading_town = serializers.CharField(
         label=_('Trading Town'),
+        max_length=50,
+        min_length=5,
+        required = False,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-4'
@@ -267,6 +284,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
     trading_county = serializers.CharField(
         label=_('Trading County'),
+        max_length=50,
+        min_length=5,
+        required = False,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-4'
@@ -274,6 +294,9 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
     trading_country = serializers.CharField(
         label=_('Trading Country'),
+        max_length=50,
+        min_length=5,
+        required = False,
         style={
             'base_template': 'custom_input.html',
             'custom_class': 'col-6'
@@ -281,7 +304,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
     trading_post_code = serializers.ChoiceField(
         label=_('Trading Post Code'),
-        required = True,
+        required = False,
         choices=POST_CODE_LIST,
 
         style={

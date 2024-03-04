@@ -240,7 +240,7 @@
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.id %}"
                       class="text-decoration-none w-100 nav-link"
-                      >{{requirement.site_address|default:'-'|truncatechars:20|title}}</a
+                      >{{requirement.site_address.site_name|truncatechars:20|title|default:'-'}}</a
                     >
                   </td>
                   {% comment %}

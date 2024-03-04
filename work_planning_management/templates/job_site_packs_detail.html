@@ -223,16 +223,18 @@
               <form method="post" id="uploadSitePack" enctype='multipart/form-data'>
                 {% csrf_token %}
                 <input type="hidden" id="type" name="type" value="new">
-                <input class="form-control mb-3" type="text" name="name" placeholder="Site Pack Name" required>
-                {% if new_site_packs_erros and 'name' in new_site_packs_erros %}
-                  <div class="help-block ps-1">
-                    {% for fieldKey, fieldError in new_site_packs_erros.items %}
-                    {% if fieldKey == 'name' %}
-                    {{fieldError}}
-                    {% endif %}
-                    {% endfor %}
-                  </div>
-                {% endif %}
+                <div class="mb-3">
+                  <input class="form-control" type="text" name="name" placeholder="Site Pack Name" required>
+                  {% if new_site_packs_erros and 'name' in new_site_packs_erros %}
+                    <div class="help-block ps-1">
+                      {% for fieldKey, fieldError in new_site_packs_erros.items %}
+                      {% if fieldKey == 'name' %}
+                      {{fieldError}}
+                      {% endif %}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
                 
                 <div class="mb-3">
                   <input class="form-control" type="file" name="document_path" accept='image/*, .pdf, .doc, .docx, .xls, .xlsx, .csv, .txt'>

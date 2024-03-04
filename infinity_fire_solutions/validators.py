@@ -34,25 +34,15 @@ class CustomFileValidator(FileExtensionValidator):
         Raises:
             serializers.ValidationError: If the file extension or size is invalid.
         """
-        extension_error = None
-        size_error = None
-
-        try:
-            super().__call__(value)
-        except ValidationError as e:
-            extension_error = e.error_list[0].messages[0]
+        super().__call__(value)
 
         max_size = 5 * 1024 * 1024  # 5MB in bytes
         if value.size > max_size:
-            size_error = "File size must be no more than 5MB."
-
-        if extension_error or size_error:
-            errors = {}
-            if extension_error:
-                errors['extension'] = [extension_error]
-            if size_error:
-                errors['size'] = [size_error]
-            raise ValidationError(errors)
+            raise ValidationError(
+                "File size must be no more than 5MB.",
+                'max_size',
+            )
+            
 
 class CustomImageFileValidator(CustomFileValidator):
     def __init__(self, allowed_extensions=settings.IMAGE_SUPPORTED_EXTENSIONS, *args, **kwargs):

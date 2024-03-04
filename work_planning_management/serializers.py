@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from authentication.models import User
 from infinity_fire_solutions.custom_form_validation import *
 from infinity_fire_solutions.aws_helper import *
-from infinity_fire_solutions.validators import CustomImageFileValidator
+from infinity_fire_solutions.validators import CustomImageFileValidator, CustomFileValidator
 from customer_management.models import SiteAddress
 from rest_framework.validators import UniqueValidator
 
@@ -1184,6 +1184,7 @@ class AddAndAttachSitePackSerializer(serializers.ModelSerializer):
 
     name = serializers.CharField(
         required=True,
+        max_length=50,
         error_messages={
             "required": "This field is required.",
             "blank": "Name is required.",
@@ -1192,8 +1193,12 @@ class AddAndAttachSitePackSerializer(serializers.ModelSerializer):
 
     document_path = serializers.FileField(
         allow_empty_file=False,
-        validators=[CustomImageFileValidator(allowed_extensions=settings.SUPPORTED_EXTENSIONS)],
+        validators=[CustomFileValidator()],
         required=True,
+        error_messages={
+            'invalid': f'The file is not supported, supported file formats are: {", ".join(settings.SUPPORTED_EXTENSIONS)}',
+            'max_size': f'The file size exceed from 5 MBs. Please ensure the file smaller than this.'
+        }
     )
 
     class Meta:

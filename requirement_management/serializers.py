@@ -225,7 +225,7 @@ class RequirementAddSerializer(serializers.ModelSerializer):
     
     UPRN = serializers.CharField(
         label=('UPRN'),
-        required=True, 
+        required=False, 
         max_length=12,
         style={'base_template': 'custom_input.html'},
         error_messages={
@@ -355,26 +355,6 @@ class RequirementAddSerializer(serializers.ModelSerializer):
         if not self.instance:
             if Requirement.objects.filter(RBNO=value).exists():
                 raise serializers.ValidationError("Job Number already exists.")
-        return value
-
-
-    def validate_UPRN(self, value):
-        """
-        Validate the uniqueness of UPRN.
-
-        Args:
-            value (str): The UPRN value to be validated.
-
-        Returns:
-            str: The validated UPRN value.
-
-        Raises:
-            serializers.ValidationError: If the UPRN is not unique.
-        """
-        if not self.instance:
-            # Check if an object with the same UPRN already exists
-            if Requirement.objects.filter(UPRN=value).exists():
-                raise serializers.ValidationError("UPRN already exists.")
         return value
             
     def get_initial(self):
