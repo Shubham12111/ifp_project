@@ -1021,11 +1021,11 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         return queryset
     
-    def get_queryset_defect(self):
+    def get_queryset_defect(self, requirement_id):
         """
         Get the filtered queryset for requirements based on the authenticated user.
         """
-        queryset_defect = RequirementDefect.objects.filter(requirement_id = self.get_queryset() ).order_by('-created_at')
+        queryset_defect = RequirementDefect.objects.filter(requirement_id = requirement_id ).order_by('-created_at')
         return queryset_defect
     
     def get(self, request, *args, **kwargs):
@@ -1043,7 +1043,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         
         document_paths = requirement_image(requirement_instance)
         
-        requirement_defects = self.get_queryset_defect()
+        requirement_defects = self.get_queryset_defect(requirement_instance)
         defect_instance = requirement_defects.filter(pk=self.kwargs.get('pk')).first()
         
         if defect_instance:
@@ -1057,7 +1057,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
             context = {
                 'serializer': serializer,
                 'requirement_instance': requirement_instance,
-                'defects_list': self.get_queryset_defect(),
+                'defects_list': requirement_defects,
                 'defect_instance':defect_instance,
                 'customer_id': kwargs.get('customer_id'),
                 'document_paths':document_paths
@@ -1130,7 +1130,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                 # Render the HTML template with invalid serializer data.
                 context = {'serializer':serializer, 
                            'requirement_instance': requirement_instance,
-                           'defects_list': self.get_queryset_defect(),
+                           'defects_list': self.get_queryset_defect(requirement_instance),
                         'defect_instance':defect_instance,
                         'customer_id':self.kwargs.get('customer_id')
                            }

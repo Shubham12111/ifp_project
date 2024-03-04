@@ -226,40 +226,32 @@ table > tbody > tr > td > i{
             <div class="modal-body">
               
                 {% csrf_token %}
-                <h5> Actions</h5>
-                    <p class="text-sm mt-2" style="text-align: justify;">
-
-                        {{ requirement_instance.action|safe}}
-                    </p>
-                  <div id="defects-container">
-                    <!-- Defects will be displayed here -->
-                  </div>
-                  <div class="row mt-4">
-                    <div class="col-12">
-                      <label>Comments <span class="text-sm text-danger">*</span></label>
-                      <div id="editor" class="ql-toolbar ql-snow">
-                        <span class="ql-formats">
-                          <button type="button" class="ql-bold"></button>
-                          <button type="button" class="ql-italic"></button>
-                          <button type="button" class="ql-underline"></button>
-                          <button type="button" class="ql-list" value="bullet"></button>
-                        </span>
-                      </div>
-                      <div id="quill-editor" style="height: 300px;"></div>
+                <div class="row">
+                  <div class="col-12">
+                    <label>Comments <span class="text-sm text-danger">*</span></label>
+                    <div id="editor" class="ql-toolbar ql-snow">
+                      <span class="ql-formats">
+                        <button type="button" class="ql-bold"></button>
+                        <button type="button" class="ql-italic"></button>
+                        <button type="button" class="ql-underline"></button>
+                        <button type="button" class="ql-list" value="bullet"></button>
+                      </span>
                     </div>
-                    <div name="comments-errors" id="error-messages-comment" ></div>
-                    
-                    <div class="col-4 mt-4">
-                      <label>Signature <span class="text-sm text-danger">*</span></label> 
-                      <i class="fas fa-sync-alt" id="clear-button" style="float: right;"
-                      data-bs-toggle="tooltip" data-bs-original-title="Clear Signature"> </i>
-                      <div class="signature-container">
-                        <canvas id="signature-canvas" height="80"></canvas>
-                      </div>
-                    </div>
-                    <div id="error-messages-signature" ></div>
-                    
+                    <div id="quill-editor" style="height: 300px;"></div>
                   </div>
+                  <div name="comments-errors" id="error-messages-comment" ></div>
+                  
+                  <div class="col-4 mt-4">
+                    <label>Signature <span class="text-sm text-danger">*</span></label> 
+                    <i class="fas fa-sync-alt" id="clear-button" style="float: right;"
+                    data-bs-toggle="tooltip" data-bs-original-title="Clear Signature"> </i>
+                    <div class="signature-container">
+                      <canvas id="signature-canvas" height="80"></canvas>
+                    </div>
+                  </div>
+                  <div id="error-messages-signature" ></div>
+                  
+                </div>
                   
                 <input type="hidden" name="comments" id="comments">
                 <input type="hidden" name="selected_defect_ids" id="selected-defect-ids">
