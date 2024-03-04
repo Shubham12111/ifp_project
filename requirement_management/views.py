@@ -1281,7 +1281,7 @@ class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
 
-        queryset = RequirementDefect.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
+        queryset = RequirementDefect.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'), requirement_id__report__isnull=True)
         
         requirement_defect = queryset.first()
         
