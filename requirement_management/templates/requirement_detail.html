@@ -76,7 +76,9 @@ table > tbody > tr > td > i{
           <div><h5 class="mb-0">Defects</h5></div>
           {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user  %} 
         <div class="ms-auto my-auto mt-lg-0 mt-4">
+            {% if not requirement_instance.report_set.exists %} 
             <a href="{% url 'customer_requirement_defects' customer_id requirement_instance.id %}" class="btn bg-gradient-primary btn-sm mb-0 mx-2"  style="float: right;">+&nbsp; Add Defect</a>
+            {% endif %}
           </div>
           {% endif %}
         </div>
@@ -131,7 +133,7 @@ table > tbody > tr > td > i{
                           </a>
                           <ul class="dropdown-menu px-2 py-3 ms-sm-n4 ms-n5" aria-labelledby="dropdownTable2">
                               {% if request.user.roles.name == "projects_admin_(IT)" or requirement_instance.surveyor == request.user %}
-                                {% if request.user|has_update_permission:"fire_risk_assessment" %}
+                                {% if request.user|has_update_permission:"fire_risk_assessment" and not requirement_instance.report_set.exists %}
                                   <li>
                                       <a href="{% url 'customer_requirement_defect_update' customer_id requirement_instance.id defect.id %}" class="dropdown-item border-radius-md">
                                           Edit
