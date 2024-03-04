@@ -60,11 +60,15 @@
           <div class="row justify-content-between">
             <div class="col-6">
               <h4 class="mb-0">Approved Quotation List</h4>
+              {% if request.user.roles.name != 'customer_contact' %}
               {% include 'customer_info.html' %}
+              {% endif %}
             </div>
             <div class="col-6 text-end">
               {% include 'components/back_button.html' %}
+              {% if request.user|has_add_permission:"work_planning" %}
               <button id="addJob" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>+&nbsp;Add Job</button>
+              {% endif %}
             </div>
           </div>
           <div class="row">
@@ -78,7 +82,9 @@
             <table class="table table-hover text-dark">
               <thead class="thead-light">
                 <tr>
+                  {% if request.user|has_add_permission:"work_planning" %}
                   <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th>
+                  {% endif %}
                   <th>Action</th>
                   <th>Description</th>
                   <th>Date</th>
@@ -89,10 +95,12 @@
               <tbody class="ml-4">
                 {% for item in approved_quotation %}
                 <tr class="text-sm">
+                  {% if request.user|has_add_permission:"work_planning" %}
                   <td class="text-sm">
                     <input type="checkbox" class="checkbox-item" name="requirement_checkbox" value="{{ item.id }}" 
                     {% if item.job_set.all %}disabled{% endif %}>
                   </td>
+                  {% endif %}
                   <td class="text-sm">
                     <a href="{% url 'customer_quotation_view' item.requirement_id.customer_id item.id %}" target="_blank" class="text-decoration-none w-100 h-100 nav-link">
                         {{ item.requirement_id.action|truncatechars:20}}

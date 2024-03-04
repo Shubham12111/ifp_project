@@ -61,7 +61,7 @@ class RequirementReportsListView(CustomAuthenticationMixin,generics.ListAPIView)
     @swagger_auto_schema(auto_schema=None)
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+           self,"fire_risk_assessment", HasViewDataPermission, 'view'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
@@ -156,7 +156,7 @@ class ReportView(CustomAuthenticationMixin,generics.ListAPIView):
         Get the filtered queryset for requirements based on the authenticated user.
         """
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'detail'
+           self,"fire_risk_assessment", HasViewDataPermission, 'view'
         )
         
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))

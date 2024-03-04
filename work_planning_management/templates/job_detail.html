@@ -37,7 +37,9 @@
     opacity: 0.5 !important;
   }
 </style>
+{% if request.user.roles.name != 'customer_contact' %}
 {% include "job_stw_rlo_actions.html" %}
+{% endif %}
 <div class="container-fluid pt-4">
   <div class="row">
     <div class="col-12">
@@ -64,6 +66,7 @@
             </div>
               <div class="col-6 text-end">
               {% include 'components/back_button.html' %}        
+              {% if request.user|has_update_permission:"work_planning" %}
               {% if job.status == 'pending' %}
               <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" data-bs-toggle="modal" data-bs-target="#startJobModal">
                   Start Job
@@ -123,6 +126,7 @@
               <a href="#" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>
                   Mark as Done
               </a>
+              {% endif %}
               {% endif %}
             </div>
           </div>
