@@ -58,11 +58,11 @@
                             <tbody>
                                 <tr>
                                     <td><strong class="text-dark">Customer</strong></td>
-                                    <td>{{ stw_instance.customer_id.first_name|title }} {{ stw_instance.customer_id.last_name|title }}</td>
+                                    <td>{{ stw_instance.customer_id.customermeta.company_name|title|default:'-' }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong class="text-dark">Email</strong></td>
-                                    <td>{{ stw_instance.customer_id.email }}</td>
+                                    <td>{{ stw_instance.customer_id.customermeta.email|default:'-' }}</td>
                                 </tr>
                                 {% if stw_instance.UPRN %}
                                     <tr>

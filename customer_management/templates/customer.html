@@ -41,19 +41,4 @@
 <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
 <script src="{% static 'assets/js/custom_country.js' %}"></script>
 <!-- HTML form with loader overlay -->
-{% if customer_instance %}
-<script>
-  function disableInputsBasedOnCustomerStatus() {
-        var inputField1 = document.getElementById("customerEmail");
-        
-        inputField1.disabled = true;
-    }
-
-    // Call the function when the page is loaded
-    window.onload = function() {
-        disableInputsBasedOnCustomerStatus();
-    };
- 
-</script>
-{% endif %}
 {% endblock %}

@@ -590,8 +590,8 @@ class PurchaseOrderViewSerializer(serializers.ModelSerializer):
             } if instance.site_address else "",
             'user_id': {
                 'id': instance.user_id.id, 
-                'name': f'{instance.user_id.first_name} {instance.user_id.last_name}',
-                'email': f'{instance.user_id.email}'
+                'name': f'{instance.user_id.customermeta.company_name}' if instance.user_id.customermeta else '',
+                'email': f'{instance.user_id.customermeta.email}' if instance.user_id.customermeta else ''
             } if instance.user_id else '',
             
             'status': instance.get_status_display(),
