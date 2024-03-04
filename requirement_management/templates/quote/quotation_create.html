@@ -312,8 +312,27 @@
                     <button class="btn btn-outline-dotted text-lower btn-sm mt-4" data-defect-id="{{ defect.id }}"
                       onclick="addTable(this)">Add SOR</button>
                       {% if requiremnt_defect_instances|length > 1 %}
-                        <button class="btn bg-gradient-secondary btn-sm mt-4" data-defect-id="{{ defect.id }}"
-                          onclick="removeDefect(this)">Remove Defect</button>
+                        <button class="btn bg-gradient-secondary btn-sm mt-4" data-bs-toggle="modal" data-bs-target="#deleteDefectModal{{defect.id}}">Remove Defect</button>
+                        
+                        <div class="modal fade" id="deleteDefectModal{{defect.id}}" tabindex="-1" aria-labelledby="deleteDefectModal{{defect.id}}Label" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="deleteDefectModal{{defect.id}}Label">Delete Defect</h5>
+                                <button type="button" class="btn-close text-dark" data-bs-dismiss="modal" aria-label="Close">
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                              <div class="modal-body">
+                                <p>Are You sure you wantto delete this defect from this Quotation?</p>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn bg-gradient-secondary btn-sm" data-bs-dismiss="modal">No</button>
+                                <button type="button" class="btn bg-gradient-primary btn-sm" onclick="removeDefect(this)" data-defect-id="{{ defect.id }}">Yes</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       {% endif %}
                   </div>
                 </div>

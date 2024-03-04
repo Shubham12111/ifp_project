@@ -1012,38 +1012,38 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
     template_name = 'defects.html'
     swagger_schema = None
     
-    def get_queryset(self):
+    def get_queryset(self, data_access_value):
         """
         Get the filtered queryset for requirements based on the authenticated user.
         """
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'view'
-        )
-        
-        if isinstance(authenticated_user, HttpResponseRedirect):
-            return authenticated_user
-
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
-        queryset = queryset.filter(pk=self.kwargs.get('requirement_id')).first()
+        queryset = queryset.filter(pk=self.kwargs.get('requirement_id'), report__isnull=True).first()
         
         return queryset
     
-    def get_queryset_defect(self):
+    def get_queryset_defect(self, requirement_id):
         """
         Get the filtered queryset for requirements based on the authenticated user.
         """
-        queryset_defect = RequirementDefect.objects.filter(requirement_id = self.get_queryset() ).order_by('-created_at')
+        queryset_defect = RequirementDefect.objects.filter(requirement_id = requirement_id ).order_by('-created_at')
         return queryset_defect
     
     def get(self, request, *args, **kwargs):
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasViewDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+
         # This method handles GET requests for updating an existing Requirement object.
-        requirement_instance = self.get_queryset()
-        if isinstance(requirement_instance, HttpResponseRedirect):
-            return requirement_instance
+        requirement_instance = self.get_queryset(data_access_value)
+        if not requirement_instance:
+            messages.error(request, 'You are not authorized to perform this action.')
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
         
         document_paths = requirement_image(requirement_instance)
         
-        requirement_defects = self.get_queryset_defect()
+        requirement_defects = self.get_queryset_defect(requirement_instance)
         defect_instance = requirement_defects.filter(pk=self.kwargs.get('pk')).first()
         
         if defect_instance:
@@ -1057,7 +1057,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
             context = {
                 'serializer': serializer,
                 'requirement_instance': requirement_instance,
-                'defects_list': self.get_queryset_defect(),
+                'defects_list': requirement_defects,
                 'defect_instance':defect_instance,
                 'customer_id': kwargs.get('customer_id'),
                 'document_paths':document_paths
@@ -1072,14 +1072,20 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
         Handle POST request to add a requirement.
         """
         # Call the handle_unauthenticated method to handle unauthenticated access.
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"fire_risk_assessment", HasViewDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+        
+
         
         data = request.data
-        
         file_list = data.getlist('file_list', [])
-        
-        requirement_instance = self.get_queryset()
-        if isinstance(requirement_instance, HttpResponseRedirect):
-            return requirement_instance
+        requirement_instance = self.get_queryset(data_access_value)
+        if not requirement_instance:
+            messages.error(request, 'You are not authorized to perform this action.')
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': kwargs.get('customer_id')}))
         
         defect_instance = RequirementDefect.objects.filter(requirement_id = requirement_instance, pk=self.kwargs.get('pk')).first()
         
@@ -1124,7 +1130,7 @@ class RequirementDefectView(CustomAuthenticationMixin, generics.CreateAPIView):
                 # Render the HTML template with invalid serializer data.
                 context = {'serializer':serializer, 
                            'requirement_instance': requirement_instance,
-                           'defects_list': self.get_queryset_defect(),
+                           'defects_list': self.get_queryset_defect(requirement_instance),
                         'defect_instance':defect_instance,
                         'customer_id':self.kwargs.get('customer_id')
                            }
@@ -1275,7 +1281,7 @@ class RequirementDefectDeleteView(CustomAuthenticationMixin, generics.DestroyAPI
         # Get the appropriate filter from the mapping based on the data access value,
         # or use an empty Q() object if the value is not in the mapping
 
-        queryset = RequirementDefect.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'))
+        queryset = RequirementDefect.objects.filter(filter_mapping.get(data_access_value, Q()), pk=self.kwargs.get('pk'), requirement_id__report__isnull=True)
         
         requirement_defect = queryset.first()
         
