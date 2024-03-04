@@ -36,7 +36,9 @@
           <div class="row justify-content-between">
             <div class="col-6">
               <h4 class="mb-0">Jobs List</h4>
+              {% if request.user.roles.name != 'customer_contact' %}
               {% include 'customer_info.html' %}
+              {% endif %}
             </div>
             <div class="col-6 text-end">
               {% include 'components/back_button.html' %}
@@ -58,7 +60,7 @@
                   <th>Site Address</th>
                   <th>Team</th>
                   <th>Status</th>
-                  {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                  {% if request.user|has_delete_permission:"work_planning" %}
                   <th class="custom-last-column">Actions</th>
                   {% endif %}
                 </tr>
@@ -126,7 +128,7 @@
                       {{ job.status|title }}
                     </a>
                   </td>
-                  {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                  {% if request.user|has_delete_permission:"work_planning" %}
                   <td class="align-middle">
                     <div class="dropstart ms-auto pe-0">
                       <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"

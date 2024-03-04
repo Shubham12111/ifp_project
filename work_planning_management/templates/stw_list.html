@@ -63,18 +63,17 @@
           <div class="row justify-content-between">
             <div class="col-6">
               <h5 class="mb-0">STW List</h5>
+              {% if request.user.roles.name != 'customer_contact' %}
               {% include 'customer_info.html' %}
+              {% endif %}
             </div>
             <div class="col-6 text-end">
               {% include 'components/back_button.html' %}
               {% if request.user|has_add_permission:"survey" %}
                 <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'work planning' module -->
-                
                 <a href="{% url 'customer_stw_add' customer_id %}" class="btn bg-gradient-primary btn-sm mb-0"  style="float: right;">+&nbsp; New STW</a>
-              {% else %}
-                <!-- The user doesn't have the permission, so don't show the "Add" button -->
+                <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>+&nbsp;Add Job</button>
               {% endif %}
-              <button id="createJobButton" class="btn bg-gradient-primary btn-sm mb-0 mx-2" disabled>+&nbsp;Add Job</button>
             </div>
           </div>
           <div class="row">
@@ -90,14 +89,16 @@
             <table class="table table-hover text-dark" id="stw-list">
               <thead class="thead-light">
                 <tr>
+                  {% if request.user|has_add_permission:"survey" %}
                   <th class="custom-last-column"><i class="fa fa-cog text-secondary" aria-hidden="true"></i></th>
+                  {% endif %}
                   <th>STW Action</th>
                   <th>STW Description</th>
                   <th>Job Number</th>
                   <th>UPRN</th>
                   <th>STW Status</th>
                   <th>Created Date</th>
-                  {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                  {% if request.user|has_update_permission:"survey" or request.user|has_delete_permission:"survey" %}
                   <th class="custom-last-column">Actions</th>
                   {% endif %}
                 </tr>
@@ -105,10 +106,12 @@
               <tbody class="ml-4"> 
                 {% for stw in stw_requirements %}
                 <tr class="text-sm">
+                  {% if request.user|has_add_permission:"survey" %}
                   <td class="text-sm">
                       <input type="checkbox" class="checkbox-item" name="stw_checkbox" value="{{ stw.id }}"
                       {% if stw.job_set.all %}disabled{% endif %}>
                   </td>
+                  {% endif %}
                   <td>
                     <a href="{% url 'customer_stw_view' customer_id stw.id %}" 
                       class="text-decoration-none w-100 nav-link">
@@ -153,7 +156,7 @@
 
 
 
-                  {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
+                  {% if request.user|has_update_permission:"survey" or request.user|has_delete_permission:"survey" %}
                   <td>
                       <div class="dropstart ms-auto pe-0">
                        <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">

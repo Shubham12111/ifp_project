@@ -151,10 +151,18 @@ def filter_requirements(data_access_value, user, customer=None, request=None):
         queryset = queryset.filter(
             Q(surveyor=user)|Q(user_id=user) | filter_mapping.get(data_access_value, Q())
         )
+    elif user.roles.name == "customer_contact":
+        contact_person = user.contactperson
+        customer_meta = contact_person.customer if contact_person else None
+        customer = customer_meta.user_id if customer_meta else None
+        if customer:
+            queryset = queryset.filter(customer_id=customer)
+        else:
+            queryset = Requirement.objects.none()
     else:
         queryset = queryset.filter(filter_mapping.get(data_access_value, Q()))
 
-    if isinstance(request, Request):
+    if isinstance(request, Request) and queryset:
         # Get the filtering parameters from the request's query parameters
         filters = {
             'status': request.GET.get('status'),
@@ -256,6 +264,15 @@ class RequirementCustomerListView(CustomAuthenticationMixin,generics.ListAPIView
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        if request.user.roles.name == 'customer_contact':
+            contact_person = request.user.contactperson
+            customer_meta = contact_person.customer if contact_person else None
+            customer = customer_meta.user_id if customer_meta else None
+            if not customer:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('dashboard'))        
+            return redirect(reverse('customer_requirement_list', kwargs={'customer_id': customer.id}))
 
         queryset = self.get_queryset()
         queryset = self.get_searched_queryset(queryset)
@@ -1150,7 +1167,7 @@ class RequirementDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIV
         Get the filtered queryset for requirements based on the authenticated user.
         """
         authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"fire_risk_assessment", HasCreateDataPermission, 'view'
+           self,"fire_risk_assessment", HasViewDataPermission, 'view'
         )
         
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
@@ -1759,7 +1776,18 @@ class RequirementSurveyorCalendarView(CustomAuthenticationMixin, generics.ListAP
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        serializer = self.get_serializer(self.get_queryset(), many=True)
+        queryset = self.get_queryset()
+
+        if request.user.roles.name == "customer_contact":
+            contact_person = request.user.contactperson
+            customer_meta = contact_person.customer if contact_person else None
+            customer = customer_meta.user_id if customer_meta else None
+            if customer:
+                queryset = queryset.filter(customer_id=customer)
+            else:
+                queryset = []
+
+        serializer = self.get_serializer(queryset, many=True)
 
         if request.accepted_renderer.format == 'html':
             context = {
@@ -1855,6 +1883,15 @@ class RequirementSurvyeCustomerListView(CustomAuthenticationMixin, generics.List
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+        
+        if request.user.roles.name == 'customer_contact':
+            contact_person = request.user.contactperson
+            customer_meta = contact_person.customer if contact_person else None
+            customer = customer_meta.user_id if customer_meta else None
+            if not customer:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('dashboard'))        
+            return redirect(reverse('customer_survey_list', kwargs={'customer_id': customer.id}))
 
         queryset = self.get_queryset()
         queryset = self.get_searched_queryset(queryset)

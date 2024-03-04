@@ -114,6 +114,8 @@
         <div class="card-header pt-3 pb-0">
           <div class="row justify-content-end">
             <div class="col-12 text-end">
+              {% if request.user|has_add_permission:"fire_risk_assessment" %}
+              <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
               <button
                 id="openCreateCsvModalButton"
                 data-bs-toggle="modal"
@@ -122,9 +124,6 @@
               >
                 Import FRA
               </button>
-              {% if request.user|has_add_permission:"fire_risk_assessment" %}
-              <!-- Show the "Add" button only if the user has the 'can_create_data' permission for 'requirement' module -->
-
               <a
                 href="{% url 'customer_requirement_add'    customer_id %}"
                 class="btn bg-gradient-primary btn-sm mb-2 mx-2"
@@ -157,7 +156,9 @@
           <div class="row justify-content-between">
             <div class="col-6">
               <h4 class="mb-0">FRA Actions</h4>
+              {% if request.user.roles.name != 'customer_contact' %}
               {% include 'customer_info.html' %}
+              {% endif %}
             </div>
             <!-- Modal for bulk import-->
             <div
@@ -540,12 +541,14 @@
             <table class="table table-hover text-dark" id="requirement-list">
               <thead class="thead-light">
                 <tr>
+                  {% if request.user|has_update_permission:"fire_risk_assessment" %}
                   <th class="custom-last-column">
                     <i
                       class="fa fa-cog text-secondary"
                       aria-hidden="true"
                     ></i>
                   </th>
+                  {% endif %}
                   <!-- Add an empty th for the checkbox column -->
                   <th>FRA Action</th>
                   <th>Description</th>
@@ -556,12 +559,15 @@
                   {% comment %} <th>Surveyor</th> {% endcomment %}
                   <th>Status</th>
                   <th>Due Date</th>
+                  {% if request.user|has_update_permission:"fire_risk_assessment" or request.user|has_delete_permission:"fire_risk_assessment"%}
                   <th class="custom-last-column">Actions</th>
+                  {% endif %}
                 </tr>
               </thead>
               <tbody class="ml-4">
                 {% for requirement in requirements %}
                 <tr>
+                  {% if request.user|has_update_permission:"fire_risk_assessment" %}
                   <td class="text-sm">
                     <input
                       type="checkbox"
@@ -569,6 +575,7 @@
                       value="{{ requirement.id }}"
                     />
                   </td>
+                  {% endif %}
                   <td class="text-sm">
                     <a
                       href="{% url 'customer_requirement_view' customer_id requirement.id %}"
@@ -616,6 +623,7 @@
                       >{{requirement.due_date}}</a
                     >
                   </td>
+                  {% if request.user|has_update_permission:"fire_risk_assessment" or request.user|has_delete_permission:"fire_risk_assessment"%}
                   <td class="text-sm">
                     <div class="dropstart ms-auto pe-0">
                       <a
@@ -659,6 +667,7 @@
                       </ul>
                     </div>
                   </td>
+                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>

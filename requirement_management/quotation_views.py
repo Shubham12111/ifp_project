@@ -79,6 +79,15 @@ class QuotationCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
+        if request.user.roles.name == 'customer_contact':
+            contact_person = request.user.contactperson
+            customer_meta = contact_person.customer if contact_person else None
+            customer = customer_meta.user_id if customer_meta else None
+            if not customer:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('dashboard'))        
+            return redirect(reverse('view_customer_fra_list_report', kwargs={'customer_id': customer.id}))
+
         queryset = self.get_queryset()    
         reports = Report.objects.filter()
 

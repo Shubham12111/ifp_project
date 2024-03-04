@@ -163,6 +163,15 @@ class ApprovedQuotationCustomerListView(CustomAuthenticationMixin, generics.List
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
+        if request.user.roles.name == 'customer_contact':
+            contact_person = request.user.contactperson
+            customer_meta = contact_person.customer if contact_person else None
+            customer = customer_meta.user_id if customer_meta else None
+            if not customer:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('dashboard'))        
+            return redirect(reverse('approved_quotation_list', kwargs={'customer_id': customer.id}))
+
         queryset = self.get_queryset()
         queryset = self.get_searched_queryset(queryset)
         all_quotes = Quotation.objects.filter(status="approved")
@@ -258,7 +267,7 @@ class ApprovedQuotationListView(CustomAuthenticationMixin, generics.ListAPIView)
     
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "survey", HasListDataPermission, 'list'
+            self, "work_planning", HasListDataPermission, 'list'
         )
         
         if isinstance(authenticated_user, HttpResponseRedirect):
@@ -485,6 +494,15 @@ class STWCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        if request.user.roles.name == 'customer_contact':
+            contact_person = request.user.contactperson
+            customer_meta = contact_person.customer if contact_person else None
+            customer = customer_meta.user_id if customer_meta else None
+            if not customer:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('dashboard'))        
+            return redirect(reverse('customer_stw_list', kwargs={'customer_id': customer.id}))
 
         queryset = self.get_queryset()
         queryset = self.get_searched_queryset(queryset)
@@ -1415,14 +1433,10 @@ class STWDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
         queryset = STWDefect.objects.filter(pk=self.kwargs.get('defect_id')).order_by('-created_at')
         return queryset
 
-    def get_stw_instance(self):
+    def get_stw_instance(self, data_access_value):
         """
         Get the filtered queryset for stw based on the authenticated user.
         """
-        authenticated_user, data_access_value = check_authentication_and_permissions(
-           self,"survey", HasCreateDataPermission, 'view'
-        )
-        
         queryset = filter_requirements(data_access_value, self.request.user, self.kwargs.get('customer_id'))
         queryset = queryset.filter(pk=self.kwargs.get('stw_id')).first()
         
@@ -1468,12 +1482,18 @@ class STWDefectDetailView(CustomAuthenticationMixin, generics.CreateAPIView):
         Returns:
             HttpResponse: The response, either HTML or JSON.
         """
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+           self,"survey", HasViewDataPermission, 'view'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
+
         customer_id = self.kwargs.get('customer_id')
 
         customer_data = User.objects.filter(id=customer_id).first()
         if customer_data:
             defect_instance = self.get_queryset().first()
-            stw_instance = self.get_stw_instance()
+            stw_instance = self.get_stw_instance(data_access_value)
             document_paths = stw_requirement_image(stw_instance)
             
             if not defect_instance:
@@ -1915,6 +1935,10 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
     }
 
     def get_filtered_queryset(self, queryset):
+        
+        if not queryset:
+            return queryset
+        
         # Get the filtering parameters from the request's query parameters
         filters = {
             'status': self.request.GET.get('status'),
@@ -1983,7 +2007,9 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
             "self": Q(user_id=self.request.user),
             "all": Q(),
         }
-        queryset = queryset.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        if self.request.user.roles.name != 'customer_contact':
+            queryset = queryset.filter(filter_mapping.get(data_access_value, Q())).distinct()
+        
         queryset = queryset.filter(customer_id=customer_data).all()
         # Order the queryset based on the 'ordering_fields'
         ordering = self.request.GET.get('ordering')
@@ -1999,7 +2025,7 @@ class JobsListView(CustomAuthenticationMixin, generics.ListAPIView):
     @swagger_auto_schema(operation_id='STW Job Assignment Listing', responses={**common_get_response})
     def get(self, request, *args, **kwargs):
         authenticated_user, data_access_value = check_authentication_and_permissions(
-            self, "survey", HasListDataPermission, 'list'
+            self, "work_planning", HasListDataPermission, 'list'
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user
@@ -3533,6 +3559,15 @@ class JobCustomerListView(CustomAuthenticationMixin,generics.ListAPIView):
         )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        if request.user.roles.name == 'customer_contact':
+            contact_person = request.user.contactperson
+            customer_meta = contact_person.customer if contact_person else None
+            customer = customer_meta.user_id if customer_meta else None
+            if not customer:
+                messages.error(request, "You are not authorized to perform this action")
+                return redirect(reverse('dashboard'))        
+            return redirect(reverse('jobs_list', kwargs={'customer_id': customer.id}))
 
         queryset = self.get_queryset()
         queryset = self.get_searched_queryset(queryset)

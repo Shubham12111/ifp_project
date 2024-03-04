@@ -19,8 +19,11 @@ from decimal import Decimal
 
 from requirement_management.models import *
 from infinity_fire_solutions.validators import CustomFileValidator
+from infinity_fire_solutions.email import Email
 
 from django.shortcuts import get_object_or_404
+
+email = Email()
 
 # Define a serializer for ContactCustomer model
 class ContactCustomerSerializer(serializers.ModelSerializer):
@@ -788,7 +791,7 @@ class ContactProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'phone_number']
+        fields = ['first_name', 'last_name', 'phone_number', 'is_active']
 
     
 
@@ -904,9 +907,19 @@ class ContactPersonSerializer(serializers.ModelSerializer):
         validators=[validate_job_role]
     )
     
+    is_active = serializers.BooleanField(
+        label=('Is Login Allowed?'),
+        default=False,
+        style={
+            'custom_class': 'ms-3 col-3 align-self-center',
+            'input_type':'checkbox',
+            'base_template': 'custom_boolean_input.html'
+        },
+    )
+
     class Meta:
         model = ContactPerson
-        fields = ['first_name', 'last_name', 'email', 'phone_number','job_role']
+        fields = ['first_name', 'last_name', 'email', 'phone_number','job_role', 'is_active']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -920,6 +933,7 @@ class ContactPersonSerializer(serializers.ModelSerializer):
             'last_name': instance.user.last_name,
             'email': instance.user.email,
             'phone_number': instance.user.phone_number,
+            'is_active': instance.user.is_active,
             'job_role': instance.job_role
         }
         return ret
@@ -966,6 +980,37 @@ class ContactPersonSerializer(serializers.ModelSerializer):
 
         return value
     
+    def send_mail(self, instance: ContactPerson, password: str):
+        """
+        Sends an email to the contact person with their new account password.
+
+        Arguments:
+            self: The instance of the class.
+            instance (ContactPerson): The contact person instance to send the email to.
+            password (str): The new account password.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
+        # Prepare context for the email template
+        context = {
+            'user': instance.user,  # Assign the user object from the instance to the 'user' key in the context
+            'user_password': password,  # Assign the new password to the 'user_password' key in the context
+            'site_url': 'https://app-dev.infinityfireprevention.com/'  # Assign the site URL to the 'site_url' key in the context
+        }
+
+        # Send the email using Django's send_mail function
+        email.send_mail(
+            instance.user.email,  # Recipient's email address
+            'email_templates/customer_password.html',  # Email template file path
+            context,  # Context data to render the email template
+            'Your New Account Password',  # Subject of the email
+        )
+
+    
     def create(self, validated_data):
         """
         Method to create a new user with the provided validated data.
@@ -1001,13 +1046,19 @@ class ContactPersonSerializer(serializers.ModelSerializer):
         
         # Update additional user fields
         user.phone_number = validated_data.pop('phone_number', '')
-        user.is_active = False
+        user.is_active = validated_data.pop('is_active', False)
         user.roles = contact_role
         user.save()
         
         # Assign the newly created user to the validated data and call the superclass create method
         validated_data['user'] = user
         instance = super().create(validated_data)
+        
+        try:
+            self.send_mail(instance, password)
+        except:
+            pass
+
         return instance
     
     def update(self, instance, validated_data):
@@ -1015,7 +1066,8 @@ class ContactPersonSerializer(serializers.ModelSerializer):
         data = {
             'first_name': validated_data.pop('first_name', ''),
             'last_name': validated_data.pop('last_name', ''),
-            'phone_number': validated_data.pop('phone_number', '')
+            'phone_number': validated_data.pop('phone_number', ''),
+            'is_active': validated_data.pop('is_active', False)
         }
         serializer = ContactProfileSerializer(data=data, instance=instance.user)
         serializer.is_valid()
