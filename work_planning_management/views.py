@@ -3213,7 +3213,7 @@ class JobRLOApproveView(CustomAuthenticationMixin, generics.CreateAPIView):
     serializer_class = UpdateRLOSeirlaizer
     renderer_classes = [TemplateHTMLRenderer, JSONRenderer]
     template_name = 'RLO/rlo_form.html'
-    queryset = RLO.objects.all()
+    queryset = RLO.objects.filter(status='pending').all()
 
     def get_job_instance(self):
         """
@@ -4003,6 +4003,12 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
             return create_api_response(status_code=HTTP_201_CREATED, message="GET Method Not Allowed")
 
     def post(self, request, *args, **kwargs):
+        # Handle GET request to display a form for creating a team.
+        authenticated_user, data_access_value = check_authentication_and_permissions(
+            self, "survey", HasCreateDataPermission, 'add'
+        )
+        if isinstance(authenticated_user, HttpResponseRedirect):
+            return authenticated_user
         data = request.data
         serializer = TeamUpdateSerializer(data=data, context={'request': request})
         message = "Team added successfully!"
@@ -4019,7 +4025,7 @@ class TeamAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         else:
             # Team doesn't have the required number of members
             error_message = "A team must have between 2 and 6 members."
-            members = self.get_members_queryset()
+            members = self.get_queryset()
             if request.accepted_renderer.format == 'html':
                 messages.error(request, error_message)
                 context = {
