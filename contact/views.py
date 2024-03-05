@@ -100,7 +100,7 @@ class ContactListView(CustomAuthenticationMixin,generics.ListAPIView):
     serializer_class = ContactSerializer
     renderer_classes = [TemplateHTMLRenderer,JSONRenderer]
     filter_backends = [filters.SearchFilter]
-    search_fields = ['first_name', 'last_name','email']
+    search_fields = ['first_name', 'last_name','email', 'company_name']
     template_name = 'contact_list.html'
     ordering_fields = ['created_at'] 
 

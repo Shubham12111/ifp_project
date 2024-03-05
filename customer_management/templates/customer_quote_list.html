@@ -117,7 +117,7 @@
                                     </td>
 
                                     <td>
-                                        {% if quotation.status != 'Approved' or not quotation.job_status or 'in-progress' in quotation.job_status or 'pending' in quotation.job_status or quotation.invoice_id %}
+                                        {% if quotation.status != 'To Commence' or not quotation.job_status or 'in-progress' in quotation.job_status or 'planned' in quotation.job_status or quotation.invoice_id %}
                                         <a href="#" class="text-decoration-none w-100 h-100 nav-link" disabled >
                                             <i class="fas fa-receipt" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Create Invoice"></i>
                                         </a>

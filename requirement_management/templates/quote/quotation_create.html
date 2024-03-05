@@ -416,15 +416,13 @@
     <div class="modal-content ">
       <div class="modal-header">
         <h5 class="modal-title" id="errorModalLabel">Error</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="close btn btn-sm shadow-none py-0 mb-0 pe-2" data-dismiss="modal" aria-label="Close">
+          <i class="fas fa-times fs-6"></i>
         </button>
       </div>
       <div class="modal-body">
         Please add/select SOR
       </div>
-
-
       <div class="modal-footer">
         <button type="button" class="btn bg-gradient-dark" id="closeModal">Close</button>
       </div>
@@ -1458,6 +1456,15 @@
 
       // Attach a click event listener to the "Cancel" button in the modal
       errorModal.querySelector('[data-dismiss="modal"]').addEventListener('click', function () {
+        // User clicked Cancel, do nothing
+        // Close the modal
+        removeBlur();
+        errorModal.classList.remove('show');
+        errorModal.style.display = 'none';
+
+      });
+
+      errorModal.querySelector('#closeModal').addEventListener('click', function () {
         // User clicked Cancel, do nothing
         // Close the modal
         removeBlur();

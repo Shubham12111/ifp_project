@@ -82,7 +82,7 @@ class VendorSerializer(serializers.ModelSerializer):
 
     )
     company = serializers.CharField(
-        label=('Company'),
+        label=('Company Name'),
         max_length=100,
         required=False,
         style={
@@ -90,7 +90,8 @@ class VendorSerializer(serializers.ModelSerializer):
             "autocomplete": "off",
             "autofocus": False,
             "base_template": 'custom_input.html'
-        }
+        },
+        validators=[validate_company_name],
     )
 
 
