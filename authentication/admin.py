@@ -34,6 +34,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ('email', 'first_name', 'last_name', 'roles', 'is_active','last_login')
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('email',)
+    list_filter = UserAdmin.list_filter + ('roles',)
     
     
     fieldsets = (
