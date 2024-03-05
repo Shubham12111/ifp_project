@@ -33,6 +33,10 @@
     font-size: 0.7rem !important;
     font-weight: 700 !important;
   }
+
+  a[disabled]{
+    opacity: 0.5;
+  }
 </style>
 {% include 'components/alert.html' %}
 <div class="container-fluid py-2">
@@ -127,6 +131,7 @@
                     </a>
                   </td>
                   <td class="py-3">
+                    {% if order.status != 'completed' %}
                     <div class="dropstart ms-auto pe-0">
                       <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown"
                         aria-expanded="false">
@@ -143,7 +148,7 @@
                               href="{% url 'purchase_order_edit' order.id %}">Approve</a></li>
                           {% endif %}
                           {% if request.user.roles.name == "projects_admin_(IT)" %}
-                            {% if order.status == "approved" or status == "partially_completed" %}
+                            {% if order.status == "approved" or order.status == "partially_completed" %}
                             <li><a class="dropdown-item border-radius-md"
                                 href="{% url 'purchase_order_convert_to_invoice' order.id %}">Invoice</a></li>
                             {% endif %}
@@ -151,6 +156,11 @@
                         {% endif %}
                       </ul>
                     </div>
+                    {% else %}
+                      <a href="javascript:;" class="cursor-pointer" disabled>
+                        <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
+                      </a>
+                    {% endif %}
                   </td>
                 </tr>
                 {% endfor %}

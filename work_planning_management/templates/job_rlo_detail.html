@@ -8,6 +8,9 @@
     span>p {
         margin-bottom: 0 !important;
     }
+    a[disabled]{
+        opacity: 0.5;
+    }
 </style>
 {% include "job_stw_rlo_actions.html" %}
 <div class="container-fluid pt-4">
@@ -50,6 +53,7 @@
             
                                 {% if request.user|has_update_permission:"survey" or request.user|has_add_permission:"survey" or request.user|has_delete_permission:"survey" or request.user|has_view_permission:"survey" %}
                                 <td>
+                                    {% if rlo.status == 'pending' %}
                                     <div class="dropstart btn-group">
                                         <a href="javascript:;" class="cursor-pointer" id="dropdownTable2" data-bs-toggle="dropdown" aria-expanded="false">
                                             <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
@@ -63,11 +67,13 @@
                                             </li> {% endcomment %}
                                              
                                             {% if request.user|has_delete_permission:"survey" %}
+                                            {% if rlo.status == 'pending' %}
                                             <li>
                                                 <a href="{% url 'job_rlo_delete' job.customer_id.id job.id rlo.id %}" type="button" class="dropdown-item border-radius-md">
                                                     Delete
                                                 </a>
                                             </li>
+                                            {% endif %}
                                             {% endif %}
                                             
                                             {% comment %} <li>
@@ -75,14 +81,20 @@
                                                     Reject
                                                 </a>
                                             </li> {% endcomment %}
-
+                                            {% if rlo.status != 'approved' %}
                                             <li>
                                                 <a href="{% url 'job_rlo_approve' job.customer_id.id job.id rlo.id %}" type="button" class="dropdown-item border-radius-md">
                                                     Approve
                                                 </a>
                                             </li>
+                                            {% endif %}
                                         </ul>
                                     </div>
+                                    {% else %}
+                                    <a href="javascript:;" class="cursor-pointer" disabled>
+                                        <i class="fa fa-cog text-secondary" aria-hidden="true"></i>
+                                    </a>
+                                    {% endif %}
                                 </td>
                                 {% endif %}
                             </tr>
