@@ -31,7 +31,7 @@ class CustomUserAdmin(UserAdmin):
     """
     Customizing the admin interface for the User model.
     """
-    list_display = ('email', 'first_name', 'last_name','is_active','last_login')
+    list_display = ('email', 'first_name', 'last_name', 'roles', 'is_active','last_login')
     search_fields = ('email', 'first_name', 'last_name')
     ordering = ('email',)
     list_filter = UserAdmin.list_filter + ('roles',)

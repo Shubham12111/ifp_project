@@ -9,7 +9,7 @@ class Command(BaseCommand):
         # Define HTML data for each section
         site_address_info = """
          <div class="col-12">
-                                <img src="https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/assets/img/logo2.png" alt="Company Logo"  style="max-height: 4rem;">
+                                <img src="https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/assets/img/logo2.png" alt="Company Logo"  style="max-height: 4rem;">
                             </div>
      <p class="text-wrap">The Resident</p>
                             <p class="text-wrap">Flat 1</p>
@@ -21,7 +21,7 @@ class Command(BaseCommand):
 
         company_info = """
          <div class="col-12">
-                                <img src="https://ifp-static-dev.s3.eu-west-2.amazonaws.com/static/assets/img/logo2.png" alt="Company Logo"  style="max-height: 4rem;">
+                                <img src="https://ifp-static-beta.s3.eu-west-2.amazonaws.com/static/assets/img/logo2.png" alt="Company Logo"  style="max-height: 4rem;">
                             </div>
         <p class="text-wrap">Unit 2 Regents Business Park</p>
                             <p class="text-wrap">6 Jubilee Road</p>
