@@ -700,6 +700,10 @@ class ConvertToCustomerView(CustomAuthenticationMixin,generics.CreateAPIView):
         if CustomerMeta.objects.filter(company_name=instance.company_name).exists():
             messages.error(request, 'You cannot convert the Contact into Customer as a Customer with this company name is already present.')
             return redirect(reverse('contact_list'))
+
+        if User.objects.filter(email=instance.email).exists():
+            messages.error(request, 'The Email is already in use, please use a different email.')
+            return redirect(reverse('contact_list'))
         
         data = {
             'company_name': instance.company_name, 
