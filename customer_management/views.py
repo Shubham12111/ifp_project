@@ -377,7 +377,6 @@ class CustomerUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView):
         
         # If the customer instance exists, initialize the serializer with instance and provided data.
         data = request.data.dict()
-        data['email'] = company_meta.email
         serializer = self.serializer_class(instance = company_meta, data = data, context = {'request': request} )
         if serializer.is_valid():
             # If the serializer data is valid, save the updated customer instance.

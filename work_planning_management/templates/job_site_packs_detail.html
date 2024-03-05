@@ -203,8 +203,8 @@
                 {% csrf_token %}
                 <input type="hidden" id="type" name="type" value="default">
                 <div class="form-group">
-                  <select class="form-control" multiple id="site-pack-choices" name="sitepack_document" required>
-                    <option value="">Select Site Pack</option>
+                  <select class="form-control" id="site-pack-choices" name="sitepack_document" required>
+                    <option disabled selected value>Select Site Pack</option>
                     {% for default_site_pack in default_site_packs %}
                         <option value="{{default_site_pack.id}}">{{default_site_pack.name}}</option>
                     {% endfor %}
@@ -286,7 +286,7 @@
         shouldSortItems: false,
         searchFields: ['label'],
         duplicateItemsAllowed: false,
-        removeItemButton: true,
+        removeItemButton: false,
         searchPlaceholderValue: "Search Site Pack",
         placeholderValue: "Select Site Pack",
         fuseOptions: {
@@ -300,42 +300,6 @@
         }
       });
     }
-
-    addSitePackModal = document.getElementById('addSitePackModal');
-    if (addSitePackModal) {
-      addSitePackModal.addEventListener('hide.bs.modal', function () {
-        var sitepack_element = document.getElementById('site-pack-choices');
-        sitepack_choices = new Choices(sitepack_element, {
-          default: false,
-          items: [],
-          choices: [],
-          renderChoiceLimit: 10,
-          maxItemCount: 1,
-          searchEnabled: true,
-          searchChoices: true,
-          searchFloor: 1,
-          searchResultLimit: 4,
-          resetScrollPosition: true,
-          shouldSort: true,
-          shouldSortItems: false,
-          searchFields: ['label'],
-          duplicateItemsAllowed: false,
-          removeItemButton: true,
-          searchPlaceholderValue: "Search Site Pack",
-          placeholderValue: "Select Site Pack",
-          fuseOptions: {
-            includeScore: true,
-            includeMatches: true,
-            threshold: 0, // Set to 0 for exact match
-            location: 0,
-            distance: 100,
-            maxPatternLength: 32,
-            minMatchCharLength: 1
-          }
-        });
-      });
-    }
-
 
     function submitForm(e){
       activeTab = document.querySelector('[data-bs-toggle="tab"]:is(.active)');
@@ -355,6 +319,41 @@
           }
         }
       }
+    }
+
+    // Get a reference to the modal
+    var addSitePackModal = document.getElementById('addSitePackModal');
+
+    // Check if the modal exists
+    if (addSitePackModal) {
+        // Add an event listener for the modal's hidden.bs.modal event
+        addSitePackModal.addEventListener('hidden.bs.modal', function () {
+            // Call your function here
+            resetModalData();
+        });
+    }
+
+    var tabs = document.querySelectorAll('[role="tab"]');
+    tabs.forEach(tab => tab.addEventListener('click', function () {
+        // Call your function here
+        resetModalData();
+      })
+    );
+
+    // Define your function to be triggered on modal close
+    function resetModalData() {
+      nameField = document.querySelector('[name="name"]');
+      if (nameField){
+        nameField.value = '';
+      }
+
+      fileField = document.querySelector('[name="document_path"]');
+      if (fileField){
+        // Reset the value of the file input
+        fileField.value = '';
+      }
+
+      sitepack_choices.setChoiceByValue('');
     }
 
 
