@@ -74,7 +74,7 @@ table > tbody > tr > td > a > p{
                     <tbody> <!-- Use thead for table headers -->
                         <tr>
                             <th>Client</th>
-                            <td>{{ requirement_instance.customer_id.first_name }} {{ requirement_instance.customer_id.last_name }}</td>
+                            <td>{{ requirement_instance.customer_id.company_name|default:'-'|title }}</td>
                         </tr>
                         <tr>
                             <th>Site Address</th>
