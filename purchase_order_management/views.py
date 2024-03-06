@@ -437,7 +437,7 @@ class PurchaseOrderAddView(CustomAuthenticationMixin, generics.CreateAPIView):
         tax_rate = AdminConfiguration.objects.all().first()
         customer_list = User.objects.filter(roles__name='Customer').all()
         sub_contractor_list = Contact.objects.filter(contact_type__name='Sub-Contractor').all()
-        job_list = Job.objects.filter(status__in=['pending', 'in-progress']).all()
+        job_list = Job.objects.filter(status__in=['planned', 'in-progress']).all()
         
            
         if request.accepted_renderer.format == 'html':
@@ -601,7 +601,7 @@ class PurchaseOrderUpdateView(CustomAuthenticationMixin, generics.UpdateAPIView)
         inventory_location_list = InventoryLocation.objects.all()
         tax_rate = AdminConfiguration.objects.first()
         sub_contractor_list = Contact.objects.filter(contact_type__name='Sub-Contractor').all()
-        job_list = Job.objects.filter(status__in=['pending', 'in-progress']).all()
+        job_list = Job.objects.filter(status__in=['planned', 'in-progress']).all()
 
         item_list = None
         if instance.vendor_id:
