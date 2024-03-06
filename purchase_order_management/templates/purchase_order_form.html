@@ -767,6 +767,7 @@
                 itemTableBody.appendChild(newRow);
                 initiateAutocomplete(rowNumber=1);
                 rowsAdded = 2;
+                calculateTotal();
             }
         } catch (error) {
             console.error('Error fetching vendor data:', error);
@@ -1116,6 +1117,7 @@
                     itemTableBody.appendChild(newRow);
                     initiateAutocomplete(rowNumber=1);
                     rowsAdded = 2;
+                    calculateTotal();
                 }
                 
             }

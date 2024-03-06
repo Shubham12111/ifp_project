@@ -7,31 +7,52 @@
 {% include 'customer_management/customer_actions.html' %}
 <div class="container-fluid my-3 py-3">
   <div class="row">
-   <div class="col-lg-12">
+    <div class="col-lg-12">
       <div class="card" id="basic-info">
-            <div class="card-header mt-0">
-              <div class="row justify-content-between">
-                <div class="col-6">
-                  <h5>General Information</h5>
-                </div>
-                <div class="col-6 text-end">
-                  {% include 'components/back_button.html' %}
-                </div>
+        <div class="card-header mt-0">
+          <div class="row justify-content-between">
+            <div class="col-6">
+              <h5>General Information</h5>
             </div>
-              
+            <div class="col-6 text-end">
+              {% include 'components/back_button.html' %}
             </div>
-            <div class="card-body pt-0">
-                <form role="form"  method="POST" autocomplete="off" onsubmit="showLoader()" >                    <div class='row'>
-                        {% csrf_token %}
-                        {% render_form serializer  %}
-                    </div>
-                    
-                    <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-                    </form>
-                   {% include 'components/loader.html' %}
+          </div>
 
-            </div>
         </div>
+        <div class="card-body pt-0">
+          <form role="form" method="POST" autocomplete="off" onsubmit="showLoader()">
+            {% csrf_token %}
+            <div class='row'>
+              {% render_field serializer.company_name style=serializer.company_name.style %}
+              {% render_field serializer.customer_type style=serializer.customer_type.style %}
+              {% render_field serializer.company_registration_number style=serializer.company_registration_number.style %}
+              {% render_field serializer.utr_number style=serializer.utr_number.style %}
+              {% render_field serializer.email style=serializer.email.style %}
+              {% render_field serializer.main_telephone_number style=serializer.main_telephone_number.style %}
+            </div>
+
+            <div class="row mt-4">
+              {% render_field serializer.registered_address style=serializer.registered_address.style %}
+              {% render_field serializer.registered_town style=serializer.registered_town.style %}
+              {% render_field serializer.registered_county style=serializer.registered_county.style %}
+              {% render_field serializer.registered_country style=serializer.registered_country.style %}
+              {% render_field serializer.registered_post_code style=serializer.registered_post_code.style %}
+            </div>
+
+            <div class="row mt-4">
+              {% render_field serializer.trading_address style=serializer.trading_address.style %}
+              {% render_field serializer.trading_town style=serializer.trading_town.style %}
+              {% render_field serializer.trading_county style=serializer.trading_county.style %}
+              {% render_field serializer.trading_country style=serializer.trading_country.style %}
+              {% render_field serializer.trading_post_code style=serializer.trading_post_code.style %}
+            </div>
+            <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
+          </form>
+          {% include 'components/loader.html' %}
+
+        </div>
+      </div>
     </div>
   </div>
 </div>
