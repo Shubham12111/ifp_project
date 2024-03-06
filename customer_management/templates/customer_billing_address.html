@@ -9,40 +9,60 @@
 <div class="container-fluid my-3 py-3">
   <div class="row ">
     <div class="col-lg-12">
-       <!-- Card Basic Info -->
-        <div class="card" id="basic-info">
-          <div class="card-header mt-0">
-            <div class="row justify-content-between">
-              <div class="col-6">
-                <h5>Billing Information </h5>
-              </div>
-              <div class="col-6 text-end">
-                {% include 'components/back_button.html' %}
-              </div>
+      <!-- Card Basic Info -->
+      <div class="card" id="basic-info">
+        <div class="card-header mt-0">
+          <div class="row justify-content-between">
+            <div class="col-6">
+              <h5>Billing Information </h5>
             </div>
-              
+            <div class="col-6 text-end">
+              {% include 'components/back_button.html' %}
             </div>
-            <div class="card-body pt-0">
-              <form role="form"  method="POST" autocomplete="off" >
-                    <div class='row'>
-                        {% csrf_token %}
-                        {% render_form serializer %}
-                    </div>
-                    <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
-              </form>
-                  {% include 'components/loader.html' %}
-            </div>
+          </div>
+
         </div>
+        <div class="card-body pt-0">
+          <form role="form" method="POST" autocomplete="off">
+            {% csrf_token %}
+            <div class='row'>
+              {% render_field serializer.vat_number style=serializer.vat_number.style %}
+              {% render_field serializer.payment_terms style=serializer.payment_terms.style %}
+              {% render_field serializer.tax_preference style=serializer.tax_preference.style %}
+            </div>
+
+            <div class='row mt-4'>
+              {% render_field serializer.contact_email style=serializer.contact_email.style %}
+              {% render_field serializer.contact_tel_no style=serializer.contact_tel_no.style %}
+            </div>
+
+            <div class='row mt-4'>
+              {% render_field serializer.address style=serializer.address.style %}
+              {% render_field serializer.town style=serializer.town.style %}
+              {% render_field serializer.county style=serializer.county.style %}
+              {% render_field serializer.country style=serializer.country.style %}
+              {% render_field serializer.post_code style=serializer.post_code.style %}
+            </div>
+
+            <div class='row mt-4'>
+              {% render_field serializer.purchase_order_required style=serializer.purchase_order_required.style %}
+              {% render_field serializer.CIS style=serializer.CIS.style %}
+            </div>
+            <button class="btn bg-gradient-dark btn-sm float-end mt-2 mb-0 mx-2">Save</button>
+          </form>
+          {% include 'components/loader.html' %}
         </div>
       </div>
-    
-       
+    </div>
+  </div>
 
-{% endblock %}
-{% block extra_js %}
-<script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
-<script src="{% static 'assets/js/custom_country.js' %}"></script>
-<script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
-<script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
-<script src="{% static 'assets/js/custom_delete.js' %}"></script>
-{% endblock %}
+
+
+  {% endblock %}
+  {% block extra_js %}
+  <script src="{% static 'assets/js/plugins/choices.min.js' %}"></script>
+  <script src="{% static 'assets/js/custom_country.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/datatables.js' %}"></script>
+  <script src="{% static 'assets/js/plugins/sweetalert.min.js' %}"></script>
+  <script src="{% static 'assets/js/custom_delete.js' %}"></script>
+  {% endblock %}

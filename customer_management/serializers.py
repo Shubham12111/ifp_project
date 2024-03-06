@@ -239,7 +239,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         required=True,
         style={
             'base_template': 'custom_input.html',
-            'custom_class': 'col-6'
+            'custom_class': 'col-4'
         },
     )
     registered_post_code = serializers.ChoiceField(
@@ -249,7 +249,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
         style={
             'base_template': 'custom_select_without_search.html',
-            'custom_class': 'col-6'
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -307,7 +307,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         allow_null=True,
         style={
             'base_template': 'custom_input.html',
-            'custom_class': 'col-6'
+            'custom_class': 'col-4'
         },
     )
     trading_post_code = serializers.ChoiceField(
@@ -317,7 +317,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
         style={
             'base_template': 'custom_select_without_search.html',
-            'custom_class': 'col-6'
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -541,7 +541,8 @@ class BillingAddressSerializer(serializers.ModelSerializer):
             "autofocus": False,
             "autocomplete": "off",
             "required": True,
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -557,7 +558,8 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         allow_null=True,
         allow_blank=True,
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -585,7 +587,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         label=_('Country'),
         style={
             'base_template': 'custom_input.html',
-            'custom_class': 'col-6'
+            'custom_class': 'col-4'
         },
     )
     
@@ -612,7 +614,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
 
         style={
             'base_template': 'custom_select_without_search.html',
-            'custom_class': 'col-6'
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -625,7 +627,8 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         required=True,
         style={
             'base_template': 'custom_input.html',
-            "placeholder":"Vat Number must be of 9 digits"
+            "placeholder":"Vat Number must be of 9 digits",
+            'custom_class': 'col-4'
         },
 
         error_messages={
@@ -641,7 +644,7 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         default='taxable',
         style={
             'base_template': 'custom_select_without_search.html',
-            'custom_class': 'col-6'
+            'custom_class': 'col-4'
         },
     )
 
@@ -652,7 +655,8 @@ class BillingAddressSerializer(serializers.ModelSerializer):
         # default='30 days',
 
         style={
-            'base_template': 'custom_select_without_search.html'
+            'base_template': 'custom_select_without_search.html',
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
@@ -756,21 +760,24 @@ class SiteAddressSerializer(serializers.ModelSerializer):
     country = serializers.CharField(
         label=_('Country'),
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
     )
     
     town = serializers.CharField(
         label=_('Town'),
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
     )
     
     county = serializers.CharField(
         label=_('County'),
         style={
-            'base_template': 'custom_input.html'
+            'base_template': 'custom_input.html',
+            'custom_class': 'col-4'
         },
     )
     
@@ -780,7 +787,8 @@ class SiteAddressSerializer(serializers.ModelSerializer):
         choices=POST_CODE_LIST,
 
         style={
-            'base_template': 'custom_select_without_search.html'
+            'base_template': 'custom_select_without_search.html',
+            'custom_class': 'col-4'
         },
         error_messages={
             "required": "This field is required.",
