@@ -3649,7 +3649,7 @@ class MembersListView(CustomAuthenticationMixin, generics.ListAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        if request.user.roles.name != 'customer_contact':
+        if request.user.roles.name == 'customer_contact':
             messages.error(request, "You are not authorized to perform this action.")
             return redirect(reverse('dashboard'))
         
@@ -4099,7 +4099,7 @@ class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
 
-        if request.user.roles.name != 'customer_contact':
+        if request.user.roles.name == 'customer_contact':
             messages.error(request, "You are not authorized to perform this action.")
             return redirect(reverse('dashboard'))
 
