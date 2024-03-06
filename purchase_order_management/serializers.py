@@ -202,7 +202,7 @@ class PurchaseOrderSerializer(serializers.ModelSerializer):
 
     job_id = serializers.PrimaryKeyRelatedField(
         required=False,
-        queryset=Job.objects.filter(status__in=['pending', 'in-progress']).all(),
+        queryset=Job.objects.filter(status__in=['planned', 'in-progress']).all(),
         error_messages={
             "required": "This field is required.",
             "blank": "Job is required.",
