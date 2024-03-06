@@ -3648,6 +3648,11 @@ class MembersListView(CustomAuthenticationMixin, generics.ListAPIView):
             )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        if request.user.roles.name != 'customer_contact':
+            messages.error(request, "You are not authorized to perform this action.")
+            return redirect(reverse('dashboard'))
+        
         filter_mapping = {
             "self": Q(user_id=self.request.user ),
             "all": Q(),  # An empty Q() object returns all data
@@ -4093,6 +4098,10 @@ class TeamsListView(CustomAuthenticationMixin, generics.ListAPIView):
             )
         if isinstance(authenticated_user, HttpResponseRedirect):
             return authenticated_user  # Redirect the user to the page specified in the HttpResponseRedirect
+
+        if request.user.roles.name != 'customer_contact':
+            messages.error(request, "You are not authorized to perform this action.")
+            return redirect(reverse('dashboard'))
 
         filter_mapping = {
             "self": Q(user_id=self.request.user ),
